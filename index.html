@@ -46,16 +46,21 @@
       align-items: center;
       background: var(--brand-dark);
       display: flex;
-      gap: 16px;
-      justify-content: space-between;
-      margin: 0 -24px 24px;
+      justify-content: center;
+      left: 50%;
+      margin-bottom: 24px;
       padding: 14px 24px;
+      position: relative;
+      right: 50%;
+      width: 100vw;
+      margin-left: -50vw;
+      margin-right: -50vw;
     }
 
     .brand-topbar-left {
       align-items: center;
       display: flex;
-      gap: 14px;
+      justify-content: center;
     }
 
     .brand-logo {
@@ -136,7 +141,11 @@
       color: rgba(255, 255, 255, 0.72);
       font-size: 12px;
       font-weight: 500;
+      position: absolute;
+      right: 24px;
       text-decoration: none;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
     .admin-topbar-link:hover {
@@ -618,7 +627,8 @@
       .filters-row.actions-row { grid-template-columns: 1fr; }
       .header { flex-direction: column; align-items: flex-start; }
       .header-actions { width: 100%; justify-content: space-between; }
-      .brand-topbar { flex-wrap: wrap; margin: 0 -24px 20px; }
+      .brand-topbar { padding: 12px 16px; }
+      .admin-topbar-link { right: 16px; }
       .page-hero { padding: 20px; }
     }
 
@@ -630,7 +640,7 @@
 <body>
   <div class="dashboard" id="dashboard">
     <div class="loading-state">
-      <header class="brand-topbar" style="margin:0 -24px 24px">
+      <header class="brand-topbar">
         <div class="brand-topbar-left">
           <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
         </div>
@@ -1828,7 +1838,7 @@
         if (!hasLayout) {
           dashboard.innerHTML = `
             <div class="loading-state">
-              <header class="brand-topbar" style="margin:0 -24px 24px">
+              <header class="brand-topbar">
                 <div class="brand-topbar-left">
                   <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
                 </div>
