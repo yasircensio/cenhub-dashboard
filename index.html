@@ -22,6 +22,14 @@
       --accent-green: #138b53;
       --accent-blue: #0085f2;
       --brand-dark: #1a1208;
+      --brand-topbar-gradient: linear-gradient(
+        90deg,
+        #0f0a08 0%,
+        #1a100c 22%,
+        #261812 48%,
+        #352018 72%,
+        #452818 100%
+      );
       --shadow: 0 12px 32px rgba(26, 18, 8, 0.08);
       --card-gradient: linear-gradient(145deg, #ffffff 0%, #fffaf6 100%);
       --hero-gradient: linear-gradient(135deg, #ff6a00 0%, #dc640a 100%);
@@ -44,7 +52,7 @@
 
     .brand-topbar {
       align-items: center;
-      background: var(--brand-dark);
+      background: var(--brand-topbar-gradient);
       display: flex;
       justify-content: center;
       left: 50%;
