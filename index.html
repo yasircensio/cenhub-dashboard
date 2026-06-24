@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SunTech Nordic · Censio Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
+
+    :root {
+      --bg: #f7f5f2;
+      --panel: #ffffff;
+      --panel-soft: #faf8f6;
+      --border: #e8e0d8;
+      --text: #1a1208;
+      --text-muted: #6b5348;
+      --text-soft: #a07868;
+      --primary: #ff6a00;
+      --primary-dark: #dc640a;
+      --primary-soft: #fff4eb;
+      --primary-text: #ffffff;
+      --accent-green: #138b53;
+      --accent-blue: #0085f2;
+      --brand-dark: #1a1208;
+      --shadow: 0 12px 32px rgba(26, 18, 8, 0.08);
+      --card-gradient: linear-gradient(145deg, #ffffff 0%, #fffaf6 100%);
+      --hero-gradient: linear-gradient(135deg, #ff6a00 0%, #dc640a 100%);
+      --bar-gradient: linear-gradient(180deg, #ff9147 0%, #ff6a00 100%);
+      --error: #c2410c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .dashboard { max-width: 1280px; margin: 0 auto; padding: 0 24px 32px; }
+
+    .brand-topbar {
+      align-items: center;
+      background: var(--brand-dark);
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      margin: 0 -24px 24px;
+      padding: 14px 24px;
+    }
+
+    .brand-topbar-left {
+      align-items: center;
+      display: flex;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      display: block;
+      height: 32px;
+      width: auto;
+    }
+
+    .brand-tagline {
+      color: rgba(255, 255, 255, 0.72);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .page-hero {
+      background: linear-gradient(135deg, #2a1200 0%, #1a1208 55%, #0f0c0a 100%);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      padding: 24px 28px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header h1 {
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .header p {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .meta { color: rgba(255, 255, 255, 0.55); font-size: 12px; text-align: right; }
+
+    .header-actions--client {
+      align-items: flex-end;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .header-presets {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .header-presets .preset-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
+
+    .header-presets .preset-btn:hover {
+      background: rgba(255, 106, 0, 0.25);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .header-presets .preset-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .admin-topbar-link {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .admin-topbar-link:hover {
+      color: var(--primary);
+    }
+
+    .brand-footer {
+      border-top: 1px solid var(--border);
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-top: 8px;
+      padding-top: 16px;
+      text-align: center;
+    }
+
+    .brand-footer a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .brand-footer a:hover { color: var(--primary-dark); }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .panel-title {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .filters {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .filters-row.compact {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .filters-row.actions-row {
+      align-items: center;
+      grid-template-columns: 1fr auto;
+    }
+
+    #pipeline-panel { width: 100%; }
+
+    details.panel summary {
+      cursor: pointer;
+      list-style: none;
+    }
+
+    details.panel summary::-webkit-details-marker { display: none; }
+
+    details.panel summary.panel-title::after {
+      color: var(--text-soft);
+      content: 'Show';
+      float: right;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: none;
+    }
+
+    details.panel[open] summary.panel-title::after { content: 'Hide'; }
+
+    details.panel .display-grid { margin-top: 14px; }
+
+    .content-area { display: flex; flex-direction: column; gap: 14px; }
+
+    label {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .filter-group.full-width { grid-column: 1 / -1; }
+
+    select, input[type="date"], input[type="number"] {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      padding: 10px 12px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      width: 100%;
+    }
+
+    select:focus, input[type="date"]:focus, input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.15);
+      outline: none;
+    }
+
+    .pipeline-box {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .pipeline-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .pipeline-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .pipeline-item, .checkbox-item {
+      align-items: center;
+      color: var(--text);
+      display: flex;
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    .pipeline-item input, .checkbox-item input {
+      accent-color: var(--primary);
+      width: auto;
+    }
+
+    .pipeline-note {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .pipeline-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .pipeline-chip {
+      background: var(--primary-soft);
+      border: 1px solid var(--primary);
+      border-radius: 999px;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+    }
+
+    .pipeline-chip.muted {
+      background: var(--panel-soft);
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+
+    .pipeline-warning {
+      color: #d97706;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .preset-row, .widget-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .preset-btn, .refresh-btn, .widget-btn {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 9px 14px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .preset-btn:hover, .widget-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .preset-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .widget-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .refresh-btn.primary, .widget-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 4px 14px rgba(255, 106, 0, 0.28);
+      color: var(--primary-text);
+      font-weight: 600;
+    }
+
+    .refresh-btn.primary:hover, .widget-btn.primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: #fff;
+    }
+
+    .display-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .display-group {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .display-group h3 {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-auto-rows: 1fr;
+      gap: 14px;
+    }
+
+    .kpi-grid > .card {
+      display: flex;
+      flex-direction: column;
+      min-height: 148px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow);
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card.primary {
+      background: var(--card-gradient);
+      border-color: rgba(255, 106, 0, 0.28);
+    }
+
+    .card-label {
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .card-value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--text);
+    }
+
+    .card.primary .card-value {
+      font-size: 30px;
+      background: var(--hero-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .card-sub { color: var(--text-soft); font-size: 12px; margin-top: 8px; }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .chart {
+      align-items: end;
+      display: flex;
+      gap: 10px;
+      min-height: 220px;
+      padding-top: 12px;
+    }
+
+    .bar-wrap {
+      align-items: center;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .bar {
+      background: var(--bar-gradient);
+      border-radius: 8px 8px 4px 4px;
+      max-width: 42px;
+      min-height: 8px;
+      width: 100%;
+    }
+
+    .bar-label {
+      color: var(--text-soft);
+      font-size: 10px;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .status-item {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .status-item .name { color: var(--text-muted); font-size: 12px; margin-bottom: 6px; }
+    .status-item .value { font-size: 24px; font-weight: 700; }
+
+    table { border-collapse: collapse; font-size: 13px; width: 100%; }
+    th, td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; }
+    th {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    td.num, th.num { text-align: right; }
+
+    .loading-state, .error-state {
+      color: var(--text-muted);
+      padding: 80px 24px;
+      text-align: center;
+    }
+
+    .spinner {
+      animation: spin 0.8s linear infinite;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      height: 34px;
+      margin: 0 auto 16px;
+      width: 34px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-state { color: var(--error); }
+    .note { color: var(--text-soft); font-size: 12px; margin-top: 8px; }
+    .empty-section { color: var(--text-soft); font-size: 13px; padding: 12px 0; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .chart-card .section-title { margin-bottom: 0; }
+
+    .chart-card > .section-title {
+      margin-bottom: 12px;
+    }
+
+    .chart-canvas-wrap {
+      background: var(--chart-canvas, #ffffff);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      height: 280px;
+      position: relative;
+    }
+
+    .chart-canvas-wrap--circular {
+      box-sizing: border-box;
+      padding: 12px;
+    }
+
+    .panel .chart-card {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .charts-panel-title {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .charts-panel-title h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 1200px) {
+      .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 980px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filters-row,
+      .filters-row.compact,
+      .section-grid,
+      .display-grid,
+      .pipeline-list { grid-template-columns: 1fr; }
+      .filters-row.actions-row { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: flex-start; }
+      .header-actions { width: 100%; justify-content: space-between; }
+      .brand-topbar { flex-wrap: wrap; margin: 0 -24px 20px; }
+      .page-hero { padding: 20px; }
+    }
+
+    @media (max-width: 560px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard" id="dashboard">
+    <div class="loading-state">
+      <header class="brand-topbar" style="margin:0 -24px 24px">
+        <div class="brand-topbar-left">
+          <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
+        </div>
+      </header>
+      <div class="spinner"></div>
+      Henter dashboard data...
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const IS_ADMIN = document.body.dataset.dashboardMode === 'admin'
+      || new URLSearchParams(window.location.search).get('view') === 'admin';
+
+    (function initDashboardCharts(global) {
+      const PALETTE = ['#ff6a00', '#138b53', '#0085f2', '#dc640a', '#833b08', '#a07868', '#ff9147', '#6b5348'];
+      const STATUS_COLORS = { open: '#0085f2', won: '#138b53', lost: '#dc640a', abandoned: '#a07868' };
+
+      function isoWeekKeyToLocalDates(weekKey) {
+        const match = String(weekKey).match(/^(\d{4})-W(\d{2})$/);
+        if (!match) return null;
+
+        const isoYear = Number(match[1]);
+        const isoWeek = Number(match[2]);
+        const jan4 = new Date(Date.UTC(isoYear, 0, 4));
+        const jan4Day = jan4.getUTCDay() || 7;
+        const mondayWeek1 = new Date(jan4);
+        mondayWeek1.setUTCDate(jan4.getUTCDate() - jan4Day + 1);
+
+        const monday = new Date(mondayWeek1);
+        monday.setUTCDate(mondayWeek1.getUTCDate() + (isoWeek - 1) * 7);
+
+        const thursday = new Date(monday);
+        thursday.setUTCDate(monday.getUTCDate() + 3);
+
+        return {
+          monday: new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate()),
+          thursday: new Date(thursday.getUTCFullYear(), thursday.getUTCMonth(), thursday.getUTCDate()),
+        };
+      }
+
+      function countMondayOfMonth(date) {
+        let mondayCount = 0;
+        for (let day = 1; day <= date.getDate(); day += 1) {
+          if (new Date(date.getFullYear(), date.getMonth(), day).getDay() === 1) {
+            mondayCount += 1;
+          }
+        }
+        return mondayCount;
+      }
+
+      function formatWeekLabel(weekKey) {
+        const dates = isoWeekKeyToLocalDates(weekKey);
+        if (!dates) return String(weekKey).replace('-W', ' W');
+
+        const monday = dates.monday;
+        const month = monday.toLocaleDateString('da-DK', { month: 'short' })
+          .replace('.', '')
+          .replace(/^\w/u, (char) => char.toUpperCase());
+        const weekInMonth = countMondayOfMonth(monday);
+        return `${month} W${weekInMonth}`;
+      }
+      function formatMonthLabel(month) {
+        const [year, monthNumber] = String(month).split('-');
+        return new Date(Number(year), Number(monthNumber) - 1, 1).toLocaleDateString('da-DK', { month: 'short', year: '2-digit' });
+      }
+      function truncateLabel(label, max = 18) {
+        const text = String(label);
+        return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+      }
+      function getThemeColors() {
+        return {
+          text: '#1a1208',
+          muted: '#6b5348',
+          grid: 'rgba(26, 18, 8, 0.1)',
+          border: '#e8e0d8',
+          tooltipBg: '#ffffff',
+          tooltipBorder: '#e8e0d8',
+          tooltipText: '#1a1208',
+        };
+      }
+      function seriesFromRows(rows, labelKey, valueKey, labelFormatter) {
+        return {
+          labels: rows.map((row) => labelFormatter(row[labelKey])),
+          values: rows.map((row) => Number(row[valueKey]) || 0),
+        };
+      }
+
+      const CHART_DEFINITIONS = {
+        weeklyRevenue: { title: 'Won Revenue (Weekly)', defaultType: 'area', format: 'currency', extract(data) { return seriesFromRows(data.weeklyRevenue || [], 'week', 'revenue', formatWeekLabel); } },
+        monthlyRevenue: { title: 'Won Revenue (Monthly)', defaultType: 'area', format: 'currency', extract(data) { return seriesFromRows(data.monthlyRevenue || [], 'month', 'revenue', formatMonthLabel); } },
+        weeklyLeads: { title: 'New Leads (Weekly)', defaultType: 'area', format: 'number', extract(data) { return seriesFromRows(data.weeklyLeads || [], 'week', 'count', formatWeekLabel); } },
+        monthlyLeads: { title: 'New Leads (Monthly)', defaultType: 'area', format: 'number', extract(data) { return seriesFromRows(data.monthlyLeads || [], 'month', 'count', formatMonthLabel); } },
+        conversionTrend: { title: 'Conversion Rate Trend', defaultType: 'line', format: 'percent', extract(data) { return seriesFromRows(data.monthlyConversion || [], 'month', 'rate', formatMonthLabel); } },
+        statusBreakdown: { title: 'Opportunity Status', defaultType: 'doughnut', format: 'number', extract(data) {
+          const breakdown = data.chartStatusBreakdown || data.statusBreakdown || {};
+          const keys = ['open', 'won', 'lost', 'abandoned'];
+          return { labels: ['Open', 'Won', 'Lost', 'Abandoned'], values: keys.map((key) => Number(breakdown[key]) || 0), colors: keys.map((key) => STATUS_COLORS[key]) };
+        } },
+      };
+
+      function formatTooltipValue(value, format) {
+        const amount = Number(value) || 0;
+        if (format === 'currency') return `Dkr ${Math.round(amount).toLocaleString('da-DK')}`;
+        if (format === 'percent') return `${amount.toFixed(1)}%`;
+        return Math.round(amount).toLocaleString('da-DK');
+      }
+
+      function buildChartConfig(chartId, data, chartType) {
+        const definition = CHART_DEFINITIONS[chartId];
+        if (!definition) return null;
+        const extracted = definition.extract(data);
+        if (!extracted.labels.length || extracted.values.every((value) => value === 0)) return null;
+
+        const colors = getThemeColors();
+        const isCircular = ['pie', 'doughnut', 'polarArea'].includes(chartType);
+        const datasetColors = extracted.colors || extracted.labels.map((_, index) => PALETTE[index % PALETTE.length]);
+        const resolvedType = chartType === 'area' ? 'line' : chartType === 'horizontalBar' ? 'bar' : chartType;
+
+        const areaFill = `${PALETTE[0]}55`;
+        const isDoughnut = chartType === 'doughnut';
+
+        const dataset = {
+          label: definition.title,
+          data: extracted.values,
+          backgroundColor: isCircular
+            ? (isDoughnut ? datasetColors : datasetColors.map((color) => `${color}cc`))
+            : chartType === 'area' ? areaFill : `${PALETTE[0]}cc`,
+          borderColor: isCircular ? datasetColors : PALETTE[0],
+          borderWidth: isCircular ? (isDoughnut ? 0 : 1) : 2,
+          fill: chartType === 'area',
+          tension: 0.35,
+          borderRadius: isCircular ? 0 : 6,
+          maxBarThickness: 42,
+          ...(isDoughnut ? { cutout: '62%', borderAlign: 'inner' } : {}),
+        };
+
+        return {
+          type: resolvedType,
+          data: { labels: extracted.labels, datasets: [dataset] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: isDoughnut ? false : isCircular,
+            indexAxis: chartType === 'horizontalBar' ? 'y' : 'x',
+            plugins: {
+              legend: {
+                display: isCircular,
+                position: 'bottom',
+                align: 'center',
+                labels: {
+                  color: colors.text,
+                  boxWidth: 12,
+                  boxHeight: 12,
+                  padding: 14,
+                },
+              },
+              tooltip: {
+                backgroundColor: colors.tooltipBg,
+                borderColor: colors.tooltipBorder,
+                borderWidth: 1,
+                titleColor: colors.tooltipText,
+                bodyColor: colors.muted,
+                padding: 12,
+                callbacks: {
+                  label(context) {
+                    const parsed = context.parsed;
+                    const value = typeof parsed === 'object' ? (parsed.y ?? parsed.x ?? 0) : (parsed ?? 0);
+                    return `${context.label}: ${formatTooltipValue(value, definition.format)}`;
+                  },
+                },
+              },
+            },
+            ...(isDoughnut ? {
+              layout: { padding: 8 },
+              devicePixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1,
+              elements: { arc: { borderAlign: 'inner' } },
+            } : {}),
+            scales: isCircular ? {} : {
+              x: {
+                ticks: { color: colors.muted, maxRotation: 45, minRotation: 0 },
+                grid: { color: colors.grid },
+                border: { color: colors.border },
+              },
+              y: {
+                ticks: {
+                  color: colors.muted,
+                  callback(value) {
+                    if (definition.format === 'currency') {
+                      return value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : value >= 1000 ? `${Math.round(value / 1000)}K` : value;
+                    }
+                    if (definition.format === 'percent') return `${value}%`;
+                    return value;
+                  },
+                },
+                grid: { color: colors.grid },
+                border: { color: colors.border },
+                beginAtZero: true,
+              },
+            },
+          },
+        };
+      }
+
+      global.DashboardCharts = { CHART_DEFINITIONS, buildChartConfig, formatTooltipValue };
+    })(window);
+
+    const STORAGE_KEY = 'suntech-dashboard-display';
+    const PIPELINE_KEY = 'suntech-dashboard-pipelines';
+
+    const DISPLAY_OPTIONS = {
+      kpis: {
+        totalRevenue: 'Total Revenue',
+        clientsWon: 'Clients Won',
+        totalLeads: 'Total Leads',
+        totalLeadsValue: 'Total Leads Value',
+        averageLeadValue: 'Average Lead Value',
+        conversionRate: 'Conversion Rate',
+        totalBundlinje: 'Total Bundlinje',
+        openLeads: 'Open Leads',
+        openPipelineValue: 'Open Pipeline Value',
+        averageWonDealSize: 'Avg Won Deal Size',
+      },
+      sections: {
+        statusBreakdown: 'Opportunity Status (Cards)',
+        sourceReport: 'Lead Source Report',
+        assigneeReport: 'Leads Closed by Assignee',
+        pipelineBreakdown: 'Pipeline Breakdown',
+      },
+      charts: {
+        weeklyRevenue: 'Won Revenue (Weekly)',
+        monthlyRevenue: 'Won Revenue (Monthly)',
+        weeklyLeads: 'New Leads (Weekly)',
+        monthlyLeads: 'New Leads (Monthly)',
+        conversionTrend: 'Conversion Rate Trend',
+        statusBreakdown: 'Opportunity Status',
+      },
+      statusItems: {
+        open: 'Open',
+        won: 'Won',
+        lost: 'Lost',
+        abandoned: 'Abandoned',
+      },
+      columns: {
+        sourceReport: {
+          totalLeads: 'Total leads',
+          totalValue: 'Total values',
+          open: 'Open',
+          won: 'Won',
+          lost: 'Lost',
+          abandoned: 'Abandoned',
+          winPct: 'Win %',
+        },
+        assigneeReport: {
+          won: 'Won',
+          totalLeads: 'Total leads',
+          wonValue: 'Won revenue',
+          totalValue: 'Total value',
+        },
+        pipelineBreakdown: {
+          count: 'Leads',
+          won: 'Won',
+          monetary: 'Value',
+          profit: 'Bundlinje',
+          wonValue: 'Won revenue',
+        },
+      },
+    };
+
+    const state = {
+      pipelineIds: loadPipelineSelection(),
+      status: 'all',
+      source: 'all',
+      assignedTo: 'all',
+      dateField: 'createdAt',
+      dateFrom: '',
+      dateTo: '',
+      adSpend: '',
+      preset: 'all',
+    };
+
+    let cachedData = null;
+    let availablePipelines = [];
+    let display = loadDisplayPrefs();
+    let pipelineDefaultsApplied = false;
+    let chartInstances = {};
+    let chartFieldsCache = null;
+    let chartFieldsCacheKey = null;
+
+    const CHART_FIELD_KEYS = [
+      'weeklyRevenue',
+      'monthlyRevenue',
+      'weeklyLeads',
+      'monthlyLeads',
+      'monthlyLeadsValue',
+      'monthlyConversion',
+      'chartStatusBreakdown',
+    ];
+
+    function getChartCacheKey() {
+      return [
+        [...state.pipelineIds].sort().join(','),
+        state.status,
+        state.source,
+        state.assignedTo,
+      ].join('|');
+    }
+
+    function cacheChartFields(data) {
+      chartFieldsCache = {};
+      CHART_FIELD_KEYS.forEach((key) => {
+        if (data[key] !== undefined) chartFieldsCache[key] = data[key];
+      });
+      chartFieldsCacheKey = getChartCacheKey();
+    }
+
+    function applyChartFieldsCache(data) {
+      const hasDateFilter = Boolean(state.dateFrom || state.dateTo);
+      if (!hasDateFilter) {
+        cacheChartFields(data);
+        return data;
+      }
+      if (chartFieldsCache && chartFieldsCacheKey === getChartCacheKey()) {
+        const merged = { ...data };
+        CHART_FIELD_KEYS.forEach((key) => {
+          if (chartFieldsCache[key] !== undefined) merged[key] = chartFieldsCache[key];
+        });
+        return merged;
+      }
+      cacheChartFields(data);
+      return data;
+    }
+
+    function getDefaultChartPrefs() {
+      const prefs = {};
+      const chartKeys = window.DashboardCharts
+        ? Object.keys(DashboardCharts.CHART_DEFINITIONS)
+        : Object.keys(DISPLAY_OPTIONS.charts);
+      chartKeys.forEach((key) => { prefs[key] = true; });
+      return prefs;
+    }
+
+    function destroyCharts() {
+      Object.values(chartInstances).forEach((chart) => chart.destroy());
+      chartInstances = {};
+    }
+
+    function mountCharts(data) {
+      if (typeof Chart === 'undefined' || !window.DashboardCharts) return;
+
+      destroyCharts();
+
+      Object.keys(DashboardCharts.CHART_DEFINITIONS).forEach((chartId) => {
+        if (!isVisible('charts', chartId)) return;
+
+        const canvas = document.getElementById(`chart-${chartId}`);
+        if (!canvas) return;
+
+        const wrapper = canvas.closest('.chart-card');
+        const emptyState = wrapper?.querySelector('.chart-empty');
+        const definition = DashboardCharts.CHART_DEFINITIONS[chartId];
+        const chartType = definition?.defaultType || 'bar';
+        const config = DashboardCharts.buildChartConfig(chartId, data, chartType);
+
+        if (!config) {
+          canvas.style.display = 'none';
+          if (emptyState) emptyState.style.display = 'block';
+          return;
+        }
+
+        canvas.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'none';
+        chartInstances[chartId] = new Chart(canvas, config);
+      });
+    }
+
+    function loadPipelineSelection() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PIPELINE_KEY) || '[]');
+        return Array.isArray(saved) ? saved : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function getAllPipelineIds(pipelines) {
+      return pipelines.map((pipeline) => pipeline.id);
+    }
+
+    const CENHUB_DEFAULT_PIPELINES = ['Salg Pipeline', 'Nye leads Pipeline'];
+
+    function getDefaultPipelineIds(pipelines) {
+      const matched = pipelines
+        .filter((pipeline) => CENHUB_DEFAULT_PIPELINES.includes(pipeline.name))
+        .map((pipeline) => pipeline.id);
+      return matched.length ? matched : getAllPipelineIds(pipelines);
+    }
+
+    function ensurePipelineDefaults(pipelines) {
+      if (pipelineDefaultsApplied || !pipelines.length) return;
+
+      const allIds = getAllPipelineIds(pipelines);
+      const saved = loadPipelineSelection();
+
+      if (!saved.length) {
+        state.pipelineIds = getDefaultPipelineIds(pipelines);
+      } else {
+        state.pipelineIds = saved.filter((id) => allIds.includes(id));
+        if (!state.pipelineIds.length) state.pipelineIds = [...allIds];
+      }
+
+      pipelineDefaultsApplied = true;
+      savePipelineSelection();
+    }
+
+    function savePipelineSelection() {
+      localStorage.setItem(PIPELINE_KEY, JSON.stringify(state.pipelineIds));
+    }
+
+    function isPipelineSelected(id) {
+      return state.pipelineIds.includes(id);
+    }
+
+    function isAllPipelinesSelected(pipelines) {
+      const allIds = getAllPipelineIds(pipelines);
+      return allIds.length > 0 && allIds.every((id) => state.pipelineIds.includes(id));
+    }
+
+    function selectAllPipelines(pipelines) {
+      state.pipelineIds = getAllPipelineIds(pipelines);
+      savePipelineSelection();
+    }
+
+    function clearPipelineSelection() {
+      state.pipelineIds = [];
+      savePipelineSelection();
+    }
+
+    function setPipelineSelection(ids) {
+      state.pipelineIds = [...new Set(ids)];
+      savePipelineSelection();
+    }
+
+    function togglePipelineSelection(pipelineId) {
+      if (isPipelineSelected(pipelineId)) {
+        state.pipelineIds = state.pipelineIds.filter((id) => id !== pipelineId);
+      } else {
+        state.pipelineIds = [...state.pipelineIds, pipelineId];
+      }
+      savePipelineSelection();
+    }
+
+    function formatSelectedPipelines(pipelines) {
+      if (!state.pipelineIds.length) return 'None selected';
+      if (isAllPipelinesSelected(pipelines)) return 'All pipelines';
+
+      return state.pipelineIds
+        .map((id) => pipelines.find((pipeline) => pipeline.id === id)?.name || id)
+        .join(', ');
+    }
+
+    function renderPipelineChips(pipelines) {
+      if (!state.pipelineIds.length) {
+        return '<div class="pipeline-warning">Select at least one pipeline, then click Apply data filters.</div>';
+      }
+
+      const selectedNames = state.pipelineIds
+        .map((id) => pipelines.find((pipeline) => pipeline.id === id))
+        .filter(Boolean);
+
+      return `
+        <div class="pipeline-chips">
+          ${selectedNames.map((pipeline) => `
+            <span class="pipeline-chip">${pipeline.name}</span>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function defaultDisplayPrefs() {
+      const prefs = {
+        kpis: {},
+        sections: {},
+        charts: getDefaultChartPrefs(),
+        statusItems: {},
+        columns: {},
+      };
+      Object.keys(DISPLAY_OPTIONS.kpis).forEach((key) => { prefs.kpis[key] = true; });
+      Object.keys(DISPLAY_OPTIONS.sections).forEach((key) => { prefs.sections[key] = true; });
+      Object.keys(DISPLAY_OPTIONS.charts).forEach((key) => { prefs.charts[key] = true; });
+      Object.keys(DISPLAY_OPTIONS.statusItems).forEach((key) => { prefs.statusItems[key] = true; });
+      Object.entries(DISPLAY_OPTIONS.columns).forEach(([table, columns]) => {
+        prefs.columns[table] = {};
+        Object.keys(columns).forEach((key) => { prefs.columns[table][key] = true; });
+      });
+      return prefs;
+    }
+
+    function loadDisplayPrefs() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (!saved) return defaultDisplayPrefs();
+        const defaults = defaultDisplayPrefs();
+        return {
+          kpis: { ...defaults.kpis, ...saved.kpis },
+          sections: { ...defaults.sections, ...saved.sections },
+          charts: { ...defaults.charts, ...saved.charts },
+          statusItems: { ...defaults.statusItems, ...saved.statusItems },
+          columns: {
+            sourceReport: { ...defaults.columns.sourceReport, ...(saved.columns?.sourceReport || {}) },
+            assigneeReport: { ...defaults.columns.assigneeReport, ...(saved.columns?.assigneeReport || {}) },
+            pipelineBreakdown: { ...defaults.columns.pipelineBreakdown, ...(saved.columns?.pipelineBreakdown || {}) },
+          },
+        };
+      } catch {
+        return defaultDisplayPrefs();
+      }
+    }
+
+    function ensureChartsVisible() {
+      const chartKeys = Object.keys(DISPLAY_OPTIONS.charts);
+      const anyVisible = chartKeys.some((key) => display.charts[key] !== false);
+      if (!anyVisible) {
+        chartKeys.forEach((key) => { display.charts[key] = true; });
+        saveDisplayPrefs();
+      }
+    }
+
+    function saveDisplayPrefs() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(display));
+    }
+
+    function isVisible(group, key, table) {
+      if (group === 'columns') return display.columns[table]?.[key] !== false;
+      return display[group]?.[key] !== false;
+    }
+
+    function toggleDisplay(group, key, table) {
+      if (group === 'columns') {
+        display.columns[table][key] = !display.columns[table][key];
+      } else {
+        display[group][key] = !display[group][key];
+      }
+      saveDisplayPrefs();
+      if (cachedData) updateDashboardContent(cachedData);
+    }
+
+    function setAllDisplay(group, value, table) {
+      if (group === 'columns') {
+        Object.keys(DISPLAY_OPTIONS.columns[table]).forEach((key) => {
+          display.columns[table][key] = value;
+        });
+      } else {
+        Object.keys(DISPLAY_OPTIONS[group]).forEach((key) => {
+          display[group][key] = value;
+        });
+      }
+      saveDisplayPrefs();
+      if (cachedData) updateDashboardContent(cachedData);
+    }
+
+    const fmt = (value) => new Intl.NumberFormat('da-DK', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Math.round(Number(value) || 0));
+
+    const fmtCompact = (value) => {
+      const amount = Number(value) || 0;
+      if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(2)}M`;
+      if (amount >= 1_000) return `${(amount / 1_000).toFixed(2)}K`;
+      return fmt(amount);
+    };
+
+    const fmtPct = (value) => `${(Number(value) || 0).toFixed(2)}%`;
+
+    function formatActiveDateFilter(filters) {
+      if (!filters.dateFrom && !filters.dateTo) return 'Till date';
+      return `${filters.dateFrom || 'start'} to ${filters.dateTo || 'now'}`;
+    }
+
+    function buildQuery(pipelines) {
+      const params = new URLSearchParams();
+      const allIds = getAllPipelineIds(pipelines || []);
+      const selected = state.pipelineIds.filter((id) => allIds.includes(id));
+
+      if (!selected.length) {
+        throw new Error('Select at least one pipeline.');
+      }
+
+      params.set('pipelineIds', selected.join(','));
+
+      ['status', 'source', 'assignedTo', 'dateField', 'dateFrom', 'dateTo', 'adSpend'].forEach((key) => {
+        if (state[key] && state[key] !== 'all') params.set(key, state[key]);
+      });
+      return params.toString();
+    }
+
+    function formatDateInput(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function setPreset(preset) {
+      state.preset = preset;
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+
+      if (preset === 'all') {
+        state.dateFrom = '';
+        state.dateTo = '';
+      } else if (preset === 'month') {
+        state.dateFrom = formatDateInput(new Date(year, month, 1));
+        state.dateTo = formatDateInput(new Date(year, month + 1, 0));
+        state.dateField = 'updatedAt';
+      } else if (preset === 'year') {
+        state.dateFrom = `${year}-01-01`;
+        state.dateTo = `${year}-12-31`;
+        state.dateField = 'updatedAt';
+      }
+    }
+
+    function updateFilterUi() {
+      const dateFrom = document.getElementById('dateFrom');
+      const dateTo = document.getElementById('dateTo');
+      const adSpend = document.getElementById('adSpend');
+
+      if (dateFrom) dateFrom.value = state.dateFrom || '';
+      if (dateTo) dateTo.value = state.dateTo || '';
+      if (adSpend) adSpend.value = state.adSpend || '';
+
+      ['status', 'source', 'assignedTo', 'dateField'].forEach((key) => {
+        const el = document.getElementById(key);
+        if (el) el.value = state[key];
+      });
+
+      document.querySelectorAll('[data-preset]').forEach((button) => {
+        button.classList.toggle('active', button.dataset.preset === state.preset);
+      });
+    }
+
+    function onManualDateChange() {
+      state.preset = 'custom';
+      updateFilterUi();
+    }
+
+    function onFilterChange(key, value) {
+      state[key] = value;
+    }
+
+    async function fetchDashboardData(pipelines) {
+      const query = buildQuery(pipelines);
+      const response = await fetch(`/api/dashboard${query ? `?${query}` : ''}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `Dashboard API error ${response.status}`);
+      return applyChartFieldsCache(data);
+    }
+
+    async function bootstrapDashboardData() {
+      const response = await fetch('/api/dashboard');
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `Dashboard API error ${response.status}`);
+      return applyChartFieldsCache(data);
+    }
+
+    function refreshPipelinePanel() {
+      const panel = document.getElementById('pipeline-panel');
+      if (panel && availablePipelines.length) {
+        panel.innerHTML = renderPipelineSelector(availablePipelines);
+      }
+    }
+
+    function selectAllPipelinesAction() {
+      selectAllPipelines(availablePipelines);
+      refreshPipelinePanel();
+    }
+
+    function clearPipelineSelectionAction() {
+      clearPipelineSelection();
+      refreshPipelinePanel();
+    }
+
+    function togglePipelineSelectionAction(pipelineId) {
+      togglePipelineSelection(pipelineId);
+      refreshPipelinePanel();
+    }
+
+    function selectCenhubPipelinesAction() {
+      setPipelineSelection(getDefaultPipelineIds(availablePipelines));
+      refreshPipelinePanel();
+    }
+
+    function renderPipelineSelector(pipelines) {
+      if (!pipelines.length) {
+        return '<div class="pipeline-note">No pipelines found.</div>';
+      }
+
+      return `
+        <div class="pipeline-actions">
+          <button type="button" class="widget-btn ${isAllPipelinesSelected(pipelines) ? 'active' : ''}" onclick="selectAllPipelinesAction()">All pipelines</button>
+          <button type="button" class="widget-btn" onclick="selectCenhubPipelinesAction()">Funnel only (Salg + Nye leads)</button>
+          <button type="button" class="widget-btn" onclick="clearPipelineSelectionAction()">Clear all</button>
+        </div>
+        <div class="pipeline-list">
+          ${pipelines.map((pipeline) => `
+            <label class="pipeline-item">
+              <input type="checkbox"
+                ${isPipelineSelected(pipeline.id) ? 'checked' : ''}
+                onchange="togglePipelineSelectionAction('${pipeline.id}')" />
+              <span>${pipeline.name}</span>
+            </label>
+          `).join('')}
+        </div>
+        ${renderPipelineChips(pipelines)}
+      `;
+    }
+
+    function renderSelect(id, label, options, value) {
+      return `
+        <div class="filter-group">
+          <label for="${id}">${label}</label>
+          <select id="${id}" onchange="onFilterChange('${id}', this.value)">
+            ${options.map((option) => `
+              <option value="${option.id}" ${option.id === value ? 'selected' : ''}>${option.name}</option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    function renderCheckboxGroup(title, group, items, table) {
+      const entries = Object.entries(items);
+      return `
+        <div class="display-group">
+          <h3>${title}</h3>
+          <div class="widget-actions" style="margin-bottom:10px">
+            <button class="widget-btn" onclick="setAllDisplay('${group}', true${table ? `, '${table}'` : ''})">Select all</button>
+            <button class="widget-btn" onclick="setAllDisplay('${group}', false${table ? `, '${table}'` : ''})">Clear all</button>
+          </div>
+          <div class="checkbox-list">
+            ${entries.map(([key, label]) => `
+              <label class="checkbox-item">
+                <input type="checkbox"
+                  ${isVisible(group, key, table) ? 'checked' : ''}
+                  onchange="toggleDisplay('${group}', '${key}'${table ? `, '${table}'` : ''})" />
+                <span>${label}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderChartCard(chartId) {
+      const definition = window.DashboardCharts?.CHART_DEFINITIONS?.[chartId];
+      if (!definition) return '';
+
+      const isCircular = ['pie', 'doughnut', 'polarArea'].includes(definition.defaultType);
+
+      return `
+        <div class="card chart-card">
+          <div class="section-title">${definition.title}</div>
+          <div class="chart-empty note" style="display:none">No data for selected filters.</div>
+          <div class="chart-canvas-wrap${isCircular ? ' chart-canvas-wrap--circular' : ''}">
+            <canvas id="chart-${chartId}"></canvas>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderChartsSection() {
+      if (typeof Chart === 'undefined') {
+        return `
+          <div class="panel">
+            <div class="error-state" style="padding:24px">
+              Charts could not load (Chart.js blocked). Check your internet connection or ad blocker.
+            </div>
+          </div>
+        `;
+      }
+
+      const visibleCharts = Object.keys(DISPLAY_OPTIONS.charts).filter((chartId) => isVisible('charts', chartId));
+
+      if (!visibleCharts.length) {
+        return `
+          <div class="panel">
+            <div class="empty-section">
+              No charts enabled. Open <strong>Display options</strong> and tick items under <strong>Charts</strong>.
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="panel" id="charts-section">
+          <div class="charts-panel-title">
+            <h2>Charts</h2>
+          </div>
+          <div class="charts-grid">
+            ${visibleCharts.map((chartId) => renderChartCard(chartId)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTable(tableKey, labelColumn, headers, rows, renderCell) {
+      const visibleHeaders = headers.filter((header) => isVisible('columns', header.key, tableKey));
+      if (!visibleHeaders.length) {
+        return '<div class="empty-section">No columns selected for this table.</div>';
+      }
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>${labelColumn}</th>
+              ${visibleHeaders.map((header) => `<th class="${header.align || ''}">${header.label}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.length ? rows.map((row) => `
+              <tr>
+                <td>${renderCell(row, 'label')}</td>
+                ${visibleHeaders.map((header) => `<td class="${header.align || ''}">${renderCell(row, header.key)}</td>`).join('')}
+              </tr>
+            `).join('') : `<tr><td colspan="${visibleHeaders.length + 1}">Ingen data for valgte filtre.</td></tr>`}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderPresetButtons() {
+      return `
+        <button type="button" class="preset-btn ${state.preset === 'all' ? 'active' : ''}" data-preset="all" onclick="applyPreset('all')">Till date</button>
+        <button type="button" class="preset-btn ${state.preset === 'month' ? 'active' : ''}" data-preset="month" onclick="applyPreset('month')">This month</button>
+        <button type="button" class="preset-btn ${state.preset === 'year' ? 'active' : ''}" data-preset="year" onclick="applyPreset('year')">This year</button>
+      `;
+    }
+
+    function renderAdminFiltersPanel(filterOptions) {
+      return `
+        <div class="panel">
+          <div class="panel-title">Data filters</div>
+          <div class="filters">
+            <div class="filters-row">
+              <div class="filter-group full-width">
+                <label>Pipelines</label>
+                <div class="pipeline-box" id="pipeline-panel">
+                  ${renderPipelineSelector(filterOptions.pipelines)}
+                </div>
+              </div>
+            </div>
+
+            <div class="filters-row">
+              ${renderSelect('status', 'Status', filterOptions.statuses, state.status)}
+              ${renderSelect('source', 'Source', filterOptions.sources, state.source)}
+              ${renderSelect('assignedTo', 'Assignee', filterOptions.assignees, state.assignedTo)}
+              ${renderSelect('dateField', 'Date field', filterOptions.dateFields, state.dateField)}
+            </div>
+
+            <div class="filters-row compact">
+              <div class="filter-group">
+                <label for="dateFrom">From</label>
+                <input id="dateFrom" type="date" value="${state.dateFrom || ''}" onchange="state.dateFrom=this.value; onManualDateChange()" />
+              </div>
+              <div class="filter-group">
+                <label for="dateTo">To</label>
+                <input id="dateTo" type="date" value="${state.dateTo || ''}" onchange="state.dateTo=this.value; onManualDateChange()" />
+              </div>
+              <div class="filter-group">
+                <label for="adSpend">Ad spend (manual)</label>
+                <input id="adSpend" type="number" min="0" step="1" value="${state.adSpend || ''}" placeholder="45190" onchange="state.adSpend=this.value" />
+              </div>
+            </div>
+
+            <div class="filters-row actions-row">
+              <div class="preset-row">
+                ${renderPresetButtons()}
+              </div>
+              <button type="button" class="refresh-btn primary" id="apply-filters-btn" onclick="applyDataFilters()">Apply data filters</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAdminDisplayOptions(displayOpen) {
+      return `
+        <details class="panel" ${displayOpen ? 'open' : ''}>
+          <summary class="panel-title">Display options</summary>
+          <div class="display-grid">
+            ${renderCheckboxGroup('KPI cards', 'kpis', DISPLAY_OPTIONS.kpis)}
+            ${renderCheckboxGroup('Charts', 'charts', DISPLAY_OPTIONS.charts)}
+            ${renderCheckboxGroup('Sections', 'sections', DISPLAY_OPTIONS.sections)}
+            ${renderCheckboxGroup('Status items', 'statusItems', DISPLAY_OPTIONS.statusItems)}
+            ${renderCheckboxGroup('Source report columns', 'columns', DISPLAY_OPTIONS.columns.sourceReport, 'sourceReport')}
+            ${renderCheckboxGroup('Assignee report columns', 'columns', DISPLAY_OPTIONS.columns.assigneeReport, 'assigneeReport')}
+            ${renderCheckboxGroup('Pipeline report columns', 'columns', DISPLAY_OPTIONS.columns.pipelineBreakdown, 'pipelineBreakdown')}
+          </div>
+        </details>
+      `;
+    }
+
+    function renderKpiCards(kpis) {
+      const cards = [];
+
+      if (isVisible('kpis', 'totalRevenue')) {
+        cards.push(`
+          <div class="card primary">
+            <div class="card-label">Total Revenue</div>
+            <div class="card-value">Dkr ${fmtCompact(kpis.totalRevenue)}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? `Won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)` : `Sum of won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`}</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'clientsWon')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Clients Won</div>
+            <div class="card-value">${fmt(kpis.clientsWon)}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? `Unique clients with won deals in period${kpis.wonOpportunityCount ? ` (${kpis.wonOpportunityCount} won opportunities)` : ''}` : kpis.usingCenhubDefaults ? 'Won clients in Eftersalg & Betalinger pipeline' : `Unique clients with won deals${kpis.wonOpportunityCount ? ` (${kpis.wonOpportunityCount} won opportunities)` : ''}`}</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'totalLeads')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Total Leads</div>
+            <div class="card-value">${fmt(kpis.totalLeads)}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? `New opportunities created in selected period (${fmt(kpis.opportunityCount)} in filter)` : kpis.usingCenhubDefaults ? `Total contacts (${fmt(kpis.opportunityCount)} opportunities)` : 'Opportunities in filter'}</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'totalLeadsValue')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Total Leads Value</div>
+            <div class="card-value">Dkr ${fmtCompact(kpis.totalLeadsValue)}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? 'Sum of opportunity values in selected period' : kpis.usingCenhubDefaults ? 'Sum of opportunity values for selected pipelines' : 'Sum of all opportunity values'}</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'averageLeadValue')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Average Lead Value</div>
+            <div class="card-value">Dkr ${fmtCompact(kpis.averageLeadValue)}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? 'Average value per lead in selected period' : kpis.usingCenhubDefaults ? 'All pipeline value ÷ opportunity count' : 'Per opportunity in filter'}</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'conversionRate')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Conversion Rate</div>
+            <div class="card-value">${fmtPct(kpis.conversionRate)}</div>
+            <div class="card-sub">Won opportunities / total leads</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'openLeads')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Open Leads</div>
+            <div class="card-value">${fmt(kpis.openLeads)}</div>
+            <div class="card-sub">Opportunities still in pipeline</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'openPipelineValue')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Open Pipeline Value</div>
+            <div class="card-value">Dkr ${fmtCompact(kpis.openPipelineValue)}</div>
+            <div class="card-sub">Monetary value of open deals</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'averageWonDealSize')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Avg Won Deal Size</div>
+            <div class="card-value">Dkr ${fmtCompact(kpis.averageWonDealSize)}</div>
+            <div class="card-sub">Won revenue / won opportunities</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'totalBundlinje')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Total Bundlinje</div>
+            <div class="card-value">Dkr ${fmtCompact(kpis.totalBundlinje)}</div>
+            <div class="card-sub">Profit custom field</div>
+          </div>
+        `);
+      }
+
+      if (!cards.length) {
+        return IS_ADMIN
+          ? '<div class="empty-section">No KPI cards selected. Use the display options below.</div>'
+          : '<div class="empty-section">No KPI data for selected period.</div>';
+      }
+
+      return `<div class="kpi-grid">${cards.join('')}</div>`;
+    }
+
+    function renderStatusBreakdown(statusBreakdown) {
+      const items = Object.entries(DISPLAY_OPTIONS.statusItems)
+        .filter(([key]) => isVisible('statusItems', key))
+        .map(([key, label]) => `
+          <div class="status-item">
+            <div class="name">${label}</div>
+            <div class="value">${fmt(statusBreakdown[key])}</div>
+          </div>
+        `);
+
+      if (!items.length) {
+        return '<div class="empty-section">No status items selected.</div>';
+      }
+
+      return `<div class="status-grid">${items.join('')}</div>`;
+    }
+
+    function renderDashboardContent(data) {
+      const { kpis, statusBreakdown, sourceReport, assigneeReport, pipelines, filters } = data;
+      const showStatus = isVisible('sections', 'statusBreakdown');
+
+      return `
+        ${renderKpiCards(kpis)}
+
+        ${renderChartsSection()}
+
+        ${showStatus ? `
+          <div class="card">
+            <div class="section-title">Opportunity Status (Cards)</div>
+            ${renderStatusBreakdown(statusBreakdown)}
+          </div>
+        ` : ''}
+
+        ${isVisible('sections', 'sourceReport') ? `
+          <div class="card">
+            <div class="section-title">Lead Source Report</div>
+            ${renderTable(
+              'sourceReport',
+              'Source',
+              [
+                { key: 'totalLeads', label: 'Total leads', align: 'num' },
+                { key: 'totalValue', label: 'Total values', align: 'num' },
+                { key: 'open', label: 'Open', align: 'num' },
+                { key: 'won', label: 'Won', align: 'num' },
+                { key: 'lost', label: 'Lost', align: 'num' },
+                { key: 'abandoned', label: 'Abandoned', align: 'num' },
+                { key: 'winPct', label: 'Win %', align: 'num' },
+              ],
+              sourceReport,
+              (row, key) => {
+                if (key === 'label') return row.source;
+                if (key === 'totalValue') return `Dkr ${fmt(row.totalValue)}`;
+                if (key === 'winPct') return fmtPct(row.winPct);
+                return fmt(row[key]);
+              }
+            )}
+          </div>
+        ` : ''}
+
+        ${isVisible('sections', 'assigneeReport') || isVisible('sections', 'pipelineBreakdown') ? `
+          <div class="section-grid">
+            ${isVisible('sections', 'assigneeReport') ? `
+              <div class="card">
+                <div class="section-title">Leads Closed by Assignee</div>
+                ${renderTable(
+                  'assigneeReport',
+                  'Assignee',
+                  [
+                    { key: 'won', label: 'Won', align: 'num' },
+                    { key: 'totalLeads', label: 'Total leads', align: 'num' },
+                    { key: 'wonValue', label: 'Won revenue', align: 'num' },
+                    { key: 'totalValue', label: 'Total value', align: 'num' },
+                  ],
+                  assigneeReport,
+                  (row, key) => {
+                    if (key === 'label') return row.assigneeName;
+                    if (key === 'wonValue' || key === 'totalValue') return `Dkr ${fmt(row[key])}`;
+                    return fmt(row[key]);
+                  }
+                )}
+              </div>
+            ` : ''}
+            ${isVisible('sections', 'pipelineBreakdown') ? `
+              <div class="card">
+                <div class="section-title">Pipeline Breakdown</div>
+                ${renderTable(
+                  'pipelineBreakdown',
+                  'Pipeline',
+                  [
+                    { key: 'count', label: 'Leads', align: 'num' },
+                    { key: 'won', label: 'Won', align: 'num' },
+                    { key: 'monetary', label: 'Value', align: 'num' },
+                    { key: 'profit', label: 'Bundlinje', align: 'num' },
+                    { key: 'wonValue', label: 'Won revenue', align: 'num' },
+                  ],
+                  pipelines,
+                  (row, key) => {
+                    if (key === 'label') return row.name;
+                    if (key === 'monetary' || key === 'profit' || key === 'wonValue') return `Dkr ${fmt(row[key])}`;
+                    return fmt(row[key]);
+                  }
+                )}
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        ${IS_ADMIN ? `
+        <div class="note">
+          ${kpis.usingCenhubDefaults ? 'Till-date KPIs match Cenhub: Total Leads uses contact count, Clients Won uses Eftersalg wins, Total Leads Value excludes the post-sale pipeline. ' : ''}
+          Active filters: pipelines=${formatSelectedPipelines(data.filterOptions.pipelines)}, status=${filters.status}, source=${filters.source}, assignee=${filters.assignedTo}, dates=${formatActiveDateFilter(filters)}.
+        </div>
+        ` : ''}
+        <div class="brand-footer">
+          Dashboard by <a href="https://censio.dk/" target="_blank" rel="noopener noreferrer">Censio</a>
+          · Holstebro
+        </div>
+      `;
+    }
+
+    function updateDashboardContent(data) {
+      const content = document.getElementById('dashboard-content');
+      if (content) {
+        content.innerHTML = renderDashboardContent(data);
+        mountCharts(data);
+      }
+    }
+
+    function renderDashboard(data) {
+      const dashboard = document.getElementById('dashboard');
+      const { filterOptions } = data;
+      const displayOpen = document.querySelector('details.panel')?.open;
+
+      dashboard.innerHTML = `
+        <header class="brand-topbar">
+          <div class="brand-topbar-left">
+            <img
+              class="brand-logo"
+              src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png"
+              alt="Censio"
+              width="130"
+              height="32"
+            />
+          </div>
+          ${IS_ADMIN ? '<a class="admin-topbar-link" href="/">Client dashboard</a>' : ''}
+        </header>
+
+        <div class="page-hero">
+          <div class="header">
+            <div>
+              <h1>SunTech Nordic</h1>
+              <p>Performance dashboard · Pipeline & omsætning</p>
+            </div>
+            ${IS_ADMIN ? '' : `
+            <div class="header-actions header-actions--client">
+              <div class="preset-row header-presets">${renderPresetButtons()}</div>
+            </div>
+            `}
+          </div>
+        </div>
+
+        ${IS_ADMIN ? renderAdminFiltersPanel(filterOptions) : ''}
+        ${IS_ADMIN ? renderAdminDisplayOptions(displayOpen) : ''}
+
+        <div class="content-area" id="dashboard-content">
+          ${renderDashboardContent(data)}
+        </div>
+      `;
+    }
+
+    let isFetching = false;
+    let pendingRefetch = false;
+    let fetchGeneration = 0;
+
+    async function loadDashboard(refetch = true) {
+      const dashboard = document.getElementById('dashboard');
+      if (isFetching) {
+        if (refetch) pendingRefetch = true;
+        return;
+      }
+
+      const hasLayout = Boolean(document.getElementById('dashboard-content'));
+      const applyBtn = document.getElementById('apply-filters-btn');
+
+      if (refetch || !cachedData) {
+        const generation = ++fetchGeneration;
+        isFetching = true;
+        if (!hasLayout) {
+          dashboard.innerHTML = `
+            <div class="loading-state">
+              <header class="brand-topbar" style="margin:0 -24px 24px">
+                <div class="brand-topbar-left">
+                  <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
+                </div>
+              </header>
+              <div class="spinner"></div>
+              Henter dashboard data...
+            </div>`;
+        } else if (applyBtn) {
+          applyBtn.disabled = true;
+          applyBtn.textContent = 'Loading...';
+        }
+        document.querySelectorAll('[data-preset]').forEach((button) => {
+          button.disabled = true;
+        });
+
+        try {
+          if (!availablePipelines.length) {
+            const bootstrap = await bootstrapDashboardData();
+            availablePipelines = bootstrap.filterOptions.pipelines || [];
+            ensurePipelineDefaults(availablePipelines);
+          }
+
+          const data = await fetchDashboardData(availablePipelines);
+          if (generation !== fetchGeneration) return;
+          cachedData = data;
+          availablePipelines = cachedData.filterOptions.pipelines || availablePipelines;
+        } catch (error) {
+          if (generation !== fetchGeneration) return;
+          if (!hasLayout) {
+            dashboard.innerHTML = `
+              <div class="error-state">
+                <div>Fejl ved hentning af data</div>
+                <div style="margin-top:8px;font-size:12px;color:#666">${error.message}</div>
+                <button class="refresh-btn primary" onclick="loadDashboard(true)">Prov igen</button>
+              </div>
+            `;
+          } else if (applyBtn) {
+            applyBtn.textContent = 'Apply failed - try again';
+          }
+          isFetching = false;
+          return;
+        } finally {
+          isFetching = false;
+          if (applyBtn) {
+            applyBtn.disabled = false;
+            applyBtn.textContent = 'Apply data filters';
+          }
+          document.querySelectorAll('[data-preset]').forEach((button) => {
+            button.disabled = false;
+          });
+          if (pendingRefetch) {
+            pendingRefetch = false;
+            loadDashboard(true);
+          }
+        }
+
+        if (generation !== fetchGeneration) return;
+      }
+
+      try {
+        if (hasLayout) {
+          updateDashboardContent(cachedData);
+          updateFilterUi();
+        } else {
+          renderDashboard(cachedData);
+          mountCharts(cachedData);
+        }
+      } catch (error) {
+        dashboard.innerHTML = `
+          <div class="error-state">
+            <div>Fejl ved visning af dashboard</div>
+            <div style="margin-top:8px;font-size:12px;color:#666">${error.message}</div>
+            <button class="refresh-btn primary" onclick="loadDashboard(true)">Prov igen</button>
+          </div>
+        `;
+      }
+    }
+
+    function syncFiltersFromDom() {
+      ['status', 'source', 'assignedTo', 'dateField'].forEach((key) => {
+        const el = document.getElementById(key);
+        if (el) state[key] = el.value;
+      });
+
+      const dateFrom = document.getElementById('dateFrom');
+      const dateTo = document.getElementById('dateTo');
+      const adSpend = document.getElementById('adSpend');
+
+      if (dateFrom) state.dateFrom = dateFrom.value;
+      if (dateTo) state.dateTo = dateTo.value;
+      if (adSpend) state.adSpend = adSpend.value;
+    }
+
+    function applyPreset(preset) {
+      setPreset(preset);
+      updateFilterUi();
+      applyDataFilters(false);
+    }
+
+    function applyDataFilters(syncFromDom = true) {
+      if (syncFromDom) syncFiltersFromDom();
+
+      if (!state.pipelineIds.length) {
+        if (IS_ADMIN) {
+          refreshPipelinePanel();
+          return;
+        }
+        if (availablePipelines.length) ensurePipelineDefaults(availablePipelines);
+        if (!state.pipelineIds.length) return;
+      }
+
+      loadDashboard(true);
+    }
+
+    ensureChartsVisible();
+    loadDashboard(true);
+    setInterval(() => {
+      if (!isFetching) loadDashboard(true);
+    }, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
