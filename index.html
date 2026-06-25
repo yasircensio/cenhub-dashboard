@@ -1821,7 +1821,7 @@
           <div class="card accent">
             <div class="card-label">POAS</div>
             <div class="card-value">${fmtRoas(kpis.poas)}</div>
-            <div class="card-sub">Bundlinje from merged deals (Eftersalg duplicate included)</div>
+            <div class="card-sub">Bundlinje ÷ ad spend</div>
           </div>
         `);
       }
@@ -1848,7 +1848,7 @@
           <div class="card">
             <div class="card-label">Clients Won</div>
             <div class="card-value">${fmt(kpis.clientsWon)}</div>
-            <div class="card-sub">${kpis.hasDateFilter ? `Unique clients with won deals in period${kpis.wonOpportunityCount ? ` (${kpis.wonOpportunityCount} won deals)` : ''}` : 'Unique clients with won deals (Eftersalg duplicates merged)'}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? `Unique Eftersalg wins in period${kpis.wonOpportunityCount ? ` (${kpis.wonOpportunityCount} won deals in filter)` : ''}` : 'Unique won clients in Eftersalg pipeline (includes standalone wins)'}</div>
           </div>
         `);
       }
@@ -1920,7 +1920,7 @@
           <div class="card">
             <div class="card-label">Total Bundlinje</div>
             <div class="card-value">Dkr ${fmtCompact(kpis.totalBundlinje)}</div>
-            <div class="card-sub">Bundlinje on won deals (Eftersalg merged into Salg)</div>
+            <div class="card-sub">Bundlinje on won deals</div>
           </div>
         `);
       }
@@ -2043,7 +2043,6 @@
 
         ${IS_ADMIN ? `
         <div class="note">
-          ${kpis.dedupeEnabled ? `Eftersalg duplicates are merged with Salg/Nye leads (${fmt(kpis.dedupePairsMerged)} pairs). Standalone Eftersalg wins still count when Salg was removed. ` : ''}
           ${kpis.usingCenhubDefaults ? 'Till-date Total Leads uses contact count from GHL. ' : ''}
           Active filters: pipelines=${formatSelectedPipelines(data.filterOptions.pipelines)}, status=${filters.status}, source=${filters.source}, assignee=${filters.assignedTo}, dates=${formatActiveDateFilter(filters)}.
         </div>
