@@ -1791,7 +1791,7 @@
           <div class="card primary">
             <div class="card-label">Total Revenue</div>
             <div class="card-value">Dkr ${fmtCompact(kpis.totalRevenue)}</div>
-            <div class="card-sub">${kpis.hasDateFilter ? `Won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)` : `Sum of won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? `Eftersalg won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)` : `Sum of Eftersalg won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`}</div>
           </div>
         `);
       }
@@ -1839,7 +1839,7 @@
           <div class="card">
             <div class="card-label">Cost per Won Client</div>
             <div class="card-value">${kpis.costPerWonClient > 0 ? `Dkr ${fmtCompact(kpis.costPerWonClient)}` : '—'}</div>
-            <div class="card-sub">Ad spend ÷ clients won in period</div>
+            <div class="card-sub">Ad spend ÷ Eftersalg clients won</div>
           </div>
         `);
       }
@@ -1884,7 +1884,7 @@
           <div class="card">
             <div class="card-label">Conversion Rate</div>
             <div class="card-value">${fmtPct(kpis.conversionRate)}</div>
-            <div class="card-sub">Won opportunities / total leads</div>
+            <div class="card-sub">Eftersalg wins ÷ new leads in period</div>
           </div>
         `);
       }
@@ -1911,7 +1911,7 @@
           <div class="card">
             <div class="card-label">Avg Won Deal Size</div>
             <div class="card-value">Dkr ${fmtCompact(kpis.averageWonDealSize)}</div>
-            <div class="card-sub">Won revenue / won opportunities</div>
+            <div class="card-sub">Eftersalg won revenue ÷ won deals (${fmt(kpis.wonOpportunityCount)})</div>
           </div>
         `);
       }
