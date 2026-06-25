@@ -1848,7 +1848,7 @@
           <div class="card">
             <div class="card-label">Clients Won</div>
             <div class="card-value">${fmt(kpis.clientsWon)}</div>
-            <div class="card-sub">${kpis.hasDateFilter ? `Unique Eftersalg wins in period${kpis.wonOpportunityCount ? ` (${kpis.wonOpportunityCount} won deals in filter)` : ''}` : 'Unique won clients in Eftersalg pipeline (includes standalone wins)'}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? 'Unique Eftersalg wins in period' : 'Unique won clients in Eftersalg pipeline'}</div>
           </div>
         `);
       }
