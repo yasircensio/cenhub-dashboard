@@ -4,6 +4,7 @@
   "scripts": {
     "start": "node server.js",
     "test:api": "node scripts/test-api.js",
+    "test:dedupe": "node scripts/test-dedupe.js",
     "test:facebook-metrics": "node scripts/test-facebook-metrics.js"
   },
   "dependencies": {
