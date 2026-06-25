@@ -1441,14 +1441,15 @@
       if (preset === 'all') {
         state.dateFrom = '';
         state.dateTo = '';
+        state.dateField = 'createdAt';
       } else if (preset === 'month') {
         state.dateFrom = formatDateInput(new Date(year, month, 1));
         state.dateTo = formatDateInput(new Date(year, month + 1, 0));
-        state.dateField = 'updatedAt';
+        state.dateField = 'createdAt';
       } else if (preset === 'year') {
         state.dateFrom = `${year}-01-01`;
         state.dateTo = `${year}-12-31`;
-        state.dateField = 'updatedAt';
+        state.dateField = 'createdAt';
       }
     }
 
@@ -1856,7 +1857,7 @@
           <div class="card">
             <div class="card-label">Total Leads</div>
             <div class="card-value">${fmt(kpis.totalLeads)}</div>
-            <div class="card-sub">${kpis.hasDateFilter ? `New opportunities created in selected period (${fmt(kpis.opportunityCount)} in filter)` : kpis.usingCenhubDefaults ? `Total contacts (${fmt(kpis.opportunityCount)} opportunities)` : 'Opportunities in filter'}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? 'New opportunities created in selected period' : kpis.usingCenhubDefaults ? `Total contacts (${fmt(kpis.opportunityCount)} opportunities)` : 'Opportunities in filter'}</div>
           </div>
         `);
       }
