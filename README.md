@@ -87,6 +87,47 @@ Manual metrics:
 
 - Ad spend, cost per lead, and ROAS require manual ad spend input because Cenhub does not expose ad cost through the opportunities API.
 
+## Facebook metrics API (Make.com)
+
+Receives Facebook ad data from Make.com and stores it for the dashboard.
+
+### Files
+
+- `api/facebook-metrics.js` — Vercel serverless endpoint
+- `lib/facebook-metrics-handler.js` — POST/GET logic
+- `lib/facebook-metrics-store.js` — Vercel KV in production, local `.data/` file fallback
+
+### Endpoints
+
+| Method | URL | Purpose |
+|--------|-----|---------|
+| `POST` | `/api/facebook-metrics` | Make.com sends metrics (requires `x-api-key` header) |
+| `GET` | `/api/facebook-metrics` | List all clients |
+| `GET` | `/api/facebook-metrics?client=suntech-nordic` | One client's metrics |
+
+### Vercel setup
+
+1. **Storage** → Create **KV** or **Upstash Redis** → Connect to project
+2. **Environment variables:**
+   - `MAKE_WEBHOOK_SECRET` — same secret Make.com sends in `x-api-key` header
+3. Redeploy
+
+### Make.com HTTP module
+
+- **URL:** `https://cenhub-dashboard.vercel.app/api/facebook-metrics`
+- **Method:** POST
+- **Header:** `x-api-key: YOUR_MAKE_WEBHOOK_SECRET`
+- **Body:** JSON with `client_id`, `yearly`, `this_month`, `last_month`
+
+### Local test
+
+```bash
+npm run test:facebook-metrics
+npm start
+curl http://localhost:3000/api/facebook-metrics
+curl "http://localhost:3000/api/facebook-metrics?client=suntech-nordic"
+```
+
 ## Vercel Local Test
 
 If you prefer Vercel's local runtime instead:
