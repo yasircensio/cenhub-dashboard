@@ -347,6 +347,11 @@
 
     .preset-row, .widget-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+    .preset-btn:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
     .preset-btn, .refresh-btn, .widget-btn {
       background: var(--panel-soft);
       border: 1px solid var(--border);
@@ -447,6 +452,14 @@
     .card.primary {
       background: var(--card-gradient);
       border-color: rgba(255, 106, 0, 0.28);
+    }
+
+    .card.accent {
+      border-color: rgba(19, 139, 83, 0.28);
+    }
+
+    .card.accent .card-value {
+      color: var(--accent-green);
     }
 
     .card-label {
@@ -659,6 +672,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/lib/marketing-metrics.js"></script>
   <script>
     const IS_ADMIN = document.body.dataset.dashboardMode === 'admin'
       || new URLSearchParams(window.location.search).get('view') === 'admin';
@@ -737,6 +751,140 @@
         };
       }
 
+      function formatAxisCurrency(value) {
+        const amount = Number(value) || 0;
+        if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+        if (amount >= 1000) return `${Math.round(amount / 1000)}K`;
+        return amount;
+      }
+
+      function mergeMonthlySpendRevenue(data) {
+        const spendByMonth = new Map((data.monthlyAdSpend || []).map((row) => [row.month, Number(row.spend) || 0]));
+        const revenueByMonth = new Map((data.monthlyRevenue || []).map((row) => [row.month, Number(row.revenue) || 0]));
+        const months = [...new Set([...spendByMonth.keys(), ...revenueByMonth.keys()])].sort();
+
+        return {
+          dualAxis: true,
+          labels: months.map((month) => formatMonthLabel(month)),
+          spendValues: months.map((month) => spendByMonth.get(month) || 0),
+          revenueValues: months.map((month) => revenueByMonth.get(month) || 0),
+        };
+      }
+
+      function buildDualAxisConfig(definition, extracted, colors) {
+        const hasData = extracted.spendValues.some((value) => value > 0)
+          || extracted.revenueValues.some((value) => value > 0);
+        if (!extracted.labels.length || !hasData) return null;
+
+        return {
+          type: 'bar',
+          data: {
+            labels: extracted.labels,
+            datasets: [
+              {
+                type: 'bar',
+                label: 'Ad Spend',
+                data: extracted.spendValues,
+                backgroundColor: '#ff6a00cc',
+                borderColor: '#ff6a00',
+                borderWidth: 2,
+                borderRadius: 6,
+                maxBarThickness: 42,
+                yAxisID: 'y',
+                order: 2,
+              },
+              {
+                type: 'line',
+                label: 'Won Revenue',
+                data: extracted.revenueValues,
+                backgroundColor: '#138b5333',
+                borderColor: '#138b53',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                yAxisID: 'y1',
+                order: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                align: 'center',
+                labels: {
+                  color: colors.text,
+                  boxWidth: 12,
+                  boxHeight: 12,
+                  padding: 14,
+                },
+              },
+              tooltip: {
+                backgroundColor: colors.tooltipBg,
+                borderColor: colors.tooltipBorder,
+                borderWidth: 1,
+                titleColor: colors.tooltipText,
+                bodyColor: colors.muted,
+                padding: 12,
+                callbacks: {
+                  label(context) {
+                    const value = context.parsed.y ?? 0;
+                    return `${context.dataset.label}: Dkr ${Math.round(value).toLocaleString('da-DK')}`;
+                  },
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: { color: colors.muted, maxRotation: 45, minRotation: 0 },
+                grid: { color: colors.grid },
+                border: { color: colors.border },
+              },
+              y: {
+                type: 'linear',
+                position: 'left',
+                title: {
+                  display: true,
+                  text: 'Ad Spend (Dkr)',
+                  color: '#ff6a00',
+                  font: { size: 11, weight: '600' },
+                },
+                ticks: {
+                  color: '#ff6a00',
+                  callback: formatAxisCurrency,
+                },
+                grid: { color: colors.grid },
+                border: { color: colors.border },
+                beginAtZero: true,
+              },
+              y1: {
+                type: 'linear',
+                position: 'right',
+                title: {
+                  display: true,
+                  text: 'Won Revenue (Dkr)',
+                  color: '#138b53',
+                  font: { size: 11, weight: '600' },
+                },
+                ticks: {
+                  color: '#138b53',
+                  callback: formatAxisCurrency,
+                },
+                grid: { drawOnChartArea: false },
+                border: { color: colors.border },
+                beginAtZero: true,
+              },
+            },
+          },
+        };
+      }
+
       const CHART_DEFINITIONS = {
         weeklyRevenue: { title: 'Won Revenue (Weekly)', defaultType: 'area', format: 'currency', extract(data) { return seriesFromRows(data.weeklyRevenue || [], 'week', 'revenue', formatWeekLabel); } },
         monthlyRevenue: { title: 'Won Revenue (Monthly)', defaultType: 'area', format: 'currency', extract(data) { return seriesFromRows(data.monthlyRevenue || [], 'month', 'revenue', formatMonthLabel); } },
@@ -748,12 +896,20 @@
           const keys = ['open', 'won', 'lost', 'abandoned'];
           return { labels: ['Open', 'Won', 'Lost', 'Abandoned'], values: keys.map((key) => Number(breakdown[key]) || 0), colors: keys.map((key) => STATUS_COLORS[key]) };
         } },
+        marketingSpendComparison: { title: 'Facebook Ad Spend', defaultType: 'area', format: 'currency', extract(data) {
+          return seriesFromRows(data.monthlyAdSpend || [], 'month', 'spend', formatMonthLabel);
+        } },
+        monthlyCostPerLead: { title: 'Cost per Lead (Monthly)', defaultType: 'area', format: 'currency', extract(data) {
+          return seriesFromRows(data.monthlyCostPerLead || [], 'month', 'cpl', formatMonthLabel);
+        } },
       };
 
-      function formatTooltipValue(value, format) {
+      function formatTooltipValue(value, format, valueFormats, index) {
         const amount = Number(value) || 0;
-        if (format === 'currency') return `Dkr ${Math.round(amount).toLocaleString('da-DK')}`;
-        if (format === 'percent') return `${amount.toFixed(1)}%`;
+        const rowFormat = Array.isArray(valueFormats) ? valueFormats[index] : format;
+        if (rowFormat === 'ratio') return `${amount.toFixed(2)}x`;
+        if (rowFormat === 'currency' || format === 'currency') return `Dkr ${Math.round(amount).toLocaleString('da-DK')}`;
+        if (rowFormat === 'percent' || format === 'percent') return `${amount.toFixed(1)}%`;
         return Math.round(amount).toLocaleString('da-DK');
       }
 
@@ -761,9 +917,13 @@
         const definition = CHART_DEFINITIONS[chartId];
         if (!definition) return null;
         const extracted = definition.extract(data);
-        if (!extracted.labels.length || extracted.values.every((value) => value === 0)) return null;
-
         const colors = getThemeColors();
+
+        if (extracted.dualAxis || chartType === 'dualAxis') {
+          return buildDualAxisConfig(definition, extracted, colors);
+        }
+
+        if (!extracted.labels?.length || extracted.values.every((value) => value === 0)) return null;
         const isCircular = ['pie', 'doughnut', 'polarArea'].includes(chartType);
         const datasetColors = extracted.colors || extracted.labels.map((_, index) => PALETTE[index % PALETTE.length]);
         const resolvedType = chartType === 'area' ? 'line' : chartType === 'horizontalBar' ? 'bar' : chartType;
@@ -776,8 +936,10 @@
           data: extracted.values,
           backgroundColor: isCircular
             ? (isDoughnut ? datasetColors : datasetColors.map((color) => `${color}cc`))
-            : chartType === 'area' ? areaFill : `${PALETTE[0]}cc`,
-          borderColor: isCircular ? datasetColors : PALETTE[0],
+            : extracted.colors
+              ? extracted.colors.map((color) => `${color}cc`)
+              : chartType === 'area' ? areaFill : `${PALETTE[0]}cc`,
+          borderColor: isCircular ? datasetColors : extracted.colors || PALETTE[0],
           borderWidth: isCircular ? (isDoughnut ? 0 : 1) : 2,
           fill: chartType === 'area',
           tension: 0.35,
@@ -816,7 +978,7 @@
                   label(context) {
                     const parsed = context.parsed;
                     const value = typeof parsed === 'object' ? (parsed.y ?? parsed.x ?? 0) : (parsed ?? 0);
-                    return `${context.label}: ${formatTooltipValue(value, definition.format)}`;
+                    return `${context.label}: ${formatTooltipValue(value, definition.format, extracted.valueFormats, context.dataIndex)}`;
                   },
                 },
               },
@@ -835,8 +997,11 @@
               y: {
                 ticks: {
                   color: colors.muted,
-                  callback(value) {
-                    if (definition.format === 'currency') {
+                  callback(value, index) {
+                    if (definition.format === 'mixed' && extracted.valueFormats?.[index] === 'ratio') {
+                      return `${Number(value).toFixed(2)}x`;
+                    }
+                    if (definition.format === 'currency' || extracted.valueFormats?.[index] === 'currency') {
                       return value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : value >= 1000 ? `${Math.round(value / 1000)}K` : value;
                     }
                     if (definition.format === 'percent') return `${value}%`;
@@ -861,6 +1026,11 @@
     const DISPLAY_OPTIONS = {
       kpis: {
         totalRevenue: 'Total Revenue',
+        adSpend: 'Ad Spend',
+        roas: 'ROAS',
+        poas: 'POAS',
+        costPerLead: 'Cost per Lead',
+        costPerWonClient: 'Cost per Won Client',
         clientsWon: 'Clients Won',
         totalLeads: 'Total Leads',
         totalLeadsValue: 'Total Leads Value',
@@ -880,6 +1050,8 @@
       charts: {
         weeklyRevenue: 'Won Revenue (Weekly)',
         monthlyRevenue: 'Won Revenue (Monthly)',
+        marketingSpendComparison: 'Facebook Ad Spend',
+        monthlyCostPerLead: 'Cost per Lead (Monthly)',
         weeklyLeads: 'New Leads (Weekly)',
         monthlyLeads: 'New Leads (Monthly)',
         conversionTrend: 'Conversion Rate Trend',
@@ -917,6 +1089,8 @@
       },
     };
 
+    const FACEBOOK_CLIENT_ID = new URLSearchParams(window.location.search).get('client') || 'suntech-nordic';
+
     const state = {
       pipelineIds: loadPipelineSelection(),
       status: 'all',
@@ -930,6 +1104,8 @@
     };
 
     let cachedData = null;
+    let cachedFacebookMetrics = null;
+    let cachedMonthlyAdSpend = null;
     let availablePipelines = [];
     let display = loadDisplayPrefs();
     let pipelineDefaultsApplied = false;
@@ -1003,12 +1179,12 @@
       Object.keys(DashboardCharts.CHART_DEFINITIONS).forEach((chartId) => {
         if (!isVisible('charts', chartId)) return;
 
+        const definition = DashboardCharts.CHART_DEFINITIONS[chartId];
         const canvas = document.getElementById(`chart-${chartId}`);
         if (!canvas) return;
 
         const wrapper = canvas.closest('.chart-card');
         const emptyState = wrapper?.querySelector('.chart-empty');
-        const definition = DashboardCharts.CHART_DEFINITIONS[chartId];
         const chartType = definition?.defaultType || 'bar';
         const config = DashboardCharts.buildChartConfig(chartId, data, chartType);
 
@@ -1222,6 +1398,10 @@
     };
 
     const fmtPct = (value) => `${(Number(value) || 0).toFixed(2)}%`;
+    const fmtRoas = (value) => {
+      const amount = Number(value) || 0;
+      return amount > 0 ? `${amount.toFixed(2)}x` : '—';
+    };
 
     function formatActiveDateFilter(filters) {
       if (!filters.dateFrom && !filters.dateTo) return 'Till date';
@@ -1300,18 +1480,66 @@
       state[key] = value;
     }
 
-    async function fetchDashboardData(pipelines) {
+    async function fetchJson(url, signal) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+      const abortFromParent = () => controller.abort();
+      signal?.addEventListener('abort', abortFromParent);
+
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || `Request failed (${response.status})`);
+        }
+        return data;
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          throw error;
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeoutId);
+        signal?.removeEventListener('abort', abortFromParent);
+      }
+    }
+
+    async function fetchFacebookMetrics(signal) {
+      try {
+        return await fetchJson(`/api/facebook-metrics?client=${encodeURIComponent(FACEBOOK_CLIENT_ID)}`, signal);
+      } catch (error) {
+        if (error.name === 'AbortError') throw error;
+        return null;
+      }
+    }
+
+    function applyMarketingData(data, fbMetrics) {
+      if (!window.MarketingMetrics) return data;
+      const result = window.MarketingMetrics.applyMarketingToDashboard(data, fbMetrics, state.preset);
+      if (result.monthlyAdSpend?.length) {
+        cachedMonthlyAdSpend = result.monthlyAdSpend;
+      }
+      if (cachedMonthlyAdSpend?.length) {
+        result.monthlyAdSpend = cachedMonthlyAdSpend;
+      }
+      if (window.MarketingMetrics?.buildMonthlyCostPerLead) {
+        result.monthlyCostPerLead = window.MarketingMetrics.buildMonthlyCostPerLead(
+          result.monthlyAdSpend,
+          result.monthlyLeads || data.monthlyLeads || [],
+        );
+      }
+      return result;
+    }
+
+    async function fetchDashboardData(pipelines, signal) {
       const query = buildQuery(pipelines);
-      const response = await fetch(`/api/dashboard${query ? `?${query}` : ''}`);
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || `Dashboard API error ${response.status}`);
+      const data = await fetchJson(`/api/dashboard${query ? `?${query}` : ''}`, signal);
       return applyChartFieldsCache(data);
     }
 
-    async function bootstrapDashboardData() {
-      const response = await fetch('/api/dashboard');
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || `Dashboard API error ${response.status}`);
+    async function bootstrapDashboardData(signal) {
+      const data = await fetchJson('/api/dashboard', signal);
       return applyChartFieldsCache(data);
     }
 
@@ -1412,6 +1640,7 @@
       return `
         <div class="card chart-card">
           <div class="section-title">${definition.title}</div>
+          ${definition.subtitle ? `<div class="card-sub" style="margin-top:-4px;margin-bottom:12px">${definition.subtitle}</div>` : ''}
           <div class="chart-empty note" style="display:none">No data for selected filters.</div>
           <div class="chart-canvas-wrap${isCircular ? ' chart-canvas-wrap--circular' : ''}">
             <canvas id="chart-${chartId}"></canvas>
@@ -1562,6 +1791,54 @@
             <div class="card-label">Total Revenue</div>
             <div class="card-value">Dkr ${fmtCompact(kpis.totalRevenue)}</div>
             <div class="card-sub">${kpis.hasDateFilter ? `Won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)` : `Sum of won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`}</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'adSpend')) {
+        const spendSub = kpis.adSpendSource === 'facebook'
+          ? `Facebook ${kpis.adSpendLabel || 'period'} spend`
+          : 'No Facebook spend data for this period';
+        cards.push(`
+          <div class="card accent">
+            <div class="card-label">Ad Spend</div>
+            <div class="card-value">${kpis.adSpend > 0 ? `Dkr ${fmtCompact(kpis.adSpend)}` : '—'}</div>
+            <div class="card-sub">${spendSub}</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'roas')) {
+        cards.push(`
+          <div class="card accent">
+            <div class="card-label">ROAS</div>
+            <div class="card-value">${fmtRoas(kpis.roas)}</div>
+            <div class="card-sub">Won revenue ÷ ad spend</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'poas')) {
+        cards.push(`
+          <div class="card accent">
+            <div class="card-label">POAS</div>
+            <div class="card-value">${fmtRoas(kpis.poas)}</div>
+            <div class="card-sub">Bundlinje ÷ ad spend</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'costPerLead')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Cost per Lead</div>
+            <div class="card-value">${kpis.costPerLead > 0 ? `Dkr ${fmtCompact(kpis.costPerLead)}` : '—'}</div>
+            <div class="card-sub">Ad spend ÷ new leads in period</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'costPerWonClient')) {
+        cards.push(`
+          <div class="card">
+            <div class="card-label">Cost per Won Client</div>
+            <div class="card-value">${kpis.costPerWonClient > 0 ? `Dkr ${fmtCompact(kpis.costPerWonClient)}` : '—'}</div>
+            <div class="card-sub">Ad spend ÷ clients won in period</div>
           </div>
         `);
       }
@@ -1829,10 +2106,43 @@
     let isFetching = false;
     let pendingRefetch = false;
     let fetchGeneration = 0;
+    let activeFetchController = null;
+    let fetchStartedAt = 0;
+    const FETCH_TIMEOUT_MS = 45000;
 
-    async function loadDashboard(refetch = true) {
+    function setPresetButtonsDisabled(disabled) {
+      document.querySelectorAll('[data-preset]').forEach((button) => {
+        button.disabled = disabled;
+      });
+    }
+
+    function resetFetchUiState() {
+      isFetching = false;
+      setPresetButtonsDisabled(false);
+      const applyBtn = document.getElementById('apply-filters-btn');
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.textContent = 'Apply data filters';
+      }
+    }
+
+    function cancelActiveFetch() {
+      if (activeFetchController) {
+        activeFetchController.abort();
+        activeFetchController = null;
+      }
+    }
+
+    async function loadDashboard(refetch = true, options = {}) {
+      const { background = false } = options;
       const dashboard = document.getElementById('dashboard');
-      if (isFetching) {
+
+      if (isFetching && (refetch || !cachedData)) {
+        cancelActiveFetch();
+        fetchGeneration += 1;
+        pendingRefetch = false;
+        resetFetchUiState();
+      } else if (isFetching) {
         if (refetch) pendingRefetch = true;
         return;
       }
@@ -1842,7 +2152,11 @@
 
       if (refetch || !cachedData) {
         const generation = ++fetchGeneration;
+        activeFetchController = new AbortController();
+        const signal = activeFetchController.signal;
         isFetching = true;
+        fetchStartedAt = Date.now();
+
         if (!hasLayout) {
           dashboard.innerHTML = `
             <div class="loading-state">
@@ -1854,27 +2168,32 @@
               <div class="spinner"></div>
               Henter dashboard data...
             </div>`;
-        } else if (applyBtn) {
-          applyBtn.disabled = true;
-          applyBtn.textContent = 'Loading...';
+        } else if (!background) {
+          if (applyBtn) {
+            applyBtn.disabled = true;
+            applyBtn.textContent = 'Loading...';
+          }
+          setPresetButtonsDisabled(true);
         }
-        document.querySelectorAll('[data-preset]').forEach((button) => {
-          button.disabled = true;
-        });
 
         try {
           if (!availablePipelines.length) {
-            const bootstrap = await bootstrapDashboardData();
+            const bootstrap = await bootstrapDashboardData(signal);
+            if (generation !== fetchGeneration) return;
             availablePipelines = bootstrap.filterOptions.pipelines || [];
             ensurePipelineDefaults(availablePipelines);
           }
 
-          const data = await fetchDashboardData(availablePipelines);
+          const [data, fbMetrics] = await Promise.all([
+            fetchDashboardData(availablePipelines, signal),
+            fetchFacebookMetrics(signal),
+          ]);
           if (generation !== fetchGeneration) return;
-          cachedData = data;
+          cachedFacebookMetrics = fbMetrics;
+          cachedData = applyMarketingData(data, fbMetrics);
           availablePipelines = cachedData.filterOptions.pipelines || availablePipelines;
         } catch (error) {
-          if (generation !== fetchGeneration) return;
+          if (error.name === 'AbortError' || generation !== fetchGeneration) return;
           if (!hasLayout) {
             dashboard.innerHTML = `
               <div class="error-state">
@@ -1886,17 +2205,12 @@
           } else if (applyBtn) {
             applyBtn.textContent = 'Apply failed - try again';
           }
-          isFetching = false;
           return;
         } finally {
-          isFetching = false;
-          if (applyBtn) {
-            applyBtn.disabled = false;
-            applyBtn.textContent = 'Apply data filters';
+          if (generation === fetchGeneration) {
+            activeFetchController = null;
+            resetFetchUiState();
           }
-          document.querySelectorAll('[data-preset]').forEach((button) => {
-            button.disabled = false;
-          });
           if (pendingRefetch) {
             pendingRefetch = false;
             loadDashboard(true);
@@ -1908,6 +2222,7 @@
 
       try {
         if (hasLayout) {
+          cachedData = applyMarketingData(cachedData, cachedFacebookMetrics);
           updateDashboardContent(cachedData);
           updateFilterUi();
         } else {
@@ -1915,6 +2230,7 @@
           mountCharts(cachedData);
         }
       } catch (error) {
+        resetFetchUiState();
         dashboard.innerHTML = `
           <div class="error-state">
             <div>Fejl ved visning af dashboard</div>
@@ -1964,8 +2280,17 @@
     ensureChartsVisible();
     loadDashboard(true);
     setInterval(() => {
-      if (!isFetching) loadDashboard(true);
+      loadDashboard(true, { background: true });
     }, 5 * 60 * 1000);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible' || !isFetching) return;
+      if (Date.now() - fetchStartedAt > FETCH_TIMEOUT_MS) {
+        cancelActiveFetch();
+        fetchGeneration += 1;
+        resetFetchUiState();
+      }
+    });
   </script>
 </body>
 </html>
