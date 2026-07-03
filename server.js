@@ -65,16 +65,29 @@ function serveDashboardHtml(response, mode, clientSlug = null) {
       '<title>SunTech Nordic · Censio Dashboard</title>',
       '<title>Client setup · Censio Dashboard</title>',
     );
+  } else if (mode === 'client') {
+    html = html.replace(
+      '<title>SunTech Nordic · Censio Dashboard</title>',
+      '<title>Censio Dashboard</title>',
+    );
   }
 
   response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   response.end(html);
 }
 
+function resolveAdminClientSlugFromPath(urlPath) {
+  const parts = String(urlPath || '').replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+  if (parts[0] !== 'admin' || parts.length !== 2) return null;
+  const slug = normalizeClientId(parts[1]);
+  if (!isValidSlug(slug) || RESERVED_SLUGS.has(slug)) return null;
+  return slug;
+}
+
 function resolveClientSlugFromPath(urlPath) {
-  const segment = String(urlPath || '').replace(/^\/+|\/+$/g, '').split('/')[0];
-  if (!segment) return null;
-  const slug = normalizeClientId(segment);
+  const parts = String(urlPath || '').replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+  if (parts.length !== 1) return null;
+  const slug = normalizeClientId(parts[0]);
   if (!isValidSlug(slug) || RESERVED_SLUGS.has(slug)) return null;
   return slug;
 }
@@ -188,9 +201,15 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  const adminClientSlug = resolveAdminClientSlugFromPath(url);
+  if (adminClientSlug) {
+    serveDashboardHtml(response, 'admin', adminClientSlug);
+    return;
+  }
+
   const clientSlug = resolveClientSlugFromPath(url);
   if (clientSlug) {
-    serveDashboardHtml(response, 'admin', clientSlug);
+    serveDashboardHtml(response, 'client', clientSlug);
     return;
   }
 
@@ -218,9 +237,9 @@ const server = http.createServer(async (request, response) => {
 server.listen(PORT, () => {
   console.log('');
   console.log('Censio dashboard running locally');
-  console.log(`  Client dashboard: http://localhost:${PORT}`);
+  console.log(`  Client dashboard: http://localhost:${PORT}/suntech-nordic`);
   console.log(`  Admin hub:        http://localhost:${PORT}/admin`);
-  console.log(`  Client setup:     http://localhost:${PORT}/suntech-nordic`);
+  console.log(`  Client setup:     http://localhost:${PORT}/admin/suntech-nordic`);
   console.log(`  API JSON:         http://localhost:${PORT}/api/dashboard`);
   console.log(`  Clients API:      http://localhost:${PORT}/api/clients`);
   console.log('');

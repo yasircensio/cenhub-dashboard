@@ -1739,9 +1739,16 @@
   <script>
     (function ensureDashboardModeAttr() {
       if (document.body.dataset.dashboardMode) return;
-      const first = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0];
-      if (first === 'admin') document.body.dataset.dashboardMode = 'hub';
-      else if (first && first !== 'index.html') document.body.dataset.dashboardMode = 'admin';
+      const parts = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+      if (parts[0] === 'admin') {
+        document.body.dataset.dashboardMode = parts.length >= 2 ? 'admin' : 'hub';
+        if (parts.length >= 2) document.body.dataset.clientSlug = parts[1];
+        return;
+      }
+      if (parts[0] && parts[0] !== 'index.html') {
+        document.body.dataset.dashboardMode = 'client';
+        document.body.dataset.clientSlug = parts[0];
+      }
     })();
 
     const DASHBOARD_MODE = document.body.dataset.dashboardMode || 'client';
@@ -1763,8 +1770,9 @@
 
     function resolveClientSlug() {
       if (document.body.dataset.clientSlug) return document.body.dataset.clientSlug;
-      const pathSlug = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0];
-      if (pathSlug && !['admin', 'index.html', ''].includes(pathSlug)) return pathSlug;
+      const parts = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+      if (parts[0] === 'admin' && parts[1]) return parts[1];
+      if (parts[0] && parts[0] !== 'admin' && parts[0] !== 'index.html') return parts[0];
       return new URLSearchParams(window.location.search).get('client') || 'suntech-nordic';
     }
 
@@ -1820,7 +1828,11 @@
     async function resolveTenantParams() {
       const params = new URLSearchParams(window.location.search);
 
-      if (IS_ADMIN_CLIENT || IS_ADMIN) {
+      if (IS_ADMIN_HUB) {
+        return {};
+      }
+
+      if (IS_ADMIN_CLIENT || IS_CLIENT_VIEW) {
         return { client: CLIENT_SLUG };
       }
 
@@ -1831,28 +1843,6 @@
       const locationFromUrl = params.get('location_id') || params.get('locationId');
       if (locationFromUrl) {
         return { location_id: locationFromUrl };
-      }
-
-      if (IS_CLIENT_VIEW) {
-        const payload = await requestGhlUserData();
-        if (payload) {
-          const response = await fetch('/api/ghl-sso', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ payload }),
-          });
-          const data = await response.json().catch(() => ({}));
-          if (response.ok && data.locationId) {
-            if (data.account?.clientId) facebookClientId = data.account.clientId;
-            return { location_id: data.locationId };
-          }
-        }
-
-        if (window.self === window.top) {
-          return { client: 'suntech-nordic' };
-        }
-
-        throw new Error('Kunne ikke identificere GHL-lokation. Kontakt Censio support.');
       }
 
       return { client: CLIENT_SLUG };
@@ -1974,7 +1964,7 @@
     }
 
     function copyAdminUrl(clientId) {
-      const url = `${window.location.origin}/${clientId}`;
+      const url = `${window.location.origin}/admin/${clientId}`;
       navigator.clipboard.writeText(url).then(
         () => showToast('Admin URL copied', 'success'),
         () => showToast('Could not copy URL', 'error'),
@@ -2057,8 +2047,8 @@
             </div>
           ` : ''}
           <div class="client-card-actions">
-            <a class="admin-btn" href="/${client.clientId}">Setting</a>
-            <a class="admin-btn admin-btn--primary" href="/?client=${encodeURIComponent(client.clientId)}" title="View as client">Preview</a>
+            <a class="admin-btn" href="/admin/${client.clientId}">Setting</a>
+            <a class="admin-btn admin-btn--primary" href="/${encodeURIComponent(client.clientId)}" title="Open client dashboard">Dashboard</a>
             <button class="admin-btn" type="button" onclick="syncClient('${client.clientId}', this)">Sync</button>
           </div>
         </article>
@@ -2180,7 +2170,7 @@
           body: JSON.stringify({ accountName, clientId, locationId: locationId || null }),
         });
         showToast('Client created', 'success');
-        window.location.href = `/${encodeURIComponent(clientId)}`;
+        window.location.href = `/admin/${encodeURIComponent(clientId)}`;
       } catch (error) {
         showToast(error.message, 'error');
       }
@@ -2554,7 +2544,7 @@
             <div class="setup-actions-group">
               <button class="admin-btn" type="button" onclick="fetchSetupPipelines()">Fetch pipelines</button>
               <button class="admin-btn" type="button" onclick="syncClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync data</button>
-              <a class="admin-btn" href="/?client=${encodeURIComponent(CLIENT_SLUG)}">${ICON_CHART} View as client</a>
+              <a class="admin-btn" href="/${encodeURIComponent(CLIENT_SLUG)}" target="_blank" rel="noopener noreferrer">${ICON_CHART} Open dashboard</a>
             </div>
             <div class="setup-actions-group">
               <label class="setup-ready-toggle">
