@@ -3,13 +3,20 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
+    "seed:suntech": "node scripts/seed-suntech.js",
     "test:api": "node scripts/test-api.js",
+    "test:ghl-sso": "node scripts/test-ghl-sso.js",
     "test:dedupe": "node scripts/test-dedupe.js",
-    "test:facebook-metrics": "node scripts/test-facebook-metrics.js"
+    "test:facebook-metrics": "node scripts/test-facebook-metrics.js",
+    "test:pipeline-slots": "node scripts/test-pipeline-slots.js",
+    "test:metrics-model": "node scripts/test-metrics-model.js",
+    "test:sync": "node scripts/test-sync.js"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
     "@upstash/redis": "^1.38.0",
     "@vercel/kv": "^3.0.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "inngest": "^4.11.0"
   }
 }

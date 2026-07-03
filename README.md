@@ -1,137 +1,149 @@
-# SunTech Nordic Cenhub Dashboard
+# Censio Multi-Client GHL Dashboard
 
-This widget loads opportunity totals from the two configured Cenhub pipelines and displays them as a dashboard that can be embedded in Cenhub with a custom iframe.
+Multi-tenant marketing dashboard for Censio clients. Each client has GHL credentials, three pipeline slots (new leads / sales / optional after-sales), and synced snapshot data. Clients view the dashboard inside GHL via iframe + SSO; Censio staff manage accounts from the admin hub.
 
-## Files
+Production: https://cenhub-dashboard.vercel.app/
 
-- `index.html` is the iframe dashboard.
-- `api/dashboard.js` is the serverless API proxy that calls the Cenhub API, handles pagination, and calculates totals.
-- `.env.example` shows the required environment variable name.
+## Routes
 
-## Environment Variable
+| URL | Who | Purpose |
+|-----|-----|---------|
+| `/` | Client (GHL iframe) | Dashboard — tenant from GHL SSO (`location_id`) |
+| `/admin` | Censio admin | Client hub — card grid, add client, sync all |
+| `/{client_id}` | Censio admin | Setup wizard — credentials, pipeline slots, preview |
+| `/?client=slug` | Dev / preview only | Local testing with admin key — not for GHL menu links |
 
-Set this in Vercel project settings:
+Legacy `admin.html` redirects to `/admin`.
 
-```bash
-CENHUB_PRIVATE_INTEGRATION_TOKEN=your_rotated_private_integration_token
-```
+## Quick start (local)
 
-The private integration token must not be pasted into `index.html` or committed to git.
-
-## Deploy
-
-1. Rotate the private integration token in Cenhub because any token pasted into chat should be treated as exposed.
-2. Create a Vercel project from this folder.
-3. Add `CENHUB_PRIVATE_INTEGRATION_TOKEN` in Vercel's environment variables.
-4. Deploy.
-5. Use the Vercel URL in Cenhub as a custom iframe dashboard widget.
-
-## Local Test (no deploy needed)
-
-1. Copy the env template and add your token:
+1. Copy env template and fill in values:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Install and test:
+2. Install and seed SunTech (uses file store at `.data/multi-tenant-store.json` when `DATABASE_URL` is unset):
 
 ```bash
 npm install
-npm run test:api
+npm run seed:suntech
 npm start
 ```
 
-Open `http://localhost:3000` for the full filterable dashboard.
+3. Open:
 
-Optional ad spend default for CPL/ROAS:
+- Admin hub: http://localhost:3000/admin
+- SunTech setup: http://localhost:3000/suntech-nordic
+- Client preview: http://localhost:3000/?client=suntech-nordic
 
-```bash
-CENHUB_AD_SPEND=45190
-```
+## Environment variables
 
-## Dashboard Features
+See `.env.example` for the full list. Key vars:
 
-The dashboard supports filters similar to the built-in Cenhub dashboard:
+| Variable | Purpose |
+|----------|---------|
+| `CENHUB_PRIVATE_INTEGRATION_TOKEN` | GHL token (seed + legacy fallback) |
+| `DASHBOARD_ADMIN_API_KEY` | Protects `/api/clients` writes and admin list |
+| `ACCOUNT_CONFIG_ENCRYPTION_KEY` | Encrypts stored GHL tokens (optional locally — plaintext fallback in file store) |
+| `DATABASE_URL` | Neon Postgres (optional — file fallback if unset) |
+| `DASHBOARD_READ_SOURCE` | `snapshot` (default) or `live` |
+| `GHL_SSO_SHARED_SECRET` | GHL marketplace app SSO validation |
+| `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Daily cron sync (optional — manual sync works without) |
 
-- Pipeline (all pipelines, Salg Pipeline, Nye leads Pipeline, etc.)
-- Status (open, won, lost, abandoned)
-- Source (facebook, suntech-battery-funnel, etc.)
-- Assignee
-- Date range presets: till date, this month, this year, custom
-- Date field: created, updated, or status change date
+## Onboarding a new client
 
-Metrics shown:
+1. Open `/admin` and enter your admin API key (stored in browser localStorage).
+2. Click **Add client** — pick an available slug (e.g. `scantherm`). You are redirected to `/{slug}` setup.
+3. Go to `/{slug}` setup:
+   - **Step 1 · Metrics model** — choose Simple (all won opps) or Funnel + deduplication (pick win pipeline, e.g. Eftersalg)
+   - Paste GHL private integration token + location ID
+   - **Fetch pipelines** → assign New leads, Sales, After-sales (optional for dedupe clients)
+   - **Save** → **Sync now** (locks metrics model after first successful sync)
+4. Click **View as client** to verify KPIs match expectations.
+5. Mark **Ready for GHL** when satisfied.
+6. In GHL sub-account: add custom menu iframe pointing to the shared root URL (`https://cenhub-dashboard.vercel.app/`). SSO resolves the client by `location_id`.
 
-- Total revenue (won)
-- Clients won
-- Total leads
-- Total leads value
-- Average lead value
-- Conversion rate
-- Total bundlinje
-- Weekly won revenue chart
-- Lead source report
-- Leads closed by assignee
-- Pipeline breakdown
+SunTech slug stays **`suntech-nordic`** for Make.com / Facebook metrics compatibility.
 
-Display options:
+## Metrics model
 
-- Choose which KPI cards to show
-- Choose which sections and charts to show
-- Choose which status items to show
-- Choose which table columns to show in each report
-- Selections are saved automatically in your browser
+Each client chooses how **clients won**, **revenue**, **Bundlinje**, **ROAS**, and **won-revenue charts** are calculated:
 
-Manual metrics:
+| Mode | Dedupe | Win source |
+|------|--------|------------|
+| **Simple** | Off | All `status=won` opportunities |
+| **Funnel + deduplication** | On | Single win pipeline (required) |
 
-- Ad spend, cost per lead, and ROAS require manual ad spend input because Cenhub does not expose ad cost through the opportunities API.
+- Set on first visit to `/{slug}` (required before sync).
+- **Locked after first successful sync** — change only via **Change metrics model** (confirm slug + acknowledge impact).
+- Postgres: run `db/migrate-metrics-model.sql` on existing databases.
 
-## Facebook metrics API (Make.com)
+API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipelineId }` (plus `confirmSlug` + `acknowledgeImpact` when locked).
 
-Receives Facebook ad data from Make.com and stores it for the dashboard.
+## Sync
 
-### Files
+- **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` with `x-api-key`.
+- **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }`.
+- **Scheduled:** Inngest daily cron at 03:00 Europe/Copenhagen when Inngest keys are set. Until then, `/api/inngest` returns 503 with instructions.
 
-- `api/facebook-metrics.js` — Vercel serverless endpoint
-- `lib/facebook-metrics-handler.js` — POST/GET logic
-- `lib/facebook-metrics-store.js` — Vercel KV in production, local `.data/` file fallback
+Every sync attempt is logged to `sync_runs`. Failures surface as `sync_error` on hub cards.
 
-### Endpoints
+## Pipeline slots
 
-| Method | URL | Purpose |
-|--------|-----|---------|
-| `POST` | `/api/facebook-metrics` | Make.com sends metrics (requires `x-api-key` header) |
-| `GET` | `/api/facebook-metrics` | List all clients |
-| `GET` | `/api/facebook-metrics?client=suntech-nordic` | One client's metrics |
+| Slot | Required | Metrics |
+|------|----------|---------|
+| New leads | Yes | Total leads (period), CPL denominator |
+| Sales | Yes | Open pipeline value; wins if no after-sales |
+| After-sales | No | Revenue, clients won, Bundlinje, POAS |
 
-### Vercel setup
+When after-sales is set, dedupe pairs funnel + sales opportunities with after-sales wins by `contactId`. Win KPIs follow the account **metrics model** (`lib/metrics-model.js`).
 
-1. **Storage** → Create **KV** or **Upstash Redis** → Connect to project
-2. **Environment variables:**
-   - `MAKE_WEBHOOK_SECRET` — same secret Make.com sends in `x-api-key` header
-3. Redeploy
+## Facebook metrics (temporary)
 
-### Make.com HTTP module
+Ad spend still flows Make.com → Vercel KV per `facebook_client_id`. End state is Postgres alongside GHL snapshots after Meta verification.
 
-- **URL:** `https://cenhub-dashboard.vercel.app/api/facebook-metrics`
-- **Method:** POST
-- **Header:** `x-api-key: YOUR_MAKE_WEBHOOK_SECRET`
-- **Body:** JSON with `client_id`, `yearly`, `this_month`, `last_month`
-
-### Local test
+## Tests
 
 ```bash
+npm run test:pipeline-slots
+npm run test:metrics-model
+npm run test:sync
+npm run test:dedupe
 npm run test:facebook-metrics
-npm start
-curl http://localhost:3000/api/facebook-metrics
-curl "http://localhost:3000/api/facebook-metrics?client=suntech-nordic"
+npm run test:api          # uses suntech-nordic snapshot; may hit GHL if no snapshot
+npm run test:ghl-sso
 ```
 
-## Vercel Local Test
+Set `TEST_CLIENT_ID=other-slug` to point `test:api` at another account.
 
-If you prefer Vercel's local runtime instead:
+## Deploy (Vercel)
 
-```bash
-npx vercel dev
-```
+1. Connect repo to Vercel.
+2. Set env vars from `.env.example` (at minimum: admin key, encryption key, `DATABASE_URL` for production).
+3. Run `npm run seed:suntech` once against production DB (or migrate account via admin UI).
+4. GHL iframe URL for all clients: `https://your-deployment.vercel.app/`
+
+## Project layout
+
+| Path | Role |
+|------|------|
+| `index.html` | Client dashboard + admin hub + setup UI |
+| `lib/dashboard-data.js` | KPI aggregation from snapshots |
+| `lib/account-store.js` | Account CRUD + encryption |
+| `lib/ghl-sync.js` | GHL fetch + retries |
+| `lib/sync-service.js` | Snapshot upsert + sync_runs |
+| `lib/metrics-model.js` | Win/revenue resolution (simple vs dedupe + win pipeline) |
+| `lib/pipeline-slots.js` | 3-slot pipeline mapping |
+| `api/clients.js` | Admin CRUD + sync |
+| `api/dashboard.js` | Dashboard JSON API |
+| `api/ghl-sso.js` | GHL iframe SSO |
+| `api/inngest.js` | Inngest handler |
+| `db/schema.sql` | Postgres schema |
+| `scripts/seed-suntech.js` | Seed SunTech Nordic |
+
+## Slug rules
+
+- Lowercase `a-z`, digits, hyphens; 2–32 chars; unique.
+- Reserved: `admin`, `api`, `lib`, `dashboard`, etc.
+- Immutable after create in v1 — create a new client to rename.

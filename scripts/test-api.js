@@ -2,6 +2,13 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const { getDashboardData } = require('../lib/dashboard-data');
 
+const CLIENT_ID = process.env.TEST_CLIENT_ID || 'suntech-nordic';
+const SUNTECH_PIPELINES = {
+  newLeads: process.env.CENHUB_NEW_LEADS_PIPELINE_ID || 'YIgoFK04OJCRlMkCIa0X',
+  sales: process.env.CENHUB_SALES_PIPELINE_ID || 'mHvsnX8pjfQMEEzAvdIx',
+  afterSales: process.env.CENHUB_AFTER_SALES_PIPELINE_ID || 'YrKUKuQ1HlSQ1rZpeGex',
+};
+
 function formatDkk(value) {
   return new Intl.NumberFormat('da-DK', {
     minimumFractionDigits: 0,
@@ -9,28 +16,34 @@ function formatDkk(value) {
   }).format(Math.round(Number(value) || 0));
 }
 
-async function main() {
-  console.log('Testing Cenhub dashboard API...\n');
+function clientQuery(extra = {}) {
+  return { client: CLIENT_ID, ...extra };
+}
 
-  const data = await getDashboardData();
+async function main() {
+  console.log(`Testing dashboard data for client "${CLIENT_ID}"...\n`);
+
+  const data = await getDashboardData(clientQuery());
   const now = new Date();
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const monthEnd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()).padStart(2, '0')}`;
-  const monthData = await getDashboardData({ dateFrom: monthStart, dateTo: monthEnd });
+  const monthData = await getDashboardData(clientQuery({ dateFrom: monthStart, dateTo: monthEnd }));
   const yearStart = `${now.getFullYear()}-01-01`;
   const yearEnd = `${now.getFullYear()}-12-31`;
-  const yearData = await getDashboardData({
-    pipelineIds: 'YIgoFK04OJCRlMkCIa0X,mHvsnX8pjfQMEEzAvdIx',
+  const funnelIds = `${SUNTECH_PIPELINES.newLeads},${SUNTECH_PIPELINES.sales}`;
+  const yearData = await getDashboardData(clientQuery({
+    pipelineIds: funnelIds,
     dateFrom: yearStart,
     dateTo: yearEnd,
-  });
-  const tillFunnel = await getDashboardData({
-    pipelineIds: 'YIgoFK04OJCRlMkCIa0X,mHvsnX8pjfQMEEzAvdIx',
-  });
+  }));
+  const tillFunnel = await getDashboardData(clientQuery({
+    pipelineIds: funnelIds,
+  }));
 
   console.log('Totals (Cenhub-aligned when no filters)');
+  console.log(`  Account:       ${data.account?.accountName || CLIENT_ID}`);
   console.log(`  Won revenue:   DKK ${formatDkk(data.kpis.totalRevenue)}`);
-  console.log(`  Clients won:   ${data.kpis.clientsWon}${data.kpis.usingCenhubDefaults ? ' (Eftersalg pipeline)' : ''}`);
+  console.log(`  Clients won:   ${data.kpis.clientsWon}${data.kpis.usingCenhubDefaults ? ' (after-sales pipeline)' : ''}`);
   console.log(`  Total leads:   ${data.kpis.totalLeads}${data.kpis.contactCount ? ` (${data.kpis.opportunityCount} opportunities)` : ''}`);
   console.log(`  Leads value:   DKK ${formatDkk(data.kpis.totalLeadsValue)}`);
   console.log(`  Avg lead val:  DKK ${formatDkk(data.kpis.averageLeadValue)}`);
@@ -57,9 +70,9 @@ async function main() {
     throw new Error('This year clients won must match till-date for the same pipeline selection.');
   }
 
-  const chartCheck = await getDashboardData({
-    pipelineIds: 'YIgoFK04OJCRlMkCIa0X,mHvsnX8pjfQMEEzAvdIx,YrKUKuQ1HlSQ1rZpeGex',
-  });
+  const chartCheck = await getDashboardData(clientQuery({
+    pipelineIds: `${funnelIds},${SUNTECH_PIPELINES.afterSales}`,
+  }));
   const weeklyRevenueTotal = chartCheck.weeklyRevenue.reduce((sum, row) => sum + row.revenue, 0);
   const monthlyRevenueTotal = chartCheck.monthlyRevenue.reduce((sum, row) => sum + row.revenue, 0);
   if (weeklyRevenueTotal !== chartCheck.kpis.totalRevenue) {
@@ -86,6 +99,7 @@ async function main() {
   }
 
   console.log(`Updated at: ${data.updatedAt}`);
+  console.log(`Data source: ${data.dataSource || 'unknown'}`);
   console.log('\nAPI test passed.');
 }
 

@@ -6,6 +6,8 @@ const path = require('path');
 const { URL } = require('url');
 const { getDashboardData } = require('./lib/dashboard-data');
 const { handleFacebookMetrics } = require('./lib/facebook-metrics-handler');
+const { handleClientsRequest } = require('./lib/clients-handler');
+const { isValidSlug, normalizeClientId, RESERVED_SLUGS } = require('./lib/account-store');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOT = __dirname;
@@ -46,21 +48,40 @@ function createLocalResponse(serverResponse) {
   };
 }
 
-function serveDashboardHtml(response, mode) {
-  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')
-    .replace('<body>', `<body data-dashboard-mode="${mode}">`)
-    .replace(
+function serveDashboardHtml(response, mode, clientSlug = null) {
+  let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const bodyAttrs = [`data-dashboard-mode="${mode}"`];
+  if (clientSlug) bodyAttrs.push(`data-client-slug="${clientSlug}"`);
+
+  html = html.replace('<body>', `<body ${bodyAttrs.join(' ')}>`);
+
+  if (mode === 'hub') {
+    html = html.replace(
       '<title>SunTech Nordic · Censio Dashboard</title>',
-      mode === 'admin'
-        ? '<title>SunTech Nordic · Dashboard Admin</title>'
-        : '<title>SunTech Nordic · Censio Dashboard</title>',
+      '<title>Censio · Client Admin Hub</title>',
     );
+  } else if (mode === 'admin') {
+    html = html.replace(
+      '<title>SunTech Nordic · Censio Dashboard</title>',
+      '<title>Client setup · Censio Dashboard</title>',
+    );
+  }
+
   response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
   response.end(html);
 }
 
+function resolveClientSlugFromPath(urlPath) {
+  const segment = String(urlPath || '').replace(/^\/+|\/+$/g, '').split('/')[0];
+  if (!segment) return null;
+  const slug = normalizeClientId(segment);
+  if (!isValidSlug(slug) || RESERVED_SLUGS.has(slug)) return null;
+  return slug;
+}
+
 const server = http.createServer(async (request, response) => {
-  const url = request.url.split('?')[0];
+  const requestUrl = new URL(request.url, `http://${request.headers.host}`);
+  const url = requestUrl.pathname;
 
   if (url === '/api/dashboard') {
     if (request.method !== 'GET') {
@@ -70,7 +91,7 @@ const server = http.createServer(async (request, response) => {
     }
 
     try {
-      const query = Object.fromEntries(new URL(request.url, `http://${request.headers.host}`).searchParams);
+      const query = Object.fromEntries(requestUrl.searchParams);
       const data = await getDashboardData(query);
       response.writeHead(200, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify(data, null, 2));
@@ -81,9 +102,66 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/inngest') {
+    try {
+      const rawBody = ['POST', 'PUT', 'PATCH'].includes(request.method)
+        ? await readRequestBody(request)
+        : '';
+      const localResponse = createLocalResponse(response);
+      const { handleInngestRequest } = require('./lib/inngest-handler');
+      await handleInngestRequest({
+        method: request.method,
+        url,
+        headers: request.headers,
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Inngest handler failed.' }));
+    }
+    return;
+  }
+
+  if (url === '/api/ghl-sso') {
+    try {
+      const rawBody = request.method === 'POST' ? await readRequestBody(request) : '';
+      const localResponse = createLocalResponse(response);
+      const handleGhlSsoRequest = require('./lib/ghl-sso-handler');
+      await handleGhlSsoRequest({
+        method: request.method,
+        headers: request.headers,
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'GHL SSO failed.' }));
+    }
+    return;
+  }
+
+  if (url === '/api/clients' || url.startsWith('/api/clients/')) {
+    try {
+      const rawBody = ['POST', 'PUT', 'PATCH'].includes(request.method)
+        ? await readRequestBody(request)
+        : '';
+      const localResponse = createLocalResponse(response);
+      await handleClientsRequest({
+        method: request.method,
+        url,
+        headers: request.headers,
+        query: Object.fromEntries(requestUrl.searchParams),
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Clients API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/facebook-metrics') {
     try {
-      const query = Object.fromEntries(new URL(request.url, `http://${request.headers.host}`).searchParams);
+      const query = Object.fromEntries(requestUrl.searchParams);
       const rawBody = request.method === 'POST' ? await readRequestBody(request) : '';
       const localResponse = createLocalResponse(response);
 
@@ -106,7 +184,13 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (url === '/admin' || url === '/admin.html') {
-    serveDashboardHtml(response, 'admin');
+    serveDashboardHtml(response, 'hub');
+    return;
+  }
+
+  const clientSlug = resolveClientSlugFromPath(url);
+  if (clientSlug) {
+    serveDashboardHtml(response, 'admin', clientSlug);
     return;
   }
 
@@ -133,11 +217,12 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(PORT, () => {
   console.log('');
-  console.log('SunTech dashboard running locally');
+  console.log('Censio dashboard running locally');
   console.log(`  Client dashboard: http://localhost:${PORT}`);
-  console.log(`  Admin settings:   http://localhost:${PORT}/admin`);
+  console.log(`  Admin hub:        http://localhost:${PORT}/admin`);
+  console.log(`  Client setup:     http://localhost:${PORT}/suntech-nordic`);
   console.log(`  API JSON:         http://localhost:${PORT}/api/dashboard`);
-  console.log(`  Facebook metrics: http://localhost:${PORT}/api/facebook-metrics`);
+  console.log(`  Clients API:      http://localhost:${PORT}/api/clients`);
   console.log('');
   console.log('Press Ctrl+C to stop');
 });

@@ -22,6 +22,14 @@
       --accent-green: #138b53;
       --accent-blue: #0085f2;
       --brand-dark: #1a1208;
+      --selected: var(--primary);
+      --selected-dark: var(--primary-dark);
+      --selected-soft: var(--primary-soft);
+      --selected-line: #f2c49a;
+      --border-strong: #d3c3b2;
+      --danger: #c2410c;
+      --danger-soft: #fff1ee;
+      --danger-line: #f3b7a3;
       --brand-topbar-gradient: linear-gradient(
         90deg,
         #0f0a08 0%,
@@ -31,13 +39,28 @@
         #452818 100%
       );
       --shadow: 0 12px 32px rgba(26, 18, 8, 0.08);
+      --shadow-sm: 0 1px 3px rgba(26, 18, 8, 0.06);
+      --shadow-md: 0 6px 18px rgba(26, 18, 8, 0.07);
+      --shadow-lg: 0 16px 40px rgba(26, 18, 8, 0.12);
       --card-gradient: linear-gradient(145deg, #ffffff 0%, #fffaf6 100%);
       --hero-gradient: linear-gradient(135deg, #ff6a00 0%, #dc640a 100%);
       --bar-gradient: linear-gradient(180deg, #ff9147 0%, #ff6a00 100%);
       --error: #c2410c;
     }
 
+    /* Admin surfaces keep the warm brand background but use near-black text for readability. */
+    body[data-dashboard-mode="hub"],
+    body[data-dashboard-mode="admin"] {
+      --text: #16120e;
+      --text-muted: #4d453e;
+      --text-soft: #837a72;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      overflow-x: clip;
+    }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -45,24 +68,23 @@
       color: var(--text);
       min-height: 100vh;
       padding: 0;
+      overflow-x: clip;
       transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .dashboard { max-width: 1280px; margin: 0 auto; padding: 0 24px 32px; }
+    .dashboard { max-width: 1280px; margin: 0 auto; padding: 0 24px 32px; overflow-x: clip; }
 
     .brand-topbar {
       align-items: center;
       background: var(--brand-topbar-gradient);
       display: flex;
       justify-content: center;
-      left: 50%;
       margin-bottom: 24px;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
       padding: 14px 24px;
       position: relative;
-      right: 50%;
-      width: 100vw;
-      margin-left: -50vw;
-      margin-right: -50vw;
+      width: auto;
     }
 
     .brand-topbar-left {
@@ -160,6 +182,1025 @@
       color: var(--primary);
     }
 
+    .admin-hub { padding-bottom: 48px; }
+
+    .admin-hub-hero { margin-bottom: 20px; padding: 20px 24px; }
+    .admin-hub-hero h1 { color: #fff; font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+    .admin-hub-hero p { color: rgba(255,255,255,0.72); font-size: 13px; margin-top: 6px; }
+
+    .admin-breadcrumb {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .admin-breadcrumb a {
+      color: var(--primary);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .admin-breadcrumb a:hover { text-decoration: underline; }
+
+    .hub-toolbar-row {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .hub-count {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .hub-toolbar-actions {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .hub-search {
+      flex: 1 1 260px;
+      max-width: 400px;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .hub-search svg {
+      color: var(--text-soft);
+      left: 13px;
+      pointer-events: none;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .hub-search input {
+      background: var(--panel);
+      border: 1.5px solid transparent;
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+      font: inherit;
+      font-size: 14px;
+      padding: 10px 14px 10px 38px;
+      width: 100%;
+    }
+
+    .hub-search input::placeholder { color: var(--text-soft); }
+
+    .hub-search input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
+      outline: none;
+    }
+
+    .admin-toolbar {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .client-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+
+    .client-card {
+      background: var(--panel);
+      border: 1px solid transparent;
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      position: relative;
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .client-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .client-card-header {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+    }
+
+    .client-avatar {
+      align-items: center;
+      background: var(--hero-gradient);
+      border-radius: 10px;
+      color: #fff;
+      display: flex;
+      flex-shrink: 0;
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      height: 40px;
+      justify-content: center;
+      letter-spacing: 0.02em;
+      width: 40px;
+    }
+
+    .client-card-title-block {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hub-empty {
+      background: var(--panel);
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+      grid-column: 1 / -1;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .card-menu {
+      position: relative;
+    }
+
+    .card-menu-dropdown {
+      background: var(--panel);
+      border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      min-width: 172px;
+      overflow: hidden;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      z-index: 30;
+    }
+
+    .card-menu.open .card-menu-dropdown {
+      display: block;
+    }
+
+    .card-menu-dropdown button {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      display: block;
+      font: inherit;
+      font-size: 13px;
+      padding: 10px 14px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .card-menu-dropdown button:hover {
+      background: var(--panel-soft);
+    }
+
+    .card-menu-item--danger {
+      border-top: 1px solid var(--border);
+      color: #c62828 !important;
+    }
+
+    .card-menu-item--danger:hover {
+      background: #fde8e8 !important;
+    }
+
+    .icon-btn {
+      align-items: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-soft);
+      cursor: pointer;
+      display: inline-flex;
+      flex-shrink: 0;
+      height: 32px;
+      justify-content: center;
+      transition: background 0.15s ease, color 0.15s ease;
+      width: 32px;
+    }
+
+    .icon-btn:hover {
+      background: var(--panel-soft);
+      color: var(--text);
+    }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid rgba(255, 106, 0, 0.35);
+      outline-offset: 2px;
+    }
+
+    .icon-btn--danger:hover {
+      background: #fde8e8;
+      border-color: #ef9a9a;
+      color: #c62828;
+    }
+
+    .client-card-header h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.25;
+      margin: 0;
+    }
+
+    .client-card-slug {
+      color: var(--text-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .link-btn:hover { color: var(--primary-dark); }
+
+    .client-card-meta {
+      align-items: center;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+      gap: 8px;
+      line-height: 1.45;
+    }
+
+    .client-card-meta-divider {
+      color: var(--border);
+      user-select: none;
+    }
+
+    .client-card-stats {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .client-card-stat {
+      background: var(--panel-soft);
+      border-radius: 10px;
+      padding: 11px 8px;
+      text-align: center;
+    }
+
+    .client-card-stat-value {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .client-card-stat-label {
+      color: var(--text-soft);
+      font-size: 11.5px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    .status-badge {
+      align-items: center;
+      border-radius: 999px;
+      display: inline-flex;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 600;
+      gap: 6px;
+      line-height: 1;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .status-badge::before {
+      background: currentColor;
+      border-radius: 50%;
+      content: '';
+      height: 6px;
+      width: 6px;
+    }
+
+    .status-ready { background: #e8f5ee; color: var(--accent-green); }
+    .status-needs_token, .status-needs_pipelines, .status-needs_sync, .status-needs_review { background: var(--primary-soft); color: var(--primary-dark); }
+    .status-sync_error { background: #fde8e8; color: var(--error); }
+
+    .client-card-actions {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 4px;
+      padding-top: 4px;
+    }
+
+    .client-card-actions .admin-btn { justify-content: center; text-align: center; width: 100%; }
+
+    .setup-panel {
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 20px;
+      padding: 24px;
+    }
+
+    .setup-panel-header {
+      align-items: flex-start;
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .setup-panel-identity {
+      align-items: center;
+      display: flex;
+      flex: 1;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .setup-avatar {
+      align-items: center;
+      background: var(--hero-gradient);
+      border-radius: 12px;
+      color: #fff;
+      display: flex;
+      flex-shrink: 0;
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      height: 48px;
+      justify-content: center;
+      letter-spacing: 0.02em;
+      width: 48px;
+    }
+
+    .setup-panel-header h2 {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 6px;
+    }
+
+    .setup-meta {
+      align-items: center;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    .setup-meta-divider { color: var(--border); }
+
+    .setup-section {
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: 12px 40px;
+      grid-template-columns: 220px minmax(0, 1fr);
+      margin-top: 22px;
+      padding-top: 22px;
+    }
+
+    .setup-section-info {
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .setup-section-title {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .setup-section-desc {
+      color: var(--text-muted);
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .field-hint {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .setup-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .setup-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .setup-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .field-group label {
+      color: var(--text);
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .field-group input,
+    .field-group select {
+      background-color: var(--panel-soft);
+      border: 1.5px solid transparent;
+      border-radius: 10px;
+      box-sizing: border-box;
+      font: inherit;
+      font-size: 14px;
+      padding: 10px 12px;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      width: 100%;
+    }
+
+    .field-group input::placeholder { color: var(--text-soft); }
+
+    .field-group select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2355606e' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-position: right 12px center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+      cursor: pointer;
+      padding-right: 40px;
+    }
+
+    .field-group input:focus,
+    .field-group select:focus {
+      background-color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
+      outline: none;
+    }
+
+    .field-group select:focus {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ff6a00' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    }
+
+    .field-group select option {
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .setup-actions {
+      align-items: center;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      margin-top: 24px;
+      padding-top: 20px;
+    }
+
+    .setup-actions-group {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .setup-ready-toggle {
+      align-items: center;
+      color: var(--text-muted);
+      display: inline-flex;
+      font-size: 13px;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .metrics-model-panel {
+      background: var(--panel-soft);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      padding: 18px 20px;
+      position: relative;
+    }
+
+    .metrics-model-panel.is-wizard {
+      background: #fff;
+      box-shadow: 0 10px 28px rgba(220, 100, 10, 0.14), 0 0 0 1.5px var(--selected-line);
+    }
+
+    .metrics-model-header {
+      align-items: flex-start;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 12px;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .metrics-model-heading {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+    }
+
+    .metrics-model-title {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .metrics-model-copy {
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0 0 12px;
+      max-width: 720px;
+    }
+
+    .metrics-model-facts {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      margin-bottom: 12px;
+    }
+
+    .metrics-model-fact {
+      align-items: center;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+    }
+
+    .metrics-model-fact-icon {
+      align-items: center;
+      background: var(--panel-soft);
+      border-radius: 8px;
+      color: var(--text-muted);
+      display: flex;
+      flex-shrink: 0;
+      height: 28px;
+      justify-content: center;
+      width: 28px;
+    }
+
+    .metrics-model-fact.is-config .metrics-model-fact-icon {
+      background: var(--selected);
+      color: #fff;
+    }
+
+    .metrics-model-fact-body { display: grid; gap: 3px; min-width: 0; }
+
+    .metrics-model-fact-label {
+      color: var(--text-muted);
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+
+    .metrics-model-fact-value {
+      color: var(--text);
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .metrics-option-cards {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin: 0 0 12px;
+    }
+
+    .metrics-option-card {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      display: grid;
+      gap: 5px;
+      padding: 11px 12px;
+      position: relative;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .metrics-option-card:hover { border-color: var(--border-strong); }
+
+    .metrics-option-card input {
+      height: 1px;
+      opacity: 0;
+      position: absolute;
+      width: 1px;
+    }
+
+    .metrics-option-card:has(input:checked) {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      box-shadow: 0 4px 14px rgba(220, 100, 10, 0.16);
+    }
+
+    .metrics-option-card-top {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+    }
+
+    .metrics-option-card-icon {
+      align-items: center;
+      background: var(--panel-soft);
+      border-radius: 8px;
+      color: var(--text-soft);
+      display: flex;
+      flex-shrink: 0;
+      height: 28px;
+      justify-content: center;
+      width: 28px;
+    }
+
+    .metrics-option-card-icon svg { height: 15px; width: 15px; }
+
+    .metrics-option-card:has(input:checked) .metrics-option-card-icon {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .metrics-option-card-title {
+      color: var(--text);
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .metrics-option-card-desc {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .metrics-option-card-radio {
+      align-items: center;
+      border: 1.5px solid var(--border-strong);
+      border-radius: 50%;
+      display: flex;
+      flex-shrink: 0;
+      height: 18px;
+      justify-content: center;
+      margin-left: auto;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      width: 18px;
+    }
+
+    .metrics-option-card-radio svg { opacity: 0; }
+
+    .metrics-option-card:has(input:checked) .metrics-option-card-radio {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .metrics-option-card:has(input:checked) .metrics-option-card-radio svg {
+      color: #fff;
+      opacity: 1;
+    }
+
+    .metrics-confirm-strip {
+      background: var(--danger-soft);
+      border: 1.5px solid var(--danger-line);
+      border-radius: 12px;
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 14px 16px;
+    }
+
+    .metrics-confirm-strip-title {
+      align-items: center;
+      color: #9a3412;
+      display: flex;
+      font-size: 13px;
+      font-weight: 700;
+      gap: 8px;
+    }
+
+    .metrics-confirm-strip-row {
+      align-items: center;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: minmax(0, 1fr) 220px;
+    }
+
+    .metrics-confirm-check {
+      align-items: center;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      font-size: 12.5px;
+      gap: 8px;
+      line-height: 1.4;
+    }
+
+    .metrics-confirm-check input {
+      accent-color: var(--danger);
+      flex-shrink: 0;
+      height: 16px;
+      width: 16px;
+    }
+
+    .metrics-confirm-strip input[type="text"] {
+      background: #fff;
+      border: 1.5px solid var(--danger-line);
+      border-radius: 8px;
+      font: inherit;
+      font-size: 13px;
+      padding: 8px 12px;
+      width: 100%;
+    }
+
+    .metrics-confirm-strip input[type="text"]:focus {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(194, 65, 12, 0.12);
+      outline: none;
+    }
+
+    .admin-btn--danger-solid {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .admin-btn--danger-solid:hover {
+      background: #9a3412;
+      border-color: #9a3412;
+    }
+
+
+    .metrics-model-win-select { margin-bottom: 12px; }
+
+    .metrics-model-actions {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      padding-top: 4px;
+    }
+
+    .metrics-model-badge {
+      align-items: center;
+      background: var(--accent-green);
+      border-radius: 999px;
+      color: #fff;
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 600;
+      gap: 5px;
+      padding: 5px 11px 5px 9px;
+      white-space: nowrap;
+    }
+
+    .metrics-model-badge.is-locked {
+      background: #475569;
+      color: #fff;
+    }
+
+    .metrics-model-badge svg { flex-shrink: 0; }
+
+    .metrics-change-banner {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      color: #9a3412;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      padding: 10px 12px;
+    }
+
+    .setup-section.is-disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    .status-needs_metrics_model { background: #fff7ed; color: #9a3412; }
+
+    .admin-btn {
+      align-items: center;
+      background: var(--panel-soft);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      gap: 6px;
+      justify-content: center;
+      line-height: 1.2;
+      padding: 10px 14px;
+      text-decoration: none;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .admin-btn:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .admin-btn--primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .admin-btn--primary:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+      color: #fff;
+    }
+
+    .admin-btn--danger {
+      border-color: #e57373;
+      color: #c62828;
+    }
+
+    .admin-btn--danger:hover {
+      background: rgba(198, 40, 40, 0.06);
+      border-color: #c62828;
+      color: #b71c1c;
+    }
+
+    .admin-btn:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .admin-btn--primary:disabled,
+    .admin-btn--danger-solid:disabled {
+      background: var(--border-strong);
+      border-color: var(--border-strong);
+      color: #fff;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+
+    .add-client-panel {
+      background: var(--panel);
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 16px;
+      margin-top: 24px;
+      padding: 22px 24px;
+    }
+
+    .add-client-panel h2 {
+      align-items: center;
+      display: flex;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .add-client-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    .admin-preview-section {
+      margin-top: 8px;
+    }
+
+    .admin-preview-section > summary {
+      align-items: center;
+      background: var(--panel);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      font-size: 13.5px;
+      font-weight: 600;
+      gap: 10px;
+      list-style: none;
+      margin-bottom: 12px;
+      padding: 14px 16px;
+      transition: box-shadow 0.15s ease;
+    }
+
+    .admin-preview-section > summary:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .admin-preview-section > summary::-webkit-details-marker { display: none; }
+
+    .admin-preview-section > summary .summary-chevron {
+      color: var(--text-soft);
+      display: inline-flex;
+      margin-left: auto;
+      transition: transform 0.15s ease;
+    }
+
+    .admin-preview-section[open] > summary .summary-chevron {
+      transform: rotate(180deg);
+    }
+
+    @media (max-width: 900px) {
+      .setup-grid--3 { grid-template-columns: 1fr; }
+      .setup-grid--2 { grid-template-columns: 1fr; }
+      .setup-section { grid-template-columns: 1fr; gap: 14px; }
+      .metrics-option-cards { grid-template-columns: 1fr; }
+      .metrics-confirm-strip-row { grid-template-columns: 1fr; }
+      .client-card-actions { grid-template-columns: 1fr; }
+      .hub-toolbar-actions { margin-left: 0; width: 100%; }
+      .hub-toolbar-actions .admin-btn { flex: 1; }
+    }
+
+    @media (max-width: 560px) {
+      .setup-panel { padding: 18px 16px; }
+      .setup-actions { flex-direction: column; align-items: stretch; }
+      .setup-ready-toggle { margin-left: 0; }
+      .metrics-model-actions { flex-direction: column-reverse; align-items: stretch; }
+      .metrics-model-actions .admin-btn { justify-content: center; width: 100%; }
+    }
+
+    .slug-status { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
+    .slug-status.ok { color: var(--accent-green); }
+    .slug-status.bad { color: var(--error); }
+
+    .toast-host {
+      bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      position: fixed;
+      right: 20px;
+      z-index: 9999;
+    }
+
+    .toast {
+      background: var(--brand-dark);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      color: #fff;
+      font-size: 13px;
+      max-width: 320px;
+      padding: 12px 16px;
+      pointer-events: auto;
+    }
+
+    .toast--error { background: #7f1d1d; }
+    .toast--success { background: #14532d; }
+
+    .kpi-skeleton-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      margin-bottom: 20px;
+    }
+
+    .skeleton-block {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, #ece7e1 25%, #f5f1ec 50%, #ece7e1 75%);
+      background-size: 200% 100%;
+      border-radius: 10px;
+      min-height: 88px;
+    }
+
+    @keyframes pulse {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
     .brand-footer {
       border-top: 1px solid var(--border);
       color: var(--text-soft);
@@ -244,10 +1285,8 @@
 
     label {
       color: var(--text-muted);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
     }
 
     .filter-group {
@@ -260,7 +1299,7 @@
     .filter-group.full-width { grid-column: 1 / -1; }
 
     select, input[type="date"], input[type="number"] {
-      background: var(--panel-soft);
+      background-color: var(--panel-soft);
       border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--text);
@@ -269,6 +1308,22 @@
       padding: 10px 12px;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
       width: 100%;
+    }
+
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2355606e' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-position: right 12px center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+      cursor: pointer;
+      padding-right: 40px;
+    }
+
+    select:focus {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ff6a00' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     }
 
     select:focus, input[type="date"]:focus, input[type="number"]:focus {
@@ -656,9 +1711,17 @@
     @media (max-width: 560px) {
       .kpi-grid { grid-template-columns: 1fr; }
     }
+
+    @media (max-width: 420px) {
+      .dashboard { padding: 0 12px 24px; }
+      .brand-topbar { padding: 10px 12px; }
+      .page-hero { padding: 16px; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
   </style>
 </head>
 <body>
+  <div id="toast-host" class="toast-host" aria-live="polite"></div>
   <div class="dashboard" id="dashboard">
     <div class="loading-state">
       <header class="brand-topbar">
@@ -667,15 +1730,968 @@
         </div>
       </header>
       <div class="spinner"></div>
-      Henter dashboard data...
+      <p id="initial-loading-msg">Loading...</p>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="/lib/marketing-metrics.js"></script>
   <script>
-    const IS_ADMIN = document.body.dataset.dashboardMode === 'admin'
+    (function ensureDashboardModeAttr() {
+      if (document.body.dataset.dashboardMode) return;
+      const first = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0];
+      if (first === 'admin') document.body.dataset.dashboardMode = 'hub';
+      else if (first && first !== 'index.html') document.body.dataset.dashboardMode = 'admin';
+    })();
+
+    const DASHBOARD_MODE = document.body.dataset.dashboardMode || 'client';
+    const IS_ADMIN_HUB = DASHBOARD_MODE === 'hub';
+    const IS_ADMIN_CLIENT = DASHBOARD_MODE === 'admin';
+    const IS_CLIENT_VIEW = DASHBOARD_MODE === 'client';
+    const IS_PREVIEW = IS_CLIENT_VIEW && Boolean(new URLSearchParams(window.location.search).get('client'));
+    const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT
       || new URLSearchParams(window.location.search).get('view') === 'admin';
+
+    const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_ADMIN;
+    const LOADING_MSG = ADMIN_UI ? 'Loading dashboard data...' : 'Henter dashboard data...';
+    const RETRY_MSG = ADMIN_UI ? 'Try again' : 'Prøv igen';
+
+    (function setInitialLoadingMessage() {
+      const el = document.getElementById('initial-loading-msg');
+      if (el) el.textContent = LOADING_MSG;
+    })();
+
+    function resolveClientSlug() {
+      if (document.body.dataset.clientSlug) return document.body.dataset.clientSlug;
+      const pathSlug = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/')[0];
+      if (pathSlug && !['admin', 'index.html', ''].includes(pathSlug)) return pathSlug;
+      return new URLSearchParams(window.location.search).get('client') || 'suntech-nordic';
+    }
+
+    const CLIENT_SLUG = resolveClientSlug();
+    let tenantParams = {};
+    let facebookClientId = CLIENT_SLUG;
+    let setupAccount = null;
+    let setupPipelines = [];
+    let metricsModelChangeMode = false;
+
+    function showToast(message, type = 'info') {
+      const host = document.getElementById('toast-host');
+      if (!host) return;
+      const toast = document.createElement('div');
+      toast.className = `toast${type === 'error' ? ' toast--error' : type === 'success' ? ' toast--success' : ''}`;
+      toast.textContent = message;
+      host.appendChild(toast);
+      setTimeout(() => toast.remove(), 4200);
+    }
+
+    function fmtDkk(value) {
+      return new Intl.NumberFormat('da-DK', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(Math.round(Number(value) || 0));
+    }
+
+    function requestGhlUserData(timeoutMs = 8000) {
+      return new Promise((resolve) => {
+        if (window.self === window.top) {
+          resolve(null);
+          return;
+        }
+
+        const timer = setTimeout(() => {
+          window.removeEventListener('message', onMessage);
+          resolve(null);
+        }, timeoutMs);
+
+        function onMessage(event) {
+          if (event.data?.message === 'REQUEST_USER_DATA_RESPONSE' && event.data.payload) {
+            clearTimeout(timer);
+            window.removeEventListener('message', onMessage);
+            resolve(event.data.payload);
+          }
+        }
+
+        window.addEventListener('message', onMessage);
+        window.parent.postMessage({ message: 'REQUEST_USER_DATA' }, '*');
+      });
+    }
+
+    async function resolveTenantParams() {
+      const params = new URLSearchParams(window.location.search);
+
+      if (IS_ADMIN_CLIENT || IS_ADMIN) {
+        return { client: CLIENT_SLUG };
+      }
+
+      if (params.get('client')) {
+        return { client: params.get('client') };
+      }
+
+      const locationFromUrl = params.get('location_id') || params.get('locationId');
+      if (locationFromUrl) {
+        return { location_id: locationFromUrl };
+      }
+
+      if (IS_CLIENT_VIEW) {
+        const payload = await requestGhlUserData();
+        if (payload) {
+          const response = await fetch('/api/ghl-sso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payload }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (response.ok && data.locationId) {
+            if (data.account?.clientId) facebookClientId = data.account.clientId;
+            return { location_id: data.locationId };
+          }
+        }
+
+        if (window.self === window.top) {
+          return { client: 'suntech-nordic' };
+        }
+
+        throw new Error('Kunne ikke identificere GHL-lokation. Kontakt Censio support.');
+      }
+
+      return { client: CLIENT_SLUG };
+    }
+
+    function appendTenantParams(searchParams) {
+      if (tenantParams.location_id) searchParams.set('location_id', tenantParams.location_id);
+      else if (tenantParams.client) searchParams.set('client', tenantParams.client);
+    }
+    const ADMIN_API_KEY_STORAGE = 'cenhub_admin_api_key';
+
+    function getAdminApiKey() {
+      return localStorage.getItem(ADMIN_API_KEY_STORAGE) || '';
+    }
+
+    function ensureAdminApiKey() {
+      let key = getAdminApiKey();
+      if (!key && (IS_ADMIN_HUB || IS_ADMIN_CLIENT)) {
+        key = window.prompt('Enter admin API key (DASHBOARD_ADMIN_API_KEY):') || '';
+        if (key) localStorage.setItem(ADMIN_API_KEY_STORAGE, key);
+      }
+      return key;
+    }
+
+    async function adminFetch(path, options = {}) {
+      const apiKey = ensureAdminApiKey();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      };
+      if (apiKey) headers['x-api-key'] = apiKey;
+
+      const response = await fetch(path, { ...options, headers });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    function statusLabel(status) {
+      const labels = {
+        ready: 'Ready',
+        needs_token: 'Needs token',
+        needs_metrics_model: 'Needs metrics model',
+        needs_pipelines: 'Needs pipelines',
+        needs_sync: 'Needs sync',
+        needs_review: 'Needs review',
+        sync_error: 'Sync failed',
+      };
+      return labels[status] || status;
+    }
+
+    function formatRelativeSync(dateValue) {
+      if (!dateValue) return 'Not synced yet';
+      const diffMs = Date.now() - new Date(dateValue).getTime();
+      const minutes = Math.round(diffMs / 60000);
+      if (minutes < 2) return 'Synced just now';
+      if (minutes < 60) return `Synced ${minutes} min ago`;
+      const hours = Math.round(minutes / 60);
+      if (hours < 24) return `Synced ${hours} hr ago`;
+      return `Synced ${new Date(dateValue).toLocaleString('en-GB')}`;
+    }
+
+    const ICON_SEARCH = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>';
+    const ICON_PLUS = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+    const ICON_SYNC = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
+    const ICON_CHEVRON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+    const ICON_CHART = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>';
+
+    function clientInitials(name) {
+      const words = String(name || '?').trim().split(/\s+/).filter(Boolean);
+      if (!words.length) return '?';
+      if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+
+    function renderAdminHubPage(clients) {
+      const count = clients.length;
+      return `
+        <header class="brand-topbar">
+          <div class="brand-topbar-left">
+            <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
+          </div>
+        </header>
+        <div class="page-hero admin-hub-hero">
+          <h1>Client administration</h1>
+          <p>Manage dashboard accounts, sync GHL data, and preview client views.</p>
+        </div>
+        <div class="admin-hub">
+          <div class="hub-toolbar-row">
+            <div class="hub-search">
+              ${ICON_SEARCH}
+              <input id="hub-search" type="search" placeholder="Search clients..." oninput="filterHubCards()" />
+            </div>
+            <span class="hub-count" id="hub-count">${count} client${count === 1 ? '' : 's'}</span>
+            <div class="hub-toolbar-actions">
+              <button class="admin-btn" type="button" onclick="syncAllClients()">${ICON_SYNC} Sync all</button>
+              <button class="admin-btn admin-btn--primary" type="button" onclick="focusAddClient()">${ICON_PLUS} Add client</button>
+            </div>
+          </div>
+          <div class="client-grid" id="client-grid">
+            ${count ? clients.map((client) => renderClientCard(client)).join('') : '<div class="hub-empty">No clients yet. Create your first client below.</div>'}
+            <div class="hub-empty" id="hub-no-results" style="display:none">No clients match your search.</div>
+          </div>
+          ${renderAddClientPanel()}
+        </div>
+        <div class="brand-footer">
+          Dashboard by <a href="https://censio.dk/" target="_blank" rel="noopener noreferrer">Censio</a> · Holstebro
+        </div>
+      `;
+    }
+
+    function focusAddClient() {
+      const input = document.getElementById('new-account-name');
+      if (!input) return;
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => input.focus({ preventScroll: true }), 350);
+    }
+
+    function copyAdminUrl(clientId) {
+      const url = `${window.location.origin}/${clientId}`;
+      navigator.clipboard.writeText(url).then(
+        () => showToast('Admin URL copied', 'success'),
+        () => showToast('Could not copy URL', 'error'),
+      );
+    }
+
+    function closeCardMenus() {
+      document.querySelectorAll('.card-menu.open').forEach((menu) => menu.classList.remove('open'));
+    }
+
+    function toggleCardMenu(clientId, event) {
+      event.stopPropagation();
+      const menu = document.getElementById(`card-menu-${clientId}`);
+      if (!menu) return;
+      const willOpen = !menu.classList.contains('open');
+      closeCardMenus();
+      if (willOpen) menu.classList.add('open');
+    }
+
+    function renderCardMenu(clientId, accountName) {
+      const label = accountName || clientId;
+      return `
+        <div class="card-menu" id="card-menu-${clientId}" data-client-id="${clientId}">
+          <button
+            type="button"
+            class="icon-btn card-menu-trigger"
+            aria-label="More actions for ${label}"
+            title="More actions"
+            aria-haspopup="menu"
+            onclick="toggleCardMenu('${clientId}', event)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="12" cy="5" r="1.75"></circle>
+              <circle cx="12" cy="12" r="1.75"></circle>
+              <circle cx="12" cy="19" r="1.75"></circle>
+            </svg>
+          </button>
+          <div class="card-menu-dropdown" role="menu">
+            <button type="button" role="menuitem" onclick="copyAdminUrl('${clientId}'); closeCardMenus();">Copy admin URL</button>
+            <button type="button" role="menuitem" class="card-menu-item--danger" onclick="closeCardMenus(); deleteClient('${clientId}');">Delete client</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderClientCard(client) {
+      const kpis = client.previewKpis || {};
+      const pipelineLabel = client.pipelineMode === '3-pipeline' ? '3 pipelines' : '2 pipelines';
+      return `
+        <article class="client-card" data-search="${`${client.accountName} ${client.clientId}`.toLowerCase()}">
+          <div class="client-card-header">
+            <span class="client-avatar" aria-hidden="true">${clientInitials(client.accountName)}</span>
+            <div class="client-card-title-block">
+              <h3>${client.accountName}</h3>
+              <div class="client-card-slug">/${client.clientId}</div>
+            </div>
+            ${renderCardMenu(client.clientId, client.accountName)}
+          </div>
+          <div class="client-card-meta">
+            <span class="status-badge status-${client.status}">${statusLabel(client.status)}</span>
+            <span class="client-card-meta-divider" aria-hidden="true">·</span>
+            <span>${pipelineLabel}</span>
+            <span class="client-card-meta-divider" aria-hidden="true">·</span>
+            <span>${formatRelativeSync(client.lastSyncAt)}</span>
+          </div>
+          ${kpis.totalLeads != null ? `
+            <div class="client-card-stats">
+              <div class="client-card-stat">
+                <div class="client-card-stat-value">${fmtDkk(kpis.totalLeads)}</div>
+                <div class="client-card-stat-label">Leads</div>
+              </div>
+              <div class="client-card-stat">
+                <div class="client-card-stat-value">${fmtDkk(kpis.clientsWon)}</div>
+                <div class="client-card-stat-label">Won</div>
+              </div>
+              <div class="client-card-stat">
+                <div class="client-card-stat-value">${fmtDkk(kpis.wonRevenue)}</div>
+                <div class="client-card-stat-label">Revenue</div>
+              </div>
+            </div>
+          ` : ''}
+          <div class="client-card-actions">
+            <a class="admin-btn" href="/${client.clientId}">Setting</a>
+            <a class="admin-btn admin-btn--primary" href="/?client=${encodeURIComponent(client.clientId)}" title="View as client">Preview</a>
+            <button class="admin-btn" type="button" onclick="syncClient('${client.clientId}', this)">Sync</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function filterHubCards() {
+      const query = (document.getElementById('hub-search')?.value || '').trim().toLowerCase();
+      let visible = 0;
+      document.querySelectorAll('#client-grid .client-card').forEach((card) => {
+        const match = !query || (card.dataset.search || '').includes(query);
+        card.style.display = match ? '' : 'none';
+        if (match) visible += 1;
+      });
+      const empty = document.getElementById('hub-no-results');
+      if (empty) empty.style.display = query && !visible ? '' : 'none';
+    }
+
+    function renderAddClientPanel() {
+      return `
+        <div class="add-client-panel">
+          <h2>${ICON_PLUS} Add new client</h2>
+          <p class="add-client-desc">Creates the account and opens the setup page where you pick the metrics model and connect GHL.</p>
+          <div class="setup-grid setup-grid--3">
+            <div class="field-group">
+              <label for="new-account-name">Account name</label>
+              <input id="new-account-name" type="text" placeholder="ScanTherm" oninput="suggestNewClientSlug()" />
+            </div>
+            <div class="field-group">
+              <label for="new-client-slug">Admin slug</label>
+              <input id="new-client-slug" type="text" placeholder="scantherm" oninput="checkNewClientSlug()" />
+              <div id="slug-status" class="slug-status"></div>
+            </div>
+            <div class="field-group">
+              <label for="new-location-id">GHL location ID</label>
+              <input id="new-location-id" type="text" placeholder="Optional — can be added later" />
+            </div>
+          </div>
+          <div class="setup-actions" style="border-top:0;padding-top:16px;margin-top:0">
+            <div></div>
+            <button class="admin-btn admin-btn--primary" type="button" onclick="createClient()">${ICON_PLUS} Create client</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadAdminHub() {
+      const dashboard = document.getElementById('dashboard');
+      dashboard.innerHTML = `
+        <div class="loading-state">
+          <header class="brand-topbar">
+            <div class="brand-topbar-left">
+              <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
+            </div>
+          </header>
+          <div class="spinner"></div>
+          Loading clients...
+        </div>`;
+
+      try {
+        const data = await adminFetch('/api/clients');
+        dashboard.innerHTML = renderAdminHubPage(data.clients || []);
+      } catch (error) {
+        dashboard.innerHTML = `
+          <header class="brand-topbar">
+            <div class="brand-topbar-left">
+              <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
+            </div>
+          </header>
+          <div class="error-state" style="padding:24px">${error.message}</div>`;
+      }
+    }
+
+    let slugCheckTimer = null;
+
+    function suggestNewClientSlug() {
+      const name = document.getElementById('new-account-name')?.value || '';
+      const slugInput = document.getElementById('new-client-slug');
+      if (!slugInput || slugInput.dataset.userEdited === 'true') return;
+      slugInput.value = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      checkNewClientSlug();
+    }
+
+    function checkNewClientSlug() {
+      const slugInput = document.getElementById('new-client-slug');
+      if (slugInput) slugInput.dataset.userEdited = 'true';
+      clearTimeout(slugCheckTimer);
+      slugCheckTimer = setTimeout(async () => {
+        const slug = document.getElementById('new-client-slug')?.value || '';
+        const statusEl = document.getElementById('slug-status');
+        if (!statusEl || !slug) {
+          if (statusEl) statusEl.textContent = '';
+          return;
+        }
+        try {
+          const result = await adminFetch(`/api/clients/check-slug?slug=${encodeURIComponent(slug)}`);
+          statusEl.className = `slug-status ${result.available ? 'ok' : 'bad'}`;
+          statusEl.textContent = result.available
+            ? `Available · ${result.adminUrl}`
+            : `Unavailable (${result.reason || 'taken'})`;
+        } catch (error) {
+          statusEl.className = 'slug-status bad';
+          statusEl.textContent = error.message;
+        }
+      }, 300);
+    }
+
+    async function createClient() {
+      const accountName = document.getElementById('new-account-name')?.value?.trim();
+      const clientId = document.getElementById('new-client-slug')?.value?.trim();
+      const locationId = document.getElementById('new-location-id')?.value?.trim();
+      if (!accountName || !clientId) {
+        window.alert('Account name and slug are required.');
+        return;
+      }
+      try {
+        await adminFetch('/api/clients', {
+          method: 'POST',
+          body: JSON.stringify({ accountName, clientId, locationId: locationId || null }),
+        });
+        showToast('Client created', 'success');
+        window.location.href = `/${encodeURIComponent(clientId)}`;
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function syncAllClients() {
+      try {
+        showToast('Syncing all clients...');
+        const data = await adminFetch('/api/clients', {
+          method: 'POST',
+          body: JSON.stringify({ action: 'sync-all' }),
+        });
+        const failed = (data.results || []).filter((row) => !row.success);
+        if (failed.length) {
+          showToast(`${failed.length} sync(s) failed`, 'error');
+        } else {
+          showToast('All clients synced', 'success');
+        }
+        await loadAdminHub();
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function deleteClient(clientId) {
+      const label = clientId;
+      const ok = window.confirm(
+        `Delete "${label}" permanently?\n\nThis removes the account, GHL token, and all synced snapshot data. This cannot be undone.`,
+      );
+      if (!ok) return;
+
+      const typed = window.prompt(`Type "${clientId}" to confirm deletion:`);
+      if (typed !== clientId) {
+        showToast('Deletion cancelled — slug did not match.', 'error');
+        return;
+      }
+
+      try {
+        await adminFetch(`/api/clients/${encodeURIComponent(clientId)}`, { method: 'DELETE' });
+        showToast(`Deleted ${clientId}`, 'success');
+        if (IS_ADMIN_HUB) {
+          await loadAdminHub();
+        } else {
+          window.location.href = '/admin';
+        }
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function syncClient(clientId, button) {
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Syncing...';
+      }
+      try {
+        await adminFetch(`/api/clients/${encodeURIComponent(clientId)}/sync`, { method: 'POST', body: '{}' });
+        showToast('Sync completed', 'success');
+        if (IS_ADMIN_HUB) await loadAdminHub();
+        else if (IS_ADMIN_CLIENT) {
+          await loadSetupAccount();
+          if (accountCanPreviewDashboard(setupAccount)) loadDashboard(true, { background: true });
+        }
+        else loadDashboard(true, { background: true });
+      } catch (error) {
+        showToast(error.message, 'error');
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.textContent = 'Sync';
+        }
+      }
+    }
+
+    function getMetricsModelLabels(account, pipelines = setupPipelines) {
+      const pipelineMap = new Map((pipelines || []).map((pipeline) => [pipeline.id, pipeline.name]));
+      if (account.dedupeEnabled) {
+        const winName = pipelineMap.get(account.winPipelineId) || account.winPipelineId || '—';
+        return {
+          typeLabel: 'Funnel + deduplication',
+          winLabel: `Win pipeline: ${winName}`,
+        };
+      }
+      if (account.winPipelineId) {
+        const winName = pipelineMap.get(account.winPipelineId) || account.winPipelineId;
+        return {
+          typeLabel: 'Simple (single win pipeline)',
+          winLabel: `Win pipeline: ${winName}`,
+        };
+      }
+      return {
+        typeLabel: 'Simple (no deduplication)',
+        winLabel: 'All won opportunities',
+      };
+    }
+
+    const ICON_CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+    const ICON_LAYER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>';
+    const ICON_MERGE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="15" r="2.4"/><path d="M6 8.4V15.6"/><path d="M8.2 6.4C14 6.4 14 12.6 15.8 13.4"/></svg>';
+    const ICON_TARGET = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>';
+    const ICON_LOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9" rx="2"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/></svg>';
+    const ICON_UNLOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="9" rx="2"/><path d="M8 10.5V7a4 4 0 017.8-1.2"/></svg>';
+    const ICON_TAG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.7L12.7 20.6a2 2 0 01-2.8 0l-7-7a2 2 0 010-2.8L10.8 3H19a2 2 0 012 2v7.7z"/><circle cx="15" cy="8" r="1.2"/></svg>';
+    const ICON_HASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14M10 3L8 21M16 3l-2 18"/></svg>';
+    const ICON_EDIT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+    const ICON_WARNING = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L2.6 18a1.5 1.5 0 001.3 2.2h16.2a1.5 1.5 0 001.3-2.2L13.7 3.9a1.5 1.5 0 00-3.4 0z"/><path d="M12 9v4"/><path d="M12 16.5h.01"/></svg>';
+
+
+    function renderMetricsModelPanel(account) {
+      const labels = getMetricsModelLabels(account);
+      const showWizard = !account.metricsModelSetAt || metricsModelChangeMode;
+      const wizardClass = showWizard ? ' is-wizard' : ' is-locked';
+      const initialMode = account.dedupeEnabled ? 'dedupe' : (account.winPipelineId ? 'pipeline' : 'simple');
+      const lockedCopy = account.metricsModelLockedAt
+        ? `Locked since ${new Date(account.metricsModelLockedAt).toLocaleDateString('en-GB')}`
+        : 'Editable until first successful sync';
+      const badgeClass = account.metricsModelLockedAt ? 'metrics-model-badge is-locked' : 'metrics-model-badge';
+
+      if (!showWizard) {
+        return `
+          <div class="metrics-model-panel is-locked">
+            <div class="metrics-model-header">
+              <div class="metrics-model-heading">
+                <h3 class="metrics-model-title">Metrics model</h3>
+              </div>
+              <span class="${badgeClass}">${account.metricsModelLockedAt ? ICON_LOCK : ICON_UNLOCK} ${account.metricsModelLockedAt ? 'Locked' : 'Editable'}</span>
+            </div>
+            <p class="metrics-model-copy">
+              Defines how clients won, revenue, Bundlinje, ROAS, and won-revenue charts are calculated.
+            </p>
+            <div class="metrics-model-facts">
+              <div class="metrics-model-fact is-config">
+                <span class="metrics-model-fact-icon">${ICON_TAG}</span>
+                <div class="metrics-model-fact-body">
+                  <div class="metrics-model-fact-label">Model</div>
+                  <div class="metrics-model-fact-value">${labels.typeLabel}</div>
+                </div>
+              </div>
+              <div class="metrics-model-fact is-config">
+                <span class="metrics-model-fact-icon">${ICON_TARGET}</span>
+                <div class="metrics-model-fact-body">
+                  <div class="metrics-model-fact-label">Win source</div>
+                  <div class="metrics-model-fact-value">${labels.winLabel}</div>
+                </div>
+              </div>
+              <div class="metrics-model-fact">
+                <span class="metrics-model-fact-icon">${account.metricsModelLockedAt ? ICON_LOCK : ICON_UNLOCK}</span>
+                <div class="metrics-model-fact-body">
+                  <div class="metrics-model-fact-label">Status</div>
+                  <div class="metrics-model-fact-value">${lockedCopy}</div>
+                </div>
+              </div>
+              <div class="metrics-model-fact">
+                <span class="metrics-model-fact-icon">${ICON_HASH}</span>
+                <div class="metrics-model-fact-body">
+                  <div class="metrics-model-fact-label">Version</div>
+                  <div class="metrics-model-fact-value">v${account.metricsModelVersion || 1}</div>
+                </div>
+              </div>
+            </div>
+            <div class="metrics-model-actions">
+              <button class="admin-btn" type="button" onclick="startMetricsModelChange()">${ICON_EDIT} Change metrics model</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="metrics-model-panel${wizardClass}">
+          <div class="metrics-model-header">
+            <div class="metrics-model-heading">
+              <h3 class="metrics-model-title">${metricsModelChangeMode ? 'Change metrics model' : 'Metrics model'}</h3>
+            </div>
+          </div>
+          <p class="metrics-model-copy">How should wins and revenue be counted for this client?</p>
+          <div class="metrics-option-cards">
+            <label class="metrics-option-card">
+              <input type="radio" name="metrics-model-type" value="simple" ${initialMode === 'simple' ? 'checked' : ''} onchange="onMetricsModelTypeChange()" />
+              <span class="metrics-option-card-top">
+                <span class="metrics-option-card-icon">${ICON_LAYER}</span>
+                <span class="metrics-option-card-title">Simple</span>
+                <span class="metrics-option-card-radio">${ICON_CHECK}</span>
+              </span>
+              <span class="metrics-option-card-desc">Every won deal counts, from any pipeline. For clients without duplicate opportunities.</span>
+            </label>
+            <label class="metrics-option-card">
+              <input type="radio" name="metrics-model-type" value="dedupe" ${initialMode === 'dedupe' ? 'checked' : ''} onchange="onMetricsModelTypeChange()" />
+              <span class="metrics-option-card-top">
+                <span class="metrics-option-card-icon">${ICON_MERGE}</span>
+                <span class="metrics-option-card-title">Funnel + dedup</span>
+                <span class="metrics-option-card-radio">${ICON_CHECK}</span>
+              </span>
+              <span class="metrics-option-card-desc">Wins count from one win pipeline only (e.g. Eftersalg). Duplicates are merged by contact.</span>
+            </label>
+          </div>
+          <div class="metrics-model-win-select" id="metrics-win-pipeline-wrap" style="${initialMode === 'dedupe' ? '' : 'display:none'}">
+            ${renderPipelineSelect('metrics-win-pipeline', 'Win pipeline (required)', account.winPipelineId || account.afterSalesPipelineId, setupPipelines)}
+          </div>
+          ${metricsModelChangeMode ? `
+            <div class="metrics-confirm-strip">
+              <div class="metrics-confirm-strip-title">${ICON_WARNING} Applying this recalculates revenue, clients won and all charts</div>
+              <div class="metrics-confirm-strip-row">
+                <label class="metrics-confirm-check">
+                  <input id="metrics-acknowledge-impact" type="checkbox" onchange="updateMetricsApplyState()" />
+                  <span>I understand the numbers will change</span>
+                </label>
+                <input id="metrics-confirm-slug" type="text" placeholder="Type ${CLIENT_SLUG} to confirm" autocomplete="off" oninput="updateMetricsApplyState()" />
+              </div>
+            </div>
+          ` : ''}
+          <div class="metrics-model-actions">
+            ${metricsModelChangeMode ? `<button class="admin-btn" type="button" onclick="cancelMetricsModelChange()">Cancel</button>` : ''}
+            <button
+              id="metrics-apply-btn"
+              class="admin-btn ${metricsModelChangeMode ? 'admin-btn--danger-solid' : 'admin-btn--primary'}"
+              type="button"
+              onclick="saveMetricsModel()"
+              ${metricsModelChangeMode ? 'disabled' : ''}
+            >
+              ${ICON_CHECK} ${metricsModelChangeMode ? 'Apply change' : 'Save metrics model'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateMetricsApplyState() {
+      const btn = document.getElementById('metrics-apply-btn');
+      if (!btn || !metricsModelChangeMode) return;
+      const ack = Boolean(document.getElementById('metrics-acknowledge-impact')?.checked);
+      const slug = document.getElementById('metrics-confirm-slug')?.value?.trim() || '';
+      btn.disabled = !(ack && slug === CLIENT_SLUG);
+    }
+
+    function onMetricsModelTypeChange() {
+      const mode = document.querySelector('input[name="metrics-model-type"]:checked')?.value;
+      const wrap = document.getElementById('metrics-win-pipeline-wrap');
+      if (wrap) wrap.style.display = mode === 'dedupe' ? '' : 'none';
+    }
+
+    async function saveMetricsModel() {
+      const mode = document.querySelector('input[name="metrics-model-type"]:checked')?.value || 'simple';
+      const dedupeEnabled = mode === 'dedupe';
+      const winPipelineId = dedupeEnabled
+        ? (document.getElementById('metrics-win-pipeline')?.value || null)
+        : null;
+
+      if (dedupeEnabled && !winPipelineId) {
+        showToast('Select a win pipeline for deduplication mode.', 'error');
+        return;
+      }
+
+      const payload = {
+        dedupeEnabled,
+        winPipelineId,
+        afterSalesPipelineId: dedupeEnabled ? winPipelineId : undefined,
+      };
+
+      if (metricsModelChangeMode) {
+        payload.confirmSlug = document.getElementById('metrics-confirm-slug')?.value?.trim() || '';
+        payload.acknowledgeImpact = Boolean(document.getElementById('metrics-acknowledge-impact')?.checked);
+      }
+
+      try {
+        await adminFetch(`/api/clients/${encodeURIComponent(CLIENT_SLUG)}/metrics-model`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        metricsModelChangeMode = false;
+        showToast('Metrics model saved', 'success');
+        await loadSetupAccount();
+        if (accountCanPreviewDashboard(setupAccount)) {
+          loadDashboard(true, { background: true });
+        }
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    function startMetricsModelChange() {
+      metricsModelChangeMode = true;
+      if (setupAccount) {
+        const panel = document.getElementById('setup-panel-mount');
+        if (panel) panel.innerHTML = renderClientSetupPanel(setupAccount);
+      }
+    }
+
+    function cancelMetricsModelChange() {
+      metricsModelChangeMode = false;
+      if (setupAccount) {
+        const panel = document.getElementById('setup-panel-mount');
+        if (panel) panel.innerHTML = renderClientSetupPanel(setupAccount);
+      }
+    }
+
+    function renderPipelineSelect(id, label, value, pipelines) {
+      return `
+        <div class="field-group">
+          <label for="${id}">${label}</label>
+          <select id="${id}">
+            <option value="">— Select pipeline —</option>
+            ${pipelines.map((pipeline) => `
+              <option value="${pipeline.id}" ${pipeline.id === value ? 'selected' : ''}>${pipeline.name}</option>
+            `).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    function renderClientSetupPanel(account) {
+      if (!IS_ADMIN_CLIENT || !account) return '';
+      const metricsLabels = getMetricsModelLabels(account);
+      const setupDisabled = !account.metricsModelSetAt ? ' is-disabled' : '';
+      return `
+        <div class="setup-panel">
+          <nav class="admin-breadcrumb">
+            <a href="/admin">Admin</a> / ${account.accountName}
+          </nav>
+          <div class="setup-panel-header">
+            <div class="setup-panel-identity">
+              <span class="setup-avatar" aria-hidden="true">${clientInitials(account.accountName)}</span>
+              <div>
+                <h2>${account.accountName}</h2>
+                <div class="setup-meta">
+                  <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
+                  <span class="setup-meta-divider">·</span>
+                  <span>${metricsLabels.typeLabel}</span>
+                  <span class="setup-meta-divider">·</span>
+                  <span>${formatRelativeSync(account.lastSyncAt)}</span>
+                </div>
+              </div>
+            </div>
+            ${renderCardMenu(CLIENT_SLUG, account.accountName)}
+          </div>
+          ${renderMetricsModelPanel(account)}
+
+          <div class="setup-section${setupDisabled}">
+            <div class="setup-section-info">
+              <div class="setup-section-title">GHL connection</div>
+              <p class="setup-section-desc">Private integration token and location for this sub-account. The token is stored encrypted.</p>
+            </div>
+            <div class="setup-grid setup-grid--2">
+              <div class="field-group">
+                <label for="setup-location-id">Location ID</label>
+                <input id="setup-location-id" type="text" value="${account.locationId || ''}" />
+              </div>
+              <div class="field-group">
+                <label for="setup-timezone">Timezone</label>
+                <input id="setup-timezone" type="text" value="${account.timezone || 'Europe/Copenhagen'}" />
+              </div>
+              <div class="field-group" style="grid-column:1/-1">
+                <label for="setup-ghl-token">GHL token</label>
+                <input id="setup-ghl-token" type="password" placeholder="${account.hasGhlToken ? '••••••••  (saved — leave blank to keep)' : 'Paste private integration token'}" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-section${setupDisabled}">
+            <div class="setup-section-info">
+              <div class="setup-section-title">Pipeline slots</div>
+              <p class="setup-section-desc">Map GHL pipelines to dashboard roles. Use Fetch pipelines below to refresh the list.</p>
+            </div>
+            <div class="setup-grid setup-grid--3">
+              ${renderPipelineSelect('setup-new-leads', 'New leads (required)', account.newLeadsPipelineId, setupPipelines)}
+              ${renderPipelineSelect('setup-sales', 'Sales (required)', account.salesPipelineId, setupPipelines)}
+              ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines)}
+            </div>
+          </div>
+
+          <div class="setup-actions${setupDisabled}">
+            <div class="setup-actions-group">
+              <button class="admin-btn" type="button" onclick="fetchSetupPipelines()">Fetch pipelines</button>
+              <button class="admin-btn" type="button" onclick="syncClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync data</button>
+              <a class="admin-btn" href="/?client=${encodeURIComponent(CLIENT_SLUG)}">${ICON_CHART} View as client</a>
+            </div>
+            <div class="setup-actions-group">
+              <label class="setup-ready-toggle">
+                <input id="setup-ready-ghl" type="checkbox" ${account.readyForGhl ? 'checked' : ''} />
+                <span>Ready for GHL iframe</span>
+              </label>
+              <button class="admin-btn admin-btn--primary" type="button" onclick="saveSetupAccount()">${ICON_CHECK} Save changes</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function accountCanPreviewDashboard(account) {
+      if (!account) return false;
+      return Boolean(account.hasGhlToken || account.lastSyncAt);
+    }
+
+    function renderAdminSetupPlaceholder() {
+      return `
+        <div class="note admin-setup-placeholder">
+          Save a GHL token and location ID above, then sync to preview dashboard data here.
+        </div>
+      `;
+    }
+
+    function renderAdminClientShell() {
+      const dashboard = document.getElementById('dashboard');
+      const emptyFilters = { pipelines: [], statuses: [], sources: [], assignees: [], dateFields: [] };
+      dashboard.innerHTML = `
+        <header class="brand-topbar">
+          <div class="brand-topbar-left">
+            <img
+              class="brand-logo"
+              src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png"
+              alt="Censio"
+              width="130"
+              height="32"
+            />
+          </div>
+          <a class="admin-topbar-link" href="/admin">Admin hub</a>
+        </header>
+
+        <div id="setup-panel-mount">
+          <div class="loading-state" style="padding:24px">
+            <div class="spinner"></div>
+            Loading setup...
+          </div>
+        </div>
+        <details class="panel admin-preview-section">
+          <summary>${ICON_CHART} Dashboard preview <span style="color:var(--text-soft);font-weight:500">· advanced filters</span><span class="summary-chevron">${ICON_CHEVRON}</span></summary>
+          ${renderAdminFiltersPanel(emptyFilters)}
+          ${renderAdminDisplayOptions(false)}
+          <div class="content-area" id="dashboard-content">
+            ${renderAdminSetupPlaceholder()}
+          </div>
+        </details>
+      `;
+    }
+
+    async function initAdminClientPage() {
+      renderAdminClientShell();
+      try {
+        await loadSetupAccount();
+      } catch (error) {
+        const panel = document.getElementById('setup-panel-mount');
+        if (panel) {
+          panel.innerHTML = `<div class="note" style="padding:24px">${error.message}</div>`;
+        }
+        return;
+      }
+
+      if (accountCanPreviewDashboard(setupAccount)) {
+        ensureChartsVisible();
+        loadDashboard(true);
+      }
+    }
+
+    async function loadSetupAccount() {
+      if (!IS_ADMIN_CLIENT) return;
+      try {
+        const data = await adminFetch(`/api/clients/${encodeURIComponent(CLIENT_SLUG)}`);
+        setupAccount = data.account;
+        if (setupAccount.newLeadsPipelineId && !setupPipelines.length) {
+          await fetchSetupPipelines(true);
+        }
+        const panel = document.getElementById('setup-panel-mount');
+        if (panel) panel.innerHTML = renderClientSetupPanel(setupAccount);
+      } catch (error) {
+        const panel = document.getElementById('setup-panel-mount');
+        if (panel) {
+          panel.innerHTML = `<div class="note" style="padding:24px">${error.message}</div>`;
+        }
+        showToast(error.message, 'error');
+        throw error;
+      }
+    }
+
+    async function fetchSetupPipelines(silent = false) {
+      try {
+        const data = await adminFetch(`/api/clients/${encodeURIComponent(CLIENT_SLUG)}/sync-pipelines`, {
+          method: 'POST',
+          body: '{}',
+        });
+        setupPipelines = data.pipelines || [];
+        if (!silent) showToast(`${setupPipelines.length} pipeline(s) loaded`, 'success');
+        await loadSetupAccount();
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function saveSetupAccount() {
+      try {
+        const payload = {
+          locationId: document.getElementById('setup-location-id')?.value?.trim() || null,
+          timezone: document.getElementById('setup-timezone')?.value?.trim() || 'Europe/Copenhagen',
+          newLeadsPipelineId: document.getElementById('setup-new-leads')?.value || null,
+          salesPipelineId: document.getElementById('setup-sales')?.value || null,
+          afterSalesPipelineId: document.getElementById('setup-after-sales')?.value || null,
+          readyForGhl: Boolean(document.getElementById('setup-ready-ghl')?.checked),
+        };
+        const token = document.getElementById('setup-ghl-token')?.value?.trim();
+        if (token) payload.ghlToken = token;
+        await adminFetch(`/api/clients/${encodeURIComponent(CLIENT_SLUG)}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+        showToast('Account saved', 'success');
+        await loadSetupAccount();
+        if (accountCanPreviewDashboard(setupAccount)) {
+          loadDashboard(true);
+        }
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
 
     (function initDashboardCharts(global) {
       const PALETTE = ['#ff6a00', '#138b53', '#0085f2', '#dc640a', '#833b08', '#a07868', '#ff9147', '#6b5348'];
@@ -1028,7 +3044,9 @@
         totalRevenue: 'Total Revenue',
         adSpend: 'Ad Spend',
         roas: 'ROAS',
+        roasDk: 'ROAS (DK)',
         poas: 'POAS',
+        poasDk: 'POAS (DK)',
         costPerLead: 'Cost per Lead',
         costPerWonClient: 'Cost per Won Client',
         clientsWon: 'Clients Won',
@@ -1089,10 +3107,8 @@
       },
     };
 
-    const FACEBOOK_CLIENT_ID = new URLSearchParams(window.location.search).get('client') || 'suntech-nordic';
-
     const state = {
-      pipelineIds: loadPipelineSelection(),
+      pipelineIds: usesClientPipelineDefaults() ? [] : loadPipelineSelection(),
       status: 'all',
       source: 'all',
       assignedTo: 'all',
@@ -1129,6 +3145,9 @@
         state.status,
         state.source,
         state.assignedTo,
+        state.dateField,
+        state.dateFrom || '',
+        state.dateTo || '',
       ].join('|');
     }
 
@@ -1200,9 +3219,17 @@
       });
     }
 
+    function usesClientPipelineDefaults() {
+      return IS_CLIENT_VIEW || IS_ADMIN;
+    }
+
+    function getPipelineStorageKey() {
+      return `cenhub_pipelines_${facebookClientId || CLIENT_SLUG}`;
+    }
+
     function loadPipelineSelection() {
       try {
-        const saved = JSON.parse(localStorage.getItem(PIPELINE_KEY) || '[]');
+        const saved = JSON.parse(localStorage.getItem(getPipelineStorageKey()) || '[]');
         return Array.isArray(saved) ? saved : [];
       } catch {
         return [];
@@ -1213,34 +3240,62 @@
       return pipelines.map((pipeline) => pipeline.id);
     }
 
-    const CENHUB_DEFAULT_PIPELINES = ['Salg Pipeline', 'Nye leads Pipeline'];
-
-    function getDefaultPipelineIds(pipelines) {
-      const matched = pipelines
-        .filter((pipeline) => CENHUB_DEFAULT_PIPELINES.includes(pipeline.name))
-        .map((pipeline) => pipeline.id);
-      return matched.length ? matched : getAllPipelineIds(pipelines);
+    function getDefaultPipelineIds(pipelines, accountDefaults = []) {
+      const allIds = getAllPipelineIds(pipelines);
+      const fromAccount = (accountDefaults || []).filter((id) => allIds.includes(id));
+      if (fromAccount.length) return fromAccount;
+      return allIds.length ? allIds : [];
     }
 
-    function ensurePipelineDefaults(pipelines) {
-      if (pipelineDefaultsApplied || !pipelines.length) return;
+    function ensurePipelineDefaults(pipelines, accountDefaults = []) {
+      if (!pipelines.length) return;
 
-      const allIds = getAllPipelineIds(pipelines);
-      const saved = loadPipelineSelection();
-
-      if (!saved.length) {
-        state.pipelineIds = getDefaultPipelineIds(pipelines);
-      } else {
-        state.pipelineIds = saved.filter((id) => allIds.includes(id));
-        if (!state.pipelineIds.length) state.pipelineIds = [...allIds];
+      if (usesClientPipelineDefaults()) {
+        state.pipelineIds = getDefaultPipelineIds(pipelines, accountDefaults);
+        pipelineDefaultsApplied = true;
+        return;
       }
 
-      pipelineDefaultsApplied = true;
-      savePipelineSelection();
+      const allIds = getAllPipelineIds(pipelines);
+      let saved = loadPipelineSelection();
+      if (!saved.length) {
+        try {
+          saved = JSON.parse(localStorage.getItem(PIPELINE_KEY) || '[]');
+        } catch {
+          saved = [];
+        }
+      }
+
+      if (!saved.length || !pipelineDefaultsApplied) {
+        if (!saved.length) {
+          state.pipelineIds = getDefaultPipelineIds(pipelines, accountDefaults);
+        } else {
+          state.pipelineIds = saved.filter((id) => allIds.includes(id));
+          if (!state.pipelineIds.length) {
+            state.pipelineIds = getDefaultPipelineIds(pipelines, accountDefaults);
+          }
+        }
+        pipelineDefaultsApplied = true;
+        savePipelineSelection();
+      } else if (!state.pipelineIds.length) {
+        state.pipelineIds = getDefaultPipelineIds(pipelines, accountDefaults);
+        savePipelineSelection();
+      }
+    }
+
+    function ensurePipelineSelectionBeforeFetch() {
+      if (state.pipelineIds.length) return true;
+      if (!availablePipelines.length) return false;
+      state.pipelineIds = getDefaultPipelineIds(
+        availablePipelines,
+        cachedData?.account?.defaultPipelineIds,
+      );
+      if (state.pipelineIds.length && !usesClientPipelineDefaults()) savePipelineSelection();
+      return state.pipelineIds.length > 0;
     }
 
     function savePipelineSelection() {
-      localStorage.setItem(PIPELINE_KEY, JSON.stringify(state.pipelineIds));
+      localStorage.setItem(getPipelineStorageKey(), JSON.stringify(state.pipelineIds));
     }
 
     function isPipelineSelected(id) {
@@ -1419,9 +3474,14 @@
 
       params.set('pipelineIds', selected.join(','));
 
-      ['status', 'source', 'assignedTo', 'dateField', 'dateFrom', 'dateTo', 'adSpend'].forEach((key) => {
+      if (state.dateField) params.set('dateField', state.dateField);
+      if (state.dateFrom) params.set('dateFrom', state.dateFrom);
+      if (state.dateTo) params.set('dateTo', state.dateTo);
+
+      ['status', 'source', 'assignedTo', 'adSpend'].forEach((key) => {
         if (state[key] && state[key] !== 'all') params.set(key, state[key]);
       });
+      appendTenantParams(params);
       return params.toString();
     }
 
@@ -1445,11 +3505,18 @@
       } else if (preset === 'month') {
         state.dateFrom = formatDateInput(new Date(year, month, 1));
         state.dateTo = formatDateInput(new Date(year, month + 1, 0));
-        state.dateField = 'createdAt';
+        state.dateField = 'lastStatusChangeAt';
+      } else if (preset === 'lastMonth') {
+        const lastMonthStart = new Date(year, month - 1, 1);
+        const lastYear = lastMonthStart.getFullYear();
+        const lastMonth = lastMonthStart.getMonth();
+        state.dateFrom = formatDateInput(new Date(lastYear, lastMonth, 1));
+        state.dateTo = formatDateInput(new Date(lastYear, lastMonth + 1, 0));
+        state.dateField = 'lastStatusChangeAt';
       } else if (preset === 'year') {
         state.dateFrom = `${year}-01-01`;
         state.dateTo = `${year}-12-31`;
-        state.dateField = 'createdAt';
+        state.dateField = 'lastStatusChangeAt';
       }
     }
 
@@ -1470,6 +3537,8 @@
       document.querySelectorAll('[data-preset]').forEach((button) => {
         button.classList.toggle('active', button.dataset.preset === state.preset);
       });
+
+      refreshPipelinePanel();
     }
 
     function onManualDateChange() {
@@ -1479,6 +3548,7 @@
 
     function onFilterChange(key, value) {
       state[key] = value;
+      applyDataFilters(false);
     }
 
     async function fetchJson(url, signal) {
@@ -1508,7 +3578,7 @@
 
     async function fetchFacebookMetrics(signal) {
       try {
-        return await fetchJson(`/api/facebook-metrics?client=${encodeURIComponent(FACEBOOK_CLIENT_ID)}`, signal);
+        return await fetchJson(`/api/facebook-metrics?client=${encodeURIComponent(facebookClientId)}`, signal);
       } catch (error) {
         if (error.name === 'AbortError') throw error;
         return null;
@@ -1540,15 +3610,22 @@
     }
 
     async function bootstrapDashboardData(signal) {
-      const data = await fetchJson('/api/dashboard', signal);
+      const params = new URLSearchParams();
+      appendTenantParams(params);
+      const query = params.toString();
+      const data = await fetchJson(`/api/dashboard${query ? `?${query}` : ''}`, signal);
+      if (data.account?.clientId) facebookClientId = data.account.clientId;
       return applyChartFieldsCache(data);
     }
 
     function refreshPipelinePanel() {
       const panel = document.getElementById('pipeline-panel');
-      if (panel && availablePipelines.length) {
-        panel.innerHTML = renderPipelineSelector(availablePipelines);
+      if (!panel) return;
+      if (!availablePipelines.length) {
+        panel.innerHTML = '<div class="pipeline-note">Sync client data to load pipelines.</div>';
+        return;
       }
+      panel.innerHTML = renderPipelineSelector(availablePipelines);
     }
 
     function selectAllPipelinesAction() {
@@ -1567,7 +3644,7 @@
     }
 
     function selectCenhubPipelinesAction() {
-      setPipelineSelection(getDefaultPipelineIds(availablePipelines));
+      setPipelineSelection(getDefaultPipelineIds(availablePipelines, cachedData?.account?.defaultPipelineIds));
       refreshPipelinePanel();
     }
 
@@ -1642,7 +3719,7 @@
         <div class="card chart-card">
           <div class="section-title">${definition.title}</div>
           ${definition.subtitle ? `<div class="card-sub" style="margin-top:-4px;margin-bottom:12px">${definition.subtitle}</div>` : ''}
-          <div class="chart-empty note" style="display:none">No data for selected filters.</div>
+          <div class="chart-empty note" style="display:none">${ADMIN_UI ? 'No data for selected filters.' : 'Ingen data for den valgte periode.'}</div>
           <div class="chart-canvas-wrap${isCircular ? ' chart-canvas-wrap--circular' : ''}">
             <canvas id="chart-${chartId}"></canvas>
           </div>
@@ -1715,44 +3792,19 @@
       return `
         <button type="button" class="preset-btn ${state.preset === 'all' ? 'active' : ''}" data-preset="all" onclick="applyPreset('all')">Till date</button>
         <button type="button" class="preset-btn ${state.preset === 'month' ? 'active' : ''}" data-preset="month" onclick="applyPreset('month')">This month</button>
+        <button type="button" class="preset-btn ${state.preset === 'lastMonth' ? 'active' : ''}" data-preset="lastMonth" onclick="applyPreset('lastMonth')">Last month</button>
         <button type="button" class="preset-btn ${state.preset === 'year' ? 'active' : ''}" data-preset="year" onclick="applyPreset('year')">This year</button>
       `;
     }
 
     function renderAdminFiltersPanel(filterOptions) {
       return `
-        <div class="panel">
+        <div class="panel" id="admin-filters-panel">
           <div class="panel-title">Data filters</div>
           <div class="filters">
             <div class="filters-row">
-              <div class="filter-group full-width">
-                <label>Pipelines</label>
-                <div class="pipeline-box" id="pipeline-panel">
-                  ${renderPipelineSelector(filterOptions.pipelines)}
-                </div>
-              </div>
-            </div>
-
-            <div class="filters-row">
-              ${renderSelect('status', 'Status', filterOptions.statuses, state.status)}
               ${renderSelect('source', 'Source', filterOptions.sources, state.source)}
               ${renderSelect('assignedTo', 'Assignee', filterOptions.assignees, state.assignedTo)}
-              ${renderSelect('dateField', 'Date field', filterOptions.dateFields, state.dateField)}
-            </div>
-
-            <div class="filters-row compact">
-              <div class="filter-group">
-                <label for="dateFrom">From</label>
-                <input id="dateFrom" type="date" value="${state.dateFrom || ''}" onchange="state.dateFrom=this.value; onManualDateChange()" />
-              </div>
-              <div class="filter-group">
-                <label for="dateTo">To</label>
-                <input id="dateTo" type="date" value="${state.dateTo || ''}" onchange="state.dateTo=this.value; onManualDateChange()" />
-              </div>
-              <div class="filter-group">
-                <label for="adSpend">Ad spend (manual)</label>
-                <input id="adSpend" type="number" min="0" step="1" value="${state.adSpend || ''}" placeholder="45190" onchange="state.adSpend=this.value" />
-              </div>
             </div>
 
             <div class="filters-row actions-row">
@@ -1768,7 +3820,7 @@
 
     function renderAdminDisplayOptions(displayOpen) {
       return `
-        <details class="panel" ${displayOpen ? 'open' : ''}>
+        <details class="panel" id="admin-display-panel" ${displayOpen ? 'open' : ''}>
           <summary class="panel-title">Display options</summary>
           <div class="display-grid">
             ${renderCheckboxGroup('KPI cards', 'kpis', DISPLAY_OPTIONS.kpis)}
@@ -1783,6 +3835,18 @@
       `;
     }
 
+    function renderKpiSkeleton() {
+      return `
+        <div class="kpi-skeleton-grid">
+          ${Array.from({ length: 6 }).map(() => '<div class="skeleton-block"></div>').join('')}
+        </div>
+      `;
+    }
+
+    function clientKpiCopy(adminText, clientText) {
+      return IS_CLIENT_VIEW && !IS_PREVIEW ? clientText : adminText;
+    }
+
     function renderKpiCards(kpis) {
       const cards = [];
 
@@ -1791,7 +3855,14 @@
           <div class="card primary">
             <div class="card-label">Total Revenue</div>
             <div class="card-value">Dkr ${fmtCompact(kpis.totalRevenue)}</div>
-            <div class="card-sub">${kpis.hasDateFilter ? `Eftersalg won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)` : `Sum of Eftersalg won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`}</div>
+            <div class="card-sub">${clientKpiCopy(
+              kpis.hasDateFilter
+                ? `Eftersalg won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)`
+                : `Sum of Eftersalg won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`,
+              kpis.hasDateFilter
+                ? `Vundet omsætning i perioden (${fmt(kpis.wonOpportunityCount)} handler)`
+                : `Samlet vundet omsætning (${fmt(kpis.wonOpportunityCount)} handler)`,
+            )}</div>
           </div>
         `);
       }
@@ -1816,12 +3887,30 @@
           </div>
         `);
       }
+      if (isVisible('kpis', 'roasDk')) {
+        cards.push(`
+          <div class="card accent">
+            <div class="card-label">ROAS (DK)</div>
+            <div class="card-value">${kpis.adSpend > 0 ? `Dkr ${fmtCompact(kpis.roasDk)}` : '—'}</div>
+            <div class="card-sub">Won revenue − ad spend</div>
+          </div>
+        `);
+      }
       if (isVisible('kpis', 'poas')) {
         cards.push(`
           <div class="card accent">
             <div class="card-label">POAS</div>
             <div class="card-value">${fmtRoas(kpis.poas)}</div>
             <div class="card-sub">Bundlinje ÷ ad spend</div>
+          </div>
+        `);
+      }
+      if (isVisible('kpis', 'poasDk')) {
+        cards.push(`
+          <div class="card accent">
+            <div class="card-label">POAS (DK)</div>
+            <div class="card-value">${kpis.adSpend > 0 ? `Dkr ${fmtCompact(kpis.poasDk)}` : '—'}</div>
+            <div class="card-sub">Bundlinje − ad spend</div>
           </div>
         `);
       }
@@ -1839,7 +3928,7 @@
           <div class="card">
             <div class="card-label">Cost per Won Client</div>
             <div class="card-value">${kpis.costPerWonClient > 0 ? `Dkr ${fmtCompact(kpis.costPerWonClient)}` : '—'}</div>
-            <div class="card-sub">Ad spend ÷ Eftersalg clients won</div>
+            <div class="card-sub">${clientKpiCopy('Ad spend ÷ Eftersalg clients won', 'Annonceforbrug ÷ vundne kunder')}</div>
           </div>
         `);
       }
@@ -1848,7 +3937,10 @@
           <div class="card">
             <div class="card-label">Clients Won</div>
             <div class="card-value">${fmt(kpis.clientsWon)}</div>
-            <div class="card-sub">${kpis.hasDateFilter ? 'Unique Eftersalg wins in period' : 'Unique won clients in Eftersalg pipeline'}</div>
+            <div class="card-sub">${clientKpiCopy(
+              kpis.hasDateFilter ? 'Unique Eftersalg wins in period' : 'Unique won clients in Eftersalg pipeline',
+              kpis.hasDateFilter ? 'Unikke kunder vundet i perioden' : 'Unikke kunder vundet i alt',
+            )}</div>
           </div>
         `);
       }
@@ -1857,7 +3949,7 @@
           <div class="card">
             <div class="card-label">Total Leads</div>
             <div class="card-value">${fmt(kpis.totalLeads)}</div>
-            <div class="card-sub">${kpis.hasDateFilter ? 'New opportunities created in selected period' : kpis.usingCenhubDefaults ? `Total contacts (${fmt(kpis.opportunityCount)} opportunities)` : 'Opportunities in filter'}</div>
+            <div class="card-sub">${kpis.hasDateFilter ? 'New opportunities created in selected period' : kpis.usingCenhubDefaults ? 'New opportunities created in selected period' : 'Opportunities in filter'}</div>
           </div>
         `);
       }
@@ -1884,7 +3976,7 @@
           <div class="card">
             <div class="card-label">Conversion Rate</div>
             <div class="card-value">${fmtPct(kpis.conversionRate)}</div>
-            <div class="card-sub">Eftersalg wins ÷ new leads in period</div>
+            <div class="card-sub">${clientKpiCopy('Eftersalg wins ÷ new leads in period', 'Vundne kunder ÷ nye leads i perioden')}</div>
           </div>
         `);
       }
@@ -1911,7 +4003,10 @@
           <div class="card">
             <div class="card-label">Avg Won Deal Size</div>
             <div class="card-value">Dkr ${fmtCompact(kpis.averageWonDealSize)}</div>
-            <div class="card-sub">Eftersalg won revenue ÷ won deals (${fmt(kpis.wonOpportunityCount)})</div>
+            <div class="card-sub">${clientKpiCopy(
+              `Eftersalg won revenue ÷ won deals (${fmt(kpis.wonOpportunityCount)})`,
+              `Gns. vundet handel (${fmt(kpis.wonOpportunityCount)} handler)`,
+            )}</div>
           </div>
         `);
       }
@@ -1951,11 +4046,26 @@
       return `<div class="status-grid">${items.join('')}</div>`;
     }
 
+    function renderMetricsChangeBanner(data) {
+      const changedAt = data.account?.metricsModel?.changedAt;
+      if (!changedAt) return '';
+      const ageMs = Date.now() - new Date(changedAt).getTime();
+      if (ageMs > 7 * 24 * 60 * 60 * 1000) return '';
+      const version = data.account?.metricsModel?.version || 1;
+      return `
+        <div class="metrics-change-banner">
+          Metrics model updated on ${new Date(changedAt).toLocaleString('en-GB')} (v${version}).
+          Revenue, clients won, and won-revenue charts now use: ${data.account.metricsModel.winSourceLabel || data.account.metricsModel.label}.
+        </div>
+      `;
+    }
+
     function renderDashboardContent(data) {
       const { kpis, statusBreakdown, sourceReport, assigneeReport, pipelines, filters } = data;
       const showStatus = isVisible('sections', 'statusBreakdown');
 
       return `
+        ${renderMetricsChangeBanner(data)}
         ${renderKpiCards(kpis)}
 
         ${renderChartsSection()}
@@ -2043,8 +4153,8 @@
 
         ${IS_ADMIN ? `
         <div class="note">
-          ${kpis.usingCenhubDefaults ? 'Till-date Total Leads uses contact count from GHL. ' : ''}
-          Active filters: pipelines=${formatSelectedPipelines(data.filterOptions.pipelines)}, status=${filters.status}, source=${filters.source}, assignee=${filters.assignedTo}, dates=${formatActiveDateFilter(filters)}.
+          ${kpis.usingCenhubDefaults ? 'Till-date Total Leads uses deduped opportunities from account pipeline defaults. ' : ''}
+          Active filters: source=${filters.source}, assignee=${filters.assignedTo}, dates=${formatActiveDateFilter(filters)}.
         </div>
         ` : ''}
         <div class="brand-footer">
@@ -2055,6 +4165,24 @@
     }
 
     function updateDashboardContent(data) {
+      if (IS_ADMIN) {
+        const filtersPanel = document.getElementById('admin-filters-panel');
+        if (filtersPanel) {
+          filtersPanel.outerHTML = renderAdminFiltersPanel(data.filterOptions || {
+            pipelines: [],
+            statuses: [],
+            sources: [],
+            assignees: [],
+            dateFields: [],
+          });
+        }
+        const displayPanel = document.getElementById('admin-display-panel');
+        if (displayPanel) {
+          const displayOpen = Boolean(displayPanel.open);
+          displayPanel.outerHTML = renderAdminDisplayOptions(displayOpen);
+        }
+      }
+
       const content = document.getElementById('dashboard-content');
       if (content) {
         content.innerHTML = renderDashboardContent(data);
@@ -2064,8 +4192,9 @@
 
     function renderDashboard(data) {
       const dashboard = document.getElementById('dashboard');
-      const { filterOptions } = data;
+      const { filterOptions, account = {} } = data;
       const displayOpen = document.querySelector('details.panel')?.open;
+      const accountName = account.accountName || 'SunTech Nordic';
 
       dashboard.innerHTML = `
         <header class="brand-topbar">
@@ -2078,13 +4207,24 @@
               height="32"
             />
           </div>
-          ${IS_ADMIN ? '<a class="admin-topbar-link" href="/">Client dashboard</a>' : ''}
+          ${IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : ''}
         </header>
 
+        ${IS_ADMIN_CLIENT ? `
+        <div id="setup-panel-mount"></div>
+        <details class="panel admin-preview-section"${document.querySelector('.admin-preview-section')?.open ? ' open' : ''}>
+          <summary>${ICON_CHART} Dashboard preview <span style="color:var(--text-soft);font-weight:500">· advanced filters</span><span class="summary-chevron">${ICON_CHEVRON}</span></summary>
+          ${renderAdminFiltersPanel(filterOptions)}
+          ${renderAdminDisplayOptions(displayOpen)}
+          <div class="content-area" id="dashboard-content">
+            ${renderDashboardContent(data)}
+          </div>
+        </details>
+        ` : `
         <div class="page-hero">
           <div class="header">
             <div>
-              <h1>SunTech Nordic</h1>
+              <h1>${accountName}</h1>
               <p>Performance dashboard · Pipeline & omsætning</p>
             </div>
             ${IS_ADMIN ? '' : `
@@ -2094,14 +4234,15 @@
             `}
           </div>
         </div>
-
         ${IS_ADMIN ? renderAdminFiltersPanel(filterOptions) : ''}
         ${IS_ADMIN ? renderAdminDisplayOptions(displayOpen) : ''}
-
         <div class="content-area" id="dashboard-content">
           ${renderDashboardContent(data)}
         </div>
+        `}
       `;
+
+      if (IS_ADMIN_CLIENT) loadSetupAccount();
     }
 
     let isFetching = false;
@@ -2167,9 +4308,11 @@
                 </div>
               </header>
               <div class="spinner"></div>
-              Henter dashboard data...
+              ${LOADING_MSG}
             </div>`;
         } else if (!background) {
+          const content = document.getElementById('dashboard-content');
+          if (content) content.innerHTML = renderKpiSkeleton();
           if (applyBtn) {
             applyBtn.disabled = true;
             applyBtn.textContent = 'Loading...';
@@ -2182,7 +4325,12 @@
             const bootstrap = await bootstrapDashboardData(signal);
             if (generation !== fetchGeneration) return;
             availablePipelines = bootstrap.filterOptions.pipelines || [];
-            ensurePipelineDefaults(availablePipelines);
+            ensurePipelineDefaults(availablePipelines, bootstrap.account?.defaultPipelineIds);
+          }
+
+          const pipelineSelectionReady = ensurePipelineSelectionBeforeFetch();
+          if (!pipelineSelectionReady) {
+            throw new Error('Select at least one pipeline.');
           }
 
           const [data, fbMetrics] = await Promise.all([
@@ -2192,15 +4340,28 @@
           if (generation !== fetchGeneration) return;
           cachedFacebookMetrics = fbMetrics;
           cachedData = applyMarketingData(data, fbMetrics);
+          if (cachedData.account?.clientId) facebookClientId = cachedData.account.clientId;
           availablePipelines = cachedData.filterOptions.pipelines || availablePipelines;
+          ensurePipelineDefaults(availablePipelines, cachedData?.account?.defaultPipelineIds);
         } catch (error) {
           if (error.name === 'AbortError' || generation !== fetchGeneration) return;
-          if (!hasLayout) {
+          if (IS_ADMIN_CLIENT && hasLayout) {
+            const content = document.getElementById('dashboard-content');
+            if (content) {
+              content.innerHTML = `
+                <div class="note admin-setup-placeholder">
+                  ${error.message}
+                  <div style="margin-top:12px">
+                    <button type="button" class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
+                  </div>
+                </div>`;
+            }
+          } else if (!hasLayout) {
             dashboard.innerHTML = `
               <div class="error-state">
                 <div>Fejl ved hentning af data</div>
                 <div style="margin-top:8px;font-size:12px;color:#666">${error.message}</div>
-                <button class="refresh-btn primary" onclick="loadDashboard(true)">Prov igen</button>
+                <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
               </div>
             `;
           } else if (applyBtn) {
@@ -2236,7 +4397,7 @@
           <div class="error-state">
             <div>Fejl ved visning af dashboard</div>
             <div style="margin-top:8px;font-size:12px;color:#666">${error.message}</div>
-            <button class="refresh-btn primary" onclick="loadDashboard(true)">Prov igen</button>
+            <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
           </div>
         `;
       }
@@ -2266,23 +4427,46 @@
     function applyDataFilters(syncFromDom = true) {
       if (syncFromDom) syncFiltersFromDom();
 
+      if (!state.pipelineIds.length && availablePipelines.length) {
+        ensurePipelineDefaults(availablePipelines, cachedData?.account?.defaultPipelineIds);
+      }
+
       if (!state.pipelineIds.length) {
-        if (IS_ADMIN) {
-          refreshPipelinePanel();
-          return;
-        }
-        if (availablePipelines.length) ensurePipelineDefaults(availablePipelines);
-        if (!state.pipelineIds.length) return;
+        return;
       }
 
       loadDashboard(true);
     }
 
-    ensureChartsVisible();
-    loadDashboard(true);
-    setInterval(() => {
-      loadDashboard(true, { background: true });
-    }, 5 * 60 * 1000);
+    async function initDashboardApp() {
+      if (IS_ADMIN_HUB) {
+        loadAdminHub();
+        return;
+      }
+
+      try {
+        tenantParams = await resolveTenantParams();
+      } catch (error) {
+        document.getElementById('dashboard').innerHTML = `
+          <div class="error-state" style="padding:24px">${error.message}</div>`;
+        return;
+      }
+
+      if (IS_ADMIN_CLIENT) {
+        await initAdminClientPage();
+        return;
+      }
+
+      ensureChartsVisible();
+      loadDashboard(true);
+      setInterval(() => {
+        loadDashboard(true, { background: true });
+      }, 5 * 60 * 1000);
+    }
+
+    initDashboardApp();
+
+    document.addEventListener('click', closeCardMenus);
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState !== 'visible' || !isFetching) return;
