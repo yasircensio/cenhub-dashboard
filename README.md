@@ -47,7 +47,8 @@ See `.env.example` for the full list. Key vars:
 | `DASHBOARD_ADMIN_API_KEY` | Protects `/api/clients` writes and admin list |
 | `ACCOUNT_CONFIG_ENCRYPTION_KEY` | Encrypts stored GHL tokens (optional locally — plaintext fallback in file store) |
 | `DATABASE_URL` | Neon Postgres (optional — file fallback if unset) |
-| `DASHBOARD_READ_SOURCE` | `snapshot` (default) or `live` |
+| `DASHBOARD_READ_SOURCE` | `live` (default) or `snapshot` (debug only) |
+| `DASHBOARD_CACHE_TTL_MINUTES` | Short server buffer so filter clicks don’t re-hit GHL (default `2`) |
 | `GHL_SSO_SHARED_SECRET` | GHL marketplace app SSO validation |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Daily cron sync (optional — manual sync works without) |
 
@@ -98,6 +99,36 @@ Every sync attempt is logged to `sync_runs`. Failures surface as `sync_error` on
 | After-sales | No | Revenue, clients won, Bundlinje, POAS |
 
 When after-sales is set, dedupe pairs funnel + sales opportunities with after-sales wins by `contactId`. Win KPIs follow the account **metrics model** (`lib/metrics-model.js`).
+
+## Data flow (simplified)
+
+One client, low traffic — dashboard always reads **live GHL**, with a small buffer so clicking filters doesn’t hammer the API.
+
+```
+Open dashboard / refresh after 1+ min  →  GHL live (fresh leads)
+Click filters within 1 min             →  same data, new filters only (fast)
+GHL down                               →  last Neon sync (fallback)
+Admin Sync now                         →  updates Neon backup
+```
+
+| When | What happens |
+|------|----------------|
+| First open / browser refresh | GHL live |
+| Click preset or filter **within 1 min** | Reuses recent GHL data (fast) |
+| Click preset or filter **after 1 min** | GHL live again |
+| Tab hidden then visible after 1 min | Background GHL refresh |
+| Every 2 min while page is open | Background GHL refresh |
+| GHL error | Neon snapshot fallback |
+
+Neon is for **admin config, tokens, and backup** — not the normal read path.
+
+Optional env (defaults are fine for SunTech):
+
+```
+DASHBOARD_CACHE_TTL_MINUTES=2
+```
+
+Remove `DASHBOARD_READ_SOURCE=live` if you added it for testing — live is already the default.
 
 ## Facebook metrics (temporary)
 

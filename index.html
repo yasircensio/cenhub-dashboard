@@ -3118,6 +3118,8 @@
     let chartInstances = {};
     let chartFieldsCache = null;
     let chartFieldsCacheKey = null;
+    let lastFetchedAt = 0;
+    const DATA_FRESH_MS = 60 * 1000;
 
     const CHART_FIELD_KEYS = [
       'weeklyRevenue',
@@ -3453,7 +3455,11 @@
       return `${filters.dateFrom || 'start'} to ${filters.dateTo || 'now'}`;
     }
 
-    function buildQuery(pipelines) {
+    function needsFreshData() {
+      return !lastFetchedAt || Date.now() - lastFetchedAt > DATA_FRESH_MS;
+    }
+
+    function buildQuery(pipelines, options = {}) {
       const params = new URLSearchParams();
       const allIds = getAllPipelineIds(pipelines || []);
       const selected = state.pipelineIds.filter((id) => allIds.includes(id));
@@ -3472,6 +3478,7 @@
         if (state[key] && state[key] !== 'all') params.set(key, state[key]);
       });
       appendTenantParams(params);
+      if (options.forceFresh) params.set('fresh', '1');
       return params.toString();
     }
 
@@ -3593,15 +3600,16 @@
       return result;
     }
 
-    async function fetchDashboardData(pipelines, signal) {
-      const query = buildQuery(pipelines);
+    async function fetchDashboardData(pipelines, signal, options = {}) {
+      const query = buildQuery(pipelines, options);
       const data = await fetchJson(`/api/dashboard${query ? `?${query}` : ''}`, signal);
       return applyChartFieldsCache(data);
     }
 
-    async function bootstrapDashboardData(signal) {
+    async function bootstrapDashboardData(signal, options = {}) {
       const params = new URLSearchParams();
       appendTenantParams(params);
+      if (options.forceFresh) params.set('fresh', '1');
       const query = params.toString();
       const data = await fetchJson(`/api/dashboard${query ? `?${query}` : ''}`, signal);
       if (data.account?.clientId) facebookClientId = data.account.clientId;
@@ -4266,7 +4274,8 @@
     }
 
     async function loadDashboard(refetch = true, options = {}) {
-      const { background = false } = options;
+      const { background = false, forceFresh = false } = options;
+      const shouldFetchFresh = forceFresh || (refetch && needsFreshData());
       const dashboard = document.getElementById('dashboard');
 
       if (isFetching && (refetch || !cachedData)) {
@@ -4312,7 +4321,7 @@
 
         try {
           if (!availablePipelines.length) {
-            const bootstrap = await bootstrapDashboardData(signal);
+            const bootstrap = await bootstrapDashboardData(signal, { forceFresh: shouldFetchFresh });
             if (generation !== fetchGeneration) return;
             availablePipelines = bootstrap.filterOptions.pipelines || [];
             ensurePipelineDefaults(availablePipelines, bootstrap.account?.defaultPipelineIds);
@@ -4324,7 +4333,7 @@
           }
 
           const [data, fbMetrics] = await Promise.all([
-            fetchDashboardData(availablePipelines, signal),
+            fetchDashboardData(availablePipelines, signal, { forceFresh: shouldFetchFresh }),
             fetchFacebookMetrics(signal),
           ]);
           if (generation !== fetchGeneration) return;
@@ -4333,6 +4342,9 @@
           if (cachedData.account?.clientId) facebookClientId = cachedData.account.clientId;
           availablePipelines = cachedData.filterOptions.pipelines || availablePipelines;
           ensurePipelineDefaults(availablePipelines, cachedData?.account?.defaultPipelineIds);
+          lastFetchedAt = cachedData.cachedAt
+            ? new Date(cachedData.cachedAt).getTime()
+            : Date.now();
         } catch (error) {
           if (error.name === 'AbortError' || generation !== fetchGeneration) return;
           if (IS_ADMIN_CLIENT && hasLayout) {
@@ -4448,10 +4460,10 @@
       }
 
       ensureChartsVisible();
-      loadDashboard(true);
+      loadDashboard(true, { forceFresh: true });
       setInterval(() => {
-        loadDashboard(true, { background: true });
-      }, 5 * 60 * 1000);
+        loadDashboard(true, { background: true, forceFresh: true });
+      }, 2 * 60 * 1000);
     }
 
     initDashboardApp();
@@ -4459,11 +4471,14 @@
     document.addEventListener('click', closeCardMenus);
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState !== 'visible' || !isFetching) return;
-      if (Date.now() - fetchStartedAt > FETCH_TIMEOUT_MS) {
+      if (document.visibilityState !== 'visible') return;
+      if (isFetching && Date.now() - fetchStartedAt > FETCH_TIMEOUT_MS) {
         cancelActiveFetch();
         fetchGeneration += 1;
         resetFetchUiState();
+      }
+      if (!IS_ADMIN_HUB && cachedData && needsFreshData()) {
+        loadDashboard(true, { background: true, forceFresh: true });
       }
     });
   </script>

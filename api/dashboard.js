@@ -1,7 +1,7 @@
 const { getDashboardData } = require('../lib/dashboard-data');
 
 module.exports = async function dashboardHandler(request, response) {
-  response.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=240');
+  response.setHeader('Cache-Control', 'private, no-store');
 
   if (request.method === 'OPTIONS') {
     response.status(204).end();

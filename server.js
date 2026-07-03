@@ -106,7 +106,10 @@ const server = http.createServer(async (request, response) => {
     try {
       const query = Object.fromEntries(requestUrl.searchParams);
       const data = await getDashboardData(query);
-      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'private, no-store',
+      });
       response.end(JSON.stringify(data, null, 2));
     } catch (error) {
       response.writeHead(502, { 'Content-Type': 'application/json' });
