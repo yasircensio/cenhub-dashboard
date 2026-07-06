@@ -1738,11 +1738,11 @@
   <script src="/lib/marketing-metrics.js"></script>
   <script>
     (function ensureDashboardModeAttr() {
-      if (document.body.dataset.dashboardMode) return;
       const parts = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
       if (parts[0] === 'admin') {
         document.body.dataset.dashboardMode = parts.length >= 2 ? 'admin' : 'hub';
         if (parts.length >= 2) document.body.dataset.clientSlug = parts[1];
+        else delete document.body.dataset.clientSlug;
         return;
       }
       if (parts[0] && parts[0] !== 'index.html') {
@@ -3370,6 +3370,9 @@
     }
 
     function loadDisplayPrefs() {
+      if (IS_CLIENT_VIEW && !IS_PREVIEW) {
+        return defaultDisplayPrefs();
+      }
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (!saved) return defaultDisplayPrefs();
@@ -4273,9 +4276,21 @@
       }
     }
 
+    function canReuseBootstrapDashboard(bootstrapData) {
+      return Boolean(
+        bootstrapData?.kpis
+        && usesClientPipelineDefaults()
+        && !state.dateFrom
+        && !state.dateTo
+        && state.status === 'all'
+        && state.source === 'all'
+        && state.assignedTo === 'all',
+      );
+    }
+
     async function loadDashboard(refetch = true, options = {}) {
       const { background = false, forceFresh = false } = options;
-      const shouldFetchFresh = forceFresh || (refetch && needsFreshData());
+      const shouldFetchFresh = Boolean(forceFresh) || (refetch && cachedData && needsFreshData());
       const dashboard = document.getElementById('dashboard');
 
       if (isFetching && (refetch || !cachedData)) {
@@ -4320,11 +4335,12 @@
         }
 
         try {
+          let bootstrapData = null;
           if (!availablePipelines.length) {
-            const bootstrap = await bootstrapDashboardData(signal);
+            bootstrapData = await bootstrapDashboardData(signal);
             if (generation !== fetchGeneration) return;
-            availablePipelines = bootstrap.filterOptions.pipelines || [];
-            ensurePipelineDefaults(availablePipelines, bootstrap.account?.defaultPipelineIds);
+            availablePipelines = bootstrapData.filterOptions.pipelines || [];
+            ensurePipelineDefaults(availablePipelines, bootstrapData.account?.defaultPipelineIds);
           }
 
           const pipelineSelectionReady = ensurePipelineSelectionBeforeFetch();
@@ -4332,10 +4348,20 @@
             throw new Error('Select at least one pipeline.');
           }
 
-          const [data, fbMetrics] = await Promise.all([
-            fetchDashboardData(availablePipelines, signal, { forceFresh: shouldFetchFresh }),
-            fetchFacebookMetrics(signal),
-          ]);
+          const reuseBootstrap = canReuseBootstrapDashboard(bootstrapData) && !shouldFetchFresh;
+          let data;
+          let fbMetrics;
+          if (reuseBootstrap) {
+            [fbMetrics, data] = await Promise.all([
+              fetchFacebookMetrics(signal),
+              Promise.resolve(bootstrapData),
+            ]);
+          } else {
+            [data, fbMetrics] = await Promise.all([
+              fetchDashboardData(availablePipelines, signal, { forceFresh: shouldFetchFresh }),
+              fetchFacebookMetrics(signal),
+            ]);
+          }
           if (generation !== fetchGeneration) return;
           cachedFacebookMetrics = fbMetrics;
           cachedData = applyMarketingData(data, fbMetrics);
@@ -4472,6 +4498,9 @@
 
       ensureChartsVisible();
       loadDashboard(true);
+      setTimeout(() => {
+        loadDashboard(true, { background: true, forceFresh: true });
+      }, 500);
       setInterval(() => {
         loadDashboard(true, { background: true, forceFresh: true });
       }, 2 * 60 * 1000);

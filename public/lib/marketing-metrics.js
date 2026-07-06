@@ -1,4 +1,5 @@
-const DEFAULT_TIMEZONE = process.env.DASHBOARD_TIMEZONE || 'Europe/Copenhagen';
+const DEFAULT_TIMEZONE = (typeof process !== 'undefined' && process.env?.DASHBOARD_TIMEZONE)
+  || 'Europe/Copenhagen';
 
 function parseFbAmount(value) {
   const parsed = Number.parseFloat(value);
