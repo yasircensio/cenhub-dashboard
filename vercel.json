@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/lib/marketing-metrics.js", "destination": "/api/marketing-metrics-lib" },
     { "source": "/admin", "destination": "/index.html" },
     { "source": "/admin/:client_id", "destination": "/index.html" },
     { "source": "/:client_id", "destination": "/index.html" }

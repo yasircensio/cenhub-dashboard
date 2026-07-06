@@ -2,6 +2,7 @@
   "name": "suntech-cenhub-dashboard",
   "private": true,
   "scripts": {
+    "build": "mkdir -p public/lib && cp lib/marketing-metrics.js public/lib/marketing-metrics.js",
     "start": "node server.js",
     "seed:suntech": "node scripts/seed-suntech.js",
     "test:api": "node scripts/test-api.js",
