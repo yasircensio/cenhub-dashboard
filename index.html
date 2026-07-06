@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SunTech Nordic · Censio Dashboard</title>
+  <title>Censio Dashboard</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -1783,6 +1783,15 @@
     let setupPipelines = [];
     let metricsModelChangeMode = false;
 
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function showToast(message, type = 'info') {
       const host = document.getElementById('toast-host');
       if (!host) return;
@@ -1848,9 +1857,12 @@
       return { client: CLIENT_SLUG };
     }
 
+    let CLIENT_ACCESS_KEY = new URLSearchParams(window.location.search).get('key') || '';
+
     function appendTenantParams(searchParams) {
       if (tenantParams.location_id) searchParams.set('location_id', tenantParams.location_id);
       else if (tenantParams.client) searchParams.set('client', tenantParams.client);
+      if (CLIENT_ACCESS_KEY) searchParams.set('key', CLIENT_ACCESS_KEY);
     }
     const ADMIN_API_KEY_STORAGE = 'cenhub_admin_api_key';
 
@@ -1991,7 +2003,7 @@
           <button
             type="button"
             class="icon-btn card-menu-trigger"
-            aria-label="More actions for ${label}"
+            aria-label="More actions for ${esc(label)}"
             title="More actions"
             aria-haspopup="menu"
             onclick="toggleCardMenu('${clientId}', event)"
@@ -2014,11 +2026,11 @@
       const kpis = client.previewKpis || {};
       const pipelineLabel = client.pipelineMode === '3-pipeline' ? '3 pipelines' : '2 pipelines';
       return `
-        <article class="client-card" data-search="${`${client.accountName} ${client.clientId}`.toLowerCase()}">
+        <article class="client-card" data-search="${esc(`${client.accountName} ${client.clientId}`.toLowerCase())}">
           <div class="client-card-header">
-            <span class="client-avatar" aria-hidden="true">${clientInitials(client.accountName)}</span>
+            <span class="client-avatar" aria-hidden="true">${esc(clientInitials(client.accountName))}</span>
             <div class="client-card-title-block">
-              <h3>${client.accountName}</h3>
+              <h3>${esc(client.accountName)}</h3>
               <div class="client-card-slug">/${client.clientId}</div>
             </div>
             ${renderCardMenu(client.clientId, client.accountName)}
@@ -2118,7 +2130,7 @@
               <img class="brand-logo" src="https://censio.dk/wp-content/uploads/2024/06/Censio-Logo-white-300x74.png" alt="Censio" width="130" height="32" />
             </div>
           </header>
-          <div class="error-state" style="padding:24px">${error.message}</div>`;
+          <div class="error-state" style="padding:24px">${esc(error.message)}</div>`;
       }
     }
 
@@ -2473,7 +2485,7 @@
           <select id="${id}">
             <option value="">— Select pipeline —</option>
             ${pipelines.map((pipeline) => `
-              <option value="${pipeline.id}" ${pipeline.id === value ? 'selected' : ''}>${pipeline.name}</option>
+              <option value="${esc(pipeline.id)}" ${pipeline.id === value ? 'selected' : ''}>${esc(pipeline.name)}</option>
             `).join('')}
           </select>
         </div>
@@ -2487,13 +2499,13 @@
       return `
         <div class="setup-panel">
           <nav class="admin-breadcrumb">
-            <a href="/admin">Admin</a> / ${account.accountName}
+            <a href="/admin">Admin</a> / ${esc(account.accountName)}
           </nav>
           <div class="setup-panel-header">
             <div class="setup-panel-identity">
-              <span class="setup-avatar" aria-hidden="true">${clientInitials(account.accountName)}</span>
+              <span class="setup-avatar" aria-hidden="true">${esc(clientInitials(account.accountName))}</span>
               <div>
-                <h2>${account.accountName}</h2>
+                <h2>${esc(account.accountName)}</h2>
                 <div class="setup-meta">
                   <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
                   <span class="setup-meta-divider">·</span>
@@ -2612,7 +2624,7 @@
       } catch (error) {
         const panel = document.getElementById('setup-panel-mount');
         if (panel) {
-          panel.innerHTML = `<div class="note" style="padding:24px">${error.message}</div>`;
+          panel.innerHTML = `<div class="note" style="padding:24px">${esc(error.message)}</div>`;
         }
         return;
       }
@@ -2628,6 +2640,9 @@
       try {
         const data = await adminFetch(`/api/clients/${encodeURIComponent(CLIENT_SLUG)}`);
         setupAccount = data.account;
+        if (setupAccount.accessKey && !CLIENT_ACCESS_KEY) {
+          CLIENT_ACCESS_KEY = setupAccount.accessKey;
+        }
         if (setupAccount.newLeadsPipelineId && !setupPipelines.length) {
           await fetchSetupPipelines(true);
         }
@@ -2636,7 +2651,7 @@
       } catch (error) {
         const panel = document.getElementById('setup-panel-mount');
         if (panel) {
-          panel.innerHTML = `<div class="note" style="padding:24px">${error.message}</div>`;
+          panel.innerHTML = `<div class="note" style="padding:24px">${esc(error.message)}</div>`;
         }
         showToast(error.message, 'error');
         throw error;
@@ -3026,7 +3041,8 @@
       global.DashboardCharts = { CHART_DEFINITIONS, buildChartConfig, formatTooltipValue };
     })(window);
 
-    const STORAGE_KEY = 'suntech-dashboard-display';
+    const STORAGE_KEY = `cenhub_display_${CLIENT_SLUG}`;
+    const LEGACY_STORAGE_KEY = 'suntech-dashboard-display';
     const PIPELINE_KEY = 'suntech-dashboard-pipelines';
 
     const DISPLAY_OPTIONS = {
@@ -3344,7 +3360,7 @@
       return `
         <div class="pipeline-chips">
           ${selectedNames.map((pipeline) => `
-            <span class="pipeline-chip">${pipeline.name}</span>
+            <span class="pipeline-chip">${esc(pipeline.name)}</span>
           `).join('')}
         </div>
       `;
@@ -3374,7 +3390,11 @@
         return defaultDisplayPrefs();
       }
       try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        const saved = JSON.parse(
+          localStorage.getItem(STORAGE_KEY)
+          || localStorage.getItem(LEGACY_STORAGE_KEY)
+          || 'null',
+        );
         if (!saved) return defaultDisplayPrefs();
         const defaults = defaultDisplayPrefs();
         return {
@@ -3606,7 +3626,9 @@
 
     async function fetchFacebookMetrics(signal) {
       try {
-        return await fetchJson(`/api/facebook-metrics?client=${encodeURIComponent(facebookClientId)}`, signal);
+        const params = new URLSearchParams({ client: facebookClientId });
+        if (CLIENT_ACCESS_KEY) params.set('key', CLIENT_ACCESS_KEY);
+        return await fetchJson(`/api/facebook-metrics?${params}`, signal);
       } catch (error) {
         if (error.name === 'AbortError') throw error;
         return null;
@@ -3696,7 +3718,7 @@
               <input type="checkbox"
                 ${isPipelineSelected(pipeline.id) ? 'checked' : ''}
                 onchange="togglePipelineSelectionAction('${pipeline.id}')" />
-              <span>${pipeline.name}</span>
+              <span>${esc(pipeline.name)}</span>
             </label>
           `).join('')}
         </div>
@@ -3710,7 +3732,7 @@
           <label for="${id}">${label}</label>
           <select id="${id}" onchange="onFilterChange('${id}', this.value)">
             ${options.map((option) => `
-              <option value="${option.id}" ${option.id === value ? 'selected' : ''}>${option.name}</option>
+              <option value="${esc(option.id)}" ${option.id === value ? 'selected' : ''}>${esc(option.name)}</option>
             `).join('')}
           </select>
         </div>
@@ -3888,8 +3910,8 @@
             <div class="card-value">Dkr ${fmtCompact(kpis.totalRevenue)}</div>
             <div class="card-sub">${clientKpiCopy(
               kpis.hasDateFilter
-                ? `Eftersalg won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)`
-                : `Sum of Eftersalg won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`,
+                ? `Won deal value in period (${fmt(kpis.wonOpportunityCount)} won deals)`
+                : `Sum of won deal values (${fmt(kpis.wonOpportunityCount)} won deals)`,
               kpis.hasDateFilter
                 ? `Vundet omsætning i perioden (${fmt(kpis.wonOpportunityCount)} handler)`
                 : `Samlet vundet omsætning (${fmt(kpis.wonOpportunityCount)} handler)`,
@@ -3959,7 +3981,7 @@
           <div class="card">
             <div class="card-label">Cost per Won Client</div>
             <div class="card-value">${kpis.costPerWonClient > 0 ? `Dkr ${fmtCompact(kpis.costPerWonClient)}` : '—'}</div>
-            <div class="card-sub">${clientKpiCopy('Ad spend ÷ Eftersalg clients won', 'Annonceforbrug ÷ vundne kunder')}</div>
+            <div class="card-sub">${clientKpiCopy('Ad spend ÷ clients won', 'Annonceforbrug ÷ vundne kunder')}</div>
           </div>
         `);
       }
@@ -3969,7 +3991,7 @@
             <div class="card-label">Clients Won</div>
             <div class="card-value">${fmt(kpis.clientsWon)}</div>
             <div class="card-sub">${clientKpiCopy(
-              kpis.hasDateFilter ? 'Unique Eftersalg wins in period' : 'Unique won clients in Eftersalg pipeline',
+              kpis.hasDateFilter ? 'Unique wins in period' : 'Unique won clients in win pipeline',
               kpis.hasDateFilter ? 'Unikke kunder vundet i perioden' : 'Unikke kunder vundet i alt',
             )}</div>
           </div>
@@ -4007,7 +4029,7 @@
           <div class="card">
             <div class="card-label">Conversion Rate</div>
             <div class="card-value">${fmtPct(kpis.conversionRate)}</div>
-            <div class="card-sub">${clientKpiCopy('Eftersalg wins ÷ new leads in period', 'Vundne kunder ÷ nye leads i perioden')}</div>
+            <div class="card-sub">${clientKpiCopy('Wins ÷ new leads in period', 'Vundne kunder ÷ nye leads i perioden')}</div>
           </div>
         `);
       }
@@ -4035,7 +4057,7 @@
             <div class="card-label">Avg Won Deal Size</div>
             <div class="card-value">Dkr ${fmtCompact(kpis.averageWonDealSize)}</div>
             <div class="card-sub">${clientKpiCopy(
-              `Eftersalg won revenue ÷ won deals (${fmt(kpis.wonOpportunityCount)})`,
+              `Won revenue ÷ won deals (${fmt(kpis.wonOpportunityCount)})`,
               `Gns. vundet handel (${fmt(kpis.wonOpportunityCount)} handler)`,
             )}</div>
           </div>
@@ -4086,7 +4108,7 @@
       return `
         <div class="metrics-change-banner">
           Metrics model updated on ${new Date(changedAt).toLocaleString('en-GB')} (v${version}).
-          Revenue, clients won, and won-revenue charts now use: ${data.account.metricsModel.winSourceLabel || data.account.metricsModel.label}.
+          Revenue, clients won, and won-revenue charts now use: ${esc(data.account.metricsModel.winSourceLabel || data.account.metricsModel.label)}.
         </div>
       `;
     }
@@ -4125,7 +4147,7 @@
               ],
               sourceReport,
               (row, key) => {
-                if (key === 'label') return row.source;
+                if (key === 'label') return esc(row.source);
                 if (key === 'totalValue') return `Dkr ${fmt(row.totalValue)}`;
                 if (key === 'winPct') return fmtPct(row.winPct);
                 return fmt(row[key]);
@@ -4150,7 +4172,7 @@
                   ],
                   assigneeReport,
                   (row, key) => {
-                    if (key === 'label') return row.assigneeName;
+                    if (key === 'label') return esc(row.assigneeName);
                     if (key === 'wonValue' || key === 'totalValue') return `Dkr ${fmt(row[key])}`;
                     return fmt(row[key]);
                   }
@@ -4172,7 +4194,7 @@
                   ],
                   pipelines,
                   (row, key) => {
-                    if (key === 'label') return row.name;
+                    if (key === 'label') return esc(row.name);
                     if (key === 'monetary' || key === 'profit' || key === 'wonValue') return `Dkr ${fmt(row[key])}`;
                     return fmt(row[key]);
                   }
@@ -4225,7 +4247,10 @@
       const dashboard = document.getElementById('dashboard');
       const { filterOptions, account = {} } = data;
       const displayOpen = document.querySelector('details.panel')?.open;
-      const accountName = account.accountName || 'SunTech Nordic';
+      const accountName = account.accountName || 'Dashboard';
+      if (IS_CLIENT_VIEW && account.accountName) {
+        document.title = `${account.accountName} · Censio Dashboard`;
+      }
 
       dashboard.innerHTML = `
         <header class="brand-topbar">
@@ -4255,7 +4280,7 @@
         <div class="page-hero">
           <div class="header">
             <div>
-              <h1>${accountName}</h1>
+              <h1>${esc(accountName)}</h1>
               <p>Performance dashboard · Pipeline & omsætning</p>
             </div>
             ${IS_ADMIN ? '' : `
@@ -4419,7 +4444,7 @@
             if (content) {
               content.innerHTML = `
                 <div class="note admin-setup-placeholder">
-                  ${error.message}
+                  ${esc(error.message)}
                   <div style="margin-top:12px">
                     <button type="button" class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
                   </div>
@@ -4429,7 +4454,7 @@
             dashboard.innerHTML = `
               <div class="error-state">
                 <div>Fejl ved hentning af data</div>
-                <div style="margin-top:8px;font-size:12px;color:#666">${error.message}</div>
+                <div style="margin-top:8px;font-size:12px;color:#666">${esc(error.message)}</div>
                 <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
               </div>
             `;
@@ -4465,7 +4490,7 @@
         dashboard.innerHTML = `
           <div class="error-state">
             <div>Fejl ved visning af dashboard</div>
-            <div style="margin-top:8px;font-size:12px;color:#666">${error.message}</div>
+            <div style="margin-top:8px;font-size:12px;color:#666">${esc(error.message)}</div>
             <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
           </div>
         `;
@@ -4517,7 +4542,7 @@
         tenantParams = await resolveTenantParams();
       } catch (error) {
         document.getElementById('dashboard').innerHTML = `
-          <div class="error-state" style="padding:24px">${error.message}</div>`;
+          <div class="error-state" style="padding:24px">${esc(error.message)}</div>`;
         return;
       }
 

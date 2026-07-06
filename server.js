@@ -7,7 +7,9 @@ const { URL } = require('url');
 const { getDashboardData } = require('./lib/dashboard-data');
 const { handleFacebookMetrics } = require('./lib/facebook-metrics-handler');
 const { handleClientsRequest } = require('./lib/clients-handler');
-const { isValidSlug, normalizeClientId, RESERVED_SLUGS } = require('./lib/account-store');
+const { isValidSlug, normalizeClientId, RESERVED_SLUGS, DEFAULT_ACCOUNT_ID } = require('./lib/account-store');
+const { requireClientAccess } = require('./lib/client-access');
+const { handleHealthRequest } = require('./lib/health-handler');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ROOT = __dirname;
@@ -57,18 +59,13 @@ function serveDashboardHtml(response, mode, clientSlug = null) {
 
   if (mode === 'hub') {
     html = html.replace(
-      '<title>SunTech Nordic · Censio Dashboard</title>',
+      '<title>Censio Dashboard</title>',
       '<title>Censio · Client Admin Hub</title>',
     );
   } else if (mode === 'admin') {
     html = html.replace(
-      '<title>SunTech Nordic · Censio Dashboard</title>',
-      '<title>Client setup · Censio Dashboard</title>',
-    );
-  } else if (mode === 'client') {
-    html = html.replace(
-      '<title>SunTech Nordic · Censio Dashboard</title>',
       '<title>Censio Dashboard</title>',
+      '<title>Client setup · Censio Dashboard</title>',
     );
   }
 
@@ -105,6 +102,8 @@ const server = http.createServer(async (request, response) => {
 
     try {
       const query = Object.fromEntries(requestUrl.searchParams);
+      const clientId = query.client ? normalizeClientId(query.client) : DEFAULT_ACCOUNT_ID;
+      requireClientAccess(clientId, query, request.headers || {});
       const data = await getDashboardData(query);
       response.writeHead(200, {
         'Content-Type': 'application/json',
@@ -112,9 +111,15 @@ const server = http.createServer(async (request, response) => {
       });
       response.end(JSON.stringify(data, null, 2));
     } catch (error) {
-      response.writeHead(502, { 'Content-Type': 'application/json' });
+      response.writeHead(error.statusCode || 502, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ error: error.message || 'Failed to load dashboard data.' }));
     }
+    return;
+  }
+
+  if (url === '/api/health') {
+    const localResponse = createLocalResponse(response);
+    await handleHealthRequest(localResponse);
     return;
   }
 

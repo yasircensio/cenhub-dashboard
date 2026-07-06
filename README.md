@@ -13,7 +13,7 @@ Production: https://cenhub-dashboard.vercel.app/
 | `/{client_id}` | Censio admin | Setup wizard — credentials, pipeline slots, preview |
 | `/?client=slug` | Dev / preview only | Local testing with admin key — not for GHL menu links |
 
-Legacy `admin.html` redirects to `/admin`.
+Health check: `GET /api/health` returns DB + KV status (200 ok / 503 degraded).
 
 ## Quick start (local)
 
@@ -51,6 +51,26 @@ See `.env.example` for the full list. Key vars:
 | `DASHBOARD_CACHE_TTL_MINUTES` | Short server buffer so filter clicks don’t re-hit GHL (default `2`) |
 | `GHL_SSO_SHARED_SECRET` | GHL marketplace app SSO validation |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Daily cron sync (optional — manual sync works without) |
+| `DASHBOARD_ACCESS_KEY_SECRET` | Enables per-client access keys for read APIs (see below) |
+| `REQUIRE_CLIENT_ACCESS_KEY` | Set `1` to enforce access keys on `/api/dashboard` and Facebook metrics GET |
+
+## Per-client access keys (optional hardening)
+
+By default the client dashboard and its read APIs are public to anyone who knows a client slug. To lock them down:
+
+1. Set `DASHBOARD_ACCESS_KEY_SECRET` to a strong random string and deploy.
+2. Fetch each client's key: `GET /api/clients/{slug}` (admin) returns `accessKey` and a ready-to-share `clientUrl` like `/{slug}?key=abc123...`.
+3. Update GHL menu links / bookmarks to the key-based URLs.
+4. Set `REQUIRE_CLIENT_ACCESS_KEY=1` and redeploy. Requests without a valid key (or admin `x-api-key`) get 403.
+
+Keys are HMAC-derived from the secret, so rotating `DASHBOARD_ACCESS_KEY_SECRET` rotates every client key at once.
+
+## Testing
+
+```bash
+npm test        # unit tests + lib/public sync check (also runs in GitHub Actions CI)
+npm run test:api  # integration test against live env (needs GHL token or snapshot)
+```
 
 ## Onboarding a new client
 

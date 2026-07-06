@@ -4,3 +4,4 @@
 .vercel
 .data
 node_modules
+.cursor

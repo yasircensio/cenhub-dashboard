@@ -1,6 +1,6 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
-const { getAllMetrics, getMetrics } = require('../lib/facebook-metrics-store');
+const { getAllMetrics, getMetrics, getClientList, setClientList } = require('../lib/facebook-metrics-store');
 const { saveClientMetrics } = require('../lib/facebook-metrics-handler');
 const {
   buildMonthlyAdSpend,
@@ -12,9 +12,11 @@ const {
   getPreviousMonthKey,
 } = require('../lib/marketing-metrics');
 
+// Dedicated test slug so running this against a real store never overwrites
+// a production client's metrics.
 const samplePayload = {
-  client_id: 'suntech-nordic',
-  account_name: 'SunTech Nordic',
+  client_id: 'test-metrics-sample',
+  account_name: 'Test Metrics Sample',
   currency: 'DKK',
   yearly: {
     spend: '45190',
@@ -133,6 +135,13 @@ async function main() {
   }
 
   console.log('Testing Facebook metrics store...\n');
+
+  // saveClientMetrics validates client_id against known clients; register the
+  // sample client first so the test passes on a clean store.
+  const existingClients = await getClientList();
+  if (!existingClients.includes(samplePayload.client_id)) {
+    await setClientList([...existingClients, samplePayload.client_id]);
+  }
 
   const { clientId } = await saveClientMetrics(samplePayload);
   console.log(`Saved metrics for ${clientId}`);
