@@ -3492,26 +3492,54 @@
       return `${year}-${month}-${day}`;
     }
 
+    function getDashboardTimeZone() {
+      return cachedData?.account?.timezone || 'Europe/Copenhagen';
+    }
+
+    function getCalendarPartsInTimeZone(timeZone, date = new Date()) {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).formatToParts(date);
+      return {
+        year: Number(parts.find((part) => part.type === 'year')?.value),
+        month: Number(parts.find((part) => part.type === 'month')?.value),
+      };
+    }
+
+    function formatMonthDateRange(year, month) {
+      const start = `${year}-${String(month).padStart(2, '0')}-01`;
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const end = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+      return { start, end };
+    }
+
     function setPreset(preset) {
       state.preset = preset;
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
+      const timeZone = getDashboardTimeZone();
+      const { year, month } = getCalendarPartsInTimeZone(timeZone);
 
       if (preset === 'all') {
         state.dateFrom = '';
         state.dateTo = '';
         state.dateField = 'createdAt';
       } else if (preset === 'month') {
-        state.dateFrom = formatDateInput(new Date(year, month, 1));
-        state.dateTo = formatDateInput(new Date(year, month + 1, 0));
+        const range = formatMonthDateRange(year, month);
+        state.dateFrom = range.start;
+        state.dateTo = range.end;
         state.dateField = 'lastStatusChangeAt';
       } else if (preset === 'lastMonth') {
-        const lastMonthStart = new Date(year, month - 1, 1);
-        const lastYear = lastMonthStart.getFullYear();
-        const lastMonth = lastMonthStart.getMonth();
-        state.dateFrom = formatDateInput(new Date(lastYear, lastMonth, 1));
-        state.dateTo = formatDateInput(new Date(lastYear, lastMonth + 1, 0));
+        let lastYear = year;
+        let lastMonth = month - 1;
+        if (lastMonth < 1) {
+          lastMonth = 12;
+          lastYear -= 1;
+        }
+        const range = formatMonthDateRange(lastYear, lastMonth);
+        state.dateFrom = range.start;
+        state.dateTo = range.end;
         state.dateField = 'lastStatusChangeAt';
       } else if (preset === 'year') {
         state.dateFrom = `${year}-01-01`;
@@ -3587,7 +3615,9 @@
 
     function applyMarketingData(data, fbMetrics) {
       if (!window.MarketingMetrics) return data;
-      const result = window.MarketingMetrics.applyMarketingToDashboard(data, fbMetrics, state.preset);
+      const result = window.MarketingMetrics.applyMarketingToDashboard(data, fbMetrics, state.preset, {
+        timeZone: data.account?.timezone || 'Europe/Copenhagen',
+      });
       if (result.monthlyAdSpend?.length) {
         cachedMonthlyAdSpend = result.monthlyAdSpend;
       }

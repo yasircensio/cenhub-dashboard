@@ -12,10 +12,62 @@ function getFacebookPeriodKey(preset) {
   return 'yearly';
 }
 
+function getCurrentMonthKey(timeZone = DEFAULT_TIMEZONE) {
+  return calendarMonthKey(new Date(), timeZone);
+}
+
+function getPreviousMonthKey(timeZone = DEFAULT_TIMEZONE) {
+  const current = getCurrentMonthKey(timeZone);
+  const [year, month] = current.split('-').map(Number);
+  if (!year || !month) return '';
+
+  let prevYear = year;
+  let prevMonth = month - 1;
+  if (prevMonth < 1) {
+    prevMonth = 12;
+    prevYear -= 1;
+  }
+
+  return `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+}
+
 function getFacebookSpend(fbMetrics, preset) {
   if (!fbMetrics) return 0;
   const bucket = fbMetrics[getFacebookPeriodKey(preset)];
   return bucket ? parseFbAmount(bucket.spend) : 0;
+}
+
+function getSpendForPreset(fbMetrics, preset, monthlyAdSpend, timeZone = DEFAULT_TIMEZONE) {
+  const monthly = monthlyAdSpend || buildMonthlyAdSpend(fbMetrics);
+  const byMonth = new Map(monthly.map((row) => [row.month, Number(row.spend) || 0]));
+
+  if (preset === 'month') {
+    const spend = byMonth.get(getCurrentMonthKey(timeZone));
+    if (spend > 0) return spend;
+  } else if (preset === 'lastMonth') {
+    const spend = byMonth.get(getPreviousMonthKey(timeZone));
+    if (spend > 0) return spend;
+  } else if (preset === 'year') {
+    const year = getCurrentMonthKey(timeZone).slice(0, 4);
+    const sum = monthly
+      .filter((row) => row.month.startsWith(`${year}-`))
+      .reduce((total, row) => total + (Number(row.spend) || 0), 0);
+    if (sum > 0) return sum;
+  }
+
+  return getFacebookSpend(fbMetrics, preset);
+}
+
+function getLeadsForPreset(kpis, monthlyLeads, preset, timeZone = DEFAULT_TIMEZONE) {
+  const rows = monthlyLeads || [];
+  if (preset === 'month') {
+    const row = rows.find((entry) => entry.month === getCurrentMonthKey(timeZone));
+    if (row) return Number(row.count) || 0;
+  } else if (preset === 'lastMonth') {
+    const row = rows.find((entry) => entry.month === getPreviousMonthKey(timeZone));
+    if (row) return Number(row.count) || 0;
+  }
+  return Number(kpis.totalLeads) || 0;
 }
 
 function getPeriodLabel(preset) {
@@ -25,11 +77,12 @@ function getPeriodLabel(preset) {
   return 'Till date (yearly ad data)';
 }
 
-function enrichKpisWithMarketing(kpis, fbMetrics, preset) {
-  const spend = getFacebookSpend(fbMetrics, preset);
+function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
+  const { monthlyAdSpend = null, monthlyLeads = [], timeZone = DEFAULT_TIMEZONE } = options;
+  const spend = getSpendForPreset(fbMetrics, preset, monthlyAdSpend, timeZone);
   const revenue = Number(kpis.totalRevenue) || 0;
   const bundlinje = Number(kpis.wonBundlinje) || 0;
-  const leads = Number(kpis.totalLeads) || 0;
+  const leads = getLeadsForPreset(kpis, monthlyLeads, preset, timeZone);
   const clientsWon = Number(kpis.clientsWon) || 0;
 
   return {
@@ -194,14 +247,15 @@ function addBucketSpend(spendByMonth, bucket) {
 function buildMonthlyAdSpend(fbMetrics) {
   if (!fbMetrics) return [];
 
-  const fromMonthly = normalizeMonthlyRows(fbMetrics);
-  if (fromMonthly.length) return fromMonthly;
-
   const spendByMonth = new Map();
+  for (const row of normalizeMonthlyRows(fbMetrics)) {
+    spendByMonth.set(row.month, row.spend);
+  }
+
+  // Overlay rolling Make buckets so KPI cards and charts share the same month totals.
   addBucketSpend(spendByMonth, fbMetrics.last_month);
   addBucketSpend(spendByMonth, fbMetrics.this_month);
 
-  // Only months with real Facebook buckets — no estimated split of yearly total.
   return Array.from(spendByMonth.entries())
     .map(([month, spend]) => ({ month, spend }))
     .filter((row) => row.spend > 0)
@@ -225,9 +279,14 @@ function buildMonthlyCostPerLead(monthlyAdSpend, monthlyLeads) {
     .filter((row) => row.cpl > 0);
 }
 
-function applyMarketingToDashboard(data, fbMetrics, preset) {
-  const kpis = enrichKpisWithMarketing(data.kpis, fbMetrics, preset);
+function applyMarketingToDashboard(data, fbMetrics, preset, options = {}) {
+  const timeZone = options.timeZone || data.account?.timezone || DEFAULT_TIMEZONE;
   const monthlyAdSpend = buildMonthlyAdSpend(fbMetrics);
+  const kpis = enrichKpisWithMarketing(data.kpis, fbMetrics, preset, {
+    monthlyAdSpend,
+    monthlyLeads: data.monthlyLeads || [],
+    timeZone,
+  });
 
   return {
     ...data,
@@ -250,6 +309,10 @@ const marketingMetricsApi = {
   resolveMonthlyFromPayload,
   calendarMonthKey,
   monthKeyFromDate,
+  getCurrentMonthKey,
+  getPreviousMonthKey,
+  getSpendForPreset,
+  getLeadsForPreset,
   getFacebookPeriodKey,
   getFacebookSpend,
   parseFbAmount,

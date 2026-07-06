@@ -6,6 +6,10 @@ const {
   buildMonthlyAdSpend,
   monthKeyFromDate,
   resolveMonthlyFromPayload,
+  getSpendForPreset,
+  getLeadsForPreset,
+  getCurrentMonthKey,
+  getPreviousMonthKey,
 } = require('../lib/marketing-metrics');
 
 const samplePayload = {
@@ -88,6 +92,35 @@ async function main() {
   const makeByMonth = Object.fromEntries(fromMake.map((row) => [row.month, row.spend]));
   if (makeByMonth['2024-01'] !== 963.82 || makeByMonth['2024-02'] !== 1790.58 || makeByMonth['2026-07'] !== 2760.75) {
     throw new Error(`Make monthly format mismatch: ${JSON.stringify(makeByMonth)}`);
+  }
+
+  const merged = buildMonthlyAdSpend({
+    monthly: [
+      { spend: '13330.26', date_start: '2026-05-31T22:00:00.000Z' },
+      { spend: '2769.69', date_start: '2026-06-30T22:00:00.000Z' },
+    ],
+    this_month: { spend: '3744.05', date_start: '2026-06-30T22:00:00.000Z' },
+    last_month: { spend: '20894.05', date_start: '2026-05-31T22:00:00.000Z' },
+  });
+  const mergedByMonth = Object.fromEntries(merged.map((row) => [row.month, row.spend]));
+  if (mergedByMonth['2026-07'] !== 3744.05 || mergedByMonth['2026-06'] !== 20894.05) {
+    throw new Error(`Monthly + bucket merge mismatch: ${JSON.stringify(mergedByMonth)}`);
+  }
+
+  const monthlyAdSpend = merged;
+  const thisMonthSpend = getSpendForPreset({}, 'month', monthlyAdSpend);
+  const lastMonthSpend = getSpendForPreset({}, 'lastMonth', monthlyAdSpend);
+  if (thisMonthSpend !== 3744.05 || lastMonthSpend !== 20894.05) {
+    throw new Error(`Preset spend mismatch: this=${thisMonthSpend}, last=${lastMonthSpend}`);
+  }
+
+  const leads = getLeadsForPreset(
+    { totalLeads: 99 },
+    [{ month: getCurrentMonthKey(), count: 12 }, { month: getPreviousMonthKey(), count: 34 }],
+    'month',
+  );
+  if (leads !== 12) {
+    throw new Error(`Expected preset leads from monthly series, got ${leads}`);
   }
 
   const monthlyJson = JSON.stringify([
