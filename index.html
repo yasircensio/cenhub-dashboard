@@ -4248,7 +4248,7 @@
     let fetchGeneration = 0;
     let activeFetchController = null;
     let fetchStartedAt = 0;
-    const FETCH_TIMEOUT_MS = 45000;
+    const FETCH_TIMEOUT_MS = 90000;
 
     function setPresetButtonsDisabled(disabled) {
       document.querySelectorAll('[data-preset]').forEach((button) => {
@@ -4321,7 +4321,7 @@
 
         try {
           if (!availablePipelines.length) {
-            const bootstrap = await bootstrapDashboardData(signal, { forceFresh: shouldFetchFresh });
+            const bootstrap = await bootstrapDashboardData(signal);
             if (generation !== fetchGeneration) return;
             availablePipelines = bootstrap.filterOptions.pipelines || [];
             ensurePipelineDefaults(availablePipelines, bootstrap.account?.defaultPipelineIds);
@@ -4346,7 +4346,18 @@
             ? new Date(cachedData.cachedAt).getTime()
             : Date.now();
         } catch (error) {
-          if (error.name === 'AbortError' || generation !== fetchGeneration) return;
+          if (generation !== fetchGeneration) return;
+          if (error.name === 'AbortError') {
+            if (!hasLayout) {
+              dashboard.innerHTML = `
+                <div class="error-state">
+                  <div>Fejl ved hentning af data</div>
+                  <div style="margin-top:8px;font-size:12px;color:#666">Request timed out. Prøv igen.</div>
+                  <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
+                </div>`;
+            }
+            return;
+          }
           if (IS_ADMIN_CLIENT && hasLayout) {
             const content = document.getElementById('dashboard-content');
             if (content) {
@@ -4460,7 +4471,7 @@
       }
 
       ensureChartsVisible();
-      loadDashboard(true, { forceFresh: true });
+      loadDashboard(true);
       setInterval(() => {
         loadDashboard(true, { background: true, forceFresh: true });
       }, 2 * 60 * 1000);
