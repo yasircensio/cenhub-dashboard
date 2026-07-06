@@ -2,6 +2,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const { getAllMetrics, getMetrics } = require('../lib/facebook-metrics-store');
 const { saveClientMetrics } = require('../lib/facebook-metrics-handler');
+const { buildMonthlyAdSpend, monthKeyFromDate } = require('../lib/marketing-metrics');
 
 const samplePayload = {
   client_id: 'suntech-nordic',
@@ -46,6 +47,45 @@ const samplePayload = {
 };
 
 async function main() {
+  console.log('Testing Facebook metrics month mapping...\n');
+
+  const thisMonthKey = monthKeyFromDate('2026-06-30T22:00:00.000Z');
+  const lastMonthKey = monthKeyFromDate('2026-05-31T22:00:00.000Z');
+  if (thisMonthKey !== '2026-07') {
+    throw new Error(`Expected July for this_month, got ${thisMonthKey}`);
+  }
+  if (lastMonthKey !== '2026-06') {
+    throw new Error(`Expected June for last_month, got ${lastMonthKey}`);
+  }
+
+  const monthly = buildMonthlyAdSpend({
+    yearly: { spend: '54869.55', date_start: '2025-12-31T23:00:00.000Z', date_stop: '2026-07-05T22:00:00.000Z' },
+    this_month: { spend: '3692.46', date_start: '2026-06-30T22:00:00.000Z', date_stop: '2026-07-05T22:00:00.000Z' },
+    last_month: { spend: '20894.05', date_start: '2026-05-31T22:00:00.000Z', date_stop: '2026-06-29T22:00:00.000Z' },
+  });
+  const byMonth = Object.fromEntries(monthly.map((row) => [row.month, row.spend]));
+  if (byMonth['2026-07'] !== 3692.46) {
+    throw new Error(`July spend mismatch: ${byMonth['2026-07']}`);
+  }
+  if (byMonth['2026-06'] !== 20894.05) {
+    throw new Error(`June spend mismatch: ${byMonth['2026-06']}`);
+  }
+  if (Object.keys(byMonth).length !== 2) {
+    throw new Error(`Expected only 2 real months, got ${JSON.stringify(byMonth)}`);
+  }
+
+  const fromMake = buildMonthlyAdSpend({
+    monthly: [
+      { Spend: '963.82', 'Date Start': 'January 1, 2024 12:00 AM', 'Date Stop': 'January 31, 2024 12:00 AM' },
+      { Spend: '1790.58', 'Date Start': 'February 1, 2024 12:00 AM', 'Date Stop': 'February 29, 2024 12:00 AM' },
+      { Spend: '2760.75', 'Date Start': 'July 1, 2026 12:00 AM', 'Date Stop': 'July 6, 2026 12:00 AM' },
+    ],
+  });
+  const makeByMonth = Object.fromEntries(fromMake.map((row) => [row.month, row.spend]));
+  if (makeByMonth['2024-01'] !== 963.82 || makeByMonth['2024-02'] !== 1790.58 || makeByMonth['2026-07'] !== 2760.75) {
+    throw new Error(`Make monthly format mismatch: ${JSON.stringify(makeByMonth)}`);
+  }
+
   console.log('Testing Facebook metrics store...\n');
 
   const { clientId } = await saveClientMetrics(samplePayload);

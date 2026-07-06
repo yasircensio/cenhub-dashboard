@@ -2903,7 +2903,7 @@
           return { labels: ['Open', 'Won', 'Lost', 'Abandoned'], values: keys.map((key) => Number(breakdown[key]) || 0), colors: keys.map((key) => STATUS_COLORS[key]) };
         } },
         marketingSpendComparison: { title: 'Facebook Ad Spend', defaultType: 'area', format: 'currency', extract(data) {
-          return seriesFromRows(data.monthlyAdSpend || [], 'month', 'spend', formatMonthLabel);
+          return seriesFromRows((data.monthlyAdSpend || []).slice(-8), 'month', 'spend', formatMonthLabel);
         } },
         monthlyCostPerLead: { title: 'Cost per Lead (Monthly)', defaultType: 'area', format: 'currency', extract(data) {
           return seriesFromRows(data.monthlyCostPerLead || [], 'month', 'cpl', formatMonthLabel);
