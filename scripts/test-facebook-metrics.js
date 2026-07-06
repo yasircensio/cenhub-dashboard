@@ -2,7 +2,11 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const { getAllMetrics, getMetrics } = require('../lib/facebook-metrics-store');
 const { saveClientMetrics } = require('../lib/facebook-metrics-handler');
-const { buildMonthlyAdSpend, monthKeyFromDate } = require('../lib/marketing-metrics');
+const {
+  buildMonthlyAdSpend,
+  monthKeyFromDate,
+  resolveMonthlyFromPayload,
+} = require('../lib/marketing-metrics');
 
 const samplePayload = {
   client_id: 'suntech-nordic',
@@ -84,6 +88,15 @@ async function main() {
   const makeByMonth = Object.fromEntries(fromMake.map((row) => [row.month, row.spend]));
   if (makeByMonth['2024-01'] !== 963.82 || makeByMonth['2024-02'] !== 1790.58 || makeByMonth['2026-07'] !== 2760.75) {
     throw new Error(`Make monthly format mismatch: ${JSON.stringify(makeByMonth)}`);
+  }
+
+  const monthlyJson = JSON.stringify([
+    { spend: '963.82', date_start: '2023-12-31T23:00:00.000Z' },
+    { spend: '2763.06', date_start: '2026-06-30T22:00:00.000Z' },
+  ]);
+  const parsedMonthly = resolveMonthlyFromPayload({ monthly_json: monthlyJson });
+  if (parsedMonthly.length !== 2) {
+    throw new Error(`monthly_json parse failed: ${parsedMonthly.length}`);
   }
 
   console.log('Testing Facebook metrics store...\n');
