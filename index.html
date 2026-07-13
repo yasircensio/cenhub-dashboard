@@ -1498,20 +1498,18 @@
     }
 
     .auth-card-header {
-      align-items: flex-start;
-      align-self: stretch;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      display: grid;
+      gap: 8px;
       margin-bottom: 20px;
       text-align: left;
       width: 100%;
     }
 
-    .auth-card-header h1,
-    .auth-card-header p {
-      align-self: flex-start;
-      text-align: left;
+    .auth-card-title-row {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-start;
       width: 100%;
     }
 
@@ -1527,9 +1525,10 @@
       width: 40px;
     }
 
-    .auth-card-header h1 {
+    .auth-card-title-row h1 {
       line-height: 1.2;
       margin: 0;
+      text-align: left;
     }
 
     .auth-card-header p {
@@ -1537,6 +1536,7 @@
       font-size: 13px;
       line-height: 1.5;
       margin: 0;
+      text-align: left;
     }
 
     .auth-card h1 {
