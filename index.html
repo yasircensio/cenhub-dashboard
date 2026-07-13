@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v8 -->
+  <!-- theme: cool-slate v9 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -2584,8 +2584,10 @@
           <div class="auth-page">
             <div class="auth-card">
               <div class="auth-card-header">
-                <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
-                <h1>Set your password</h1>
+                <div class="auth-card-title-row">
+                  <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
+                  <h1>Set your password</h1>
+                </div>
                 <p>Create a password for your Cenhub staff account. The link expires after 48 hours.</p>
               </div>
               <div id="auth-error" class="auth-error" style="display:none"></div>
@@ -2610,8 +2612,10 @@
         <div class="auth-page">
           <div class="auth-card">
             <div class="auth-card-header">
-              <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
-              <h1>Staff login</h1>
+              <div class="auth-card-title-row">
+                <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
+                <h1>Staff login</h1>
+              </div>
               <p>Manage client dashboards and admin settings.</p>
             </div>
             ${saved ? '<div class="auth-success">Password saved. Sign in with your new password.</div>' : ''}
