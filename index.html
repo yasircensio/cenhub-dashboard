@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate -->
+  <!-- theme: cool-slate v2 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -113,6 +113,7 @@
       flex: 1;
       gap: 10px;
       justify-content: flex-end;
+      min-width: 0;
     }
 
     .brand-logo {
@@ -730,11 +731,45 @@
       padding-top: 20px;
     }
 
+    .setup-actions--sticky {
+      backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.96);
+      bottom: 0;
+      box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+      margin: 24px -24px -24px;
+      padding: 16px 24px 20px;
+      position: sticky;
+      z-index: 20;
+    }
+
     .setup-actions-group {
       align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+    }
+
+    .setup-save-group {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      justify-content: flex-end;
+    }
+
+    .setup-save-hint {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin: 0;
+      width: 100%;
+    }
+
+    @media (min-width: 721px) {
+      .setup-save-hint {
+        order: -1;
+        text-align: right;
+        width: auto;
+      }
     }
 
     .setup-ready-toggle {
@@ -743,7 +778,33 @@
       display: inline-flex;
       font-size: 13px;
       gap: 8px;
-      margin-left: auto;
+    }
+
+    .field-label-row {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .field-label-row label {
+      margin-bottom: 0;
+    }
+
+    .token-status-ok {
+      align-items: center;
+      background: var(--status-ok-bg);
+      border: 1px solid rgba(4, 120, 87, 0.15);
+      border-radius: 999px;
+      color: var(--status-ok-text);
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 600;
+      gap: 4px;
+      padding: 3px 8px;
+      white-space: nowrap;
     }
 
     .metrics-model-panel {
@@ -1100,6 +1161,19 @@
       color: #fff;
     }
 
+    .admin-btn--secondary {
+      background: var(--surface-muted);
+      border-color: var(--border-strong);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .admin-btn--secondary:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
     .admin-btn--danger {
       border-color: #e57373;
       color: #c62828;
@@ -1201,6 +1275,9 @@
     @media (max-width: 560px) {
       .setup-panel { padding: 18px 16px; }
       .setup-actions { flex-direction: column; align-items: stretch; }
+      .setup-actions--sticky { margin: 24px -16px -16px; padding: 16px; }
+      .setup-save-group { align-items: stretch; flex-direction: column; }
+      .setup-save-hint { order: 0; text-align: left; width: 100%; }
       .setup-ready-toggle { margin-left: 0; }
       .metrics-model-actions { flex-direction: column-reverse; align-items: stretch; }
       .metrics-model-actions .admin-btn { justify-content: center; width: 100%; }
@@ -1354,13 +1431,19 @@
     .staff-header-bar {
       align-items: center;
       display: flex;
+      flex-shrink: 1;
       gap: 10px;
+      min-width: 0;
     }
 
     .staff-header-name {
       color: rgba(255, 255, 255, 0.88);
       font-size: 13px;
       font-weight: 500;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .staff-header-btn {
@@ -3019,7 +3102,7 @@
       }
     }
 
-    function renderPipelineSelect(id, label, value, pipelines) {
+    function renderPipelineSelect(id, label, value, pipelines, hint = '') {
       return `
         <div class="field-group">
           <label for="${id}">${label}</label>
@@ -3029,13 +3112,13 @@
               <option value="${esc(pipeline.id)}" ${pipeline.id === value ? 'selected' : ''}>${esc(pipeline.name)}</option>
             `).join('')}
           </select>
+          ${hint ? `<p class="field-hint">${esc(hint)}</p>` : ''}
         </div>
       `;
     }
 
     function renderClientSetupPanel(account) {
       if (!IS_ADMIN_CLIENT || !account) return '';
-      const metricsLabels = getMetricsModelLabels(account);
       const setupDisabled = !account.metricsModelSetAt ? ' is-disabled' : '';
       return `
         <div class="setup-panel">
@@ -3049,8 +3132,6 @@
                 <h2>${esc(account.accountName)}</h2>
                 <div class="setup-meta">
                   <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
-                  <span class="setup-meta-divider">·</span>
-                  <span>${metricsLabels.typeLabel}</span>
                   <span class="setup-meta-divider">·</span>
                   <span>${formatRelativeSync(account.lastSyncAt)}</span>
                 </div>
@@ -3075,7 +3156,10 @@
                 <input id="setup-timezone" type="text" value="${account.timezone || 'Europe/Copenhagen'}" />
               </div>
               <div class="field-group" style="grid-column:1/-1">
-                <label for="setup-ghl-token">GHL token</label>
+                <div class="field-label-row">
+                  <label for="setup-ghl-token">GHL token</label>
+                  ${account.hasGhlToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+                </div>
                 <input id="setup-ghl-token" type="password" placeholder="${account.hasGhlToken ? '••••••••  (saved — leave blank to keep)' : 'Paste private integration token'}" autocomplete="off" />
               </div>
             </div>
@@ -3089,17 +3173,18 @@
             <div class="setup-grid setup-grid--3">
               ${renderPipelineSelect('setup-new-leads', 'New leads (required)', account.newLeadsPipelineId, setupPipelines)}
               ${renderPipelineSelect('setup-sales', 'Sales (required)', account.salesPipelineId, setupPipelines)}
-              ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines)}
+              ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines, 'Leave empty if this client has no after-sales pipeline.')}
             </div>
           </div>
 
-          <div class="setup-actions${setupDisabled}">
+          <div class="setup-actions setup-actions--sticky${setupDisabled}">
             <div class="setup-actions-group">
               <button class="admin-btn" type="button" onclick="fetchSetupPipelines()">Fetch pipelines</button>
-              <button class="admin-btn" type="button" onclick="syncClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync data</button>
+              <button class="admin-btn admin-btn--secondary" type="button" onclick="syncClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync data</button>
               <a class="admin-btn" href="/${encodeURIComponent(CLIENT_SLUG)}" target="_blank" rel="noopener noreferrer">${ICON_CHART} Open dashboard</a>
             </div>
-            <div class="setup-actions-group">
+            <div class="setup-save-group">
+              <p class="setup-save-hint">Changes apply when you click Save changes.</p>
               <label class="setup-ready-toggle">
                 <input id="setup-ready-ghl" type="checkbox" ${account.readyForGhl ? 'checked' : ''} />
                 <span>Ready for GHL iframe</span>
