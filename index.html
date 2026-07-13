@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v5 -->
+  <!-- theme: cool-slate v6 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -74,14 +74,6 @@
       padding: 0;
     }
 
-    body[data-dashboard-mode="login"] .brand-topbar {
-      margin-bottom: 0;
-      margin-left: 0;
-      margin-right: 0;
-      padding: 16px 24px;
-      width: 100%;
-    }
-
     body[data-dashboard-mode="login"] .auth-page {
       background: linear-gradient(180deg, var(--bg) 0%, #eef2f6 100%);
       min-height: calc(100vh - 73px);
@@ -108,7 +100,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html {
-      overflow-x: clip;
+      overflow-x: hidden;
     }
 
     body {
@@ -117,39 +109,53 @@
       color: var(--text);
       min-height: 100vh;
       padding: 0;
-      overflow-x: clip;
+      overflow-x: hidden;
       transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .dashboard { max-width: 1280px; margin: 0 auto; padding: 0 24px 32px; overflow-x: clip; }
+    .dashboard {
+      margin: 0;
+      max-width: none;
+      overflow-x: visible;
+      padding: 0;
+      width: 100%;
+    }
+
+    .dashboard-shell {
+      box-sizing: border-box;
+      margin: 0 auto;
+      max-width: 1280px;
+      padding: 0 24px 32px;
+      width: 100%;
+    }
 
     .brand-topbar {
       align-items: center;
       background: var(--brand-topbar-gradient);
-      display: flex;
+      display: grid;
       gap: 12px;
-      justify-content: space-between;
-      margin-bottom: 24px;
-      margin-left: calc(50% - 50vw);
-      margin-right: calc(50% - 50vw);
+      grid-template-columns: 1fr auto 1fr;
+      margin: 0 0 24px;
       padding: 14px 24px;
       position: relative;
-      width: auto;
+      width: 100%;
     }
 
     .brand-topbar-left {
       align-items: center;
       display: flex;
-      flex: 1;
+      grid-column: 2;
       justify-content: center;
+      justify-self: center;
     }
 
     .brand-topbar-right {
       align-items: center;
       display: flex;
-      flex: 1;
       gap: 10px;
+      grid-column: 3;
       justify-content: flex-end;
+      justify-self: end;
       min-width: 0;
     }
 
@@ -231,11 +237,8 @@
       color: rgba(255, 255, 255, 0.72);
       font-size: 12px;
       font-weight: 500;
-      position: absolute;
-      right: 24px;
       text-decoration: none;
-      top: 50%;
-      transform: translateY(-50%);
+      white-space: nowrap;
     }
 
     .admin-topbar-link:hover {
@@ -2107,7 +2110,7 @@
       .header { flex-direction: column; align-items: flex-start; }
       .header-actions { width: 100%; justify-content: space-between; }
       .brand-topbar { padding: 12px 16px; }
-      .admin-topbar-link { right: 16px; }
+      .dashboard-shell { padding: 0 16px 24px; }
       .page-hero { padding: 20px; }
     }
 
@@ -2127,7 +2130,7 @@
     }
 
     @media (max-width: 420px) {
-      .dashboard { padding: 0 12px 24px; }
+      .dashboard-shell { padding: 0 12px 24px; }
       .brand-topbar { padding: 10px 12px; }
       .page-hero { padding: 16px; }
     }
@@ -2136,14 +2139,16 @@
 <body>
   <div id="toast-host" class="toast-host" aria-live="polite"></div>
   <div class="dashboard" id="dashboard">
-    <div class="loading-state">
-      <header class="brand-topbar">
-        <div class="brand-topbar-left">
-          <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-        </div>
-      </header>
-      <div class="spinner"></div>
-      <p id="initial-loading-msg">Loading...</p>
+    <header class="brand-topbar">
+      <div class="brand-topbar-left">
+        <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+      </div>
+    </header>
+    <div class="dashboard-shell">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p id="initial-loading-msg">Loading...</p>
+      </div>
     </div>
   </div>
 
@@ -2209,6 +2214,21 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function renderBrandTopbar(rightHtml = '') {
+      return `
+        <header class="brand-topbar">
+          <div class="brand-topbar-left">
+            <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+          </div>
+          ${rightHtml ? `<div class="brand-topbar-right">${rightHtml}</div>` : ''}
+        </header>
+      `;
+    }
+
+    function wrapDashboardShell(content) {
+      return `<div class="dashboard-shell">${content}</div>`;
     }
 
     function showToast(message, type = 'info') {
@@ -2393,11 +2413,8 @@
 
       if (token) {
         dashboard.innerHTML = `
-          <header class="brand-topbar">
-            <div class="brand-topbar-left">
-              <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-            </div>
-          </header>
+          ${renderBrandTopbar()}
+          ${wrapDashboardShell(`
           <div class="auth-page">
             <div class="auth-card">
               <h1>Set your password</h1>
@@ -2416,16 +2433,14 @@
               <div class="auth-note"><a href="/login">Back to login</a></div>
             </div>
           </div>
+          `)}
         `;
         return;
       }
 
       dashboard.innerHTML = `
-        <header class="brand-topbar">
-          <div class="brand-topbar-left">
-            <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-          </div>
-        </header>
+        ${renderBrandTopbar()}
+        ${wrapDashboardShell(`
         <div class="auth-page">
           <div class="auth-card">
             <h1>Staff login</h1>
@@ -2444,6 +2459,7 @@
             <div class="auth-note">Forgot password? Contact your admin.</div>
           </div>
         </div>
+        `)}
       `;
     }
 
@@ -2681,14 +2697,8 @@
     function renderAdminHubPage(clients) {
       const count = clients.length;
       return `
-        <header class="brand-topbar">
-          <div class="brand-topbar-left">
-            <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-          </div>
-          <div class="brand-topbar-right">
-            ${renderStaffHeaderActions(currentStaffUser)}
-          </div>
-        </header>
+        ${renderBrandTopbar(renderStaffHeaderActions(currentStaffUser))}
+        ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero">
           <h1>Client administration</h1>
           <p>Manage dashboard accounts, sync GHL data, and preview client views.</p>
@@ -2715,6 +2725,7 @@
         <div class="brand-footer">
           Dashboard by Cenhub · Holstebro
         </div>
+        `)}
       `;
     }
 
@@ -2872,27 +2883,22 @@
       if (!user) return;
 
       dashboard.innerHTML = `
-        <div class="loading-state">
-          <header class="brand-topbar">
-            <div class="brand-topbar-left">
-              <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-            </div>
-          </header>
-          <div class="spinner"></div>
-          Loading clients...
-        </div>`;
+        ${renderBrandTopbar(renderStaffHeaderActions(currentStaffUser))}
+        ${wrapDashboardShell(`
+          <div class="loading-state">
+            <div class="spinner"></div>
+            Loading clients...
+          </div>
+        `)}`;
 
       try {
         const data = await adminFetch('/api/clients');
         dashboard.innerHTML = renderAdminHubPage(data.clients || []);
       } catch (error) {
         dashboard.innerHTML = `
-          <header class="brand-topbar">
-            <div class="brand-topbar-left">
-              <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-            </div>
-          </header>
-          <div class="error-state" style="padding:24px">${esc(error.message)}</div>`;
+          ${renderBrandTopbar(renderStaffHeaderActions(currentStaffUser))}
+          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+        `;
       }
     }
 
@@ -3351,22 +3357,8 @@
       const dashboard = document.getElementById('dashboard');
       const emptyFilters = { pipelines: [], statuses: [], sources: [], assignees: [], dateFields: [] };
       dashboard.innerHTML = `
-        <header class="brand-topbar">
-          <div class="brand-topbar-left">
-            <img
-              class="brand-logo"
-              src="/cenhub-logo-white.png"
-              alt="Cenhub"
-              width="167"
-              height="41"
-            />
-          </div>
-          <div class="brand-topbar-right">
-            ${renderStaffHeaderActions(currentStaffUser)}
-            <a class="admin-topbar-link" href="/admin" style="position:static">Admin hub</a>
-          </div>
-        </header>
-
+        ${renderBrandTopbar(`${renderStaffHeaderActions(currentStaffUser)}<a class="admin-topbar-link" href="/admin">Admin hub</a>`)}
+        ${wrapDashboardShell(`
         <div id="setup-panel-mount">
           <div class="loading-state" style="padding:24px">
             <div class="spinner"></div>
@@ -3381,6 +3373,7 @@
             ${renderAdminSetupPlaceholder()}
           </div>
         </details>
+        `)}
       `;
     }
 
@@ -5022,19 +5015,8 @@
       }
 
       dashboard.innerHTML = `
-        <header class="brand-topbar">
-          <div class="brand-topbar-left">
-            <img
-              class="brand-logo"
-              src="/cenhub-logo-white.png"
-              alt="Cenhub"
-              width="167"
-              height="41"
-            />
-          </div>
-          ${IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : ''}
-        </header>
-
+        ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+        ${wrapDashboardShell(`
         ${IS_ADMIN_CLIENT ? `
         <div id="setup-panel-mount"></div>
         <details class="panel admin-preview-section"${document.querySelector('.admin-preview-section')?.open ? ' open' : ''}>
@@ -5065,6 +5047,7 @@
           ${renderDashboardContent(data)}
         </div>
         `}
+        `)}
       `;
 
       if (IS_ADMIN_CLIENT) loadSetupAccount();
@@ -5139,15 +5122,13 @@
 
         if (!hasLayout) {
           dashboard.innerHTML = `
-            <div class="loading-state">
-              <header class="brand-topbar">
-                <div class="brand-topbar-left">
-                  <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-                </div>
-              </header>
-              <div class="spinner"></div>
-              ${LOADING_MSG}
-            </div>`;
+            ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+            ${wrapDashboardShell(`
+              <div class="loading-state">
+                <div class="spinner"></div>
+                ${LOADING_MSG}
+              </div>
+            `)}`;
         } else if (!background) {
           const content = document.getElementById('dashboard-content');
           if (content) content.innerHTML = renderKpiSkeleton();
@@ -5200,11 +5181,14 @@
           if (error.name === 'AbortError') {
             if (!hasLayout) {
               dashboard.innerHTML = `
-                <div class="error-state">
-                  <div>Fejl ved hentning af data</div>
-                  <div style="margin-top:8px;font-size:12px;color:#666">Request timed out. Prøv igen.</div>
-                  <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
-                </div>`;
+                ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+                ${wrapDashboardShell(`
+                  <div class="error-state">
+                    <div>Fejl ved hentning af data</div>
+                    <div style="margin-top:8px;font-size:12px;color:#666">Request timed out. Prøv igen.</div>
+                    <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
+                  </div>
+                `)}`;
             }
             return;
           }
@@ -5221,12 +5205,14 @@
             }
           } else if (!hasLayout) {
             dashboard.innerHTML = `
-              <div class="error-state">
-                <div>Fejl ved hentning af data</div>
-                <div style="margin-top:8px;font-size:12px;color:#666">${esc(error.message)}</div>
-                <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
-              </div>
-            `;
+              ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+              ${wrapDashboardShell(`
+                <div class="error-state">
+                  <div>Fejl ved hentning af data</div>
+                  <div style="margin-top:8px;font-size:12px;color:#666">${esc(error.message)}</div>
+                  <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
+                </div>
+              `)}`;
           } else if (applyBtn) {
             applyBtn.textContent = 'Apply failed - try again';
           }
@@ -5257,11 +5243,14 @@
       } catch (error) {
         resetFetchUiState();
         dashboard.innerHTML = `
-          <div class="error-state">
-            <div>Fejl ved visning af dashboard</div>
-            <div style="margin-top:8px;font-size:12px;color:#666">${esc(error.message)}</div>
-            <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
-          </div>
+          ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+          ${wrapDashboardShell(`
+            <div class="error-state">
+              <div>Fejl ved visning af dashboard</div>
+              <div style="margin-top:8px;font-size:12px;color:#666">${esc(error.message)}</div>
+              <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
+            </div>
+          `)}
         `;
       }
     }
