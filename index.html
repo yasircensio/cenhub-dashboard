@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v10 -->
+  <!-- theme: cool-slate v11 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -263,6 +263,52 @@
       background: var(--primary);
       border-color: var(--primary);
       color: #fff;
+    }
+
+    .preset-controls {
+      align-items: flex-end;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .custom-date-row {
+      align-items: flex-end;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .custom-date-row .filter-group {
+      min-width: 150px;
+    }
+
+    .custom-date-row label {
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .header-presets .custom-date-row label {
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .header-presets .custom-date-row input[type="date"] {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #fff;
+      width: auto;
+    }
+
+    .date-range-error {
+      color: var(--danger);
+      font-size: 12px;
+      margin-top: 4px;
+      width: 100%;
+    }
+
+    .header-presets .date-range-error {
+      color: #ffb4a8;
     }
 
     .admin-topbar-link {
@@ -4483,7 +4529,24 @@
 
     function formatActiveDateFilter(filters) {
       if (!filters.dateFrom && !filters.dateTo) return 'Till date';
+      const timeZone = getDashboardTimeZone();
+      if (window.MarketingMetrics?.formatShortDateLabel) {
+        const from = window.MarketingMetrics.formatShortDateLabel(filters.dateFrom, timeZone);
+        const to = window.MarketingMetrics.formatShortDateLabel(filters.dateTo, timeZone);
+        if (from && to) return `${from} – ${to}`;
+      }
       return `${filters.dateFrom || 'start'} to ${filters.dateTo || 'now'}`;
+    }
+
+    function showDateRangeError(message) {
+      document.querySelectorAll('#date-range-error').forEach((el) => {
+        el.textContent = message;
+        el.hidden = !message;
+      });
+    }
+
+    function clearDateRangeError() {
+      showDateRangeError('');
     }
 
     function needsFreshData() {
@@ -4573,7 +4636,15 @@
         state.dateFrom = `${year}-01-01`;
         state.dateTo = `${year}-12-31`;
         state.dateField = 'lastStatusChangeAt';
+      } else if (preset === 'custom') {
+        state.dateField = 'createdAt';
       }
+    }
+
+    function updateCustomDateRowVisibility() {
+      document.querySelectorAll('#custom-date-row').forEach((row) => {
+        row.hidden = state.preset !== 'custom';
+      });
     }
 
     function updateFilterUi() {
@@ -4594,12 +4665,31 @@
         button.classList.toggle('active', button.dataset.preset === state.preset);
       });
 
+      updateCustomDateRowVisibility();
       refreshPipelinePanel();
     }
 
     function onManualDateChange() {
+      const dateFrom = document.getElementById('dateFrom');
+      const dateTo = document.getElementById('dateTo');
+
       state.preset = 'custom';
+      state.dateField = 'createdAt';
+      if (dateFrom) state.dateFrom = dateFrom.value;
+      if (dateTo) state.dateTo = dateTo.value;
+
+      if (state.dateFrom && state.dateTo && state.dateFrom > state.dateTo) {
+        showDateRangeError('From date must be on or before To date.');
+        updateFilterUi();
+        return;
+      }
+
+      clearDateRangeError();
       updateFilterUi();
+
+      if (state.dateFrom && state.dateTo) {
+        applyDataFilters(false);
+      }
     }
 
     function onFilterChange(key, value) {
@@ -4647,6 +4737,8 @@
       if (!window.MarketingMetrics) return data;
       const result = window.MarketingMetrics.applyMarketingToDashboard(data, fbMetrics, state.preset, {
         timeZone: data.account?.timezone || 'Europe/Copenhagen',
+        dateFrom: state.preset === 'custom' ? (state.dateFrom || null) : null,
+        dateTo: state.preset === 'custom' ? (state.dateTo || null) : null,
       });
       if (result.monthlyAdSpend?.length) {
         cachedMonthlyAdSpend = result.monthlyAdSpend;
@@ -4849,12 +4941,38 @@
       `;
     }
 
+    function renderCustomDateInputs() {
+      return `
+        <div class="custom-date-row" id="custom-date-row" ${state.preset !== 'custom' ? 'hidden' : ''}>
+          <div class="filter-group">
+            <label for="dateFrom">From</label>
+            <input type="date" id="dateFrom" value="${esc(state.dateFrom || '')}" onchange="onManualDateChange()" />
+          </div>
+          <div class="filter-group">
+            <label for="dateTo">To</label>
+            <input type="date" id="dateTo" value="${esc(state.dateTo || '')}" onchange="onManualDateChange()" />
+          </div>
+          <div class="date-range-error" id="date-range-error" hidden></div>
+        </div>
+      `;
+    }
+
+    function renderPresetControls() {
+      return `
+        <div class="preset-controls">
+          ${renderPresetButtons()}
+          ${renderCustomDateInputs()}
+        </div>
+      `;
+    }
+
     function renderPresetButtons() {
       return `
         <button type="button" class="preset-btn ${state.preset === 'all' ? 'active' : ''}" data-preset="all" onclick="applyPreset('all')">Till date</button>
         <button type="button" class="preset-btn ${state.preset === 'month' ? 'active' : ''}" data-preset="month" onclick="applyPreset('month')">This month</button>
         <button type="button" class="preset-btn ${state.preset === 'lastMonth' ? 'active' : ''}" data-preset="lastMonth" onclick="applyPreset('lastMonth')">Last month</button>
         <button type="button" class="preset-btn ${state.preset === 'year' ? 'active' : ''}" data-preset="year" onclick="applyPreset('year')">This year</button>
+        <button type="button" class="preset-btn ${state.preset === 'custom' ? 'active' : ''}" data-preset="custom" onclick="applyPreset('custom')">Custom</button>
       `;
     }
 
@@ -4870,7 +4988,7 @@
 
             <div class="filters-row actions-row">
               <div class="preset-row">
-                ${renderPresetButtons()}
+                ${renderPresetControls()}
               </div>
               <button type="button" class="refresh-btn primary" id="apply-filters-btn" onclick="applyDataFilters()">Apply data filters</button>
             </div>
@@ -4929,7 +5047,7 @@
       }
       if (isVisible('kpis', 'adSpend')) {
         const spendSub = kpis.adSpendSource === 'facebook'
-          ? `Facebook ${kpis.adSpendLabel || 'period'} spend`
+          ? `Facebook ${kpis.adSpendLabel || 'period'} spend${kpis.adSpendNote ? `. ${kpis.adSpendNote}` : ''}`
           : 'No Facebook spend data for this period';
         cards.push(`
           <div class="card accent">
@@ -5282,7 +5400,7 @@
             </div>
             ${IS_ADMIN ? '' : `
             <div class="header-actions header-actions--client">
-              <div class="preset-row header-presets">${renderPresetButtons()}</div>
+              <div class="preset-row header-presets">${renderPresetControls()}</div>
             </div>
             `}
           </div>
@@ -5514,16 +5632,42 @@
       if (dateFrom) state.dateFrom = dateFrom.value;
       if (dateTo) state.dateTo = dateTo.value;
       if (adSpend) state.adSpend = adSpend.value;
+
+      if (state.dateFrom && state.dateTo) {
+        state.preset = 'custom';
+        state.dateField = 'createdAt';
+      }
+    }
+
+    function hasPartialDateRange() {
+      return Boolean((state.dateFrom && !state.dateTo) || (!state.dateFrom && state.dateTo));
     }
 
     function applyPreset(preset) {
+      clearDateRangeError();
       setPreset(preset);
       updateFilterUi();
+      if (preset === 'custom') {
+        document.getElementById('dateFrom')?.focus();
+        return;
+      }
       applyDataFilters(false);
     }
 
     function applyDataFilters(syncFromDom = true) {
       if (syncFromDom) syncFiltersFromDom();
+
+      if (hasPartialDateRange()) {
+        showDateRangeError('Select both From and To dates.');
+        return;
+      }
+
+      if (state.dateFrom && state.dateTo && state.dateFrom > state.dateTo) {
+        showDateRangeError('From date must be on or before To date.');
+        return;
+      }
+
+      clearDateRangeError();
 
       if (!state.pipelineIds.length && availablePipelines.length) {
         ensurePipelineDefaults(availablePipelines, cachedData?.account?.defaultPipelineIds);

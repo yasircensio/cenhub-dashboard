@@ -7,9 +7,12 @@ const {
   monthKeyFromDate,
   resolveMonthlyFromPayload,
   getSpendForPreset,
+  getSpendForDateRange,
+  getPeriodLabelForRange,
   getLeadsForPreset,
   getCurrentMonthKey,
   getPreviousMonthKey,
+  monthsBetween,
 } = require('../lib/marketing-metrics');
 
 // Dedicated test slug so running this against a real store never overwrites
@@ -123,6 +126,36 @@ async function main() {
   );
   if (leads !== 12) {
     throw new Error(`Expected preset leads from monthly series, got ${leads}`);
+  }
+
+  const rangeMonthly = [
+    { month: '2026-03', spend: 1000 },
+    { month: '2026-04', spend: 1500 },
+    { month: '2026-05', spend: 2000 },
+  ];
+  const singleMonthSpend = getSpendForDateRange({}, '2026-03-01', '2026-03-15', rangeMonthly);
+  if (singleMonthSpend !== 1000) {
+    throw new Error(`Expected full March spend for partial range, got ${singleMonthSpend}`);
+  }
+
+  const multiMonthSpend = getSpendForDateRange({}, '2026-03-10', '2026-05-05', rangeMonthly);
+  if (multiMonthSpend !== 4500) {
+    throw new Error(`Expected 3-month spend sum, got ${multiMonthSpend}`);
+  }
+
+  const monthKeys = monthsBetween('2026-03-01', '2026-05-31');
+  if (monthKeys.join(',') !== '2026-03,2026-04,2026-05') {
+    throw new Error(`monthsBetween mismatch: ${monthKeys.join(',')}`);
+  }
+
+  const sameMonthLabel = getPeriodLabelForRange('2026-03-01', '2026-03-31');
+  if (!sameMonthLabel.includes('2026')) {
+    throw new Error(`Expected same-month label, got ${sameMonthLabel}`);
+  }
+
+  const crossYearLabel = getPeriodLabelForRange('2025-12-01', '2026-01-31');
+  if (!crossYearLabel.includes('2025') || !crossYearLabel.includes('2026')) {
+    throw new Error(`Expected cross-year label, got ${crossYearLabel}`);
   }
 
   const monthlyJson = JSON.stringify([

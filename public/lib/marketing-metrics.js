@@ -74,21 +74,142 @@ function getPeriodLabel(preset) {
   if (preset === 'month') return 'This month';
   if (preset === 'lastMonth') return 'Last month';
   if (preset === 'year') return 'This year';
+  if (preset === 'custom') return 'Custom range';
   return 'Till date (yearly ad data)';
 }
 
+function formatMonthYearLabel(dateStr, timeZone = DEFAULT_TIMEZONE) {
+  const date = parseMarketingDate(dateStr);
+  if (!date) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+function formatShortDateLabel(dateStr, timeZone = DEFAULT_TIMEZONE) {
+  const date = parseMarketingDate(dateStr);
+  if (!date) return '';
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+function getPeriodLabelForRange(dateFrom, dateTo, timeZone = DEFAULT_TIMEZONE) {
+  if (!dateFrom || !dateTo) return 'Custom range';
+
+  const startMonth = monthKeyFromDate(dateFrom, timeZone);
+  const endMonth = monthKeyFromDate(dateTo, timeZone);
+  if (!startMonth || !endMonth) return 'Custom range';
+
+  if (startMonth === endMonth) {
+    return formatMonthYearLabel(dateFrom, timeZone);
+  }
+
+  const startYear = startMonth.slice(0, 4);
+  const endYear = endMonth.slice(0, 4);
+  const startMonthLabel = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    month: 'short',
+  }).format(parseMarketingDate(dateFrom));
+  const endMonthLabel = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    month: 'short',
+  }).format(parseMarketingDate(dateTo));
+
+  if (startYear === endYear) {
+    return `${startMonthLabel} – ${endMonthLabel} ${startYear}`;
+  }
+
+  return `${formatMonthYearLabel(dateFrom, timeZone)} – ${formatMonthYearLabel(dateTo, timeZone)}`;
+}
+
+function getSpendForDateRange(fbMetrics, dateFrom, dateTo, monthlyAdSpend, timeZone = DEFAULT_TIMEZONE) {
+  if (!dateFrom || !dateTo) return 0;
+
+  const monthly = monthlyAdSpend || buildMonthlyAdSpend(fbMetrics);
+  const monthKeys = monthsBetween(dateFrom, dateTo, timeZone);
+  if (!monthKeys.length) return 0;
+
+  const byMonth = new Map(monthly.map((row) => [row.month, Number(row.spend) || 0]));
+  const sum = monthKeys.reduce((total, month) => total + (byMonth.get(month) || 0), 0);
+  if (sum > 0) return sum;
+
+  return fbMetrics?.yearly ? parseFbAmount(fbMetrics.yearly.spend) : 0;
+}
+
+function getFacebookMetricsForDateRange(fbMetrics, dateFrom, dateTo, monthlyAdSpend, timeZone = DEFAULT_TIMEZONE) {
+  if (!dateFrom || !dateTo || !fbMetrics) {
+    return { clicks: 0, ctr: 0, cpc: 0 };
+  }
+
+  const monthKeys = new Set(monthsBetween(dateFrom, dateTo, timeZone));
+  if (!monthKeys.size) return { clicks: 0, ctr: 0, cpc: 0 };
+
+  let clicks = 0;
+  let impressions = 0;
+  for (const row of resolveMonthlyFromPayload(fbMetrics)) {
+    const normalized = normalizeMonthlyRow(row);
+    if (!normalized || !monthKeys.has(normalized.month)) continue;
+    clicks += parseFbAmount(pickField(row, ['clicks', 'Clicks']));
+    impressions += parseFbAmount(pickField(row, ['impressions', 'Impressions']));
+  }
+
+  const spend = getSpendForDateRange(fbMetrics, dateFrom, dateTo, monthlyAdSpend, timeZone);
+  return {
+    clicks,
+    ctr: impressions > 0 ? (clicks / impressions) * 100 : 0,
+    cpc: clicks > 0 ? spend / clicks : 0,
+  };
+}
+
 function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
-  const { monthlyAdSpend = null, monthlyLeads = [], timeZone = DEFAULT_TIMEZONE } = options;
-  const spend = getSpendForPreset(fbMetrics, preset, monthlyAdSpend, timeZone);
+  const {
+    monthlyAdSpend = null,
+    monthlyLeads = [],
+    timeZone = DEFAULT_TIMEZONE,
+    dateFrom = null,
+    dateTo = null,
+  } = options;
+
   const revenue = Number(kpis.totalRevenue) || 0;
   const bundlinje = Number(kpis.wonBundlinje) || 0;
-  const leads = getLeadsForPreset(kpis, monthlyLeads, preset, timeZone);
   const clientsWon = Number(kpis.clientsWon) || 0;
+
+  let spend;
+  let adSpendLabel;
+  let leads;
+  let facebookClicks;
+  let facebookCtr;
+  let facebookCpc;
+
+  if (preset === 'custom' && dateFrom && dateTo) {
+    spend = getSpendForDateRange(fbMetrics, dateFrom, dateTo, monthlyAdSpend, timeZone);
+    adSpendLabel = getPeriodLabelForRange(dateFrom, dateTo, timeZone);
+    leads = Number(kpis.totalLeads) || 0;
+    ({
+      clicks: facebookClicks,
+      ctr: facebookCtr,
+      cpc: facebookCpc,
+    } = getFacebookMetricsForDateRange(fbMetrics, dateFrom, dateTo, monthlyAdSpend, timeZone));
+  } else {
+    spend = getSpendForPreset(fbMetrics, preset, monthlyAdSpend, timeZone);
+    adSpendLabel = getPeriodLabel(preset);
+    leads = getLeadsForPreset(kpis, monthlyLeads, preset, timeZone);
+    facebookClicks = getFacebookMetric(fbMetrics, preset, 'clicks');
+    facebookCtr = getFacebookMetric(fbMetrics, preset, 'ctr');
+    facebookCpc = getFacebookMetric(fbMetrics, preset, 'cpc');
+  }
 
   return {
     ...kpis,
     adSpend: spend,
-    adSpendLabel: getPeriodLabel(preset),
+    adSpendLabel,
+    adSpendNote: preset === 'custom' ? 'Ad spend uses full calendar months in range.' : null,
     adSpendSource: spend > 0 ? 'facebook' : 'none',
     roas: spend > 0 ? revenue / spend : 0,
     poas: spend > 0 ? bundlinje / spend : 0,
@@ -96,9 +217,9 @@ function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
     poasDk: spend > 0 ? bundlinje - spend : 0,
     costPerLead: spend > 0 && leads > 0 ? spend / leads : 0,
     costPerWonClient: spend > 0 && clientsWon > 0 ? spend / clientsWon : 0,
-    facebookClicks: getFacebookMetric(fbMetrics, preset, 'clicks'),
-    facebookCtr: getFacebookMetric(fbMetrics, preset, 'ctr'),
-    facebookCpc: getFacebookMetric(fbMetrics, preset, 'cpc'),
+    facebookClicks,
+    facebookCtr,
+    facebookCpc,
   };
 }
 
@@ -286,6 +407,8 @@ function applyMarketingToDashboard(data, fbMetrics, preset, options = {}) {
     monthlyAdSpend,
     monthlyLeads: data.monthlyLeads || [],
     timeZone,
+    dateFrom: options.dateFrom || null,
+    dateTo: options.dateTo || null,
   });
 
   return {
@@ -312,9 +435,14 @@ const marketingMetricsApi = {
   getCurrentMonthKey,
   getPreviousMonthKey,
   getSpendForPreset,
+  getSpendForDateRange,
+  getPeriodLabelForRange,
+  formatShortDateLabel,
   getLeadsForPreset,
   getFacebookPeriodKey,
   getFacebookSpend,
+  getFacebookMetricsForDateRange,
+  monthsBetween,
   parseFbAmount,
 };
 

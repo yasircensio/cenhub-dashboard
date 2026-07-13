@@ -70,6 +70,19 @@ async function main() {
     throw new Error('This year clients won must match till-date for the same pipeline selection.');
   }
 
+  const customData = await getDashboardData(clientQuery({
+    dateFrom: '2026-03-01',
+    dateTo: '2026-03-31',
+    dateField: 'createdAt',
+  }));
+  console.log(`Custom range (2026-03-01 to 2026-03-31, createdAt)`);
+  console.log(`  Total leads:   ${customData.kpis.totalLeads}`);
+  console.log(`  Clients won:   ${customData.kpis.clientsWon}`);
+  console.log(`  Has date filter: ${customData.kpis.hasDateFilter}`);
+  if (!customData.kpis.hasDateFilter) {
+    throw new Error('Custom date range query must set hasDateFilter.');
+  }
+
   const chartCheck = await getDashboardData(clientQuery({
     pipelineIds: `${funnelIds},${SUNTECH_PIPELINES.afterSales}`,
   }));
