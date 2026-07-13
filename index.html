@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v2 -->
+  <!-- theme: cool-slate v3 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -497,7 +497,7 @@
     .client-card-stats {
       display: grid;
       gap: 6px;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .client-card-stat {
@@ -550,11 +550,29 @@
     .status-needs_sync,
     .status-needs_review,
     .status-needs_metrics_model {
-      background: var(--status-warn-bg);
-      border: 1px solid var(--status-warn-border);
-      color: var(--status-warn-text);
+      background: #fff7ed;
+      border: 1px solid #fdba74;
+      color: #9a3412;
+      font-weight: 700;
     }
     .status-sync_error { background: var(--danger-soft); color: var(--error); }
+
+    .client-card--needs-action {
+      border-color: rgba(234, 88, 12, 0.35);
+      box-shadow: var(--shadow-sm), 0 0 0 1px rgba(234, 88, 12, 0.1);
+    }
+
+    .client-card-action-hint {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      color: #9a3412;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0;
+      padding: 8px 10px;
+    }
 
     .client-card-actions {
       display: grid;
@@ -1120,8 +1138,6 @@
       pointer-events: none;
     }
 
-    .status-needs_metrics_model { background: var(--status-warn-bg); border: 1px solid var(--status-warn-border); color: var(--status-warn-text); }
-
     .admin-btn {
       align-items: center;
       background: var(--panel);
@@ -1205,6 +1221,48 @@
       border-radius: 16px;
       margin-top: 24px;
       padding: 22px 24px;
+    }
+
+    .add-client-panel > summary {
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .add-client-panel > summary::-webkit-details-marker { display: none; }
+
+    .add-client-summary {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .add-client-summary h2 {
+      align-items: center;
+      display: flex;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .add-client-summary-hint {
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .add-client-panel[open] .add-client-summary-hint { display: none; }
+
+    .add-client-panel[open] .add-client-desc {
+      margin-top: 8px;
+    }
+
+    .add-client-panel:not([open]) .add-client-desc,
+    .add-client-panel:not([open]) .add-client-body {
+      display: none;
     }
 
     .add-client-panel h2 {
@@ -2128,6 +2186,35 @@
       }).format(Math.round(Number(value) || 0));
     }
 
+    function fmtRevenueDkk(value) {
+      const amount = Math.round(Number(value) || 0);
+      if (amount >= 1000000) {
+        const millions = amount / 1000000;
+        const formatted = new Intl.NumberFormat('da-DK', {
+          minimumFractionDigits: millions % 1 === 0 ? 0 : 2,
+          maximumFractionDigits: 2,
+        }).format(millions);
+        return `${formatted}M kr`;
+      }
+      return `kr ${fmtDkk(amount)}`;
+    }
+
+    function clientNeedsAction(status) {
+      return Boolean(status && status !== 'ready');
+    }
+
+    function clientActionHint(status) {
+      const hints = {
+        needs_token: 'Action needed — add GHL token in Settings',
+        needs_metrics_model: 'Action needed — choose metrics model in Settings',
+        needs_pipelines: 'Action needed — map pipelines in Settings',
+        needs_sync: 'Action needed — sync data from Settings or click Sync',
+        needs_review: 'Action needed — review client setup in Settings',
+        sync_error: 'Sync failed — open Settings and try again',
+      };
+      return hints[status] || 'Action needed — open Settings to finish setup';
+    }
+
     function requestGhlUserData(timeoutMs = 8000) {
       return new Promise((resolve) => {
         if (window.self === window.top) {
@@ -2590,6 +2677,8 @@
     }
 
     function focusAddClient() {
+      const panel = document.getElementById('add-client-panel');
+      if (panel) panel.open = true;
       const input = document.getElementById('new-account-name');
       if (!input) return;
       input.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2646,8 +2735,9 @@
     function renderClientCard(client) {
       const kpis = client.previewKpis || {};
       const pipelineLabel = client.pipelineMode === '3-pipeline' ? '3 pipelines' : '2 pipelines';
+      const needsAction = clientNeedsAction(client.status);
       return `
-        <article class="client-card" data-search="${esc(`${client.accountName} ${client.clientId}`.toLowerCase())}">
+        <article class="client-card${needsAction ? ' client-card--needs-action' : ''}" data-search="${esc(`${client.accountName} ${client.clientId}`.toLowerCase())}">
           <div class="client-card-header">
             <span class="client-avatar" aria-hidden="true">${esc(clientInitials(client.accountName))}</span>
             <div class="client-card-title-block">
@@ -2663,6 +2753,7 @@
             <span class="client-card-meta-divider" aria-hidden="true">·</span>
             <span>${formatRelativeSync(client.lastSyncAt)}</span>
           </div>
+          ${needsAction ? `<p class="client-card-action-hint">${esc(clientActionHint(client.status))}</p>` : ''}
           ${kpis.totalLeads != null ? `
             <div class="client-card-stats">
               <div class="client-card-stat">
@@ -2674,15 +2765,15 @@
                 <div class="client-card-stat-label">Won</div>
               </div>
               <div class="client-card-stat">
-                <div class="client-card-stat-value">${fmtDkk(kpis.wonRevenue)}</div>
+                <div class="client-card-stat-value">${fmtRevenueDkk(kpis.wonRevenue)}</div>
                 <div class="client-card-stat-label">Revenue</div>
               </div>
             </div>
           ` : ''}
           <div class="client-card-actions">
-            <a class="admin-btn" href="/admin/${client.clientId}">Setting</a>
+            <a class="admin-btn" href="/admin/${client.clientId}">Settings</a>
             <a class="admin-btn admin-btn--primary" href="/${encodeURIComponent(client.clientId)}" title="Open client dashboard">Dashboard</a>
-            <button class="admin-btn" type="button" onclick="syncClient('${client.clientId}', this)">Sync</button>
+            <button class="admin-btn admin-btn--secondary" type="button" onclick="syncClient('${client.clientId}', this)">${ICON_SYNC} Sync</button>
           </div>
         </article>
       `;
@@ -2702,29 +2793,34 @@
 
     function renderAddClientPanel() {
       return `
-        <div class="add-client-panel">
-          <h2>${ICON_PLUS} Add new client</h2>
+        <details class="add-client-panel" id="add-client-panel">
+          <summary class="add-client-summary">
+            <h2>${ICON_PLUS} Add new client</h2>
+            <span class="add-client-summary-hint">Click to expand</span>
+          </summary>
           <p class="add-client-desc">Creates the account and opens the setup page where you pick the metrics model and connect GHL.</p>
-          <div class="setup-grid setup-grid--3">
-            <div class="field-group">
-              <label for="new-account-name">Account name</label>
-              <input id="new-account-name" type="text" placeholder="ScanTherm" oninput="suggestNewClientSlug()" />
+          <div class="add-client-body">
+            <div class="setup-grid setup-grid--3">
+              <div class="field-group">
+                <label for="new-account-name">Account name</label>
+                <input id="new-account-name" type="text" placeholder="ScanTherm" oninput="suggestNewClientSlug()" />
+              </div>
+              <div class="field-group">
+                <label for="new-client-slug">Admin slug</label>
+                <input id="new-client-slug" type="text" placeholder="scantherm" oninput="checkNewClientSlug()" />
+                <div id="slug-status" class="slug-status"></div>
+              </div>
+              <div class="field-group">
+                <label for="new-location-id">GHL location ID</label>
+                <input id="new-location-id" type="text" placeholder="Optional — can be added later" />
+              </div>
             </div>
-            <div class="field-group">
-              <label for="new-client-slug">Admin slug</label>
-              <input id="new-client-slug" type="text" placeholder="scantherm" oninput="checkNewClientSlug()" />
-              <div id="slug-status" class="slug-status"></div>
-            </div>
-            <div class="field-group">
-              <label for="new-location-id">GHL location ID</label>
-              <input id="new-location-id" type="text" placeholder="Optional — can be added later" />
+            <div class="setup-actions" style="border-top:0;padding-top:16px;margin-top:0">
+              <div></div>
+              <button class="admin-btn admin-btn--primary" type="button" onclick="createClient()">${ICON_PLUS} Create client</button>
             </div>
           </div>
-          <div class="setup-actions" style="border-top:0;padding-top:16px;margin-top:0">
-            <div></div>
-            <button class="admin-btn admin-btn--primary" type="button" onclick="createClient()">${ICON_PLUS} Create client</button>
-          </div>
-        </div>
+        </details>
       `;
     }
 
