@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v11 -->
+  <!-- theme: cool-slate v12 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -270,6 +270,20 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+
+    #admin-filters-panel .preset-controls {
+      align-items: flex-start;
+    }
+
+    .preset-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .custom-date-row[hidden] {
+      display: none !important;
     }
 
     .custom-date-row {
@@ -4957,10 +4971,13 @@
       `;
     }
 
-    function renderPresetControls() {
+    function renderPresetControls(inHeader = false) {
+      const headerClass = inHeader ? ' header-presets' : '';
       return `
-        <div class="preset-controls">
-          ${renderPresetButtons()}
+        <div class="preset-controls${inHeader ? ' preset-controls--header' : ''}">
+          <div class="preset-btn-row${headerClass}">
+            ${renderPresetButtons()}
+          </div>
           ${renderCustomDateInputs()}
         </div>
       `;
@@ -4987,9 +5004,7 @@
             </div>
 
             <div class="filters-row actions-row">
-              <div class="preset-row">
-                ${renderPresetControls()}
-              </div>
+              ${renderPresetControls(false)}
               <button type="button" class="refresh-btn primary" id="apply-filters-btn" onclick="applyDataFilters()">Apply data filters</button>
             </div>
           </div>
@@ -5400,7 +5415,7 @@
             </div>
             ${IS_ADMIN ? '' : `
             <div class="header-actions header-actions--client">
-              <div class="preset-row header-presets">${renderPresetControls()}</div>
+              ${renderPresetControls(true)}
             </div>
             `}
           </div>
