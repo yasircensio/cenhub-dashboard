@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v3 -->
+  <!-- theme: cool-slate v5 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -66,6 +66,43 @@
       --text: #111827;
       --text-muted: #5b6673;
       --text-soft: #8b95a1;
+    }
+
+    body[data-dashboard-mode="login"] .dashboard {
+      max-width: none;
+      overflow-x: visible;
+      padding: 0;
+    }
+
+    body[data-dashboard-mode="login"] .brand-topbar {
+      margin-bottom: 0;
+      margin-left: 0;
+      margin-right: 0;
+      padding: 16px 24px;
+      width: 100%;
+    }
+
+    body[data-dashboard-mode="login"] .auth-page {
+      background: linear-gradient(180deg, var(--bg) 0%, #eef2f6 100%);
+      min-height: calc(100vh - 73px);
+      padding: 48px 24px 56px;
+    }
+
+    body[data-dashboard-mode="login"] .auth-card {
+      box-shadow: var(--shadow-lg);
+      max-width: 400px;
+      padding: 32px;
+    }
+
+    body[data-dashboard-mode="login"] .auth-card h1 {
+      font-size: 26px;
+      letter-spacing: -0.02em;
+    }
+
+    body[data-dashboard-mode="login"] .auth-field label {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1448,13 +1485,18 @@
 
     .auth-field input {
       background: var(--panel);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: 10px;
       color: var(--text);
       font: inherit;
       font-size: 14px;
       padding: 11px 12px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
       width: 100%;
+    }
+
+    .auth-field input::placeholder {
+      color: var(--text-soft);
     }
 
     .auth-field input:focus {
@@ -2363,11 +2405,11 @@
               <div id="auth-error" class="auth-error" style="display:none"></div>
               <div class="auth-field">
                 <label for="set-password">New password</label>
-                <input id="set-password" type="password" autocomplete="new-password" minlength="8" />
+                <input id="set-password" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" />
               </div>
               <div class="auth-field">
                 <label for="set-password-confirm">Confirm password</label>
-                <input id="set-password-confirm" type="password" autocomplete="new-password" minlength="8" />
+                <input id="set-password-confirm" type="password" autocomplete="new-password" minlength="8" placeholder="Repeat your password" />
               </div>
               <input id="password-token" type="hidden" value="${esc(token)}" />
               <button class="admin-btn admin-btn--primary auth-submit" type="button" onclick="submitSetPassword()">Save password</button>
@@ -2391,12 +2433,12 @@
             <div id="auth-error" class="auth-error" style="display:none"></div>
             <div class="auth-field">
               <label for="login-email">Email</label>
-              <input id="login-email" type="email" autocomplete="username" />
+              <input id="login-email" type="email" autocomplete="username" placeholder="you@company.dk" />
             </div>
             <div class="auth-field">
               <label for="login-password">Password</label>
               <input id="login-next" type="hidden" value="${esc(next)}" />
-              <input id="login-password" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitStaffLogin()" />
+              <input id="login-password" type="password" autocomplete="current-password" placeholder="Enter your password" onkeydown="if(event.key==='Enter')submitStaffLogin()" />
             </div>
             <button class="admin-btn admin-btn--primary auth-submit" type="button" onclick="submitStaffLogin()">Sign in</button>
             <div class="auth-note">Forgot password? Contact your admin.</div>
