@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v18 -->
+  <!-- theme: cool-slate v19 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -4986,7 +4986,7 @@
         const input = document.getElementById(id);
         const display = document.getElementById(`${id}-display`);
         const trigger = document.getElementById(`${id}-trigger`);
-        const value = state[key] || input?.value || '';
+        const value = state[key] ?? '';
         if (input) input.value = value;
         if (display) display.textContent = formatPickerDisplayLabel(value, placeholder);
         trigger?.classList.toggle('is-empty', !value);
@@ -4994,8 +4994,12 @@
       });
     }
 
+    function getStateDateValue(key) {
+      return state[key] ?? '';
+    }
+
     function getDatePickerViewMonth(inputId) {
-      const value = state[inputId] || document.getElementById(inputId)?.value || '';
+      const value = getStateDateValue(inputId);
       if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
         const [year, month] = value.split('-').map(Number);
         return { year, month };
@@ -5061,9 +5065,9 @@
       const daysInPrevMonth = new Date(viewYear, viewMonth - 1, 0).getDate();
       const todayParts = getCalendarPartsInTimeZone(getDashboardTimeZone());
       const todayIso = isoFromParts(todayParts.year, todayParts.month, todayParts.day);
-      const selectedValue = state[inputId] || document.getElementById(inputId)?.value || '';
-      const fromVal = state.dateFrom || document.getElementById('dateFrom')?.value || '';
-      const toVal = state.dateTo || document.getElementById('dateTo')?.value || '';
+      const selectedValue = getStateDateValue(inputId);
+      const fromVal = getStateDateValue('dateFrom');
+      const toVal = getStateDateValue('dateTo');
 
       let cells = '';
       for (let index = mondayOffset - 1; index >= 0; index -= 1) {
@@ -5263,11 +5267,55 @@
     let lastCustomDateFrom = '';
     let lastCustomDateTo = '';
 
-    function saveCustomDateRange() {
-      if (state.dateFrom && state.dateTo) {
-        lastCustomDateFrom = state.dateFrom;
-        lastCustomDateTo = state.dateTo;
+    function getPresetDateRange(preset) {
+      const timeZone = getDashboardTimeZone();
+      const { year, month } = getCalendarPartsInTimeZone(timeZone);
+
+      if (preset === 'month') {
+        return formatMonthDateRange(year, month);
       }
+      if (preset === 'lastMonth') {
+        let lastYear = year;
+        let lastMonth = month - 1;
+        if (lastMonth < 1) {
+          lastMonth = 12;
+          lastYear -= 1;
+        }
+        return formatMonthDateRange(lastYear, lastMonth);
+      }
+      if (preset === 'year') {
+        return { start: `${year}-01-01`, end: `${year}-12-31` };
+      }
+      return null;
+    }
+
+    function isPresetGeneratedRange(dateFrom, dateTo) {
+      if (!dateFrom || !dateTo) return false;
+      return ['month', 'lastMonth', 'year'].some((preset) => {
+        const range = getPresetDateRange(preset);
+        return range && dateFrom === range.start && dateTo === range.end;
+      });
+    }
+
+    function saveCustomDateRange() {
+      if (!state.dateFrom || !state.dateTo) return;
+      if (isPresetGeneratedRange(state.dateFrom, state.dateTo)) return;
+      lastCustomDateFrom = state.dateFrom;
+      lastCustomDateTo = state.dateTo;
+    }
+
+    function restoreCustomDateRange() {
+      if (
+        lastCustomDateFrom
+        && lastCustomDateTo
+        && !isPresetGeneratedRange(lastCustomDateFrom, lastCustomDateTo)
+      ) {
+        state.dateFrom = lastCustomDateFrom;
+        state.dateTo = lastCustomDateTo;
+        return;
+      }
+      state.dateFrom = '';
+      state.dateTo = '';
     }
 
     function setPreset(preset) {
@@ -5300,11 +5348,13 @@
         state.dateTo = range.end;
         state.dateField = 'lastStatusChangeAt';
       } else if (preset === 'year') {
-        state.dateFrom = `${year}-01-01`;
-        state.dateTo = `${year}-12-31`;
+        const range = getPresetDateRange('year');
+        state.dateFrom = range.start;
+        state.dateTo = range.end;
         state.dateField = 'lastStatusChangeAt';
       } else if (preset === 'custom') {
         state.dateField = 'createdAt';
+        restoreCustomDateRange();
       }
     }
 
@@ -5374,6 +5424,7 @@
       updateFilterUi();
 
       if (state.dateFrom && state.dateTo) {
+        saveCustomDateRange();
         applyDataFilters(false);
       }
     }
