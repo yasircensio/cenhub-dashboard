@@ -8,6 +8,8 @@ const {
   resolveMonthlyFromPayload,
   getSpendForPreset,
   getSpendForDateRange,
+  getProratedMonthRatio,
+  getTodayIso,
   getPeriodLabelForRange,
   getLeadsForPreset,
   getCurrentMonthKey,
@@ -128,28 +130,39 @@ async function main() {
     throw new Error(`Expected preset leads from monthly series, got ${leads}`);
   }
 
+  const timeZone = 'Europe/Copenhagen';
+  const currentMonthKey = getCurrentMonthKey(timeZone);
+  const monthSpend = 8410;
+  const currentMonthly = [{ month: currentMonthKey, spend: monthSpend }];
+  const todayIso = getTodayIso(timeZone);
+  const [year, month, todayDay] = todayIso.split('-').map((part, index) => (
+    index === 0 ? Number(part) : Number(part)
+  ));
+  const monthStart = `${year}-${String(month).padStart(2, '0')}-01`;
+  const monthToToday = getSpendForDateRange({}, monthStart, todayIso, currentMonthly, timeZone);
+  if (Math.abs(monthToToday - monthSpend) > 0.01) {
+    throw new Error(`Month start to today should equal full month spend, got ${monthToToday}`);
+  }
+
+  if (todayDay > 1) {
+    const endBeforeToday = `${year}-${String(month).padStart(2, '0')}-${String(todayDay - 1).padStart(2, '0')}`;
+    const monthToYesterday = getSpendForDateRange({}, monthStart, endBeforeToday, currentMonthly, timeZone);
+    const expectedYesterday = monthSpend * ((todayDay - 1) / todayDay);
+    if (Math.abs(monthToYesterday - expectedYesterday) > 0.01) {
+      throw new Error(`Expected ${expectedYesterday} for month to yesterday, got ${monthToYesterday}`);
+    }
+  }
+
   const rangeMonthly = [
-    { month: '2026-07', spend: 3100 },
     { month: '2026-04', spend: 1500 },
     { month: '2026-05', spend: 2000 },
   ];
-  const julyFullSpend = getSpendForDateRange({}, '2026-07-01', '2026-07-31', rangeMonthly);
-  const julyFirstHalf = getSpendForDateRange({}, '2026-07-01', '2026-07-15', rangeMonthly);
-  const julyMidRange = getSpendForDateRange({}, '2026-07-10', '2026-07-15', rangeMonthly);
-  if (julyFullSpend !== 3100) {
-    throw new Error(`Expected full July spend, got ${julyFullSpend}`);
-  }
-  if (julyFirstHalf <= 0 || julyMidRange <= 0) {
-    throw new Error('Expected prorated July spend for partial ranges');
-  }
-  if (julyFirstHalf === julyMidRange) {
-    throw new Error('Prorated spend should differ between 1-15 Jul and 10-15 Jul');
-  }
-  if (julyMidRange >= julyFirstHalf) {
-    throw new Error('Shorter July range should have lower prorated spend');
+  const aprilRatio = getProratedMonthRatio('2026-04', '2026-04-10', '2026-04-20', timeZone);
+  if (aprilRatio <= 0 || aprilRatio >= 1) {
+    throw new Error(`Expected partial April ratio for past month, got ${aprilRatio}`);
   }
 
-  const multiMonthSpend = getSpendForDateRange({}, '2026-04-10', '2026-05-05', rangeMonthly);
+  const multiMonthSpend = getSpendForDateRange({}, '2026-04-10', '2026-05-05', rangeMonthly, timeZone);
   if (multiMonthSpend <= 0 || multiMonthSpend >= 3500) {
     throw new Error(`Expected prorated multi-month spend, got ${multiMonthSpend}`);
   }
