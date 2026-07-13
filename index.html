@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v13 -->
+  <!-- theme: cool-slate v14 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -549,6 +549,18 @@
 
     .date-picker-day.is-range-start.is-range-end {
       border-radius: 10px;
+    }
+
+    .date-picker-day.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.32;
+      pointer-events: none;
+    }
+
+    .date-picker-hint {
+      color: var(--text-soft);
+      font-size: 11px;
+      margin-right: auto;
     }
 
     .date-picker-footer {
@@ -4982,7 +4994,16 @@
       return getCalendarPartsInTimeZone(getDashboardTimeZone());
     }
 
-    function renderDatePickerDayCell(iso, dayNum, isOutside, todayIso, selectedValue, fromVal, toVal) {
+    function getTodayIso() {
+      const parts = getCalendarPartsInTimeZone(getDashboardTimeZone());
+      return isoFromParts(parts.year, parts.month, parts.day);
+    }
+
+    function isStartDateDisabled(iso) {
+      return iso >= getTodayIso();
+    }
+
+    function renderDatePickerDayCell(iso, dayNum, isOutside, todayIso, selectedValue, fromVal, toVal, inputId) {
       const classes = ['date-picker-day'];
       if (isOutside) classes.push('is-outside');
       if (iso === todayIso) classes.push('is-today');
@@ -4994,6 +5015,10 @@
       }
       if (iso === fromVal) classes.push('is-range-start');
       if (iso === toVal) classes.push('is-range-end');
+      if (inputId === 'dateFrom' && isStartDateDisabled(iso)) {
+        classes.push('is-disabled');
+        return `<button type="button" class="${classes.join(' ')}" disabled aria-disabled="true">${dayNum}</button>`;
+      }
       return `<button type="button" class="${classes.join(' ')}" onclick="selectDatePickerDay('${iso}')">${dayNum}</button>`;
     }
 
@@ -5023,12 +5048,12 @@
         const month = viewMonth === 1 ? 12 : viewMonth - 1;
         const year = viewMonth === 1 ? viewYear - 1 : viewYear;
         const iso = isoFromParts(year, month, day);
-        cells += renderDatePickerDayCell(iso, day, true, todayIso, selectedValue, fromVal, toVal);
+        cells += renderDatePickerDayCell(iso, day, true, todayIso, selectedValue, fromVal, toVal, inputId);
       }
 
       for (let day = 1; day <= daysInMonth; day += 1) {
         const iso = isoFromParts(viewYear, viewMonth, day);
-        cells += renderDatePickerDayCell(iso, day, false, todayIso, selectedValue, fromVal, toVal);
+        cells += renderDatePickerDayCell(iso, day, false, todayIso, selectedValue, fromVal, toVal, inputId);
       }
 
       const trailing = (7 - ((mondayOffset + daysInMonth) % 7)) % 7;
@@ -5036,8 +5061,15 @@
         const month = viewMonth === 12 ? 1 : viewMonth + 1;
         const year = viewMonth === 12 ? viewYear + 1 : viewYear;
         const iso = isoFromParts(year, month, day);
-        cells += renderDatePickerDayCell(iso, day, true, todayIso, selectedValue, fromVal, toVal);
+        cells += renderDatePickerDayCell(iso, day, true, todayIso, selectedValue, fromVal, toVal, inputId);
       }
+
+      const footerHint = inputId === 'dateFrom'
+        ? '<span class="date-picker-hint">Start date must be before today</span>'
+        : '';
+      const todayButton = inputId === 'dateTo'
+        ? '<button type="button" class="date-picker-footer-btn primary" onclick="setDatePickerToday()">Today</button>'
+        : '';
 
       popover.innerHTML = `
         <div class="date-picker-panel">
@@ -5053,8 +5085,9 @@
           </div>
           <div class="date-picker-grid">${cells}</div>
           <div class="date-picker-footer">
+            ${footerHint}
             <button type="button" class="date-picker-footer-btn" onclick="clearDatePickerField()">Clear</button>
-            <button type="button" class="date-picker-footer-btn primary" onclick="setDatePickerToday()">Today</button>
+            ${todayButton}
           </div>
         </div>
       `;
@@ -5148,6 +5181,10 @@
     function selectDatePickerDay(isoDate) {
       const inputId = datePickerState.inputId;
       if (!inputId) return;
+      if (inputId === 'dateFrom' && isStartDateDisabled(isoDate)) {
+        showDateRangeError('Start date must be before today.');
+        return;
+      }
       state[inputId] = isoDate;
       const input = document.getElementById(inputId);
       if (input) input.value = isoDate;
@@ -5157,6 +5194,10 @@
     }
 
     function setDatePickerToday() {
+      if (datePickerState.inputId === 'dateFrom') {
+        showDateRangeError('Start date must be before today.');
+        return;
+      }
       const parts = getCalendarPartsInTimeZone(getDashboardTimeZone());
       selectDatePickerDay(isoFromParts(parts.year, parts.month, parts.day));
     }
@@ -5264,6 +5305,15 @@
         return;
       }
 
+      if (state.dateFrom && isStartDateDisabled(state.dateFrom)) {
+        state.dateFrom = '';
+        const input = document.getElementById('dateFrom');
+        if (input) input.value = '';
+        showDateRangeError('Start date must be before today.');
+        updateFilterUi();
+        return;
+      }
+
       clearDateRangeError();
       updateFilterUi();
 
@@ -5315,11 +5365,17 @@
 
     function applyMarketingData(data, fbMetrics) {
       if (!window.MarketingMetrics) return data;
-      const result = window.MarketingMetrics.applyMarketingToDashboard(data, fbMetrics, state.preset, {
-        timeZone: data.account?.timezone || 'Europe/Copenhagen',
-        dateFrom: state.preset === 'custom' ? (state.dateFrom || null) : null,
-        dateTo: state.preset === 'custom' ? (state.dateTo || null) : null,
-      });
+      const useCustomRange = Boolean(state.dateFrom && state.dateTo);
+      const result = window.MarketingMetrics.applyMarketingToDashboard(
+        data,
+        fbMetrics,
+        useCustomRange ? 'custom' : state.preset,
+        {
+          timeZone: data.account?.timezone || 'Europe/Copenhagen',
+          dateFrom: useCustomRange ? state.dateFrom : null,
+          dateTo: useCustomRange ? state.dateTo : null,
+        },
+      );
       if (result.monthlyAdSpend?.length) {
         cachedMonthlyAdSpend = result.monthlyAdSpend;
       }
@@ -6268,6 +6324,11 @@
 
       if (state.dateFrom && state.dateTo && state.dateFrom > state.dateTo) {
         showDateRangeError('From date must be on or before To date.');
+        return;
+      }
+
+      if (state.dateFrom && isStartDateDisabled(state.dateFrom)) {
+        showDateRangeError('Start date must be before today.');
         return;
       }
 

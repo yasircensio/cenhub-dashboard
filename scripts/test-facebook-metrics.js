@@ -129,18 +129,29 @@ async function main() {
   }
 
   const rangeMonthly = [
-    { month: '2026-03', spend: 1000 },
+    { month: '2026-07', spend: 3100 },
     { month: '2026-04', spend: 1500 },
     { month: '2026-05', spend: 2000 },
   ];
-  const singleMonthSpend = getSpendForDateRange({}, '2026-03-01', '2026-03-15', rangeMonthly);
-  if (singleMonthSpend !== 1000) {
-    throw new Error(`Expected full March spend for partial range, got ${singleMonthSpend}`);
+  const julyFullSpend = getSpendForDateRange({}, '2026-07-01', '2026-07-31', rangeMonthly);
+  const julyFirstHalf = getSpendForDateRange({}, '2026-07-01', '2026-07-15', rangeMonthly);
+  const julyMidRange = getSpendForDateRange({}, '2026-07-10', '2026-07-15', rangeMonthly);
+  if (julyFullSpend !== 3100) {
+    throw new Error(`Expected full July spend, got ${julyFullSpend}`);
+  }
+  if (julyFirstHalf <= 0 || julyMidRange <= 0) {
+    throw new Error('Expected prorated July spend for partial ranges');
+  }
+  if (julyFirstHalf === julyMidRange) {
+    throw new Error('Prorated spend should differ between 1-15 Jul and 10-15 Jul');
+  }
+  if (julyMidRange >= julyFirstHalf) {
+    throw new Error('Shorter July range should have lower prorated spend');
   }
 
-  const multiMonthSpend = getSpendForDateRange({}, '2026-03-10', '2026-05-05', rangeMonthly);
-  if (multiMonthSpend !== 4500) {
-    throw new Error(`Expected 3-month spend sum, got ${multiMonthSpend}`);
+  const multiMonthSpend = getSpendForDateRange({}, '2026-04-10', '2026-05-05', rangeMonthly);
+  if (multiMonthSpend <= 0 || multiMonthSpend >= 3500) {
+    throw new Error(`Expected prorated multi-month spend, got ${multiMonthSpend}`);
   }
 
   const monthKeys = monthsBetween('2026-03-01', '2026-05-31');
