@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v14 -->
+  <!-- theme: cool-slate v15 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -4918,6 +4918,7 @@
       return {
         year: Number(parts.find((part) => part.type === 'year')?.value),
         month: Number(parts.find((part) => part.type === 'month')?.value),
+        day: Number(parts.find((part) => part.type === 'day')?.value),
       };
     }
 
@@ -4938,11 +4939,13 @@
     let datePickerListenersBound = false;
 
     function isoFromParts(year, month, day) {
-      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const safeDay = Number(day);
+      if (!year || !month || !Number.isFinite(safeDay)) return '';
+      return `${year}-${String(month).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
     }
 
     function formatPickerDisplayLabel(iso, placeholder) {
-      if (!iso) return placeholder;
+      if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return placeholder;
       const timeZone = getDashboardTimeZone();
       if (window.MarketingMetrics?.formatShortDateLabel) {
         return window.MarketingMetrics.formatShortDateLabel(iso, timeZone) || iso;
@@ -4971,13 +4974,13 @@
 
     function syncDatePickerDisplays() {
       [
-        { id: 'dateFrom', placeholder: 'Pick start date' },
-        { id: 'dateTo', placeholder: 'Pick end date' },
-      ].forEach(({ id, placeholder }) => {
+        { id: 'dateFrom', key: 'dateFrom', placeholder: 'Pick start date' },
+        { id: 'dateTo', key: 'dateTo', placeholder: 'Pick end date' },
+      ].forEach(({ id, key, placeholder }) => {
         const input = document.getElementById(id);
         const display = document.getElementById(`${id}-display`);
         const trigger = document.getElementById(`${id}-trigger`);
-        const value = state[id] || input?.value || '';
+        const value = state[key] || input?.value || '';
         if (input) input.value = value;
         if (display) display.textContent = formatPickerDisplayLabel(value, placeholder);
         trigger?.classList.toggle('is-empty', !value);
@@ -5180,12 +5183,13 @@
 
     function selectDatePickerDay(isoDate) {
       const inputId = datePickerState.inputId;
-      if (!inputId) return;
+      if (!inputId || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
       if (inputId === 'dateFrom' && isStartDateDisabled(isoDate)) {
         showDateRangeError('Start date must be before today.');
         return;
       }
-      state[inputId] = isoDate;
+      if (inputId === 'dateFrom') state.dateFrom = isoDate;
+      if (inputId === 'dateTo') state.dateTo = isoDate;
       const input = document.getElementById(inputId);
       if (input) input.value = isoDate;
       closeDatePicker();
