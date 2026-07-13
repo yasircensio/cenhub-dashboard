@@ -1496,15 +1496,12 @@
     }
 
     .auth-card-header {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-
-    .auth-card-title-row {
-      align-items: center;
+      align-items: flex-start;
       display: flex;
-      gap: 14px;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+      text-align: left;
     }
 
     .auth-card-icon {
@@ -1514,13 +1511,13 @@
       color: var(--primary);
       display: flex;
       flex-shrink: 0;
-      height: 44px;
+      height: 40px;
       justify-content: center;
-      width: 44px;
+      width: 40px;
     }
 
-    .auth-card-title-row h1 {
-      line-height: 1.15;
+    .auth-card-header h1 {
+      line-height: 1.2;
       margin: 0;
     }
 
@@ -1529,11 +1526,6 @@
       font-size: 13px;
       line-height: 1.5;
       margin: 0;
-    }
-
-    .auth-card-intro {
-      flex: 1;
-      min-width: 0;
     }
 
     .auth-card h1 {
@@ -2581,11 +2573,11 @@
           <div class="auth-page">
             <div class="auth-card">
               <div class="auth-card-header">
-                <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
-                <div class="auth-card-intro">
+                <div class="auth-card-title-row">
+                  <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
                   <h1>Set your password</h1>
-                  <p>Create a password for your Cenhub staff account. The link expires after 48 hours.</p>
                 </div>
+                <p>Create a password for your Cenhub staff account. The link expires after 48 hours.</p>
               </div>
               <div id="auth-error" class="auth-error" style="display:none"></div>
               <div id="auth-success" class="auth-success" style="display:none"></div>
@@ -2609,11 +2601,11 @@
         <div class="auth-page">
           <div class="auth-card">
             <div class="auth-card-header">
-              <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
-              <div class="auth-card-intro">
+              <div class="auth-card-title-row">
+                <div class="auth-card-icon" aria-hidden="true">${ICON_AUTH_LOCK}</div>
                 <h1>Staff login</h1>
-                <p>Manage client dashboards and admin settings.</p>
               </div>
+              <p>Manage client dashboards and admin settings.</p>
             </div>
             ${saved ? '<div class="auth-success">Password saved. Sign in with your new password.</div>' : ''}
             <div id="auth-error" class="auth-error" style="display:none"></div>
