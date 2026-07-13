@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v19 -->
+  <!-- theme: cool-slate v21 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -5388,13 +5388,10 @@
     }
 
     function onManualDateChange() {
-      const dateFrom = document.getElementById('dateFrom');
-      const dateTo = document.getElementById('dateTo');
+      syncFiltersFromDom();
 
       state.preset = 'custom';
       state.dateField = 'createdAt';
-      if (dateFrom) state.dateFrom = dateFrom.value;
-      if (dateTo) state.dateTo = dateTo.value;
 
       if (state.dateFrom && state.dateTo && state.dateFrom > state.dateTo) {
         showDateRangeError('From date must be on or before To date.');
@@ -6433,16 +6430,14 @@
         if (el) state[key] = el.value;
       });
 
-      const dateFrom = document.getElementById('dateFrom');
-      const dateTo = document.getElementById('dateTo');
       const adSpend = document.getElementById('adSpend');
-
-      if (dateFrom) state.dateFrom = dateFrom.value;
-      if (dateTo) state.dateTo = dateTo.value;
       if (adSpend) state.adSpend = adSpend.value;
 
-      if (state.dateFrom && state.dateTo) {
-        state.preset = 'custom';
+      if (state.preset === 'custom') {
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        if (dateFrom) state.dateFrom = dateFrom.value;
+        if (dateTo) state.dateTo = dateTo.value;
         state.dateField = 'createdAt';
       }
     }
@@ -6467,24 +6462,26 @@
     function applyDataFilters(syncFromDom = true) {
       if (syncFromDom) syncFiltersFromDom();
 
-      if (hasPartialDateRange()) {
-        showDateRangeError('Select both From and To dates.');
-        return;
-      }
+      if (state.preset === 'custom') {
+        if (hasPartialDateRange()) {
+          showDateRangeError('Select both From and To dates.');
+          return;
+        }
 
-      if (state.dateFrom && state.dateTo && state.dateFrom > state.dateTo) {
-        showDateRangeError('From date must be on or before To date.');
-        return;
-      }
+        if (state.dateFrom && state.dateTo && state.dateFrom > state.dateTo) {
+          showDateRangeError('From date must be on or before To date.');
+          return;
+        }
 
-      if (state.dateFrom && isStartDateDisabled(state.dateFrom)) {
-        showDateRangeError('Start date must be before today.');
-        return;
-      }
+        if (state.dateFrom && isStartDateDisabled(state.dateFrom)) {
+          showDateRangeError('Start date must be before today.');
+          return;
+        }
 
-      if (state.dateTo && isFutureDateDisabled(state.dateTo)) {
-        showDateRangeError('End date cannot be after today.');
-        return;
+        if (state.dateTo && isFutureDateDisabled(state.dateTo)) {
+          showDateRangeError('End date cannot be after today.');
+          return;
+        }
       }
 
       clearDateRangeError();
