@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v17 -->
+  <!-- theme: cool-slate v18 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -5016,11 +5016,6 @@
       return iso > getTodayIso();
     }
 
-    function isCurrentMonthView(year, month) {
-      const parts = getCalendarPartsInTimeZone(getDashboardTimeZone());
-      return year === parts.year && month === parts.month;
-    }
-
     function isFutureMonthView(year, month) {
       const parts = getCalendarPartsInTimeZone(getDashboardTimeZone());
       return year > parts.year || (year === parts.year && month > parts.month);
@@ -5265,7 +5260,21 @@
       }
     }
 
+    let lastCustomDateFrom = '';
+    let lastCustomDateTo = '';
+
+    function saveCustomDateRange() {
+      if (state.dateFrom && state.dateTo) {
+        lastCustomDateFrom = state.dateFrom;
+        lastCustomDateTo = state.dateTo;
+      }
+    }
+
     function setPreset(preset) {
+      if (state.preset === 'custom' && preset !== 'custom') {
+        saveCustomDateRange();
+      }
+
       state.preset = preset;
       const timeZone = getDashboardTimeZone();
       const { year, month } = getCalendarPartsInTimeZone(timeZone);
