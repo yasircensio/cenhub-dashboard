@@ -11,6 +11,7 @@ const {
   getProratedMonthRatio,
   getTodayIso,
   getPeriodLabelForRange,
+  getPeriodLabel,
   getLeadsForPreset,
   getCurrentMonthKey,
   getPreviousMonthKey,
@@ -173,8 +174,28 @@ async function main() {
   }
 
   const sameMonthLabel = getPeriodLabelForRange('2026-03-01', '2026-03-31');
-  if (!sameMonthLabel.includes('2026')) {
+  if (!sameMonthLabel.includes('Mar') || !sameMonthLabel.includes('2026')) {
     throw new Error(`Expected same-month label, got ${sameMonthLabel}`);
+  }
+
+  const partialMonthLabel = getPeriodLabelForRange('2026-07-01', '2026-07-12');
+  if (partialMonthLabel !== 'Jul 2026') {
+    throw new Error(`Expected partial-month label "Jul 2026", got ${partialMonthLabel}`);
+  }
+
+  const fullYearLabel = getPeriodLabelForRange('2026-01-01', '2026-12-31');
+  if (fullYearLabel !== '2026') {
+    throw new Error(`Expected full-year label "2026", got ${fullYearLabel}`);
+  }
+
+  const yearLabel = getPeriodLabel('year', 'Europe/Copenhagen');
+  if (!/^\d{4}$/.test(yearLabel)) {
+    throw new Error(`Expected year-only preset label, got ${yearLabel}`);
+  }
+
+  const monthLabel = getPeriodLabel('month', 'Europe/Copenhagen');
+  if (!monthLabel.includes(' ') || !/\d{4}$/.test(monthLabel)) {
+    throw new Error(`Expected month-year preset label, got ${monthLabel}`);
   }
 
   const crossYearLabel = getPeriodLabelForRange('2025-12-01', '2026-01-31');
