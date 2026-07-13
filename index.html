@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v25 -->
+  <!-- theme: cool-slate v26 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -3228,6 +3228,9 @@
         const inviteAction = user.status === 'pending' || !user.hasPassword
           ? `<button class="admin-btn" type="button" onclick="copyStaffInviteLink('${esc(user.id)}')">Copy invite link</button>`
           : `<button class="admin-btn" type="button" onclick="resetStaffUserPassword('${esc(user.id)}', true)">Reset password</button>`;
+        const deleteAction = isSelf
+          ? ''
+          : `<button class="admin-btn card-menu-item--danger" type="button" onclick="deleteStaffUser('${esc(user.id)}')">Delete</button>`;
 
         return `
           <tr>
@@ -3239,6 +3242,7 @@
               <div class="staff-user-actions">
                 ${statusAction}
                 ${inviteAction}
+                ${deleteAction}
               </div>
             </td>
           </tr>
@@ -3319,6 +3323,23 @@
 
     async function updateStaffUserRole(userId, role) {
       await updateStaffUser(userId, { role: role === 'admin' ? 'admin' : 'member' });
+    }
+
+    async function deleteStaffUser(userId) {
+      if (!window.confirm('Delete this staff member? This permanently removes their account and cannot be undone.')) {
+        return;
+      }
+      try {
+        await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}`, {
+          method: 'DELETE',
+        });
+        if (IS_TEAM_PAGE) {
+          await reloadTeamUsersTable();
+        }
+        showToast('Staff member deleted.', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
     }
 
     async function copyStaffInviteLink(userId) {
