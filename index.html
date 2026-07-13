@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v15 -->
+  <!-- theme: cool-slate v16 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -5685,6 +5685,47 @@
 
     function clientKpiCopy(adminText, clientText) {
       return IS_CLIENT_VIEW && !IS_PREVIEW ? clientText : adminText;
+    }
+
+    function isFullCurrentMonthToTodayRange() {
+      if (!state.dateFrom || !state.dateTo) return false;
+      const timeZone = getDashboardTimeZone();
+      const { year, month, day } = getCalendarPartsInTimeZone(timeZone);
+      const monthStart = formatMonthDateRange(year, month).start;
+      const todayIso = isoFromParts(year, month, day);
+      return state.dateFrom === monthStart && state.dateTo === todayIso;
+    }
+
+    function isFullLastMonthRange() {
+      if (!state.dateFrom || !state.dateTo) return false;
+      const timeZone = getDashboardTimeZone();
+      const { year, month } = getCalendarPartsInTimeZone(timeZone);
+      let lastYear = year;
+      let lastMonth = month - 1;
+      if (lastMonth < 1) {
+        lastMonth = 12;
+        lastYear -= 1;
+      }
+      const range = formatMonthDateRange(lastYear, lastMonth);
+      return state.dateFrom === range.start && state.dateTo === range.end;
+    }
+
+    function getAdSpendSubtitle(kpis) {
+      if (kpis.adSpendSource !== 'facebook') {
+        return 'No Facebook spend data for this period';
+      }
+
+      if (state.preset === 'month' || state.preset === 'lastMonth' || state.preset === 'year') {
+        return `Facebook ${kpis.adSpendLabel || 'period'} spend`;
+      }
+
+      if (state.preset === 'custom') {
+        if (isFullCurrentMonthToTodayRange()) return 'Facebook This month spend';
+        if (isFullLastMonthRange()) return 'Facebook Last month spend';
+        return 'Avg value';
+      }
+
+      return `Facebook ${kpis.adSpendLabel || 'period'} spend`;
     }
 
     function renderKpiCards(kpis) {
