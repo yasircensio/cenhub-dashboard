@@ -48,3 +48,5 @@ CREATE TABLE IF NOT EXISTS sync_runs (
 
 CREATE INDEX IF NOT EXISTS sync_runs_client_id_started_at_idx
   ON sync_runs (client_id, started_at DESC);
+
+-- Staff auth (see db/migrate-staff-auth.sql for full migration)

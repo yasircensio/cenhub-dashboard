@@ -78,7 +78,8 @@
       align-items: center;
       background: var(--brand-topbar-gradient);
       display: flex;
-      justify-content: center;
+      gap: 12px;
+      justify-content: space-between;
       margin-bottom: 24px;
       margin-left: calc(50% - 50vw);
       margin-right: calc(50% - 50vw);
@@ -90,7 +91,16 @@
     .brand-topbar-left {
       align-items: center;
       display: flex;
+      flex: 1;
       justify-content: center;
+    }
+
+    .brand-topbar-right {
+      align-items: center;
+      display: flex;
+      flex: 1;
+      gap: 10px;
+      justify-content: flex-end;
     }
 
     .brand-logo {
@@ -1218,6 +1228,153 @@
 
     .brand-footer a:hover { color: var(--primary-dark); }
 
+    .auth-page {
+      align-items: center;
+      display: flex;
+      justify-content: center;
+      min-height: calc(100vh - 80px);
+      padding: 32px 24px 48px;
+    }
+
+    .auth-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      max-width: 420px;
+      padding: 28px;
+      width: 100%;
+    }
+
+    .auth-card h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .auth-card p {
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .auth-field input {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      padding: 11px 12px;
+      width: 100%;
+    }
+
+    .auth-field input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.15);
+      outline: none;
+    }
+
+    .auth-submit {
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .auth-error {
+      background: #fde8e8;
+      border: 1px solid #f5c2c2;
+      border-radius: 10px;
+      color: var(--error);
+      font-size: 13px;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+    }
+
+    .auth-note {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .staff-header-bar {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+    }
+
+    .staff-header-name {
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .staff-header-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      color: #fff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      padding: 7px 12px;
+    }
+
+    .staff-header-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .staff-users-panel {
+      margin-bottom: 20px;
+    }
+
+    .staff-users-table {
+      border-collapse: collapse;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .staff-users-table th,
+    .staff-users-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .staff-users-table th {
+      color: var(--text-muted);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .staff-user-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .staff-setup-link {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      word-break: break-all;
+    }
+
     .panel {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -1765,6 +1922,11 @@
   <script>
     (function ensureDashboardModeAttr() {
       const parts = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+      if (parts[0] === 'login') {
+        document.body.dataset.dashboardMode = 'login';
+        delete document.body.dataset.clientSlug;
+        return;
+      }
       if (parts[0] === 'admin') {
         document.body.dataset.dashboardMode = parts.length >= 2 ? 'admin' : 'hub';
         if (parts.length >= 2) document.body.dataset.clientSlug = parts[1];
@@ -1778,6 +1940,7 @@
     })();
 
     const DASHBOARD_MODE = document.body.dataset.dashboardMode || 'client';
+    const IS_LOGIN_PAGE = DASHBOARD_MODE === 'login';
     const IS_ADMIN_HUB = DASHBOARD_MODE === 'hub';
     const IS_ADMIN_CLIENT = DASHBOARD_MODE === 'admin';
     const IS_CLIENT_VIEW = DASHBOARD_MODE === 'client';
@@ -1891,34 +2054,332 @@
       if (CLIENT_ACCESS_KEY) searchParams.set('key', CLIENT_ACCESS_KEY);
     }
     const ADMIN_API_KEY_STORAGE = 'cenhub_admin_api_key';
+    let currentStaffUser = null;
 
     function getAdminApiKey() {
       return localStorage.getItem(ADMIN_API_KEY_STORAGE) || '';
     }
 
-    function ensureAdminApiKey() {
-      let key = getAdminApiKey();
-      if (!key && (IS_ADMIN_HUB || IS_ADMIN_CLIENT)) {
-        key = window.prompt('Enter admin API key (DASHBOARD_ADMIN_API_KEY):') || '';
-        if (key) localStorage.setItem(ADMIN_API_KEY_STORAGE, key);
+    function redirectToLogin() {
+      const next = `${window.location.pathname}${window.location.search}`;
+      window.location.href = `/login?next=${encodeURIComponent(next)}`;
+    }
+
+    async function fetchStaffMe() {
+      const response = await fetch('/api/auth/me', { credentials: 'include' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return null;
+      return data.user || null;
+    }
+
+    async function requireStaffAuth() {
+      const user = await fetchStaffMe();
+      if (!user) {
+        redirectToLogin();
+        return null;
       }
-      return key;
+      currentStaffUser = user;
+      return user;
     }
 
     async function adminFetch(path, options = {}) {
-      const apiKey = ensureAdminApiKey();
       const headers = {
         'Content-Type': 'application/json',
         ...(options.headers || {}),
       };
-      if (apiKey) headers['x-api-key'] = apiKey;
+      const legacyKey = getAdminApiKey();
+      if (legacyKey) headers['x-api-key'] = legacyKey;
 
-      const response = await fetch(path, { ...options, headers });
+      const response = await fetch(path, {
+        ...options,
+        headers,
+        credentials: 'include',
+      });
       const data = await response.json().catch(() => ({}));
+      if (response.status === 401 && ADMIN_UI) {
+        redirectToLogin();
+        throw new Error(data.error || 'Unauthorized.');
+      }
       if (!response.ok) {
         throw new Error(data.error || `Request failed (${response.status})`);
       }
       return data;
+    }
+
+    async function staffLogout() {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      } catch {
+        // ignore
+      }
+      window.location.href = '/login';
+    }
+
+    function renderStaffHeaderActions(user) {
+      if (!user) return '';
+      return `
+        <div class="staff-header-bar">
+          <span class="staff-header-name">${esc(user.name || user.email)}</span>
+          ${user.role === 'admin' ? '<button type="button" class="staff-header-btn" onclick="toggleStaffUsersPanel()">Staff users</button>' : ''}
+          <button type="button" class="staff-header-btn" onclick="staffLogout()">Log out</button>
+        </div>
+      `;
+    }
+
+    function renderLoginPage() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const next = params.get('next') || '/admin';
+      const dashboard = document.getElementById('dashboard');
+
+      if (token) {
+        dashboard.innerHTML = `
+          <header class="brand-topbar">
+            <div class="brand-topbar-left">
+              <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+            </div>
+          </header>
+          <div class="auth-page">
+            <div class="auth-card">
+              <h1>Set your password</h1>
+              <p>Create a password for your Cenhub staff account. The link expires after 48 hours.</p>
+              <div id="auth-error" class="auth-error" style="display:none"></div>
+              <div class="auth-field">
+                <label for="set-password">New password</label>
+                <input id="set-password" type="password" autocomplete="new-password" minlength="8" />
+              </div>
+              <div class="auth-field">
+                <label for="set-password-confirm">Confirm password</label>
+                <input id="set-password-confirm" type="password" autocomplete="new-password" minlength="8" />
+              </div>
+              <input id="password-token" type="hidden" value="${esc(token)}" />
+              <button class="admin-btn admin-btn--primary auth-submit" type="button" onclick="submitSetPassword()">Save password</button>
+              <div class="auth-note"><a href="/login">Back to login</a></div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      dashboard.innerHTML = `
+        <header class="brand-topbar">
+          <div class="brand-topbar-left">
+            <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+          </div>
+        </header>
+        <div class="auth-page">
+          <div class="auth-card">
+            <h1>Staff login</h1>
+            <p>Sign in to manage client dashboards and admin settings.</p>
+            <div id="auth-error" class="auth-error" style="display:none"></div>
+            <div class="auth-field">
+              <label for="login-email">Email</label>
+              <input id="login-email" type="email" autocomplete="username" />
+            </div>
+            <div class="auth-field">
+              <label for="login-password">Password</label>
+              <input id="login-next" type="hidden" value="${esc(next)}" />
+              <input id="login-password" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitStaffLogin()" />
+            </div>
+            <button class="admin-btn admin-btn--primary auth-submit" type="button" onclick="submitStaffLogin()">Sign in</button>
+            <div class="auth-note">Forgot password? Contact your admin.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showAuthError(message) {
+      const el = document.getElementById('auth-error');
+      if (!el) return;
+      el.textContent = message;
+      el.style.display = message ? 'block' : 'none';
+    }
+
+    async function submitStaffLogin() {
+      showAuthError('');
+      const nextPath = document.getElementById('login-next')?.value || '/admin';
+      const email = document.getElementById('login-email')?.value?.trim();
+      const password = document.getElementById('login-password')?.value || '';
+      if (!email || !password) {
+        showAuthError('Email and password are required.');
+        return;
+      }
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          showAuthError(data.error || 'Login failed.');
+          return;
+        }
+        window.location.href = nextPath || '/admin';
+      } catch (error) {
+        showAuthError(error.message || 'Login failed.');
+      }
+    }
+
+    async function submitSetPassword() {
+      showAuthError('');
+      const token = document.getElementById('password-token')?.value || '';
+      const password = document.getElementById('set-password')?.value || '';
+      const confirmPassword = document.getElementById('set-password-confirm')?.value || '';
+      if (password.length < 8) {
+        showAuthError('Password must be at least 8 characters.');
+        return;
+      }
+      if (password !== confirmPassword) {
+        showAuthError('Passwords do not match.');
+        return;
+      }
+      try {
+        const response = await fetch('/api/auth/set-password', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, password, confirmPassword }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          showAuthError(data.error || 'Could not set password.');
+          return;
+        }
+        window.location.href = '/login?next=/admin';
+      } catch (error) {
+        showAuthError(error.message || 'Could not set password.');
+      }
+    }
+
+    function toggleStaffUsersPanel() {
+      const panel = document.getElementById('staff-users-panel');
+      if (!panel) return;
+      const willOpen = panel.hasAttribute('hidden');
+      if (willOpen) {
+        panel.removeAttribute('hidden');
+        loadStaffUsersPanel();
+      } else {
+        panel.setAttribute('hidden', 'hidden');
+      }
+    }
+
+    function renderStaffUsersPanelShell() {
+      return `
+        <div class="panel staff-users-panel" id="staff-users-panel" hidden>
+          <div class="panel-title">Staff users</div>
+          <div id="staff-users-content">Loading staff users...</div>
+        </div>
+      `;
+    }
+
+    async function loadStaffUsersPanel() {
+      const container = document.getElementById('staff-users-content');
+      if (!container) return;
+      container.textContent = 'Loading staff users...';
+      try {
+        const data = await adminFetch('/api/auth/users');
+        container.innerHTML = renderStaffUsersTable(data.users || []);
+      } catch (error) {
+        container.innerHTML = `<div class="error-state">${esc(error.message)}</div>`;
+      }
+    }
+
+    function renderStaffUsersTable(users) {
+      const rows = users.map((user) => `
+        <tr>
+          <td>${esc(user.name || '—')}<div style="color:var(--text-soft);font-size:12px">${esc(user.email)}</div></td>
+          <td>${esc(user.role)}</td>
+          <td>${esc(user.status)}</td>
+          <td>
+            <div class="staff-user-actions">
+              ${user.status === 'disabled'
+                ? `<button class="admin-btn" type="button" onclick="updateStaffUser('${esc(user.id)}', { status: 'active' })">Enable</button>`
+                : `<button class="admin-btn" type="button" onclick="updateStaffUser('${esc(user.id)}', { status: 'disabled' })">Disable</button>`}
+              <button class="admin-btn" type="button" onclick="resetStaffUserPassword('${esc(user.id)}')">Reset password</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      return `
+        <table class="staff-users-table">
+          <thead>
+            <tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>${rows || '<tr><td colspan="4">No staff users yet.</td></tr>'}</tbody>
+        </table>
+        <div style="margin-top:16px">
+          <div class="panel-title" style="margin-bottom:10px">Add staff member</div>
+          <div class="filters-row" style="grid-template-columns:1fr 1fr auto">
+            <div class="auth-field" style="margin:0">
+              <label for="new-staff-email">Email</label>
+              <input id="new-staff-email" type="email" />
+            </div>
+            <div class="auth-field" style="margin:0">
+              <label for="new-staff-name">Name</label>
+              <input id="new-staff-name" type="text" />
+            </div>
+            <button class="admin-btn admin-btn--primary" type="button" style="align-self:end" onclick="createStaffUserFromForm()">${ICON_PLUS} Add user</button>
+          </div>
+          <div id="staff-setup-link" class="staff-setup-link" style="display:none"></div>
+        </div>
+      `;
+    }
+
+    async function createStaffUserFromForm() {
+      const email = document.getElementById('new-staff-email')?.value?.trim();
+      const name = document.getElementById('new-staff-name')?.value?.trim();
+      if (!email) {
+        window.alert('Email is required.');
+        return;
+      }
+      try {
+        const data = await adminFetch('/api/auth/users', {
+          method: 'POST',
+          body: JSON.stringify({ email, name, role: 'member' }),
+        });
+        const linkEl = document.getElementById('staff-setup-link');
+        if (linkEl && data.setupUrl) {
+          linkEl.style.display = 'block';
+          linkEl.textContent = `Setup link (48h): ${data.setupUrl}`;
+        }
+        await loadStaffUsersPanel();
+        showToast('Staff user created. Copy the setup link.', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function updateStaffUser(userId, patch) {
+      try {
+        await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify(patch),
+        });
+        await loadStaffUsersPanel();
+        showToast('User updated.', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function resetStaffUserPassword(userId) {
+      try {
+        const data = await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}/reset-password`, {
+          method: 'POST',
+          body: '{}',
+        });
+        const linkEl = document.getElementById('staff-setup-link');
+        if (linkEl && data.setupUrl) {
+          linkEl.style.display = 'block';
+          linkEl.textContent = `Reset link (48h): ${data.setupUrl}`;
+        }
+        showToast('Password reset link generated.', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
     }
 
     function statusLabel(status) {
@@ -1965,12 +2426,16 @@
           <div class="brand-topbar-left">
             <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
           </div>
+          <div class="brand-topbar-right">
+            ${renderStaffHeaderActions(currentStaffUser)}
+          </div>
         </header>
         <div class="page-hero admin-hub-hero">
           <h1>Client administration</h1>
           <p>Manage dashboard accounts, sync GHL data, and preview client views.</p>
         </div>
         <div class="admin-hub">
+          ${currentStaffUser?.role === 'admin' ? renderStaffUsersPanelShell() : ''}
           <div class="hub-toolbar-row">
             <div class="hub-search">
               ${ICON_SEARCH}
@@ -2135,6 +2600,9 @@
 
     async function loadAdminHub() {
       const dashboard = document.getElementById('dashboard');
+      const user = await requireStaffAuth();
+      if (!user) return;
+
       dashboard.innerHTML = `
         <div class="loading-state">
           <header class="brand-topbar">
@@ -2623,7 +3091,10 @@
               height="41"
             />
           </div>
-          <a class="admin-topbar-link" href="/admin">Admin hub</a>
+          <div class="brand-topbar-right">
+            ${renderStaffHeaderActions(currentStaffUser)}
+            <a class="admin-topbar-link" href="/admin" style="position:static">Admin hub</a>
+          </div>
         </header>
 
         <div id="setup-panel-mount">
@@ -2644,6 +3115,8 @@
     }
 
     async function initAdminClientPage() {
+      const user = await requireStaffAuth();
+      if (!user) return;
       renderAdminClientShell();
       try {
         await loadSetupAccount();
@@ -4559,6 +5032,11 @@
     }
 
     async function initDashboardApp() {
+      if (IS_LOGIN_PAGE) {
+        renderLoginPage();
+        return;
+      }
+
       if (IS_ADMIN_HUB) {
         loadAdminHub();
         return;

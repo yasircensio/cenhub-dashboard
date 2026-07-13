@@ -59,13 +59,18 @@ function serveDashboardHtml(response, mode, clientSlug = null) {
 
   if (mode === 'hub') {
     html = html.replace(
-      '<title>Censio Dashboard</title>',
-      '<title>Censio · Client Admin Hub</title>',
+      '<title>Cenhub Dashboard</title>',
+      '<title>Cenhub · Client Admin Hub</title>',
     );
   } else if (mode === 'admin') {
     html = html.replace(
-      '<title>Censio Dashboard</title>',
-      '<title>Client setup · Censio Dashboard</title>',
+      '<title>Cenhub Dashboard</title>',
+      '<title>Client setup · Cenhub Dashboard</title>',
+    );
+  } else if (mode === 'login') {
+    html = html.replace(
+      '<title>Cenhub Dashboard</title>',
+      '<title>Staff login · Cenhub</title>',
     );
   }
 
@@ -160,6 +165,26 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/auth' || url.startsWith('/api/auth/')) {
+    try {
+      const rawBody = ['POST', 'PUT', 'PATCH'].includes(request.method)
+        ? await readRequestBody(request)
+        : '';
+      const localResponse = createLocalResponse(response);
+      const { handleAuthRequest } = require('./lib/auth-handler');
+      await handleAuthRequest({
+        method: request.method,
+        url,
+        headers: request.headers,
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Auth API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/clients' || url.startsWith('/api/clients/')) {
     try {
       const rawBody = ['POST', 'PUT', 'PATCH'].includes(request.method)
@@ -201,6 +226,11 @@ const server = http.createServer(async (request, response) => {
 
   if (url === '/' || url === '/index.html') {
     serveDashboardHtml(response, 'client');
+    return;
+  }
+
+  if (url === '/login') {
+    serveDashboardHtml(response, 'login');
     return;
   }
 
@@ -246,6 +276,7 @@ server.listen(PORT, () => {
   console.log('');
   console.log('Censio dashboard running locally');
   console.log(`  Client dashboard: http://localhost:${PORT}/suntech-nordic`);
+  console.log(`  Staff login:      http://localhost:${PORT}/login`);
   console.log(`  Admin hub:        http://localhost:${PORT}/admin`);
   console.log(`  Client setup:     http://localhost:${PORT}/admin/suntech-nordic`);
   console.log(`  API JSON:         http://localhost:${PORT}/api/dashboard`);
