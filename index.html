@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v24 -->
+  <!-- theme: cool-slate v25 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -2077,6 +2077,159 @@
       background: rgba(255, 255, 255, 0.18);
     }
 
+    .staff-admin-chrome {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .staff-nav {
+      align-items: center;
+      display: flex;
+      gap: 4px;
+    }
+
+    .staff-nav-link {
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 12px;
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .staff-nav-link:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .staff-nav-link.is-active {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+
+    .staff-user-menu {
+      position: relative;
+    }
+
+    .staff-user-trigger {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      color: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-size: 12px;
+      gap: 6px;
+      max-width: 200px;
+      overflow: hidden;
+      padding: 7px 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .staff-user-trigger:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .staff-user-dropdown {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      min-width: 220px;
+      padding: 8px;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 40;
+    }
+
+    .staff-user-dropdown[hidden] {
+      display: none;
+    }
+
+    .staff-user-meta {
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 8px 10px 10px;
+    }
+
+    .staff-user-menu-item {
+      background: transparent;
+      border: 0;
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      padding: 8px 10px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .staff-user-menu-item:hover {
+      background: var(--surface-muted);
+    }
+
+    .team-page {
+      display: grid;
+      gap: 18px;
+    }
+
+    .team-invite-row {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr 140px auto;
+    }
+
+    @media (max-width: 900px) {
+      .team-invite-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .staff-role-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      padding: 6px 8px;
+    }
+
+    .staff-status-badge {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      padding: 4px 10px;
+      text-transform: uppercase;
+    }
+
+    .staff-status-badge.status-active {
+      background: rgba(34, 197, 94, 0.14);
+      color: #15803d;
+    }
+
+    .staff-status-badge.status-pending {
+      background: rgba(245, 158, 11, 0.16);
+      color: #b45309;
+    }
+
+    .staff-status-badge.status-disabled {
+      background: rgba(148, 163, 184, 0.2);
+      color: #64748b;
+    }
+
     .staff-users-panel {
       margin-bottom: 20px;
     }
@@ -2677,6 +2830,11 @@
         delete document.body.dataset.clientSlug;
         return;
       }
+      if (parts[0] === 'team') {
+        document.body.dataset.dashboardMode = 'team';
+        delete document.body.dataset.clientSlug;
+        return;
+      }
       if (parts[0] === 'admin') {
         document.body.dataset.dashboardMode = parts.length >= 2 ? 'admin' : 'hub';
         if (parts.length >= 2) document.body.dataset.clientSlug = parts[1];
@@ -2691,14 +2849,15 @@
 
     const DASHBOARD_MODE = document.body.dataset.dashboardMode || 'client';
     const IS_LOGIN_PAGE = DASHBOARD_MODE === 'login';
+    const IS_TEAM_PAGE = DASHBOARD_MODE === 'team';
     const IS_ADMIN_HUB = DASHBOARD_MODE === 'hub';
     const IS_ADMIN_CLIENT = DASHBOARD_MODE === 'admin';
     const IS_CLIENT_VIEW = DASHBOARD_MODE === 'client';
     const IS_PREVIEW = IS_CLIENT_VIEW && Boolean(new URLSearchParams(window.location.search).get('client'));
-    const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT
+    const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE
       || new URLSearchParams(window.location.search).get('view') === 'admin';
 
-    const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_ADMIN;
+    const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN;
     const LOADING_MSG = ADMIN_UI ? 'Loading dashboard data...' : 'Henter dashboard data...';
     const RETRY_MSG = ADMIN_UI ? 'Try again' : 'Prøv igen';
 
@@ -2909,15 +3068,288 @@
       window.location.href = '/login';
     }
 
-    function renderStaffHeaderActions(user) {
+    function isStaffAdmin() {
+      return currentStaffUser?.role === 'admin';
+    }
+
+    function renderStaffUserMenu() {
+      const user = currentStaffUser;
       if (!user) return '';
       return `
-        <div class="staff-header-bar">
-          <span class="staff-header-name">${esc(user.name || user.email)}</span>
-          ${user.role === 'admin' ? '<button type="button" class="staff-header-btn" onclick="toggleStaffUsersPanel()">Staff users</button>' : ''}
-          <button type="button" class="staff-header-btn" onclick="staffLogout()">Log out</button>
+        <div class="staff-user-menu" id="staff-user-menu">
+          <button type="button" class="staff-user-trigger" onclick="toggleStaffUserMenu(event)" aria-haspopup="menu" aria-expanded="false">
+            <span class="staff-header-name">${esc(user.name || user.email)}</span>
+            <span aria-hidden="true">▾</span>
+          </button>
+          <div class="staff-user-dropdown" id="staff-user-dropdown" hidden role="menu">
+            <div class="staff-user-meta">${esc(user.email)}<br>${esc(user.role)}</div>
+            <button type="button" role="menuitem" class="staff-user-menu-item" onclick="staffLogout()">Log out</button>
+          </div>
         </div>
       `;
+    }
+
+    function renderStaffAdminChrome(activeTab) {
+      if (!currentStaffUser) return '';
+      const nav = `
+        <nav class="staff-nav" aria-label="Admin navigation">
+          <a href="/admin" class="staff-nav-link${activeTab === 'clients' ? ' is-active' : ''}">Clients</a>
+          ${isStaffAdmin() ? `<a href="/team" class="staff-nav-link${activeTab === 'team' ? ' is-active' : ''}">Team</a>` : ''}
+        </nav>
+      `;
+      return `
+        <div class="staff-admin-chrome">
+          ${nav}
+          ${renderStaffUserMenu()}
+        </div>
+      `;
+    }
+
+    function toggleStaffUserMenu(event) {
+      event.stopPropagation();
+      const dropdown = document.getElementById('staff-user-dropdown');
+      const trigger = event.currentTarget;
+      if (!dropdown) return;
+      const willOpen = dropdown.hidden;
+      closeStaffUserMenu();
+      if (willOpen) {
+        dropdown.hidden = false;
+        trigger?.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function closeStaffUserMenu() {
+      const dropdown = document.getElementById('staff-user-dropdown');
+      const trigger = document.querySelector('.staff-user-trigger');
+      if (dropdown) dropdown.hidden = true;
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function formatStaffLastLogin(value) {
+      if (!value) return 'Never';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '—';
+      return date.toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    function renderStaffStatusBadge(status) {
+      const label = status === 'active' ? 'Active' : status === 'pending' ? 'Pending' : 'Disabled';
+      return `<span class="staff-status-badge status-${status}">${label}</span>`;
+    }
+
+    async function copyTextToClipboard(text, successMessage) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(successMessage, 'success');
+      } catch {
+        showToast('Could not copy to clipboard', 'error');
+      }
+    }
+
+    function renderTeamPage(users) {
+      return `
+        ${renderBrandTopbar(renderStaffAdminChrome('team'))}
+        ${wrapDashboardShell(`
+        <div class="page-hero admin-hub-hero">
+          <h1>Team & access</h1>
+          <p>Invite Censio staff, manage roles, and control who can access the admin workspace.</p>
+        </div>
+        <div class="team-page">
+          <div class="panel">
+            <div class="panel-title">Staff members</div>
+            <div id="team-users-content">${renderStaffUsersTable(users)}</div>
+          </div>
+        </div>
+        <div class="brand-footer">
+          Dashboard by Cenhub · Holstebro
+        </div>
+        `)}
+      `;
+    }
+
+    async function loadTeamPage() {
+      const dashboard = document.getElementById('dashboard');
+      const user = await requireStaffAuth();
+      if (!user) return;
+      if (!isStaffAdmin()) {
+        window.location.href = '/admin';
+        return;
+      }
+
+      dashboard.innerHTML = `
+        ${renderBrandTopbar(renderStaffAdminChrome('team'))}
+        ${wrapDashboardShell(`
+          <div class="loading-state">
+            <div class="spinner"></div>
+            Loading team...
+          </div>
+        `)}`;
+
+      try {
+        const data = await adminFetch('/api/auth/users');
+        dashboard.innerHTML = renderTeamPage(data.users || []);
+      } catch (error) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('team'))}
+          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+        `;
+      }
+    }
+
+    async function reloadTeamUsersTable() {
+      const container = document.getElementById('team-users-content');
+      if (!container) return;
+      const data = await adminFetch('/api/auth/users');
+      container.innerHTML = renderStaffUsersTable(data.users || []);
+    }
+
+    function renderStaffUsersTable(users) {
+      const rows = users.map((user) => {
+        const isSelf = currentStaffUser?.id === user.id;
+        const roleSelect = `
+          <select
+            class="staff-role-select"
+            ${isSelf ? 'disabled title="You cannot change your own role here"' : ''}
+            onchange="updateStaffUserRole('${esc(user.id)}', this.value)"
+          >
+            <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
+            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+          </select>
+        `;
+        const statusAction = user.status === 'disabled'
+          ? `<button class="admin-btn" type="button" onclick="updateStaffUser('${esc(user.id)}', { status: 'active' })">Enable</button>`
+          : `<button class="admin-btn" type="button" ${isSelf ? 'disabled title="You cannot disable your own account"' : ''} onclick="updateStaffUser('${esc(user.id)}', { status: 'disabled' })">Disable</button>`;
+        const inviteAction = user.status === 'pending' || !user.hasPassword
+          ? `<button class="admin-btn" type="button" onclick="copyStaffInviteLink('${esc(user.id)}')">Copy invite link</button>`
+          : `<button class="admin-btn" type="button" onclick="resetStaffUserPassword('${esc(user.id)}', true)">Reset password</button>`;
+
+        return `
+          <tr>
+            <td>${esc(user.name || '—')}<div style="color:var(--text-soft);font-size:12px">${esc(user.email)}</div></td>
+            <td>${roleSelect}</td>
+            <td>${renderStaffStatusBadge(user.status)}</td>
+            <td>${esc(formatStaffLastLogin(user.lastLoginAt))}</td>
+            <td>
+              <div class="staff-user-actions">
+                ${statusAction}
+                ${inviteAction}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <table class="staff-users-table">
+          <thead>
+            <tr><th>User</th><th>Role</th><th>Status</th><th>Last login</th><th>Actions</th></tr>
+          </thead>
+          <tbody>${rows || '<tr><td colspan="5">No staff users yet.</td></tr>'}</tbody>
+        </table>
+        <div style="margin-top:20px">
+          <div class="panel-title" style="margin-bottom:10px">Invite staff member</div>
+          <div class="team-invite-row">
+            <div class="auth-field" style="margin:0">
+              <label for="new-staff-email">Email</label>
+              <input id="new-staff-email" type="email" placeholder="name@company.dk" />
+            </div>
+            <div class="auth-field" style="margin:0">
+              <label for="new-staff-name">Name</label>
+              <input id="new-staff-name" type="text" placeholder="Full name" />
+            </div>
+            <div class="auth-field" style="margin:0">
+              <label for="new-staff-role">Role</label>
+              <select id="new-staff-role" class="staff-role-select">
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button class="admin-btn admin-btn--primary" type="button" style="align-self:end" onclick="createStaffUserFromForm()">${ICON_PLUS} Invite</button>
+          </div>
+        </div>
+      `;
+    }
+
+    async function createStaffUserFromForm() {
+      const email = document.getElementById('new-staff-email')?.value?.trim();
+      const name = document.getElementById('new-staff-name')?.value?.trim();
+      const role = document.getElementById('new-staff-role')?.value === 'admin' ? 'admin' : 'member';
+      if (!email) {
+        showToast('Email is required.', 'error');
+        return;
+      }
+      try {
+        const data = await adminFetch('/api/auth/users', {
+          method: 'POST',
+          body: JSON.stringify({ email, name, role }),
+        });
+        if (data.setupUrl) {
+          await copyTextToClipboard(data.setupUrl, 'Invite link copied to clipboard.');
+        }
+        if (IS_TEAM_PAGE) {
+          await reloadTeamUsersTable();
+        }
+        showToast('Staff member invited.', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function updateStaffUser(userId, patch) {
+      try {
+        await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify(patch),
+        });
+        if (IS_TEAM_PAGE) {
+          await reloadTeamUsersTable();
+        }
+        showToast('User updated.', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+        if (IS_TEAM_PAGE) await reloadTeamUsersTable();
+      }
+    }
+
+    async function updateStaffUserRole(userId, role) {
+      await updateStaffUser(userId, { role: role === 'admin' ? 'admin' : 'member' });
+    }
+
+    async function copyStaffInviteLink(userId) {
+      try {
+        const data = await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}/reset-password`, {
+          method: 'POST',
+          body: '{}',
+        });
+        if (data.setupUrl) {
+          await copyTextToClipboard(data.setupUrl, 'Invite link copied to clipboard.');
+        }
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
+    async function resetStaffUserPassword(userId, copyOnly = false) {
+      try {
+        const data = await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}/reset-password`, {
+          method: 'POST',
+          body: '{}',
+        });
+        if (data.setupUrl) {
+          await copyTextToClipboard(
+            data.setupUrl,
+            copyOnly ? 'Reset link copied to clipboard.' : 'Password reset link generated.',
+          );
+        }
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
     }
 
     function renderLoginPage() {
@@ -3144,135 +3576,6 @@
       }
     }
 
-    function toggleStaffUsersPanel() {
-      const panel = document.getElementById('staff-users-panel');
-      if (!panel) return;
-      const willOpen = panel.hasAttribute('hidden');
-      if (willOpen) {
-        panel.removeAttribute('hidden');
-        loadStaffUsersPanel();
-      } else {
-        panel.setAttribute('hidden', 'hidden');
-      }
-    }
-
-    function renderStaffUsersPanelShell() {
-      return `
-        <div class="panel staff-users-panel" id="staff-users-panel" hidden>
-          <div class="panel-title">Staff users</div>
-          <div id="staff-users-content">Loading staff users...</div>
-        </div>
-      `;
-    }
-
-    async function loadStaffUsersPanel() {
-      const container = document.getElementById('staff-users-content');
-      if (!container) return;
-      container.textContent = 'Loading staff users...';
-      try {
-        const data = await adminFetch('/api/auth/users');
-        container.innerHTML = renderStaffUsersTable(data.users || []);
-      } catch (error) {
-        container.innerHTML = `<div class="error-state">${esc(error.message)}</div>`;
-      }
-    }
-
-    function renderStaffUsersTable(users) {
-      const rows = users.map((user) => `
-        <tr>
-          <td>${esc(user.name || '—')}<div style="color:var(--text-soft);font-size:12px">${esc(user.email)}</div></td>
-          <td>${esc(user.role)}</td>
-          <td>${esc(user.status)}</td>
-          <td>
-            <div class="staff-user-actions">
-              ${user.status === 'disabled'
-                ? `<button class="admin-btn" type="button" onclick="updateStaffUser('${esc(user.id)}', { status: 'active' })">Enable</button>`
-                : `<button class="admin-btn" type="button" onclick="updateStaffUser('${esc(user.id)}', { status: 'disabled' })">Disable</button>`}
-              <button class="admin-btn" type="button" onclick="resetStaffUserPassword('${esc(user.id)}')">Reset password</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-
-      return `
-        <table class="staff-users-table">
-          <thead>
-            <tr><th>User</th><th>Role</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>${rows || '<tr><td colspan="4">No staff users yet.</td></tr>'}</tbody>
-        </table>
-        <div style="margin-top:16px">
-          <div class="panel-title" style="margin-bottom:10px">Add staff member</div>
-          <div class="filters-row" style="grid-template-columns:1fr 1fr auto">
-            <div class="auth-field" style="margin:0">
-              <label for="new-staff-email">Email</label>
-              <input id="new-staff-email" type="email" />
-            </div>
-            <div class="auth-field" style="margin:0">
-              <label for="new-staff-name">Name</label>
-              <input id="new-staff-name" type="text" />
-            </div>
-            <button class="admin-btn admin-btn--primary" type="button" style="align-self:end" onclick="createStaffUserFromForm()">${ICON_PLUS} Add user</button>
-          </div>
-          <div id="staff-setup-link" class="staff-setup-link" style="display:none"></div>
-        </div>
-      `;
-    }
-
-    async function createStaffUserFromForm() {
-      const email = document.getElementById('new-staff-email')?.value?.trim();
-      const name = document.getElementById('new-staff-name')?.value?.trim();
-      if (!email) {
-        window.alert('Email is required.');
-        return;
-      }
-      try {
-        const data = await adminFetch('/api/auth/users', {
-          method: 'POST',
-          body: JSON.stringify({ email, name, role: 'member' }),
-        });
-        const linkEl = document.getElementById('staff-setup-link');
-        if (linkEl && data.setupUrl) {
-          linkEl.style.display = 'block';
-          linkEl.textContent = `Setup link (48h): ${data.setupUrl}`;
-        }
-        await loadStaffUsersPanel();
-        showToast('Staff user created. Copy the setup link.', 'success');
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
-    }
-
-    async function updateStaffUser(userId, patch) {
-      try {
-        await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}`, {
-          method: 'PATCH',
-          body: JSON.stringify(patch),
-        });
-        await loadStaffUsersPanel();
-        showToast('User updated.', 'success');
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
-    }
-
-    async function resetStaffUserPassword(userId) {
-      try {
-        const data = await adminFetch(`/api/auth/users/${encodeURIComponent(userId)}/reset-password`, {
-          method: 'POST',
-          body: '{}',
-        });
-        const linkEl = document.getElementById('staff-setup-link');
-        if (linkEl && data.setupUrl) {
-          linkEl.style.display = 'block';
-          linkEl.textContent = `Reset link (48h): ${data.setupUrl}`;
-        }
-        showToast('Password reset link generated.', 'success');
-      } catch (error) {
-        showToast(error.message, 'error');
-      }
-    }
-
     function statusLabel(status) {
       const labels = {
         ready: 'Ready',
@@ -3315,15 +3618,18 @@
 
     function renderAdminHubPage(clients) {
       const count = clients.length;
+      const adminActions = isStaffAdmin() ? `
+              <button class="admin-btn" type="button" onclick="syncAllClients()">${ICON_SYNC} Sync all</button>
+              <button class="admin-btn admin-btn--primary" type="button" onclick="focusAddClient()">${ICON_PLUS} Add client</button>
+      ` : '';
       return `
-        ${renderBrandTopbar(renderStaffHeaderActions(currentStaffUser))}
+        ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
         ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero">
           <h1>Client administration</h1>
           <p>Manage dashboard accounts, sync GHL data, and preview client views.</p>
         </div>
         <div class="admin-hub">
-          ${currentStaffUser?.role === 'admin' ? renderStaffUsersPanelShell() : ''}
           <div class="hub-toolbar-row">
             <div class="hub-search">
               ${ICON_SEARCH}
@@ -3331,15 +3637,14 @@
             </div>
             <span class="hub-count" id="hub-count">${count} client${count === 1 ? '' : 's'}</span>
             <div class="hub-toolbar-actions">
-              <button class="admin-btn" type="button" onclick="syncAllClients()">${ICON_SYNC} Sync all</button>
-              <button class="admin-btn admin-btn--primary" type="button" onclick="focusAddClient()">${ICON_PLUS} Add client</button>
+              ${adminActions}
             </div>
           </div>
           <div class="client-grid" id="client-grid">
-            ${count ? clients.map((client) => renderClientCard(client)).join('') : '<div class="hub-empty">No clients yet. Create your first client below.</div>'}
+            ${count ? clients.map((client) => renderClientCard(client)).join('') : `<div class="hub-empty">${isStaffAdmin() ? 'No clients yet. Create your first client below.' : 'No clients yet.'}</div>`}
             <div class="hub-empty" id="hub-no-results" style="display:none">No clients match your search.</div>
           </div>
-          ${renderAddClientPanel()}
+          ${isStaffAdmin() ? renderAddClientPanel() : ''}
         </div>
         <div class="brand-footer">
           Dashboard by Cenhub · Holstebro
@@ -3380,6 +3685,9 @@
 
     function renderCardMenu(clientId, accountName) {
       const label = accountName || clientId;
+      const deleteAction = isStaffAdmin()
+        ? `<button type="button" role="menuitem" class="card-menu-item--danger" onclick="closeCardMenus(); deleteClient('${clientId}');">Delete client</button>`
+        : '';
       return `
         <div class="card-menu" id="card-menu-${clientId}" data-client-id="${clientId}">
           <button
@@ -3398,7 +3706,7 @@
           </button>
           <div class="card-menu-dropdown" role="menu">
             <button type="button" role="menuitem" onclick="copyAdminUrl('${clientId}'); closeCardMenus();">Copy admin URL</button>
-            <button type="button" role="menuitem" class="card-menu-item--danger" onclick="closeCardMenus(); deleteClient('${clientId}');">Delete client</button>
+            ${deleteAction}
           </div>
         </div>
       `;
@@ -3502,7 +3810,7 @@
       if (!user) return;
 
       dashboard.innerHTML = `
-        ${renderBrandTopbar(renderStaffHeaderActions(currentStaffUser))}
+        ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
         ${wrapDashboardShell(`
           <div class="loading-state">
             <div class="spinner"></div>
@@ -3515,7 +3823,7 @@
         dashboard.innerHTML = renderAdminHubPage(data.clients || []);
       } catch (error) {
         dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffHeaderActions(currentStaffUser))}
+          ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
           ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
         `;
       }
@@ -3976,7 +4284,7 @@
       const dashboard = document.getElementById('dashboard');
       const emptyFilters = { pipelines: [], statuses: [], sources: [], assignees: [], dateFields: [] };
       dashboard.innerHTML = `
-        ${renderBrandTopbar(`${renderStaffHeaderActions(currentStaffUser)}<a class="admin-topbar-link" href="/admin">Admin hub</a>`)}
+        ${renderBrandTopbar(`${renderStaffAdminChrome('clients')}<a class="admin-topbar-link" href="/admin">Clients</a>`)}
         ${wrapDashboardShell(`
         <div id="setup-panel-mount">
           <div class="loading-state" style="padding:24px">
@@ -6484,6 +6792,11 @@
         return;
       }
 
+      if (IS_TEAM_PAGE) {
+        loadTeamPage();
+        return;
+      }
+
       try {
         tenantParams = await resolveTenantParams();
       } catch (error) {
@@ -6509,7 +6822,10 @@
 
     initDashboardApp();
 
-    document.addEventListener('click', closeCardMenus);
+    document.addEventListener('click', () => {
+      closeCardMenus();
+      closeStaffUserMenu();
+    });
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState !== 'visible') return;

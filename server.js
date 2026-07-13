@@ -72,6 +72,11 @@ function serveDashboardHtml(response, mode, clientSlug = null) {
       '<title>Cenhub Dashboard</title>',
       '<title>Staff login · Cenhub</title>',
     );
+  } else if (mode === 'team') {
+    html = html.replace(
+      '<title>Cenhub Dashboard</title>',
+      '<title>Team · Cenhub</title>',
+    );
   }
 
   response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -234,6 +239,11 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/team') {
+    serveDashboardHtml(response, 'team');
+    return;
+  }
+
   if (url === '/admin' || url === '/admin.html') {
     serveDashboardHtml(response, 'hub');
     return;
@@ -278,6 +288,7 @@ server.listen(PORT, () => {
   console.log(`  Client dashboard: http://localhost:${PORT}/suntech-nordic`);
   console.log(`  Staff login:      http://localhost:${PORT}/login`);
   console.log(`  Admin hub:        http://localhost:${PORT}/admin`);
+  console.log(`  Team:             http://localhost:${PORT}/team`);
   console.log(`  Client setup:     http://localhost:${PORT}/admin/suntech-nordic`);
   console.log(`  API JSON:         http://localhost:${PORT}/api/dashboard`);
   console.log(`  Clients API:      http://localhost:${PORT}/api/clients`);

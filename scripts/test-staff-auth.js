@@ -1,4 +1,5 @@
 const assert = require('assert');
+const { RESERVED_SLUGS } = require('../lib/account-store');
 const {
   hashPassword,
   verifyPassword,
@@ -6,6 +7,12 @@ const {
   generateToken,
   toPublicStaffUser,
 } = require('../lib/session');
+
+function testReservedTeamSlug() {
+  assert(RESERVED_SLUGS.has('team'), 'team slug should be reserved');
+  assert(RESERVED_SLUGS.has('staff'), 'staff slug should be reserved');
+  assert(RESERVED_SLUGS.has('users'), 'users slug should be reserved');
+}
 
 async function testPasswordHashing() {
   const hash = await hashPassword('test-password-123');
@@ -41,6 +48,7 @@ function testPublicUser() {
 }
 
 async function main() {
+  testReservedTeamSlug();
   await testPasswordHashing();
   testTokenHashing();
   testPublicUser();
