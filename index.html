@@ -1496,10 +1496,15 @@
     }
 
     .auth-card-header {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .auth-card-title-row {
       align-items: center;
       display: flex;
       gap: 14px;
-      margin-bottom: 18px;
     }
 
     .auth-card-icon {
@@ -1514,13 +1519,16 @@
       width: 44px;
     }
 
-    .auth-card-header h1 {
-      margin-bottom: 0;
+    .auth-card-title-row h1 {
+      line-height: 1.15;
+      margin: 0;
     }
 
     .auth-card-header p {
-      margin-bottom: 0;
-      margin-top: 4px;
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.5;
+      margin: 0;
     }
 
     .auth-card-intro {
