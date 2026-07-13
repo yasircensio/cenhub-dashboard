@@ -480,6 +480,12 @@
       color: var(--primary);
     }
 
+    .date-picker-nav-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
     .date-picker-weekdays,
     .date-picker-grid {
       display: grid;
@@ -5006,6 +5012,25 @@
       return iso >= getTodayIso();
     }
 
+    function isFutureDateDisabled(iso) {
+      return iso > getTodayIso();
+    }
+
+    function isCurrentMonthView(year, month) {
+      const parts = getCalendarPartsInTimeZone(getDashboardTimeZone());
+      return year === parts.year && month === parts.month;
+    }
+
+    function isFutureMonthView(year, month) {
+      const parts = getCalendarPartsInTimeZone(getDashboardTimeZone());
+      return year > parts.year || (year === parts.year && month > parts.month);
+    }
+
+    function isDatePickerDayDisabled(iso, inputId) {
+      if (inputId === 'dateFrom' && isStartDateDisabled(iso)) return true;
+      return isFutureDateDisabled(iso);
+    }
+
     function renderDatePickerDayCell(iso, dayNum, isOutside, todayIso, selectedValue, fromVal, toVal, inputId) {
       const classes = ['date-picker-day'];
       if (isOutside) classes.push('is-outside');
@@ -5018,7 +5043,7 @@
       }
       if (iso === fromVal) classes.push('is-range-start');
       if (iso === toVal) classes.push('is-range-end');
-      if (inputId === 'dateFrom' && isStartDateDisabled(iso)) {
+      if (isDatePickerDayDisabled(iso, inputId)) {
         classes.push('is-disabled');
         return `<button type="button" class="${classes.join(' ')}" disabled aria-disabled="true">${dayNum}</button>`;
       }
@@ -5074,13 +5099,17 @@
         ? '<button type="button" class="date-picker-footer-btn primary" onclick="setDatePickerToday()">Today</button>'
         : '';
 
+      const nextViewMonth = viewMonth === 12 ? 1 : viewMonth + 1;
+      const nextViewYear = viewMonth === 12 ? viewYear + 1 : viewYear;
+      const showNextMonth = !isFutureMonthView(nextViewYear, nextViewMonth);
+
       popover.innerHTML = `
         <div class="date-picker-panel">
           <div class="date-picker-header">
             <div class="date-picker-title">${esc(monthLabel)}</div>
             <div class="date-picker-nav">
               <button type="button" class="date-picker-nav-btn" aria-label="Previous month" onclick="shiftDatePickerMonth(-1)">${ICON_CHEVRON_LEFT}</button>
-              <button type="button" class="date-picker-nav-btn" aria-label="Next month" onclick="shiftDatePickerMonth(1)">${ICON_CHEVRON_RIGHT}</button>
+              <button type="button" class="date-picker-nav-btn" aria-label="Next month" onclick="shiftDatePickerMonth(1)" ${showNextMonth ? '' : 'disabled'}>${ICON_CHEVRON_RIGHT}</button>
             </div>
           </div>
           <div class="date-picker-weekdays">
@@ -5175,6 +5204,7 @@
         viewMonth = 1;
         viewYear += 1;
       }
+      if (delta > 0 && isFutureMonthView(viewYear, viewMonth)) return;
       datePickerState.viewYear = viewYear;
       datePickerState.viewMonth = viewMonth;
       renderDatePickerPopover();
@@ -5184,8 +5214,12 @@
     function selectDatePickerDay(isoDate) {
       const inputId = datePickerState.inputId;
       if (!inputId || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return;
-      if (inputId === 'dateFrom' && isStartDateDisabled(isoDate)) {
-        showDateRangeError('Start date must be before today.');
+      if (isDatePickerDayDisabled(isoDate, inputId)) {
+        if (inputId === 'dateFrom') {
+          showDateRangeError('Start date must be before today.');
+        } else {
+          showDateRangeError('End date cannot be after today.');
+        }
         return;
       }
       if (inputId === 'dateFrom') state.dateFrom = isoDate;
@@ -5314,6 +5348,15 @@
         const input = document.getElementById('dateFrom');
         if (input) input.value = '';
         showDateRangeError('Start date must be before today.');
+        updateFilterUi();
+        return;
+      }
+
+      if (state.dateTo && isFutureDateDisabled(state.dateTo)) {
+        state.dateTo = '';
+        const input = document.getElementById('dateTo');
+        if (input) input.value = '';
+        showDateRangeError('End date cannot be after today.');
         updateFilterUi();
         return;
       }
@@ -5757,7 +5800,7 @@
           <div class="card accent">
             <div class="card-label">Ad Spend</div>
             <div class="card-value">${kpis.adSpend > 0 ? `Dkr ${fmtCompact(kpis.adSpend)}` : '—'}</div>
-            <div class="card-sub">${spendSub}</div>
+            ${spendSub ? `<div class="card-sub">${spendSub}</div>` : ''}
           </div>
         `);
       }
@@ -6376,6 +6419,11 @@
 
       if (state.dateFrom && isStartDateDisabled(state.dateFrom)) {
         showDateRangeError('Start date must be before today.');
+        return;
+      }
+
+      if (state.dateTo && isFutureDateDisabled(state.dateTo)) {
+        showDateRangeError('End date cannot be after today.');
         return;
       }
 
