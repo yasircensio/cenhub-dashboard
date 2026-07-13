@@ -5708,7 +5708,7 @@
       }
       if (isVisible('kpis', 'adSpend')) {
         const spendSub = kpis.adSpendSource === 'facebook'
-          ? `Facebook ${kpis.adSpendLabel || 'period'} spend${kpis.adSpendNote ? `. ${kpis.adSpendNote}` : ''}`
+          ? (kpis.hasDateFilter ? 'Avg value' : `Facebook ${kpis.adSpendLabel || 'period'} spend`)
           : 'No Facebook spend data for this period';
         cards.push(`
           <div class="card accent">
