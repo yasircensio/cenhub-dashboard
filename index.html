@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v16 -->
+  <!-- theme: cool-slate v17 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -5715,6 +5715,10 @@
         return 'No Facebook spend data for this period';
       }
 
+      if (state.preset === 'all') {
+        return '';
+      }
+
       if (state.preset === 'month' || state.preset === 'lastMonth' || state.preset === 'year') {
         return `Facebook ${kpis.adSpendLabel || 'period'} spend`;
       }
@@ -5748,9 +5752,7 @@
         `);
       }
       if (isVisible('kpis', 'adSpend')) {
-        const spendSub = kpis.adSpendSource === 'facebook'
-          ? (kpis.hasDateFilter ? 'Avg value' : `Facebook ${kpis.adSpendLabel || 'period'} spend`)
-          : 'No Facebook spend data for this period';
+        const spendSub = getAdSpendSubtitle(kpis);
         cards.push(`
           <div class="card accent">
             <div class="card-label">Ad Spend</div>

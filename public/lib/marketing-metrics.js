@@ -75,7 +75,7 @@ function getPeriodLabel(preset) {
   if (preset === 'lastMonth') return 'Last month';
   if (preset === 'year') return 'This year';
   if (preset === 'custom') return 'Custom range';
-  return 'Till date (yearly ad data)';
+  return 'Till date';
 }
 
 function formatMonthYearLabel(dateStr, timeZone = DEFAULT_TIMEZONE) {
