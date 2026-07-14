@@ -13,6 +13,8 @@ const {
   getPeriodLabelForRange,
   getPeriodLabel,
   getLeadsForPreset,
+  isCustomPartialMonthNotUntilToday,
+  enrichKpisWithMarketing,
   getCurrentMonthKey,
   getPreviousMonthKey,
   monthsBetween,
@@ -201,6 +203,36 @@ async function main() {
   const crossYearLabel = getPeriodLabelForRange('2025-12-01', '2026-01-31');
   if (!crossYearLabel.includes('2025') || !crossYearLabel.includes('2026')) {
     throw new Error(`Expected cross-year label, got ${crossYearLabel}`);
+  }
+
+  if (todayDay > 2) {
+    const partialEndIso = `${year}-${String(month).padStart(2, '0')}-${String(todayDay - 2).padStart(2, '0')}`;
+    if (!isCustomPartialMonthNotUntilToday(monthStart, partialEndIso, timeZone)) {
+      throw new Error('Expected partial month custom range ending before today.');
+    }
+    if (isCustomPartialMonthNotUntilToday(monthStart, todayIso, timeZone)) {
+      throw new Error('Range ending today should not use avg ad spend mode.');
+    }
+
+    const avgKpis = enrichKpisWithMarketing(
+      { totalRevenue: 0, wonBundlinje: 0, clientsWon: 0, totalLeads: 0 },
+      {},
+      'custom',
+      {
+        monthlyAdSpend: [{ month: currentMonthKey, spend: monthSpend }],
+        timeZone,
+        dateFrom: monthStart,
+        dateTo: partialEndIso,
+      },
+    );
+    if (!avgKpis.adSpendShowAsAvg) {
+      throw new Error('Expected adSpendShowAsAvg for partial custom month ending before today.');
+    }
+    const expectedDays = todayDay - 2;
+    const expectedDaily = avgKpis.adSpend / expectedDays;
+    if (Math.abs(avgKpis.adSpendDailyAvg - expectedDaily) > 0.01) {
+      throw new Error(`Expected daily avg ${expectedDaily}, got ${avgKpis.adSpendDailyAvg}`);
+    }
   }
 
   const monthlyJson = JSON.stringify([

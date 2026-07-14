@@ -105,6 +105,22 @@ function formatShortDateLabel(dateStr, timeZone = DEFAULT_TIMEZONE) {
   }).format(date);
 }
 
+function isFullCalendarMonthRange(dateFrom, dateTo, timeZone = DEFAULT_TIMEZONE) {
+  if (!dateFrom || !dateTo) return false;
+  const monthKey = monthKeyFromDate(dateFrom, timeZone);
+  if (!monthKey || monthKey !== monthKeyFromDate(dateTo, timeZone)) return false;
+  const { start, end } = monthBoundsIso(monthKey);
+  return dateFrom === start && dateTo === end;
+}
+
+function isCustomPartialMonthNotUntilToday(dateFrom, dateTo, timeZone = DEFAULT_TIMEZONE) {
+  if (!dateFrom || !dateTo) return false;
+  if (monthKeyFromDate(dateFrom, timeZone) !== monthKeyFromDate(dateTo, timeZone)) return false;
+  if (isFullCalendarMonthRange(dateFrom, dateTo, timeZone)) return false;
+  const todayIso = getTodayIso(timeZone);
+  return Boolean(todayIso && dateTo < todayIso);
+}
+
 function getPeriodLabelForRange(dateFrom, dateTo, timeZone = DEFAULT_TIMEZONE) {
   if (!dateFrom || !dateTo) return 'Custom range';
 
@@ -263,6 +279,8 @@ function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
 
   let spend;
   let adSpendLabel;
+  let adSpendShowAsAvg = false;
+  let adSpendDailyAvg = 0;
   let leads;
   let facebookClicks;
   let facebookCtr;
@@ -271,6 +289,11 @@ function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
   if (preset === 'custom' && dateFrom && dateTo) {
     spend = getSpendForDateRange(fbMetrics, dateFrom, dateTo, monthlyAdSpend, timeZone);
     adSpendLabel = getPeriodLabelForRange(dateFrom, dateTo, timeZone);
+    if (isCustomPartialMonthNotUntilToday(dateFrom, dateTo, timeZone)) {
+      adSpendShowAsAvg = true;
+      const selectedDays = daysBetweenInclusive(dateFrom, dateTo);
+      adSpendDailyAvg = selectedDays > 0 && spend > 0 ? spend / selectedDays : 0;
+    }
     leads = Number(kpis.totalLeads) || 0;
     ({
       clicks: facebookClicks,
@@ -290,7 +313,9 @@ function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
     ...kpis,
     adSpend: spend,
     adSpendLabel,
-    adSpendNote: preset === 'custom' ? 'Avg value for days elapsed this month.' : null,
+    adSpendShowAsAvg,
+    adSpendDailyAvg,
+    adSpendNote: adSpendShowAsAvg ? 'Daily average for the selected partial month.' : null,
     adSpendSource: spend > 0 ? 'facebook' : 'none',
     roas: spend > 0 ? revenue / spend : 0,
     poas: spend > 0 ? bundlinje / spend : 0,
@@ -521,6 +546,8 @@ const marketingMetricsApi = {
   getTodayIso,
   getPeriodLabelForRange,
   getPeriodLabel,
+  isFullCalendarMonthRange,
+  isCustomPartialMonthNotUntilToday,
   formatShortDateLabel,
   getLeadsForPreset,
   getFacebookPeriodKey,
