@@ -2752,6 +2752,22 @@
       }
     }
 
+    /* Five KPI columns are tight between 1150–1279px — scale type slightly. */
+    @media (min-width: 1150px) and (max-width: 1279px) {
+      .kpi-grid > .card {
+        padding: 16px;
+      }
+
+      .kpi-grid > .card .card-value,
+      .kpi-grid > .card.primary .card-value {
+        font-size: 26px;
+      }
+
+      .kpi-grid > .card .card-sub {
+        font-size: 11px;
+      }
+    }
+
     @media (max-width: 1149px) {
       .kpi-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
