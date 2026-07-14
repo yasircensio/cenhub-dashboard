@@ -4046,7 +4046,7 @@
     async function syncAllClients(button) {
       if (button) button.disabled = true;
       try {
-        showToast('Queueing sync for all clients...');
+        showToast('Syncing all clients...');
         const data = await adminFetch('/api/clients', {
           method: 'POST',
           body: JSON.stringify({ action: 'sync-all' }),

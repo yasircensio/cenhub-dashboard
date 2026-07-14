@@ -2,6 +2,12 @@
   "functions": {
     "api/inngest.js": {
       "maxDuration": 300
+    },
+    "api/clients.js": {
+      "maxDuration": 60
+    },
+    "api/clients/[...path].js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
