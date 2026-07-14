@@ -7,7 +7,7 @@ const ROOT = path.join(__dirname, '..');
 const APP_SOURCE = path.join(ROOT, 'frontend', 'source', 'app.js');
 const OUT_DIR = path.join(ROOT, 'public', 'js');
 
-const ADMIN_START = 'function clientNeedsAction(status) {';
+const ADMIN_START = 'const ADMIN_API_KEY_STORAGE = \'cenhub_admin_api_key\';';
 const DASHBOARD_START = '(function initDashboardCharts(global) {';
 const INIT_START = 'async function initDashboardApp() {';
 
