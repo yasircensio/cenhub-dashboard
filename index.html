@@ -6406,13 +6406,6 @@
       return `${prefix} ${label.toLowerCase()}`;
     }
 
-    function getAdSpendDisplayValue(kpis) {
-      if (kpis.adSpendShowAsAvg && Number(kpis.adSpendDailyAvg) > 0) {
-        return Number(kpis.adSpendDailyAvg);
-      }
-      return Number(kpis.adSpend) || 0;
-    }
-
     function renderKpiCards(kpis) {
       const cards = [];
 
@@ -6434,11 +6427,10 @@
       }
       if (isVisible('kpis', 'adSpend')) {
         const spendSub = getAdSpendSubtitle(kpis);
-        const spendValue = getAdSpendDisplayValue(kpis);
         cards.push(`
           <div class="card accent">
             <div class="card-label">Ad Spend</div>
-            <div class="card-value">${spendValue > 0 ? `Dkr ${fmtCompact(spendValue)}` : '—'}</div>
+            <div class="card-value">${kpis.adSpend > 0 ? `Dkr ${fmtCompact(kpis.adSpend)}` : '—'}</div>
             ${spendSub ? `<div class="card-sub">${spendSub}</div>` : ''}
           </div>
         `);

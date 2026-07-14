@@ -280,7 +280,6 @@ function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
   let spend;
   let adSpendLabel;
   let adSpendShowAsAvg = false;
-  let adSpendDailyAvg = 0;
   let leads;
   let facebookClicks;
   let facebookCtr;
@@ -291,8 +290,6 @@ function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
     adSpendLabel = getPeriodLabelForRange(dateFrom, dateTo, timeZone);
     if (isCustomPartialMonthNotUntilToday(dateFrom, dateTo, timeZone)) {
       adSpendShowAsAvg = true;
-      const selectedDays = daysBetweenInclusive(dateFrom, dateTo);
-      adSpendDailyAvg = selectedDays > 0 && spend > 0 ? spend / selectedDays : 0;
     }
     leads = Number(kpis.totalLeads) || 0;
     ({
@@ -314,8 +311,7 @@ function enrichKpisWithMarketing(kpis, fbMetrics, preset, options = {}) {
     adSpend: spend,
     adSpendLabel,
     adSpendShowAsAvg,
-    adSpendDailyAvg,
-    adSpendNote: adSpendShowAsAvg ? 'Daily average for the selected partial month.' : null,
+    adSpendNote: adSpendShowAsAvg ? 'Prorated spend for the selected partial month.' : null,
     adSpendSource: spend > 0 ? 'facebook' : 'none',
     roas: spend > 0 ? revenue / spend : 0,
     poas: spend > 0 ? bundlinje / spend : 0,
