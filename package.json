@@ -10,7 +10,7 @@
     "migrate:sync-started-at": "node scripts/migrate-sync-started-at.js",
     "create-admin": "node scripts/create-admin.js",
     "seed:suntech": "node scripts/seed-suntech.js",
-    "test": "node scripts/check-lib-sync.js && node scripts/check-frontend-build.js && node scripts/test-pipeline-slots.js && node scripts/test-metrics-model.js && node scripts/test-dedupe.js && node scripts/test-ghl-sso.js && node scripts/test-sync.js && node scripts/test-sync-batch.js && node scripts/test-date-filters.js && node scripts/test-facebook-metrics.js && node scripts/test-staff-auth.js",
+    "test": "node scripts/check-lib-sync.js && node scripts/check-frontend-build.js && node scripts/test-frontend-bundle.js && node scripts/test-pipeline-slots.js && node scripts/test-metrics-model.js && node scripts/test-dedupe.js && node scripts/test-ghl-sso.js && node scripts/test-sync.js && node scripts/test-sync-batch.js && node scripts/test-date-filters.js && node scripts/test-facebook-metrics.js && node scripts/test-staff-auth.js",
     "test:api": "node scripts/test-api.js",
     "test:ghl-sso": "node scripts/test-ghl-sso.js",
     "test:dedupe": "node scripts/test-dedupe.js",

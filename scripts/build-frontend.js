@@ -7,9 +7,13 @@ const ROOT = path.join(__dirname, '..');
 const APP_SOURCE = path.join(ROOT, 'frontend', 'source', 'app.js');
 const OUT_DIR = path.join(ROOT, 'public', 'js');
 
-const ADMIN_START = 'const ADMIN_API_KEY_STORAGE = \'cenhub_admin_api_key\';';
+const ADMIN_START = 'async function fetchStaffMe() {';
 const DASHBOARD_START = '(function initDashboardCharts(global) {';
 const INIT_START = 'async function initDashboardApp() {';
+
+function extractIconConstants(source) {
+  return (source.match(/^const ICON_[A-Z_]+ = '.*?';$/gm) || []).join('\n');
+}
 
 function splitAppSource(source) {
   const adminIndex = source.indexOf(ADMIN_START);
@@ -26,7 +30,38 @@ function splitAppSource(source) {
     shared: source.slice(0, adminIndex).trim(),
     admin: source.slice(adminIndex, dashboardIndex).trim(),
     dashboard: source.slice(dashboardIndex, dashboardEnd).trim(),
+    icons: extractIconConstants(source),
   };
+}
+
+function validateClientBundle(bundleSource, dashboardSource) {
+  const requiredFunctions = [
+    'resolveTenantParams',
+    'appendTenantParams',
+    'ensureChartsVisible',
+    'loadDashboard',
+    'esc',
+    'showToast',
+  ];
+
+  for (const name of requiredFunctions) {
+    if (!bundleSource.includes(`function ${name}`) && !bundleSource.includes(`async function ${name}`)) {
+      throw new Error(`Client bundle missing function: ${name}`);
+    }
+  }
+
+  const iconRefs = new Set();
+  const iconPattern = /ICON_[A-Z_]+/g;
+  let match;
+  while ((match = iconPattern.exec(dashboardSource)) !== null) {
+    iconRefs.add(match[0]);
+  }
+
+  for (const icon of iconRefs) {
+    if (!bundleSource.includes(`const ${icon} =`)) {
+      throw new Error(`Client bundle missing icon constant: ${icon}`);
+    }
+  }
 }
 
 async function minifyWrite(filename, contents) {
@@ -41,6 +76,7 @@ async function minifyWrite(filename, contents) {
   if (result.map) {
     fs.writeFileSync(path.join(OUT_DIR, `${filename}.map`), result.map);
   }
+  return result.code;
 }
 
 async function main() {
@@ -140,11 +176,13 @@ document.addEventListener('visibilitychange', function () {
 });
 `.trim();
 
-  const adminBundle = [parts.shared, parts.admin, parts.dashboard, adminInit].join('\n\n');
-  const clientBundle = [parts.shared, parts.dashboard, clientInit].join('\n\n');
+  const clientBundleSource = [parts.shared, parts.icons, parts.dashboard, clientInit].join('\n\n');
+  const adminBundleSource = [parts.shared, parts.admin, parts.dashboard, adminInit].join('\n\n');
 
-  await minifyWrite('admin.bundle.js', adminBundle);
-  await minifyWrite('client.bundle.js', clientBundle);
+  validateClientBundle(clientBundleSource, parts.dashboard);
+
+  await minifyWrite('admin.bundle.js', adminBundleSource);
+  await minifyWrite('client.bundle.js', clientBundleSource);
 
   console.log('Built public/js/admin.bundle.js and public/js/client.bundle.js');
 }
