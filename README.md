@@ -104,9 +104,9 @@ API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipel
 
 ## Sync
 
-- **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` with `x-api-key`.
-- **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }`.
-- **Scheduled:** Inngest daily cron at 03:00 Europe/Copenhagen when Inngest keys are set. Until then, `/api/inngest` returns 503 with instructions.
+- **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` (staff session).
+- **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }`. When Inngest is configured, this queues one background job per client and returns immediately (`202`). Without Inngest, it falls back to sequential sync in the same request.
+- **Scheduled:** Inngest daily cron at 03:00 Europe/Copenhagen fans out the same per-client jobs when Inngest keys are set. Until then, `/api/inngest` returns 503 with instructions.
 
 Every sync attempt is logged to `sync_runs`. Failures surface as `sync_error` on hub cards.
 

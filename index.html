@@ -986,6 +986,11 @@
     }
 
     .status-ready { background: var(--status-ok-bg); color: var(--status-ok-text); }
+    .status-syncing {
+      background: rgba(255, 106, 0, 0.12);
+      border: 1px solid rgba(255, 106, 0, 0.28);
+      color: var(--primary-dark);
+    }
     .status-needs_token,
     .status-needs_pipelines,
     .status-needs_sync,
@@ -3619,6 +3624,7 @@
     function statusLabel(status) {
       const labels = {
         ready: 'Ready',
+        syncing: 'Syncing',
         needs_token: 'Needs token',
         needs_metrics_model: 'Needs metrics model',
         needs_pipelines: 'Needs pipelines',
@@ -3629,7 +3635,8 @@
       return labels[status] || status;
     }
 
-    function formatRelativeSync(dateValue) {
+    function formatRelativeSync(dateValue, status) {
+      if (status === 'syncing') return 'Syncing now...';
       if (!dateValue) return 'Not synced yet';
       const diffMs = Date.now() - new Date(dateValue).getTime();
       const minutes = Math.round(diffMs / 60000);
@@ -3659,7 +3666,7 @@
     function renderAdminHubPage(clients) {
       const count = clients.length;
       const adminActions = isStaffAdmin() ? `
-              <button class="admin-btn" type="button" onclick="syncAllClients()">${ICON_SYNC} Sync all</button>
+              <button class="admin-btn" type="button" onclick="syncAllClients(this)">${ICON_SYNC} Sync all</button>
               <button class="admin-btn admin-btn--primary" type="button" onclick="focusAddClient()">${ICON_PLUS} Add client</button>
       ` : '';
       return `
@@ -3757,7 +3764,7 @@
       const pipelineLabel = client.pipelineMode === '3-pipeline' ? '3 pipelines' : '2 pipelines';
       const needsAction = clientNeedsAction(client.status);
       return `
-        <article class="client-card${needsAction ? ' client-card--needs-action' : ''}" data-search="${esc(`${client.accountName} ${client.clientId}`.toLowerCase())}">
+        <article class="client-card${needsAction ? ' client-card--needs-action' : ''}" data-client-id="${client.clientId}" data-search="${esc(`${client.accountName} ${client.clientId}`.toLowerCase())}">
           <div class="client-card-header">
             <span class="client-avatar" aria-hidden="true">${esc(clientInitials(client.accountName))}</span>
             <div class="client-card-title-block">
@@ -3771,7 +3778,7 @@
             <span class="client-card-meta-divider" aria-hidden="true">·</span>
             <span>${pipelineLabel}</span>
             <span class="client-card-meta-divider" aria-hidden="true">·</span>
-            <span>${formatRelativeSync(client.lastSyncAt)}</span>
+            <span data-sync-meta>${formatRelativeSync(client.lastSyncAt, client.status)}</span>
           </div>
           ${needsAction ? `<p class="client-card-action-hint">${esc(clientActionHint(client.status))}</p>` : ''}
           ${kpis.totalLeads != null ? `
@@ -3923,13 +3930,101 @@
       }
     }
 
-    async function syncAllClients() {
+    let hubSyncPollTimer = null;
+
+    function stopHubSyncPolling() {
+      if (hubSyncPollTimer) {
+        clearInterval(hubSyncPollTimer);
+        hubSyncPollTimer = null;
+      }
+    }
+
+    function isClientSyncing(client) {
+      return client.status === 'syncing' || client.lastSyncStatus === 'syncing';
+    }
+
+    function hubHasSyncingClients(clients) {
+      return (clients || []).some(isClientSyncing);
+    }
+
+    function markHubCardsSyncing(clientIds = []) {
+      clientIds.forEach((clientId) => {
+        const card = document.querySelector(`.client-card[data-client-id="${clientId}"]`);
+        if (!card) return;
+        const badge = card.querySelector('.status-badge');
+        if (badge) {
+          badge.className = 'status-badge status-syncing';
+          badge.textContent = statusLabel('syncing');
+        }
+        const meta = card.querySelector('[data-sync-meta]');
+        if (meta) meta.textContent = 'Syncing now...';
+      });
+    }
+
+    function updateHubCardsFromClients(clients) {
+      (clients || []).forEach((client) => {
+        const card = document.querySelector(`.client-card[data-client-id="${client.clientId}"]`);
+        if (!card) return;
+        const badge = card.querySelector('.status-badge');
+        if (badge) {
+          badge.className = `status-badge status-${client.status}`;
+          badge.textContent = statusLabel(client.status);
+        }
+        const meta = card.querySelector('[data-sync-meta]');
+        if (meta) meta.textContent = formatRelativeSync(client.lastSyncAt, client.status);
+      });
+    }
+
+    function startHubSyncPolling(clientIds = []) {
+      stopHubSyncPolling();
+      markHubCardsSyncing(clientIds);
+
+      hubSyncPollTimer = setInterval(async () => {
+        if (!IS_ADMIN_HUB || !document.getElementById('client-grid')) {
+          stopHubSyncPolling();
+          return;
+        }
+
+        try {
+          const data = await adminFetch('/api/clients');
+          const clients = data.clients || [];
+          updateHubCardsFromClients(clients);
+
+          if (!hubHasSyncingClients(clients)) {
+            stopHubSyncPolling();
+            const dashboard = document.getElementById('dashboard');
+            if (dashboard) {
+              dashboard.innerHTML = renderAdminHubPage(clients);
+            }
+            const failed = clients.filter((client) => client.lastSyncStatus === 'error');
+            if (failed.length) {
+              showToast(`${failed.length} sync(s) failed`, 'error');
+            } else {
+              showToast('All clients synced', 'success');
+            }
+          }
+        } catch {
+          // Keep polling while background jobs run.
+        }
+      }, 3000);
+    }
+
+    async function syncAllClients(button) {
+      if (button) button.disabled = true;
       try {
-        showToast('Syncing all clients...');
+        showToast('Queueing sync for all clients...');
         const data = await adminFetch('/api/clients', {
           method: 'POST',
           body: JSON.stringify({ action: 'sync-all' }),
         });
+
+        if (data.queued) {
+          const count = data.count ?? (data.clientIds || []).length;
+          showToast(`Syncing ${count} client${count === 1 ? '' : 's'} in background`, 'success');
+          startHubSyncPolling(data.clientIds || []);
+          return;
+        }
+
         const failed = (data.results || []).filter((row) => !row.success);
         if (failed.length) {
           showToast(`${failed.length} sync(s) failed`, 'error');
@@ -3939,6 +4034,8 @@
         await loadAdminHub();
       } catch (error) {
         showToast(error.message, 'error');
+      } finally {
+        if (button) button.disabled = false;
       }
     }
 
