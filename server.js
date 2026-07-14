@@ -26,28 +26,45 @@ function readRequestBody(request) {
 }
 
 function createLocalResponse(serverResponse) {
-  return {
-    statusCode: 200,
+  let statusCode = 200;
+  const adapter = {
     setHeader(name, value) {
       serverResponse.setHeader(name, value);
     },
     status(code) {
-      this.statusCode = code;
-      return this;
+      statusCode = code;
+      return adapter;
     },
     json(payload) {
       if (!serverResponse.headersSent) {
-        serverResponse.writeHead(this.statusCode, { 'Content-Type': 'application/json' });
+        serverResponse.writeHead(statusCode, { 'Content-Type': 'application/json' });
       }
       serverResponse.end(JSON.stringify(payload));
+      return adapter;
+    },
+    send(payload) {
+      if (!serverResponse.headersSent) {
+        serverResponse.writeHead(statusCode);
+      }
+      serverResponse.end(typeof payload === 'string' ? payload : String(payload));
+      return adapter;
+    },
+    write(chunk) {
+      serverResponse.write(chunk);
     },
     end() {
       if (!serverResponse.headersSent) {
-        serverResponse.writeHead(this.statusCode);
+        serverResponse.writeHead(statusCode);
       }
       serverResponse.end();
     },
+    destroy(error) {
+      if (typeof serverResponse.destroy === 'function') {
+        serverResponse.destroy(error);
+      }
+    },
   };
+  return adapter;
 }
 
 function serveDashboardHtml(response, mode, clientSlug = null) {
@@ -139,13 +156,13 @@ const server = http.createServer(async (request, response) => {
         ? await readRequestBody(request)
         : '';
       const localResponse = createLocalResponse(response);
-      const { handleInngestRequest } = require('./lib/inngest-handler');
-      await handleInngestRequest({
+      const { handleInngestRequest, toExpressRequest } = require('./lib/inngest-handler');
+      await handleInngestRequest(toExpressRequest({
         method: request.method,
-        url,
         headers: request.headers,
         body: rawBody,
-      }, localResponse);
+        url,
+      }), localResponse);
     } catch (error) {
       response.writeHead(500, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ error: error.message || 'Inngest handler failed.' }));

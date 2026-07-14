@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/inngest.js": {
+      "maxDuration": 300
+    }
+  },
   "rewrites": [
     { "source": "/login", "destination": "/index.html" },
     { "source": "/team", "destination": "/index.html" },

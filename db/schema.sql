@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS sync_snapshots (
   users JSONB NOT NULL DEFAULT '[]'::jsonb,
   contact_count INTEGER NOT NULL DEFAULT 0,
   sync_status TEXT NOT NULL DEFAULT 'pending',
-  sync_error TEXT
+  sync_error TEXT,
+  sync_started_at TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS sync_runs (

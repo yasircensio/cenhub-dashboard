@@ -7,7 +7,7 @@
   "scripts": {
     "build": "mkdir -p public/lib && cp lib/marketing-metrics.js public/lib/marketing-metrics.js",
     "start": "node server.js",
-    "migrate:staff-auth": "node scripts/migrate-staff-auth.js",
+    "migrate:sync-started-at": "node scripts/migrate-sync-started-at.js",
     "create-admin": "node scripts/create-admin.js",
     "seed:suntech": "node scripts/seed-suntech.js",
     "test": "node scripts/check-lib-sync.js && node scripts/test-pipeline-slots.js && node scripts/test-metrics-model.js && node scripts/test-dedupe.js && node scripts/test-ghl-sso.js && node scripts/test-sync.js && node scripts/test-sync-batch.js && node scripts/test-date-filters.js && node scripts/test-facebook-metrics.js && node scripts/test-staff-auth.js",

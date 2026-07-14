@@ -2960,11 +2960,12 @@
     }
 
     function clientNeedsAction(status) {
-      return Boolean(status && status !== 'ready');
+      return Boolean(status && status !== 'ready' && status !== 'syncing');
     }
 
     function clientActionHint(status) {
       const hints = {
+        syncing: 'Sync in progress...',
         needs_token: 'Action needed — add GHL token in Settings',
         needs_metrics_model: 'Action needed — choose metrics model in Settings',
         needs_pipelines: 'Action needed — map pipelines in Settings',
