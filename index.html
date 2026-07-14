@@ -3934,6 +3934,7 @@
     let hubSyncPollTimer = null;
     let hubSyncPendingIds = new Set();
     let hubSyncPollStartedAt = 0;
+    let hubSyncBaselineAt = new Map();
 
     function stopHubSyncPolling() {
       if (hubSyncPollTimer) {
@@ -3942,6 +3943,7 @@
       }
       hubSyncPendingIds = new Set();
       hubSyncPollStartedAt = 0;
+      hubSyncBaselineAt = new Map();
     }
 
     function isClientSyncing(client) {
@@ -3953,7 +3955,11 @@
       const byId = new Map((clients || []).map((client) => [client.clientId, client]));
       for (const clientId of hubSyncPendingIds) {
         const client = byId.get(clientId);
-        if (client && isClientSyncing(client)) return true;
+        if (!client) continue;
+        if (isClientSyncing(client)) return true;
+        if (client.lastSyncStatus === 'error') continue;
+        const baseline = hubSyncBaselineAt.get(clientId);
+        if (baseline === client.lastSyncAt) return true;
       }
       return false;
     }
@@ -3996,10 +4002,15 @@
       }
     }
 
-    function startHubSyncPolling(clientIds = []) {
+    function startHubSyncPolling(clientIds = [], clients = []) {
       stopHubSyncPolling();
       hubSyncPendingIds = new Set(clientIds);
       hubSyncPollStartedAt = Date.now();
+      hubSyncBaselineAt = new Map(
+        (clients || [])
+          .filter((client) => clientIds.includes(client.clientId))
+          .map((client) => [client.clientId, client.lastSyncAt]),
+      );
       markHubCardsSyncing(clientIds);
       pollHubSyncProgress();
       hubSyncPollTimer = setInterval(pollHubSyncProgress, 3000);
@@ -4044,7 +4055,8 @@
         if (data.queued) {
           const count = data.count ?? (data.clientIds || []).length;
           showToast(`Syncing ${count} client${count === 1 ? '' : 's'} in background`, 'success');
-          startHubSyncPolling(data.clientIds || []);
+          const hubData = await adminFetch('/api/clients');
+          startHubSyncPolling(data.clientIds || [], hubData.clients || []);
           return;
         }
 

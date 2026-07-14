@@ -1,12 +1,11 @@
 const { cron } = require('inngest');
 const { inngest } = require('../lib/inngest-client');
-const { listAccounts } = require('../lib/account-store');
+const { listClientIds } = require('../lib/account-store');
 const { buildAccountSyncEvents, createBatchId } = require('../lib/sync-batch');
 const { syncAccount } = require('../lib/sync-service');
 
 async function listSyncableClientIds() {
-  const clients = await listAccounts();
-  return clients.map((client) => client.clientId);
+  return listClientIds();
 }
 
 const dailySyncAll = inngest.createFunction(
