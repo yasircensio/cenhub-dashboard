@@ -2745,10 +2745,16 @@
       font-weight: 600;
     }
 
-    /* KPI columns: 5 (≥1025) → 3 → 2 → 1 (GHL iframe is ~70% of viewport width). */
+    /* KPI columns: 5 (≥1200) → 4 (1025–1199) → 3 → 2 → 1. */
     @media (min-width: 1400px) {
       .kpi-grid > .card {
         min-height: 148px;
+      }
+    }
+
+    @media (max-width: 1199px) {
+      .kpi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
     }
 
