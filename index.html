@@ -4,43 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
-  <!-- theme: cool-slate v26 -->
+  <!-- theme: warm-cream v27 -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
     :root {
-      --bg: #f3f5f8;
+      --bg: #f7f5f2;
       --panel: #ffffff;
-      --panel-soft: #f4f6f9;
-      --surface-muted: #f4f6f9;
-      --surface-hover: #e9eef3;
-      --border: #dde3ea;
-      --text: #111827;
-      --text-muted: #5b6673;
-      --text-soft: #8b95a1;
+      --panel-soft: #faf8f6;
+      --surface-muted: #faf8f6;
+      --surface-hover: #f0ebe4;
+      --border: #e8e0d8;
+      --text: #1a1208;
+      --text-muted: #6b5348;
+      --text-soft: #a07868;
       --primary: #ff6a00;
-      --primary-dark: #e55f00;
-      --primary-soft: #ffefe3;
+      --primary-dark: #dc640a;
+      --primary-soft: #fff4eb;
       --primary-text: #ffffff;
       --accent-green: #138b53;
       --accent-blue: #0085f2;
       --status-ok-bg: #ecfdf5;
       --status-ok-text: #047857;
-      --status-warn-bg: #f1f5f9;
-      --status-warn-text: #475569;
-      --status-warn-border: #cbd5e1;
-      --brand-dark: #111827;
+      --status-warn-bg: #fff7ed;
+      --status-warn-text: #9a3412;
+      --status-warn-border: #fdba74;
+      --brand-dark: #1a1208;
       --selected: var(--primary);
       --selected-dark: var(--primary-dark);
       --selected-soft: var(--primary-soft);
-      --selected-line: #ffd2b3;
-      --border-strong: #c5ced8;
+      --selected-line: #f2c49a;
+      --border-strong: #d3c3b2;
       --danger: #c2410c;
-      --danger-soft: #fef2f2;
-      --danger-line: #fecaca;
+      --danger-soft: #fff1ee;
+      --danger-line: #f3b7a3;
       --danger-text: #9a3412;
-      --skeleton-from: #e2e8f0;
-      --skeleton-mid: #f1f5f9;
+      --skeleton-from: #ebe4dc;
+      --skeleton-mid: #f5f0ea;
       --brand-topbar-gradient: linear-gradient(
         90deg,
         #0f0a08 0%,
@@ -49,23 +49,24 @@
         #352018 72%,
         #452818 100%
       );
-      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
-      --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.07);
-      --shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.12);
-      --card-gradient: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      --shadow: 0 12px 32px rgba(26, 18, 8, 0.08);
+      --shadow-sm: 0 1px 3px rgba(26, 18, 8, 0.06);
+      --shadow-md: 0 6px 18px rgba(26, 18, 8, 0.07);
+      --shadow-lg: 0 16px 40px rgba(26, 18, 8, 0.12);
+      --card-gradient: linear-gradient(145deg, #ffffff 0%, #fffaf6 100%);
       --hero-gradient: linear-gradient(135deg, #ff6a00 0%, #dc640a 100%);
       --bar-gradient: linear-gradient(180deg, #ff9147 0%, #ff6a00 100%);
       --error: #c2410c;
     }
 
-    /* Admin + login surfaces use the same clean neutral text scale. */
+    /* Admin surfaces keep the warm brand background but use near-black text for readability. */
     body[data-dashboard-mode="hub"],
     body[data-dashboard-mode="admin"],
+    body[data-dashboard-mode="team"],
     body[data-dashboard-mode="login"] {
-      --text: #111827;
-      --text-muted: #5b6673;
-      --text-soft: #8b95a1;
+      --text: #16120e;
+      --text-muted: #4d453e;
+      --text-soft: #837a72;
     }
 
     body[data-dashboard-mode="login"] .dashboard {
@@ -75,7 +76,7 @@
     }
 
     body[data-dashboard-mode="login"] .auth-page {
-      background: linear-gradient(180deg, var(--bg) 0%, #eef2f6 100%);
+      background: linear-gradient(180deg, var(--bg) 0%, #f0ebe4 100%);
       min-height: calc(100vh - 73px);
       padding: 48px 24px 56px;
     }
@@ -4466,13 +4467,13 @@
       }
       function getThemeColors() {
         return {
-          text: '#111827',
-          muted: '#5b6673',
-          grid: 'rgba(15, 23, 42, 0.08)',
-          border: '#dde3ea',
+          text: '#1a1208',
+          muted: '#6b5348',
+          grid: 'rgba(26, 18, 8, 0.1)',
+          border: '#e8e0d8',
           tooltipBg: '#ffffff',
-          tooltipBorder: '#dde3ea',
-          tooltipText: '#111827',
+          tooltipBorder: '#e8e0d8',
+          tooltipText: '#1a1208',
         };
       }
       function seriesFromRows(rows, labelKey, valueKey, labelFormatter) {
