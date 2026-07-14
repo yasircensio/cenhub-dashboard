@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cenhub Dashboard</title>
+  <!-- theme: warm-cream v27 -->
+  <link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+  <div id="toast-host" class="toast-host" aria-live="polite"></div>
+  <div class="dashboard" id="dashboard">
+    <header class="brand-topbar">
+      <div class="brand-topbar-left">
+        <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+      </div>
+    </header>
+    <div class="dashboard-shell">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p id="initial-loading-msg">Loading...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="/lib/marketing-metrics.js" defer></script>
+  <script src="/js/client.bundle.js" defer></script>
+</body>
+</html>

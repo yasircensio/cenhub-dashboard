@@ -11,11 +11,11 @@
     }
   },
   "rewrites": [
-    { "source": "/login", "destination": "/index.html" },
-    { "source": "/team", "destination": "/index.html" },
-    { "source": "/admin", "destination": "/index.html" },
-    { "source": "/admin/:client_id", "destination": "/index.html" },
-    { "source": "/:client_id", "destination": "/index.html" }
+    { "source": "/login", "destination": "/admin.html" },
+    { "source": "/team", "destination": "/admin.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/:client_id", "destination": "/admin.html" },
+    { "source": "/:client_id", "destination": "/client.html" }
   ],
   "headers": [
     {

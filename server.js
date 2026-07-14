@@ -68,7 +68,9 @@ function createLocalResponse(serverResponse) {
 }
 
 function serveDashboardHtml(response, mode, clientSlug = null) {
-  let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team';
+  const templateName = isAdminMode ? 'admin.html' : 'client.html';
+  let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
   const bodyAttrs = [`data-dashboard-mode="${mode}"`];
   if (clientSlug) bodyAttrs.push(`data-client-slug="${clientSlug}"`);
 
@@ -76,22 +78,22 @@ function serveDashboardHtml(response, mode, clientSlug = null) {
 
   if (mode === 'hub') {
     html = html.replace(
-      '<title>Cenhub Dashboard</title>',
+      '<title>Cenhub Admin</title>',
       '<title>Cenhub · Client Admin Hub</title>',
     );
   } else if (mode === 'admin') {
     html = html.replace(
-      '<title>Cenhub Dashboard</title>',
+      '<title>Cenhub Admin</title>',
       '<title>Client setup · Cenhub Dashboard</title>',
     );
   } else if (mode === 'login') {
     html = html.replace(
-      '<title>Cenhub Dashboard</title>',
+      '<title>Cenhub Admin</title>',
       '<title>Staff login · Cenhub</title>',
     );
   } else if (mode === 'team') {
     html = html.replace(
-      '<title>Cenhub Dashboard</title>',
+      '<title>Cenhub Admin</title>',
       '<title>Team · Cenhub</title>',
     );
   }
@@ -278,18 +280,32 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (url.startsWith('/lib/')) {
-    const filePath = path.join(ROOT, url);
-    if (!filePath.startsWith(path.join(ROOT, 'lib')) || !fs.existsSync(filePath)) {
-      response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      response.end('Not found');
-      return;
+  if (url.startsWith('/lib/') || url.startsWith('/css/') || url.startsWith('/js/')) {
+    let filePath = path.join(ROOT, 'public', url);
+    let allowedRoot = path.join(ROOT, 'public');
+
+    if (!filePath.startsWith(allowedRoot) || !fs.existsSync(filePath)) {
+      if (url.startsWith('/lib/')) {
+        filePath = path.join(ROOT, url.slice(1));
+        allowedRoot = path.join(ROOT, 'lib');
+        if (!filePath.startsWith(allowedRoot) || !fs.existsSync(filePath)) {
+          response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          response.end('Not found');
+          return;
+        }
+      } else {
+        response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        response.end('Not found');
+        return;
+      }
     }
 
     const ext = path.extname(filePath);
     const contentType = ext === '.js'
       ? 'application/javascript; charset=utf-8'
-      : 'text/plain; charset=utf-8';
+      : ext === '.css'
+        ? 'text/css; charset=utf-8'
+        : 'text/plain; charset=utf-8';
     response.writeHead(200, { 'Content-Type': contentType });
     response.end(fs.readFileSync(filePath, 'utf8'));
     return;

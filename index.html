@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Dashboard</title>
   <!-- theme: warm-cream v27 -->
+  <!-- Source for npm run build: extracts CSS/JS into public/ bundles used by client.html + admin.html -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
@@ -2246,6 +2247,82 @@
       width: 100%;
     }
 
+    .staff-users-table-wrap {
+      -webkit-overflow-scrolling: touch;
+      overflow-x: auto;
+    }
+
+    .staff-users-cards {
+      display: none;
+      gap: 12px;
+      grid-template-columns: 1fr;
+    }
+
+    .staff-user-card {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .staff-user-card-header {
+      display: grid;
+      gap: 4px;
+    }
+
+    .staff-user-card-name {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .staff-user-card-email {
+      color: var(--text-soft);
+      font-size: 12px;
+      word-break: break-word;
+    }
+
+    .staff-user-card-meta {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      justify-content: space-between;
+    }
+
+    .staff-user-card-meta-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .staff-user-card-row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .staff-user-card .staff-user-actions {
+      flex-direction: column;
+    }
+
+    .staff-user-card .staff-user-actions .admin-btn {
+      justify-content: center;
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .staff-users-table-wrap {
+        display: none;
+      }
+
+      .staff-users-cards {
+        display: grid;
+      }
+    }
+
     .staff-users-table th,
     .staff-users-table td {
       border-bottom: 1px solid var(--border);
@@ -3234,53 +3311,92 @@
       container.innerHTML = renderStaffUsersTable(data.users || []);
     }
 
-    function renderStaffUsersTable(users) {
-      const rows = users.map((user) => {
-        const isSelf = currentStaffUser?.id === user.id;
-        const roleSelect = `
-          <select
-            class="staff-role-select"
-            ${isSelf ? 'disabled title="You cannot change your own role here"' : ''}
-            onchange="updateStaffUserRole('${esc(user.id)}', this.value)"
-          >
-            <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
-            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
-          </select>
-        `;
-        const statusAction = user.status === 'disabled'
-          ? `<button class="admin-btn" type="button" onclick="updateStaffUser('${esc(user.id)}', { status: 'active' })">Enable</button>`
-          : `<button class="admin-btn" type="button" ${isSelf ? 'disabled title="You cannot disable your own account"' : ''} onclick="updateStaffUser('${esc(user.id)}', { status: 'disabled' })">Disable</button>`;
-        const inviteAction = user.status === 'pending' || !user.hasPassword
-          ? `<button class="admin-btn" type="button" onclick="copyStaffInviteLink('${esc(user.id)}')">Copy invite link</button>`
-          : `<button class="admin-btn" type="button" onclick="resetStaffUserPassword('${esc(user.id)}', true)">Reset password</button>`;
-        const deleteAction = isSelf
-          ? ''
-          : `<button class="admin-btn card-menu-item--danger" type="button" onclick="deleteStaffUser('${esc(user.id)}')">Delete</button>`;
-
-        return `
-          <tr>
-            <td>${esc(user.name || '—')}<div style="color:var(--text-soft);font-size:12px">${esc(user.email)}</div></td>
-            <td>${roleSelect}</td>
-            <td>${renderStaffStatusBadge(user.status)}</td>
-            <td>${esc(formatStaffLastLogin(user.lastLoginAt))}</td>
-            <td>
-              <div class="staff-user-actions">
-                ${statusAction}
-                ${inviteAction}
-                ${deleteAction}
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+    function renderStaffUserActions(user) {
+      const isSelf = currentStaffUser?.id === user.id;
+      const statusAction = user.status === 'disabled'
+        ? `<button class="admin-btn" type="button" onclick="updateStaffUser('${esc(user.id)}', { status: 'active' })">Enable</button>`
+        : `<button class="admin-btn" type="button" ${isSelf ? 'disabled title="You cannot disable your own account"' : ''} onclick="updateStaffUser('${esc(user.id)}', { status: 'disabled' })">Disable</button>`;
+      const inviteAction = user.status === 'pending' || !user.hasPassword
+        ? `<button class="admin-btn" type="button" onclick="copyStaffInviteLink('${esc(user.id)}')">Copy invite link</button>`
+        : `<button class="admin-btn" type="button" onclick="resetStaffUserPassword('${esc(user.id)}', true)">Reset password</button>`;
+      const deleteAction = isSelf
+        ? ''
+        : `<button class="admin-btn card-menu-item--danger" type="button" onclick="deleteStaffUser('${esc(user.id)}')">Delete</button>`;
 
       return `
-        <table class="staff-users-table">
-          <thead>
-            <tr><th>User</th><th>Role</th><th>Status</th><th>Last login</th><th>Actions</th></tr>
-          </thead>
-          <tbody>${rows || '<tr><td colspan="5">No staff users yet.</td></tr>'}</tbody>
-        </table>
+        <div class="staff-user-actions">
+          ${statusAction}
+          ${inviteAction}
+          ${deleteAction}
+        </div>
+      `;
+    }
+
+    function renderStaffUserRoleSelect(user) {
+      const isSelf = currentStaffUser?.id === user.id;
+      return `
+        <select
+          class="staff-role-select"
+          ${isSelf ? 'disabled title="You cannot change your own role here"' : ''}
+          onchange="updateStaffUserRole('${esc(user.id)}', this.value)"
+        >
+          <option value="member" ${user.role === 'member' ? 'selected' : ''}>Member</option>
+          <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+        </select>
+      `;
+    }
+
+    function renderStaffUserCard(user) {
+      return `
+        <article class="staff-user-card">
+          <div class="staff-user-card-header">
+            <div class="staff-user-card-name">${esc(user.name || '—')}</div>
+            <div class="staff-user-card-email">${esc(user.email)}</div>
+          </div>
+          <div class="staff-user-card-row">
+            <div class="staff-user-card-meta-label">Role</div>
+            ${renderStaffUserRoleSelect(user)}
+          </div>
+          <div class="staff-user-card-meta">
+            <div>
+              <div class="staff-user-card-meta-label">Status</div>
+              ${renderStaffStatusBadge(user.status)}
+            </div>
+            <div>
+              <div class="staff-user-card-meta-label">Last login</div>
+              <div>${esc(formatStaffLastLogin(user.lastLoginAt))}</div>
+            </div>
+          </div>
+          ${renderStaffUserActions(user)}
+        </article>
+      `;
+    }
+
+    function renderStaffUsersTable(users) {
+      const rows = users.map((user) => `
+          <tr>
+            <td>${esc(user.name || '—')}<div style="color:var(--text-soft);font-size:12px">${esc(user.email)}</div></td>
+            <td>${renderStaffUserRoleSelect(user)}</td>
+            <td>${renderStaffStatusBadge(user.status)}</td>
+            <td>${esc(formatStaffLastLogin(user.lastLoginAt))}</td>
+            <td>${renderStaffUserActions(user)}</td>
+          </tr>
+        `).join('');
+
+      const cards = users.map((user) => renderStaffUserCard(user)).join('');
+
+      return `
+        <div class="staff-users-table-wrap">
+          <table class="staff-users-table staff-users-table--desktop">
+            <thead>
+              <tr><th>User</th><th>Role</th><th>Status</th><th>Last login</th><th>Actions</th></tr>
+            </thead>
+            <tbody>${rows || '<tr><td colspan="5">No staff users yet.</td></tr>'}</tbody>
+          </table>
+        </div>
+        <div class="staff-users-cards staff-users-cards--mobile">
+          ${cards || '<div class="note">No staff users yet.</div>'}
+        </div>
         <div style="margin-top:20px">
           <div class="panel-title" style="margin-bottom:10px">Invite staff member</div>
           <div class="team-invite-row">
