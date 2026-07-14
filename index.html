@@ -3931,22 +3931,78 @@
     }
 
     let hubSyncPollTimer = null;
+    let hubSyncPendingIds = new Set();
+    let hubSyncPollStartedAt = 0;
 
     function stopHubSyncPolling() {
       if (hubSyncPollTimer) {
         clearInterval(hubSyncPollTimer);
         hubSyncPollTimer = null;
       }
+      hubSyncPendingIds = new Set();
+      hubSyncPollStartedAt = 0;
     }
 
     function isClientSyncing(client) {
       return client.status === 'syncing' || client.lastSyncStatus === 'syncing';
     }
 
-    function hubHasSyncingClients(clients) {
-      return (clients || []).some(isClientSyncing);
+    function hubBatchStillPending(clients) {
+      if (!hubSyncPendingIds.size) return false;
+      const byId = new Map((clients || []).map((client) => [client.clientId, client]));
+      for (const clientId of hubSyncPendingIds) {
+        const client = byId.get(clientId);
+        if (client && isClientSyncing(client)) return true;
+      }
+      return false;
     }
 
+    async function pollHubSyncProgress() {
+      if (!IS_ADMIN_HUB || !document.getElementById('client-grid')) {
+        stopHubSyncPolling();
+        return;
+      }
+
+      if (hubSyncPollStartedAt && Date.now() - hubSyncPollStartedAt > 15 * 60 * 1000) {
+        stopHubSyncPolling();
+        showToast('Some sync jobs are still running. Refresh the page in a minute.', 'error');
+        return;
+      }
+
+      try {
+        const data = await adminFetch('/api/clients');
+        const clients = data.clients || [];
+        updateHubCardsFromClients(clients);
+
+        if (hubBatchStillPending(clients)) return;
+
+        const pendingIds = new Set(hubSyncPendingIds);
+        stopHubSyncPolling();
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+          dashboard.innerHTML = renderAdminHubPage(clients);
+        }
+        const failed = clients.filter((client) =>
+          pendingIds.has(client.clientId) && client.lastSyncStatus === 'error',
+        );
+        if (failed.length) {
+          showToast(`${failed.length} sync(s) failed`, 'error');
+        } else {
+          showToast('All clients synced', 'success');
+        }
+      } catch {
+        // Keep polling while background jobs run.
+      }
+    }
+
+    function startHubSyncPolling(clientIds = []) {
+      stopHubSyncPolling();
+      hubSyncPendingIds = new Set(clientIds);
+      hubSyncPollStartedAt = Date.now();
+      markHubCardsSyncing(clientIds);
+      pollHubSyncProgress();
+      hubSyncPollTimer = setInterval(pollHubSyncProgress, 3000);
+    }
     function markHubCardsSyncing(clientIds = []) {
       clientIds.forEach((clientId) => {
         const card = document.querySelector(`.client-card[data-client-id="${clientId}"]`);
@@ -3973,40 +4029,6 @@
         const meta = card.querySelector('[data-sync-meta]');
         if (meta) meta.textContent = formatRelativeSync(client.lastSyncAt, client.status);
       });
-    }
-
-    function startHubSyncPolling(clientIds = []) {
-      stopHubSyncPolling();
-      markHubCardsSyncing(clientIds);
-
-      hubSyncPollTimer = setInterval(async () => {
-        if (!IS_ADMIN_HUB || !document.getElementById('client-grid')) {
-          stopHubSyncPolling();
-          return;
-        }
-
-        try {
-          const data = await adminFetch('/api/clients');
-          const clients = data.clients || [];
-          updateHubCardsFromClients(clients);
-
-          if (!hubHasSyncingClients(clients)) {
-            stopHubSyncPolling();
-            const dashboard = document.getElementById('dashboard');
-            if (dashboard) {
-              dashboard.innerHTML = renderAdminHubPage(clients);
-            }
-            const failed = clients.filter((client) => client.lastSyncStatus === 'error');
-            if (failed.length) {
-              showToast(`${failed.length} sync(s) failed`, 'error');
-            } else {
-              showToast('All clients synced', 'success');
-            }
-          }
-        } catch {
-          // Keep polling while background jobs run.
-        }
-      }, 3000);
     }
 
     async function syncAllClients(button) {
