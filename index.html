@@ -4539,7 +4539,6 @@
           <div class="setup-section">
             <div class="setup-section-info">
               <div class="setup-section-title">Meta / Facebook connection</div>
-              <p class="setup-section-desc">Ad metrics sync needs a Meta Ad Account ID plus the shared system user token in Vercel (<code>META_SYSTEM_USER_TOKEN</code>) or a per-client override below. Page and Pixel IDs are stored for future lead/CAPI work. Click <strong>Sync Meta metrics</strong> to save these fields and fetch data. Ad account timezone is used by Meta date presets.</p>
             </div>
             <div class="setup-grid setup-grid--2">
               <div class="field-group">
@@ -4588,7 +4587,6 @@
           <div class="setup-section${setupDisabled}">
             <div class="setup-section-info">
               <div class="setup-section-title">GHL connection</div>
-              <p class="setup-section-desc">Private integration token and location for this sub-account. The token is stored encrypted.</p>
             </div>
             <div class="setup-grid setup-grid--2">
               <div class="field-group">
@@ -4612,7 +4610,6 @@
           <div class="setup-section${setupDisabled}">
             <div class="setup-section-info">
               <div class="setup-section-title">Pipeline slots</div>
-              <p class="setup-section-desc">Map GHL pipelines to dashboard roles. Use Fetch pipelines below to refresh the list.</p>
             </div>
             <div class="setup-grid setup-grid--3">
               ${renderPipelineSelect('setup-new-leads', 'New leads (required)', account.newLeadsPipelineId, setupPipelines)}
