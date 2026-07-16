@@ -4774,7 +4774,10 @@
         if (result.skipped) {
           showToast(result.reason || 'Meta sync skipped', 'error');
         } else {
-          showToast('Meta metrics synced', 'success');
+          let msg = 'Meta metrics synced';
+          if (result.tokenSource) msg += ` (${result.tokenSource} token)`;
+          if (result.ignoredAccountOverride) msg += ' — cleared invalid saved token override';
+          showToast(msg, 'success');
         }
         await loadSetupAccount();
         if (accountCanPreviewDashboard(setupAccount)) {
