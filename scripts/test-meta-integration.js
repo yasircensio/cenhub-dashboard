@@ -9,6 +9,7 @@ const {
   resolveMetaAccessToken,
   validateMetaAccessToken,
   verifyMetaAccessToken,
+  appendAccessTokenToUrl,
 } = require('../lib/meta-token');
 const { resolveMetaSystemUserToken } = require('../lib/account-store');
 
@@ -39,6 +40,16 @@ function testValidateMetaAccessToken() {
   assert(!validateMetaAccessToken('123456789012345|abc').ok, 'app token');
   assert(validateMetaAccessToken('EAA' + 'x'.repeat(100)).ok, 'long token');
   assert(validateMetaAccessToken('"EAA' + 'x'.repeat(100) + '"').token.startsWith('EAA'), 'strip quotes');
+}
+
+function testAppendAccessTokenToUrl() {
+  const token = 'EAA' + 'x'.repeat(100);
+  const base = 'https://graph.facebook.com/v21.0/act_154139302?fields=account_id,name';
+  const withToken = appendAccessTokenToUrl(base, token);
+  assert(withToken.includes('access_token='), 'appends access_token to full graph URL');
+  assert(withToken.includes(encodeURIComponent(token)), 'token is URL-encoded');
+  const paging = `${base}&access_token=${token}`;
+  assert(appendAccessTokenToUrl(paging, 'other') === paging, 'does not duplicate access_token');
 }
 
 function testResolveMetaAccessTokenFallback() {
@@ -92,6 +103,7 @@ async function main() {
   testNormalizeMetaAdAccountId();
   testTransformPayload();
   testValidateMetaAccessToken();
+  testAppendAccessTokenToUrl();
   testResolveMetaAccessTokenFallback();
   testResolveMetaSystemUserToken();
   await testUpdateAccountMetaFields();
