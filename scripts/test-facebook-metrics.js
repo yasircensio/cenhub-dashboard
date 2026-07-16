@@ -147,6 +147,17 @@ async function main() {
     throw new Error(`Preset spend mismatch: this=${thisMonthSpend}, last=${lastMonthSpend}`);
   }
 
+  const fullYearSpend = getSpendForDateRange(
+    { yearly: { spend: '62120.00' } },
+    '2026-01-01',
+    '2026-12-31',
+    [{ month: '2026-06', spend: 10000 }],
+    'Europe/Copenhagen',
+  );
+  if (fullYearSpend !== 62120) {
+    throw new Error(`Full-year range should use Meta yearly bucket, got ${fullYearSpend}`);
+  }
+
   const leads = getLeadsForPreset(
     { totalLeads: 99 },
     [{ month: getCurrentMonthKey(), count: 12 }, { month: getPreviousMonthKey(), count: 34 }],

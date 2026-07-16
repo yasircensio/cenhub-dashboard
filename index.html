@@ -6208,17 +6208,28 @@
       }
     }
 
+    function resolveMarketingPreset() {
+      if (['all', 'month', 'lastMonth', 'year'].includes(state.preset)) {
+        return state.preset;
+      }
+      if (state.preset === 'custom' && state.dateFrom && state.dateTo) {
+        return 'custom';
+      }
+      return state.preset;
+    }
+
     function applyMarketingData(data, fbMetrics) {
       if (!window.MarketingMetrics) return data;
-      const useCustomRange = Boolean(state.dateFrom && state.dateTo);
+      const marketingPreset = resolveMarketingPreset();
+      const useMarketingDateRange = marketingPreset === 'custom';
       const result = window.MarketingMetrics.applyMarketingToDashboard(
         data,
         fbMetrics,
-        useCustomRange ? 'custom' : state.preset,
+        marketingPreset,
         {
           timeZone: data.account?.timezone || 'Europe/Copenhagen',
-          dateFrom: useCustomRange ? state.dateFrom : null,
-          dateTo: useCustomRange ? state.dateTo : null,
+          dateFrom: useMarketingDateRange ? state.dateFrom : null,
+          dateTo: useMarketingDateRange ? state.dateTo : null,
         },
       );
       if (result.monthlyAdSpend?.length) {

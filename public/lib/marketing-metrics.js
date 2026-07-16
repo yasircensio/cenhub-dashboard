@@ -156,8 +156,26 @@ function getPeriodLabelForRange(dateFrom, dateTo, timeZone = DEFAULT_TIMEZONE) {
   return `${formatMonthYearLabel(dateFrom, timeZone)} – ${formatMonthYearLabel(dateTo, timeZone)}`;
 }
 
+function isFullCalendarYearRange(dateFrom, dateTo) {
+  if (!dateFrom || !dateTo) return null;
+  const year = String(dateFrom).slice(0, 4);
+  if (!/^\d{4}$/.test(year)) return null;
+  if (dateFrom !== `${year}-01-01` || dateTo !== `${year}-12-31`) return null;
+  if (String(dateTo).slice(0, 4) !== year) return null;
+  return year;
+}
+
 function getSpendForDateRange(fbMetrics, dateFrom, dateTo, monthlyAdSpend, timeZone = DEFAULT_TIMEZONE) {
   if (!dateFrom || !dateTo) return 0;
+
+  const fullYear = isFullCalendarYearRange(dateFrom, dateTo);
+  if (fullYear) {
+    const currentYear = getCurrentMonthKey(timeZone).slice(0, 4);
+    if (fullYear === currentYear) {
+      const yearlySpend = parseFbAmount(fbMetrics?.yearly?.spend);
+      if (yearlySpend > 0) return yearlySpend;
+    }
+  }
 
   const monthly = monthlyAdSpend || buildMonthlyAdSpend(fbMetrics);
   const monthKeys = monthsBetween(dateFrom, dateTo, timeZone);
