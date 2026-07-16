@@ -1,4 +1,4 @@
-(function(){const t=window.location.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);if(t[0]==="login"){document.body.dataset.dashboardMode="login",delete document.body.dataset.clientSlug;return}if(t[0]==="team"){document.body.dataset.dashboardMode="team",delete document.body.dataset.clientSlug;return}if(t[0]==="admin"){document.body.dataset.dashboardMode=t.length>=2?"admin":"hub",t.length>=2?document.body.dataset.clientSlug=t[1]:delete document.body.dataset.clientSlug;return}t[0]&&t[0]!=="index.html"&&(document.body.dataset.dashboardMode="client",document.body.dataset.clientSlug=t[0])})();const DASHBOARD_MODE=document.body.dataset.dashboardMode||"client",IS_LOGIN_PAGE=DASHBOARD_MODE==="login",IS_TEAM_PAGE=DASHBOARD_MODE==="team",IS_ADMIN_HUB=DASHBOARD_MODE==="hub",IS_ADMIN_CLIENT=DASHBOARD_MODE==="admin",IS_CLIENT_VIEW=DASHBOARD_MODE==="client",IS_PREVIEW=IS_CLIENT_VIEW&&!!new URLSearchParams(window.location.search).get("client"),IS_ADMIN=IS_ADMIN_HUB||IS_ADMIN_CLIENT||IS_TEAM_PAGE||new URLSearchParams(window.location.search).get("view")==="admin",ADMIN_UI=IS_ADMIN_HUB||IS_ADMIN_CLIENT||IS_TEAM_PAGE||IS_ADMIN,LOADING_MSG=ADMIN_UI?"Loading dashboard data...":"Henter dashboard data...",RETRY_MSG=ADMIN_UI?"Try again":"Pr\xF8v igen";(function(){const t=document.getElementById("initial-loading-msg");t&&(t.textContent=LOADING_MSG)})();function resolveClientSlug(){if(document.body.dataset.clientSlug)return document.body.dataset.clientSlug;const e=window.location.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return e[0]==="admin"&&e[1]?e[1]:e[0]&&e[0]!=="admin"&&e[0]!=="index.html"?e[0]:new URLSearchParams(window.location.search).get("client")||"suntech-nordic"}const CLIENT_SLUG=resolveClientSlug();let tenantParams={},facebookClientId=CLIENT_SLUG,setupAccount=null,setupPipelines=[],metricsModelChangeMode=!1;function esc(e){return String(e??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function renderBrandTopbar(e=""){return`
+(function(){const t=window.location.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);if(t[0]==="login"){document.body.dataset.dashboardMode="login",delete document.body.dataset.clientSlug;return}if(t[0]==="team"){document.body.dataset.dashboardMode="team",delete document.body.dataset.clientSlug;return}if(t[0]==="admin"){document.body.dataset.dashboardMode=t.length>=2?"admin":"hub",t.length>=2?document.body.dataset.clientSlug=t[1]:delete document.body.dataset.clientSlug;return}t[0]&&t[0]!=="index.html"&&(document.body.dataset.dashboardMode="client",document.body.dataset.clientSlug=t[0])})();const DASHBOARD_MODE=document.body.dataset.dashboardMode||"client",IS_LOGIN_PAGE=DASHBOARD_MODE==="login",IS_TEAM_PAGE=DASHBOARD_MODE==="team",IS_ADMIN_HUB=DASHBOARD_MODE==="hub",IS_ADMIN_CLIENT=DASHBOARD_MODE==="admin",IS_CLIENT_VIEW=DASHBOARD_MODE==="client",IS_PREVIEW=IS_CLIENT_VIEW&&!!new URLSearchParams(window.location.search).get("client"),IS_ADMIN=IS_ADMIN_HUB||IS_ADMIN_CLIENT||IS_TEAM_PAGE||new URLSearchParams(window.location.search).get("view")==="admin",ADMIN_UI=IS_ADMIN_HUB||IS_ADMIN_CLIENT||IS_TEAM_PAGE||IS_ADMIN,LOADING_MSG=ADMIN_UI?"Loading dashboard data...":"Henter dashboard data...",RETRY_MSG=ADMIN_UI?"Try again":"Pr\xF8v igen";(function(){const t=document.getElementById("initial-loading-msg");t&&(t.textContent=LOADING_MSG)})();function resolveClientSlug(){if(document.body.dataset.clientSlug)return document.body.dataset.clientSlug;const e=window.location.pathname.replace(/^\/+|\/+$/g,"").split("/").filter(Boolean);return e[0]==="admin"&&e[1]?e[1]:e[0]&&e[0]!=="admin"&&e[0]!=="index.html"?e[0]:new URLSearchParams(window.location.search).get("client")||"suntech-nordic"}const CLIENT_SLUG=resolveClientSlug();let tenantParams={},facebookClientId=CLIENT_SLUG,setupAccount=null,setupPipelines=[],metricsModelChangeMode=!1,setupProgressExpanded=!1;function esc(e){return String(e??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function renderBrandTopbar(e=""){return`
     <header class="brand-topbar">
       <div class="brand-topbar-left">
         <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
@@ -438,14 +438,24 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
       </select>
       ${s?`<p class="field-hint">${esc(s)}</p>`:""}
     </div>
-  `}function getSetupProgressSteps(e){return[{id:"metrics",label:"Metrics",done:!!e.metricsModelSetAt},{id:"ghl",label:"GHL",done:!!(e.hasGhlToken&&e.locationId)},{id:"pipelines",label:"Pipelines",done:!!(e.newLeadsPipelineId&&e.salesPipelineId)},{id:"meta",label:"Meta",done:e.metaSyncStatus==="ok",partial:!!(e.metaAdAccountId&&e.metaSyncStatus!=="ok")}]}function renderSetupProgressStrip(e){return`
+  `}function getSetupProgressSteps(e){return[{id:"metrics",label:"Metrics",done:!!e.metricsModelSetAt},{id:"ghl",label:"GHL",done:!!(e.hasGhlToken&&e.locationId)},{id:"pipelines",label:"Pipelines",done:!!(e.newLeadsPipelineId&&e.salesPipelineId)},{id:"meta",label:"Meta",done:e.metaSyncStatus==="ok",partial:!!(e.metaAdAccountId&&e.metaSyncStatus!=="ok")}]}function toggleSetupProgressDetail(){if(setupProgressExpanded=!setupProgressExpanded,setupAccount){const e=document.getElementById("setup-panel-mount");e&&(e.innerHTML=renderClientSetupPanel(setupAccount))}}function renderSetupProgressStrip(e){const t=getSetupProgressSteps(e),n=t.every(a=>a.done);return n&&!setupProgressExpanded?`
+      <div class="setup-progress setup-progress--complete">
+        <span class="setup-progress-complete-icon">${ICON_CHECK}</span>
+        <span>All setup steps complete</span>
+        <button type="button" class="setup-progress-review-btn" onclick="toggleSetupProgressDetail()">Review</button>
+      </div>
+    `:`
     <nav class="setup-progress" aria-label="Setup progress">
-      ${getSetupProgressSteps(e).map((n,a)=>{const s=n.done?" is-done":n.partial?" is-partial":"",i=n.done?`<span class="setup-progress-marker">${ICON_CHECK}</span>`:`<span class="setup-progress-marker">${a+1}</span>`;return`
-          <button type="button" class="setup-progress-step step-${n.id}${s}" onclick="scrollToSetupSection('${n.id}')">
-            ${i}
-            <span class="setup-progress-label">${n.label}</span>
-          </button>
-        `}).join("")}
+      <div class="setup-progress-track">
+        ${t.map((a,s)=>{const i=a.done?" is-done":a.partial?" is-partial":"",o=a.done?`<span class="setup-progress-marker">${ICON_CHECK}</span>`:`<span class="setup-progress-marker">${s+1}</span>`,f=s<t.length-1?`<span class="setup-progress-connector${a.done?" is-done":""}"></span>`:"";return`
+            <button type="button" class="setup-progress-step${i}" onclick="scrollToSetupSection('${a.id}')">
+              ${o}
+              <span class="setup-progress-label">${a.label}</span>
+            </button>
+            ${f}
+          `}).join("")}
+        ${n?'<button type="button" class="setup-progress-review-btn" onclick="toggleSetupProgressDetail()">Collapse</button>':""}
+      </div>
     </nav>
   `}function scrollToSetupSection(e){const t=document.getElementById(`setup-section-${e}`);t&&t.scrollIntoView({behavior:"smooth",block:"start"})}function renderMetaSetupSection(e){return`
       <div class="setup-section" id="setup-section-meta">

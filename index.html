@@ -1092,83 +1092,121 @@
     .setup-meta-divider { color: var(--border); }
 
     .setup-progress {
-      background: var(--panel-soft);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+
+    .setup-progress--complete {
+      align-items: center;
+      color: var(--text-muted);
+      display: flex;
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    .setup-progress-complete-icon {
+      align-items: center;
+      background: var(--status-ok-bg);
+      border-radius: 50%;
+      color: var(--status-ok-text);
+      display: inline-flex;
+      height: 20px;
+      justify-content: center;
+      width: 20px;
+    }
+
+    .setup-progress-complete-icon svg { width: 11px; height: 11px; }
+
+    .setup-progress-review-btn {
+      background: none;
+      border: none;
+      color: var(--text-soft);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12.5px;
+      margin-left: auto;
+      padding: 4px 2px;
+      text-decoration: underline;
+      text-decoration-color: var(--border-strong);
+    }
+
+    .setup-progress-review-btn:hover { color: var(--primary); }
+
+    .setup-progress-track {
+      align-items: center;
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 22px;
-      padding: 10px;
+      gap: 0;
     }
 
     .setup-progress-step {
       align-items: center;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-soft);
       cursor: pointer;
       display: inline-flex;
-      font-family: 'Poppins', sans-serif;
+      font: inherit;
       font-size: 13px;
-      font-weight: 600;
-      gap: 9px;
-      letter-spacing: -0.01em;
-      padding: 6px 14px 6px 6px;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      font-weight: 500;
+      gap: 7px;
+      padding: 5px 6px;
+      transition: color 0.15s ease;
     }
 
-    .setup-progress-step:hover {
-      border-color: var(--border-strong);
-      color: var(--text);
-    }
+    .setup-progress-step:hover { color: var(--text); }
 
     .setup-progress-step:focus-visible {
       outline: 2px solid var(--primary);
-      outline-offset: 2px;
+      outline-offset: 1px;
     }
+
+    .setup-progress-connector {
+      background: var(--border);
+      flex-shrink: 0;
+      height: 1px;
+      margin: 0 2px;
+      width: 20px;
+    }
+
+    .setup-progress-connector.is-done { background: var(--status-ok-text); opacity: 0.35; }
 
     .setup-progress-marker {
       align-items: center;
-      background: var(--surface-muted);
+      border: 1.5px solid var(--border-strong);
       border-radius: 50%;
       color: var(--text-soft);
       display: inline-flex;
       flex-shrink: 0;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
-      height: 24px;
+      height: 20px;
       justify-content: center;
       line-height: 1;
-      width: 24px;
+      width: 20px;
     }
 
-    .setup-progress-label {
-      line-height: 1;
-      white-space: nowrap;
-    }
-
-    .setup-progress-step.is-partial {
-      background: var(--status-warn-bg);
-      border-color: var(--status-warn-border);
-      color: var(--status-warn-text);
-    }
-
-    .setup-progress-step.is-partial .setup-progress-marker {
-      background: rgba(255, 255, 255, 0.6);
-      color: var(--status-warn-text);
-    }
+    .setup-progress-marker svg { width: 10px; height: 10px; }
 
     .setup-progress-step.is-done {
-      background: var(--status-ok-bg);
-      border-color: rgba(4, 120, 87, 0.25);
-      color: var(--status-ok-text);
+      color: var(--text-muted);
     }
 
     .setup-progress-step.is-done .setup-progress-marker {
-      background: var(--status-ok-text);
-      color: #fff;
+      background: none;
+      border-color: var(--status-ok-text);
+      color: var(--status-ok-text);
+    }
+
+    .setup-progress-step.is-partial {
+      color: var(--status-warn-text);
+      font-weight: 600;
+    }
+
+    .setup-progress-step.is-partial .setup-progress-marker {
+      background: var(--status-warn-bg);
+      border-color: var(--status-warn-border);
+      color: var(--status-warn-text);
     }
 
     .setup-section {
@@ -1900,9 +1938,8 @@
 
     @media (max-width: 560px) {
       .setup-panel { padding: 18px 16px; }
-      .setup-progress { border-radius: 14px; gap: 6px; padding: 8px; }
-      .setup-progress-step { font-size: 12px; padding: 6px 12px 6px 6px; }
-      .setup-progress-marker { height: 24px; width: 24px; }
+      .setup-progress-step { font-size: 12px; padding: 5px 4px; }
+      .setup-progress-connector { width: 12px; }
       .setup-actions { flex-direction: column; align-items: stretch; }
       .setup-actions--sticky { margin: 24px -16px -16px; padding: 16px; }
       .setup-save-group { align-items: stretch; flex-direction: column; }
@@ -3105,6 +3142,7 @@
     let setupAccount = null;
     let setupPipelines = [];
     let metricsModelChangeMode = false;
+    let setupProgressExpanded = false;
 
     function esc(value) {
       return String(value ?? '')
@@ -4626,22 +4664,49 @@
       ];
     }
 
+    function toggleSetupProgressDetail() {
+      setupProgressExpanded = !setupProgressExpanded;
+      if (setupAccount) {
+        const panel = document.getElementById('setup-panel-mount');
+        if (panel) panel.innerHTML = renderClientSetupPanel(setupAccount);
+      }
+    }
+
     function renderSetupProgressStrip(account) {
       const steps = getSetupProgressSteps(account);
+      const allDone = steps.every((step) => step.done);
+
+      if (allDone && !setupProgressExpanded) {
+        return `
+          <div class="setup-progress setup-progress--complete">
+            <span class="setup-progress-complete-icon">${ICON_CHECK}</span>
+            <span>All setup steps complete</span>
+            <button type="button" class="setup-progress-review-btn" onclick="toggleSetupProgressDetail()">Review</button>
+          </div>
+        `;
+      }
+
       return `
         <nav class="setup-progress" aria-label="Setup progress">
-          ${steps.map((step, index) => {
-            const stateClass = step.done ? ' is-done' : (step.partial ? ' is-partial' : '');
-            const marker = step.done
-              ? `<span class="setup-progress-marker">${ICON_CHECK}</span>`
-              : `<span class="setup-progress-marker">${index + 1}</span>`;
-            return `
-              <button type="button" class="setup-progress-step step-${step.id}${stateClass}" onclick="scrollToSetupSection('${step.id}')">
-                ${marker}
-                <span class="setup-progress-label">${step.label}</span>
-              </button>
-            `;
-          }).join('')}
+          <div class="setup-progress-track">
+            ${steps.map((step, index) => {
+              const stateClass = step.done ? ' is-done' : (step.partial ? ' is-partial' : '');
+              const marker = step.done
+                ? `<span class="setup-progress-marker">${ICON_CHECK}</span>`
+                : `<span class="setup-progress-marker">${index + 1}</span>`;
+              const connector = index < steps.length - 1
+                ? `<span class="setup-progress-connector${step.done ? ' is-done' : ''}"></span>`
+                : '';
+              return `
+                <button type="button" class="setup-progress-step${stateClass}" onclick="scrollToSetupSection('${step.id}')">
+                  ${marker}
+                  <span class="setup-progress-label">${step.label}</span>
+                </button>
+                ${connector}
+              `;
+            }).join('')}
+            ${allDone ? `<button type="button" class="setup-progress-review-btn" onclick="toggleSetupProgressDetail()">Collapse</button>` : ''}
+          </div>
         </nav>
       `;
     }
