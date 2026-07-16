@@ -37,11 +37,36 @@ function testResolveMetaSystemUserToken() {
   process.env.META_SYSTEM_USER_TOKEN = prev;
 }
 
+async function testUpdateAccountMetaFields() {
+  if (!process.env.DATABASE_URL && !require('fs').existsSync(require('path').join(__dirname, '..', '.data', 'multi-tenant-store.json'))) {
+    console.log('  (skip updateAccount meta test — no store)');
+    return;
+  }
+
+  const {
+    createAccount,
+    deleteAccount,
+    getAccount,
+    updateAccount,
+  } = require('../lib/account-store');
+
+  const slug = `test-meta-${Date.now()}`;
+  await createAccount({ clientId: slug, accountName: 'Meta Test' });
+  try {
+    await updateAccount(slug, { metaAdAccountId: 'act_154139302' });
+    const account = await getAccount(slug);
+    assert(account.metaAdAccountId === '154139302', 'metaAdAccountId persisted after update');
+  } finally {
+    await deleteAccount(slug).catch(() => {});
+  }
+}
+
 async function main() {
   console.log('Testing Meta integration helpers...\n');
   testNormalizeMetaAdAccountId();
   testTransformPayload();
   testResolveMetaSystemUserToken();
+  await testUpdateAccountMetaFields();
   console.log('All Meta integration helper tests passed.');
 }
 
