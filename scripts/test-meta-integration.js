@@ -3,6 +3,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const {
   normalizeMetaAdAccountId,
   transformToMetricsPayload,
+  validateMetaAccessToken,
 } = require('../lib/meta-insights');
 const { resolveMetaSystemUserToken } = require('../lib/account-store');
 
@@ -37,6 +38,14 @@ function testResolveMetaSystemUserToken() {
   process.env.META_SYSTEM_USER_TOKEN = prev;
 }
 
+function testValidateMetaAccessToken() {
+  assert(!validateMetaAccessToken('').ok, 'empty');
+  assert(!validateMetaAccessToken('154139302').ok, 'numeric ad account id');
+  assert(!validateMetaAccessToken('123456789012345').ok, 'numeric app id');
+  assert(validateMetaAccessToken('EAA' + 'x'.repeat(100)).ok, 'long token');
+  assert(validateMetaAccessToken('"EAA' + 'x'.repeat(100) + '"').token.startsWith('EAA'), 'strip quotes');
+}
+
 async function testUpdateAccountMetaFields() {
   if (!process.env.DATABASE_URL && !require('fs').existsSync(require('path').join(__dirname, '..', '.data', 'multi-tenant-store.json'))) {
     console.log('  (skip updateAccount meta test — no store)');
@@ -66,6 +75,7 @@ async function main() {
   testNormalizeMetaAdAccountId();
   testTransformPayload();
   testResolveMetaSystemUserToken();
+  testValidateMetaAccessToken();
   await testUpdateAccountMetaFields();
   console.log('All Meta integration helper tests passed.');
 }
