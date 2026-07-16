@@ -1272,6 +1272,20 @@
       white-space: nowrap;
     }
 
+    .token-status-warn {
+      align-items: center;
+      background: var(--status-warn-bg, #fff7ed);
+      border: 1px solid rgba(220, 100, 10, 0.2);
+      border-radius: 999px;
+      color: var(--status-warn-text, #9a3412);
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 600;
+      gap: 4px;
+      padding: 3px 8px;
+      white-space: nowrap;
+    }
+
     .setup-meta-status {
       align-items: center;
       display: flex;
@@ -4546,10 +4560,11 @@
               </div>
               <div class="field-group" style="grid-column:1/-1">
                 <div class="field-label-row">
-                  <label for="setup-meta-system-token">Meta System User token (override)</label>
-                  ${account.hasMetaSystemUserToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+                  <label for="setup-meta-system-token">Meta System User token (override — usually leave blank)</label>
+                  ${account.hasEnvMetaSystemUserToken ? '<span class="token-status-ok">Vercel env token set</span>' : '<span class="token-status-warn">No META_SYSTEM_USER_TOKEN on server</span>'}
+                  ${account.hasSavedMetaSystemUserToken ? '<span class="token-status-warn">Saved override in DB</span>' : ''}
                 </div>
-                <input id="setup-meta-system-token" type="password" placeholder="${account.hasMetaSystemUserToken ? '••••••••  (saved or env — leave blank to keep)' : 'Uses META_SYSTEM_USER_TOKEN env if blank'}" autocomplete="off" />
+                <input id="setup-meta-system-token" type="password" placeholder="${account.hasSavedMetaSystemUserToken ? 'Leave blank to use Vercel env and clear saved override' : 'Uses META_SYSTEM_USER_TOKEN on Vercel when blank'}" autocomplete="off" />
               </div>
               <div class="field-group" style="grid-column:1/-1">
                 <div class="field-label-row">
@@ -4566,6 +4581,7 @@
             </div>
             <div class="setup-actions-inline">
               <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
+              ${account.hasSavedMetaSystemUserToken ? `<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>` : ''}
             </div>
           </div>
 
@@ -4732,6 +4748,19 @@
       return payload;
     }
 
+    async function clearMetaSystemUserToken(slug) {
+      try {
+        await adminFetch(`/api/clients/${encodeURIComponent(slug)}`, {
+          method: 'PUT',
+          body: JSON.stringify({ clearMetaSystemUserToken: true }),
+        });
+        showToast('Saved Meta token override cleared — using Vercel env token', 'success');
+        await loadSetupAccount();
+      } catch (error) {
+        showToast(error.message, 'error');
+      }
+    }
+
     async function saveSetupAccount() {
       try {
         const payload = {
@@ -4767,6 +4796,8 @@
           return;
         }
         showToast('Saving Meta settings and syncing…', 'info');
+        const metaSystemToken = document.getElementById('setup-meta-system-token')?.value?.trim();
+        if (!metaSystemToken) metaPayload.clearMetaSystemUserToken = true;
         const result = await adminFetch(`/api/clients/${encodeURIComponent(slug)}/sync-meta`, {
           method: 'POST',
           body: JSON.stringify(metaPayload),

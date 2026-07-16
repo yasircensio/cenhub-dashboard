@@ -54,9 +54,12 @@ function testResolveMetaAccessTokenFallback() {
 
 function testResolveMetaSystemUserToken() {
   const prev = process.env.META_SYSTEM_USER_TOKEN;
-  process.env.META_SYSTEM_USER_TOKEN = 'EAA' + 'z'.repeat(100);
-  assert(resolveMetaSystemUserToken({ metaSystemUserToken: 'EAA' + 'a'.repeat(100) }).startsWith('EAA'), 'override');
-  assert(resolveMetaSystemUserToken({}).startsWith('EAA'), 'env fallback');
+  const envToken = 'EAA' + 'z'.repeat(100);
+  const overrideToken = 'EAA' + 'a'.repeat(100);
+  process.env.META_SYSTEM_USER_TOKEN = envToken;
+  assert(resolveMetaSystemUserToken({ metaSystemUserToken: overrideToken }) === envToken, 'env wins over override');
+  process.env.META_SYSTEM_USER_TOKEN = '';
+  assert(resolveMetaSystemUserToken({ metaSystemUserToken: overrideToken }) === overrideToken, 'override when no env');
   process.env.META_SYSTEM_USER_TOKEN = prev;
 }
 

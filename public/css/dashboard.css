@@ -1263,6 +1263,20 @@
       white-space: nowrap;
     }
 
+    .token-status-warn {
+      align-items: center;
+      background: var(--status-warn-bg, #fff7ed);
+      border: 1px solid rgba(220, 100, 10, 0.2);
+      border-radius: 999px;
+      color: var(--status-warn-text, #9a3412);
+      display: inline-flex;
+      font-size: 11px;
+      font-weight: 600;
+      gap: 4px;
+      padding: 3px 8px;
+      white-space: nowrap;
+    }
+
     .setup-meta-status {
       align-items: center;
       display: flex;
