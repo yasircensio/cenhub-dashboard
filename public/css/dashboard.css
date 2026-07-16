@@ -1263,6 +1263,28 @@
       white-space: nowrap;
     }
 
+    .setup-meta-status {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .setup-meta-sync-time {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .setup-meta-sync-error {
+      color: var(--status-error-text);
+      font-size: 12px;
+    }
+
+    .setup-actions-inline {
+      margin-top: 12px;
+    }
+
     .metrics-model-panel {
       background: var(--panel);
       border: 1px solid var(--border);

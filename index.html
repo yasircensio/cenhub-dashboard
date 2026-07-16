@@ -1272,6 +1272,28 @@
       white-space: nowrap;
     }
 
+    .setup-meta-status {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .setup-meta-sync-time {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .setup-meta-sync-error {
+      color: var(--status-error-text);
+      font-size: 12px;
+    }
+
+    .setup-actions-inline {
+      margin-top: 12px;
+    }
+
     .metrics-model-panel {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -4502,6 +4524,53 @@
 
           <div class="setup-section${setupDisabled}">
             <div class="setup-section-info">
+              <div class="setup-section-title">Meta / Facebook connection</div>
+              <p class="setup-section-desc">Ad metrics sync needs a Meta Ad Account ID plus the shared system user token in Vercel (<code>META_SYSTEM_USER_TOKEN</code>) or a per-client override below. Page and Pixel IDs are stored for future lead/CAPI work. Ad account timezone is used by Meta date presets.</p>
+            </div>
+            <div class="setup-grid setup-grid--2">
+              <div class="field-group">
+                <label for="setup-meta-ad-account-id">Meta Ad Account ID (required for sync)</label>
+                <input id="setup-meta-ad-account-id" type="text" value="${account.metaAdAccountId || ''}" placeholder="154139302 or act_154139302" />
+              </div>
+              <div class="field-group">
+                <label for="setup-facebook-client-id">Facebook metrics client key</label>
+                <input id="setup-facebook-client-id" type="text" value="${account.facebookClientId || account.clientId || ''}" placeholder="${esc(account.clientId)}" />
+              </div>
+              <div class="field-group">
+                <label for="setup-meta-page-id">Meta Page ID (optional)</label>
+                <input id="setup-meta-page-id" type="text" value="${account.metaPageId || ''}" />
+              </div>
+              <div class="field-group">
+                <label for="setup-meta-pixel-id">Meta Pixel ID (optional)</label>
+                <input id="setup-meta-pixel-id" type="text" value="${account.metaPixelId || ''}" />
+              </div>
+              <div class="field-group" style="grid-column:1/-1">
+                <div class="field-label-row">
+                  <label for="setup-meta-system-token">Meta System User token (override)</label>
+                  ${account.hasMetaSystemUserToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+                </div>
+                <input id="setup-meta-system-token" type="password" placeholder="${account.hasMetaSystemUserToken ? '••••••••  (saved or env — leave blank to keep)' : 'Uses META_SYSTEM_USER_TOKEN env if blank'}" autocomplete="off" />
+              </div>
+              <div class="field-group" style="grid-column:1/-1">
+                <div class="field-label-row">
+                  <label for="setup-meta-page-token">Meta Page access token (optional)</label>
+                  ${account.hasMetaPageAccessToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+                </div>
+                <input id="setup-meta-page-token" type="password" placeholder="${account.hasMetaPageAccessToken ? '••••••••  (saved — leave blank to keep)' : 'For future lead sync'}" autocomplete="off" />
+              </div>
+            </div>
+            <div class="setup-meta-status">
+              <span class="status-badge status-${account.metaSyncStatus === 'ok' ? 'ready' : account.metaSyncStatus === 'error' ? 'sync_error' : 'needs_sync'}">${account.metaSyncStatus === 'ok' ? 'Meta synced' : account.metaSyncStatus === 'error' ? 'Meta sync error' : 'Meta not synced'}</span>
+              ${account.metaLastSyncedAt ? `<span class="setup-meta-sync-time">Last Meta sync: ${formatRelativeSync(account.metaLastSyncedAt)}</span>` : ''}
+              ${account.metaSyncError ? `<span class="setup-meta-sync-error">${esc(account.metaSyncError)}</span>` : ''}
+            </div>
+            <div class="setup-actions-inline">
+              <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
+            </div>
+          </div>
+
+          <div class="setup-section${setupDisabled}">
+            <div class="setup-section-info">
               <div class="setup-section-title">GHL connection</div>
               <p class="setup-section-desc">Private integration token and location for this sub-account. The token is stored encrypted.</p>
             </div>
@@ -4658,9 +4727,17 @@
           salesPipelineId: document.getElementById('setup-sales')?.value || null,
           afterSalesPipelineId: document.getElementById('setup-after-sales')?.value || null,
           readyForGhl: Boolean(document.getElementById('setup-ready-ghl')?.checked),
+          metaAdAccountId: document.getElementById('setup-meta-ad-account-id')?.value?.trim() || null,
+          metaPageId: document.getElementById('setup-meta-page-id')?.value?.trim() || null,
+          metaPixelId: document.getElementById('setup-meta-pixel-id')?.value?.trim() || null,
+          facebookClientId: document.getElementById('setup-facebook-client-id')?.value?.trim() || null,
         };
         const token = document.getElementById('setup-ghl-token')?.value?.trim();
         if (token) payload.ghlToken = token;
+        const metaSystemToken = document.getElementById('setup-meta-system-token')?.value?.trim();
+        if (metaSystemToken) payload.metaSystemUserToken = metaSystemToken;
+        const metaPageToken = document.getElementById('setup-meta-page-token')?.value?.trim();
+        if (metaPageToken) payload.metaPageAccessToken = metaPageToken;
         await adminFetch(`/api/clients/${encodeURIComponent(CLIENT_SLUG)}`, {
           method: 'PUT',
           body: JSON.stringify(payload),
@@ -4672,6 +4749,27 @@
         }
       } catch (error) {
         showToast(error.message, 'error');
+      }
+    }
+
+    async function syncMetaMetricsClient(slug) {
+      try {
+        showToast('Syncing Meta metrics…', 'info');
+        const result = await adminFetch(`/api/clients/${encodeURIComponent(slug)}/sync-meta`, {
+          method: 'POST',
+        });
+        if (result.skipped) {
+          showToast(result.reason || 'Meta sync skipped', 'error');
+        } else {
+          showToast('Meta metrics synced', 'success');
+        }
+        await loadSetupAccount();
+        if (accountCanPreviewDashboard(setupAccount)) {
+          loadDashboard(true);
+        }
+      } catch (error) {
+        showToast(error.message, 'error');
+        await loadSetupAccount();
       }
     }
 
@@ -6103,7 +6201,11 @@
       if (options.forceFresh) params.set('fresh', '1');
       const query = params.toString();
       const data = await fetchJson(`/api/dashboard${query ? `?${query}` : ''}`, signal);
-      if (data.account?.clientId) facebookClientId = data.account.clientId;
+      if (data.account?.facebookClientId) {
+        facebookClientId = data.account.facebookClientId;
+      } else if (data.account?.clientId) {
+        facebookClientId = data.account.clientId;
+      }
       return applyChartFieldsCache(data);
     }
 
@@ -6913,7 +7015,11 @@
           if (generation !== fetchGeneration) return;
           cachedFacebookMetrics = fbMetrics;
           cachedData = applyMarketingData(data, fbMetrics);
-          if (cachedData.account?.clientId) facebookClientId = cachedData.account.clientId;
+          if (cachedData.account?.facebookClientId) {
+            facebookClientId = cachedData.account.facebookClientId;
+          } else if (cachedData.account?.clientId) {
+            facebookClientId = cachedData.account.clientId;
+          }
           availablePipelines = cachedData.filterOptions.pipelines || availablePipelines;
           ensurePipelineDefaults(availablePipelines, cachedData?.account?.defaultPipelineIds);
           lastFetchedAt = cachedData.cachedAt

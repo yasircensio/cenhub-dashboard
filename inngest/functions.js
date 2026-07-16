@@ -1,8 +1,9 @@
 const { cron } = require('inngest');
 const { inngest } = require('../lib/inngest-client');
-const { listClientIds } = require('../lib/account-store');
+const { listClientIds, listMetaSyncableClientIds } = require('../lib/account-store');
 const { buildAccountSyncEvents, createBatchId } = require('../lib/sync-batch');
 const { syncAccount } = require('../lib/sync-service');
+const { syncMetaMetrics } = require('../lib/meta-sync-service');
 
 async function listSyncableClientIds() {
   return listClientIds();
@@ -70,9 +71,36 @@ const syncAllAccounts = inngest.createFunction(
   },
 );
 
+const dailyMetaSyncAll = inngest.createFunction(
+  {
+    id: 'daily-sync-meta-metrics',
+    name: 'Daily sync Meta ad metrics (sequential)',
+    triggers: [cron('TZ=Europe/Copenhagen 0 4 * * *')],
+  },
+  async ({ step }) => {
+    const clientIds = await step.run('list-meta-clients', listMetaSyncableClientIds);
+    if (!clientIds.length) {
+      return { synced: 0, skipped: 0, results: [] };
+    }
+
+    const results = [];
+    for (const clientId of clientIds) {
+      const result = await step.run(`sync-meta-${clientId}`, () => syncMetaMetrics(clientId));
+      results.push({ clientId, ...result });
+    }
+
+    const synced = results.filter((row) => row.success).length;
+    const skipped = results.filter((row) => row.skipped).length;
+    const failed = results.filter((row) => !row.success && !row.skipped).length;
+
+    return { synced, skipped, failed, results };
+  },
+);
+
 module.exports = {
   dailySyncAll,
+  dailyMetaSyncAll,
   syncAllAccounts,
   syncOneAccount,
-  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts],
+  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts, dailyMetaSyncAll],
 };

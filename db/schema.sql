@@ -17,6 +17,14 @@ CREATE TABLE IF NOT EXISTS accounts (
   metrics_model_changed_at TIMESTAMPTZ,
   metrics_model_version INTEGER NOT NULL DEFAULT 1,
   ready_for_ghl BOOLEAN NOT NULL DEFAULT FALSE,
+  meta_ad_account_id TEXT,
+  meta_page_id TEXT,
+  meta_pixel_id TEXT,
+  meta_system_user_token_encrypted TEXT NOT NULL DEFAULT '',
+  meta_page_access_token_encrypted TEXT NOT NULL DEFAULT '',
+  meta_sync_status TEXT,
+  meta_sync_error TEXT,
+  meta_last_synced_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
