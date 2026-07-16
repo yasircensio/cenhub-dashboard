@@ -14,9 +14,19 @@ async function main() {
     path.join(__dirname, '..', 'db', 'migrate-meta-integration.sql'),
     'utf8',
   );
+  const statements = sql
+    .split(';')
+    .map((part) => part.replace(/--[^\n]*/g, '').trim())
+    .filter(Boolean);
+
   const { neon } = require('@neondatabase/serverless');
   const query = neon(process.env.DATABASE_URL);
-  await query(sql);
+
+  for (const statement of statements) {
+    await query(`${statement};`);
+    console.log(`OK: ${statement.slice(0, 72)}…`);
+  }
+
   console.log('Applied Meta integration migration.');
 }
 
