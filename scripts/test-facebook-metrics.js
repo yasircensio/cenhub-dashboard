@@ -113,14 +113,37 @@ async function main() {
     last_month: { spend: '20894.05', date_start: '2026-05-31T22:00:00.000Z' },
   });
   const mergedByMonth = Object.fromEntries(merged.map((row) => [row.month, row.spend]));
-  if (mergedByMonth['2026-07'] !== 3744.05 || mergedByMonth['2026-06'] !== 20894.05) {
-    throw new Error(`Monthly + bucket merge mismatch: ${JSON.stringify(mergedByMonth)}`);
+  if (mergedByMonth['2026-07'] !== 2769.69 || mergedByMonth['2026-06'] !== 13330.26) {
+    throw new Error(`Monthly series should win over rolling buckets: ${JSON.stringify(mergedByMonth)}`);
+  }
+
+  const gapFill = buildMonthlyAdSpend({
+    monthly: [{ spend: '1000', date_start: '2026-04-01' }],
+    this_month: { spend: '3744.05', date_start: '2026-06-30T22:00:00.000Z' },
+  });
+  const gapByMonth = Object.fromEntries(gapFill.map((row) => [row.month, row.spend]));
+  if (gapByMonth['2026-04'] !== 1000 || gapByMonth['2026-07'] !== 3744.05) {
+    throw new Error(`Rolling bucket should fill missing month only: ${JSON.stringify(gapByMonth)}`);
+  }
+
+  const yearSpend = getSpendForPreset(
+    { yearly: { spend: '62120.00' } },
+    'year',
+    merged,
+  );
+  const tillDateSpend = getSpendForPreset(
+    { yearly: { spend: '62120.00' } },
+    'all',
+    merged,
+  );
+  if (yearSpend !== 62120 || tillDateSpend !== 62120) {
+    throw new Error(`Year and till date should use Meta yearly bucket: year=${yearSpend}, all=${tillDateSpend}`);
   }
 
   const monthlyAdSpend = merged;
   const thisMonthSpend = getSpendForPreset({}, 'month', monthlyAdSpend);
   const lastMonthSpend = getSpendForPreset({}, 'lastMonth', monthlyAdSpend);
-  if (thisMonthSpend !== 3744.05 || lastMonthSpend !== 20894.05) {
+  if (thisMonthSpend !== 2769.69 || lastMonthSpend !== 13330.26) {
     throw new Error(`Preset spend mismatch: this=${thisMonthSpend}, last=${lastMonthSpend}`);
   }
 

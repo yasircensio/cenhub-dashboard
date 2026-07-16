@@ -48,6 +48,8 @@ function getSpendForPreset(fbMetrics, preset, monthlyAdSpend, timeZone = DEFAULT
     const spend = byMonth.get(getPreviousMonthKey(timeZone));
     if (spend > 0) return spend;
   } else if (preset === 'year') {
+    const yearlySpend = getFacebookSpend(fbMetrics, 'year');
+    if (yearlySpend > 0) return yearlySpend;
     const year = getCurrentMonthKey(timeZone).slice(0, 4);
     const sum = monthly
       .filter((row) => row.month.startsWith(`${year}-`))
@@ -400,20 +402,27 @@ function monthsBetween(startStr, endStr, timeZone = DEFAULT_TIMEZONE) {
   return months;
 }
 
+function monthKeyFromBucket(bucket, timeZone = DEFAULT_TIMEZONE) {
+  if (!bucket || typeof bucket !== 'object') return null;
+
+  let month = pickField(bucket, ['month', 'Month']);
+  if (!month) {
+    const dateStart = pickField(bucket, ['date_start', 'Date Start', 'dateStart', 'DateStart']);
+    month = monthKeyFromDate(dateStart, timeZone);
+  } else if (String(month).length > 7) {
+    month = monthKeyFromDate(month, timeZone);
+  }
+
+  return month || null;
+}
+
 function normalizeMonthlyRow(row) {
   if (!row || typeof row !== 'object') return null;
 
   const spend = parseFbAmount(pickField(row, ['spend', 'Spend']));
   if (spend <= 0) return null;
 
-  let month = pickField(row, ['month', 'Month']);
-  if (!month) {
-    const dateStart = pickField(row, ['date_start', 'Date Start', 'dateStart', 'DateStart']);
-    month = monthKeyFromDate(dateStart);
-  } else if (String(month).length > 7) {
-    month = monthKeyFromDate(month);
-  }
-
+  const month = monthKeyFromBucket(row);
   if (!month) return null;
   return { month, spend };
 }
@@ -475,9 +484,15 @@ function buildMonthlyAdSpend(fbMetrics) {
     spendByMonth.set(row.month, row.spend);
   }
 
-  // Overlay rolling Make buckets so KPI cards and charts share the same month totals.
-  addBucketSpend(spendByMonth, fbMetrics.last_month);
-  addBucketSpend(spendByMonth, fbMetrics.this_month);
+  // Fill gaps from rolling buckets (Make.com compat). Do not overwrite months already
+  // present in the monthly series — Meta sync includes those months with totals that
+  // match this_year, while this_month/last_month use slightly different date windows.
+  for (const bucket of [fbMetrics.last_month, fbMetrics.this_month]) {
+    const month = monthKeyFromBucket(bucket);
+    if (month && !spendByMonth.has(month)) {
+      addBucketSpend(spendByMonth, bucket);
+    }
+  }
 
   return Array.from(spendByMonth.entries())
     .map(([month, spend]) => ({ month, spend }))
