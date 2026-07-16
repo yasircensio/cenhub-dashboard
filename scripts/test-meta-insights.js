@@ -22,7 +22,7 @@ async function main() {
     throw new Error('Pass ad account id as argv[2] or set META_TEST_AD_ACCOUNT_ID');
   }
 
-  const verified = await verifyMetaAccessToken(token);
+  const verified = await verifyMetaAccessToken(token, { adAccountId });
   if (!verified.ok) {
     throw new Error(verified.reason || 'Token verification failed');
   }
