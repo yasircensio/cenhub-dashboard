@@ -1082,6 +1082,72 @@
 
     .setup-meta-divider { color: var(--border); }
 
+    .setup-progress {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 10px 12px;
+    }
+
+    .setup-progress-step {
+      align-items: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      gap: 8px;
+      padding: 6px 12px 6px 8px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .setup-progress-step:hover {
+      background: rgba(255, 106, 0, 0.06);
+      border-color: rgba(255, 106, 0, 0.15);
+      color: var(--text);
+    }
+
+    .setup-progress-marker {
+      align-items: center;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-soft);
+      display: inline-flex;
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 700;
+      height: 22px;
+      justify-content: center;
+      line-height: 1;
+      width: 22px;
+    }
+
+    .setup-progress-step.is-done {
+      color: var(--status-ok-text);
+    }
+
+    .setup-progress-step.is-done .setup-progress-marker {
+      background: var(--status-ok-bg);
+      border-color: rgba(4, 120, 87, 0.25);
+      color: var(--status-ok-text);
+    }
+
+    .setup-progress-step.is-partial {
+      color: var(--text);
+    }
+
+    .setup-progress-step.is-partial .setup-progress-marker {
+      border-color: rgba(255, 106, 0, 0.45);
+      color: var(--primary);
+    }
+
     .setup-section {
       border-top: 1px solid var(--border);
       display: grid;
@@ -1089,6 +1155,11 @@
       grid-template-columns: 220px minmax(0, 1fr);
       margin-top: 22px;
       padding-top: 22px;
+      scroll-margin-top: 16px;
+    }
+
+    #setup-section-metrics {
+      scroll-margin-top: 16px;
     }
 
     .setup-section-info {
@@ -1806,6 +1877,8 @@
 
     @media (max-width: 560px) {
       .setup-panel { padding: 18px 16px; }
+      .setup-progress { gap: 6px; padding: 8px; }
+      .setup-progress-step { font-size: 12px; padding: 5px 10px 5px 6px; }
       .setup-actions { flex-direction: column; align-items: stretch; }
       .setup-actions--sticky { margin: 24px -16px -16px; padding: 16px; }
       .setup-save-group { align-items: stretch; flex-direction: column; }

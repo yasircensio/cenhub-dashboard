@@ -438,28 +438,17 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
       </select>
       ${s?`<p class="field-hint">${esc(s)}</p>`:""}
     </div>
-  `}function renderClientSetupPanel(e){if(!IS_ADMIN_CLIENT||!e)return"";const t=e.metricsModelSetAt?"":" is-disabled";return`
-    <div class="setup-panel">
-      <nav class="admin-breadcrumb">
-        <a href="/admin">Admin</a> / ${esc(e.accountName)}
-      </nav>
-      <div class="setup-panel-header">
-        <div class="setup-panel-identity">
-          <span class="setup-avatar" aria-hidden="true">${esc(clientInitials(e.accountName))}</span>
-          <div>
-            <h2>${esc(e.accountName)}</h2>
-            <div class="setup-meta">
-              <span class="status-badge status-${e.status}">${statusLabel(e.status)}</span>
-              <span class="setup-meta-divider">\xB7</span>
-              <span>${formatRelativeSync(e.lastSyncAt)}</span>
-            </div>
-          </div>
-        </div>
-        ${renderCardMenu(CLIENT_SLUG,e.accountName)}
-      </div>
-      ${renderMetricsModelPanel(e)}
-
-      <div class="setup-section">
+  `}function getSetupProgressSteps(e){return[{id:"metrics",label:"Metrics",done:!!e.metricsModelSetAt},{id:"ghl",label:"GHL",done:!!(e.hasGhlToken&&e.locationId)},{id:"pipelines",label:"Pipelines",done:!!(e.newLeadsPipelineId&&e.salesPipelineId)},{id:"meta",label:"Meta",done:e.metaSyncStatus==="ok",partial:!!(e.metaAdAccountId&&e.metaSyncStatus!=="ok")}]}function renderSetupProgressStrip(e){return`
+    <nav class="setup-progress" aria-label="Setup progress">
+      ${getSetupProgressSteps(e).map((n,a)=>{const s=n.done?" is-done":n.partial?" is-partial":"",i=n.done?`<span class="setup-progress-marker">${ICON_CHECK}</span>`:`<span class="setup-progress-marker">${a+1}</span>`;return`
+          <button type="button" class="setup-progress-step${s}" onclick="scrollToSetupSection('${n.id}')">
+            ${i}
+            <span>${n.label}</span>
+          </button>
+        `}).join("")}
+    </nav>
+  `}function scrollToSetupSection(e){const t=document.getElementById(`setup-section-${e}`);t&&t.scrollIntoView({behavior:"smooth",block:"start"})}function renderMetaSetupSection(e){return`
+      <div class="setup-section" id="setup-section-meta">
         <div class="setup-section-info">
           <div class="setup-section-title">Meta / Facebook connection</div>
         </div>
@@ -506,11 +495,33 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
           ${e.hasSavedMetaSystemUserToken?`<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>`:""}
         </div>
       </div>
+  `}function renderClientSetupPanel(e){if(!IS_ADMIN_CLIENT||!e)return"";const t=e.metricsModelSetAt?"":" is-disabled";return`
+    <div class="setup-panel">
+      <nav class="admin-breadcrumb">
+        <a href="/admin">Admin</a> / ${esc(e.accountName)}
+      </nav>
+      <div class="setup-panel-header">
+        <div class="setup-panel-identity">
+          <span class="setup-avatar" aria-hidden="true">${esc(clientInitials(e.accountName))}</span>
+          <div>
+            <h2>${esc(e.accountName)}</h2>
+            <div class="setup-meta">
+              <span class="status-badge status-${e.status}">${statusLabel(e.status)}</span>
+              <span class="setup-meta-divider">\xB7</span>
+              <span>${formatRelativeSync(e.lastSyncAt)}</span>
+            </div>
+          </div>
+        </div>
+        ${renderCardMenu(CLIENT_SLUG,e.accountName)}
+      </div>
+      ${renderSetupProgressStrip(e)}
+      <div id="setup-section-metrics">
+        ${renderMetricsModelPanel(e)}
+      </div>
 
-      <div class="setup-section${t}">
+      <div class="setup-section${t}" id="setup-section-ghl">
         <div class="setup-section-info">
           <div class="setup-section-title">GHL connection</div>
-          <p class="setup-section-desc">Private integration token and location for this sub-account. The token is stored encrypted.</p>
         </div>
         <div class="setup-grid setup-grid--2">
           <div class="field-group">
@@ -531,10 +542,9 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
         </div>
       </div>
 
-      <div class="setup-section${t}">
+      <div class="setup-section${t}" id="setup-section-pipelines">
         <div class="setup-section-info">
           <div class="setup-section-title">Pipeline slots</div>
-          <p class="setup-section-desc">Map GHL pipelines to dashboard roles. Use Fetch pipelines below to refresh the list.</p>
         </div>
         <div class="setup-grid setup-grid--3">
           ${renderPipelineSelect("setup-new-leads","New leads (required)",e.newLeadsPipelineId,setupPipelines)}
@@ -542,6 +552,8 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
           ${renderPipelineSelect("setup-after-sales","After-sales (optional)",e.afterSalesPipelineId,setupPipelines,"Leave empty if this client has no after-sales pipeline.")}
         </div>
       </div>
+
+      ${renderMetaSetupSection(e)}
 
       <div class="setup-actions setup-actions--sticky${t}">
         <div class="setup-actions-group">

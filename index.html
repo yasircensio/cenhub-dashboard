@@ -1091,6 +1091,72 @@
 
     .setup-meta-divider { color: var(--border); }
 
+    .setup-progress {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 10px 12px;
+    }
+
+    .setup-progress-step {
+      align-items: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      gap: 8px;
+      padding: 6px 12px 6px 8px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .setup-progress-step:hover {
+      background: rgba(255, 106, 0, 0.06);
+      border-color: rgba(255, 106, 0, 0.15);
+      color: var(--text);
+    }
+
+    .setup-progress-marker {
+      align-items: center;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-soft);
+      display: inline-flex;
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 700;
+      height: 22px;
+      justify-content: center;
+      line-height: 1;
+      width: 22px;
+    }
+
+    .setup-progress-step.is-done {
+      color: var(--status-ok-text);
+    }
+
+    .setup-progress-step.is-done .setup-progress-marker {
+      background: var(--status-ok-bg);
+      border-color: rgba(4, 120, 87, 0.25);
+      color: var(--status-ok-text);
+    }
+
+    .setup-progress-step.is-partial {
+      color: var(--text);
+    }
+
+    .setup-progress-step.is-partial .setup-progress-marker {
+      border-color: rgba(255, 106, 0, 0.45);
+      color: var(--primary);
+    }
+
     .setup-section {
       border-top: 1px solid var(--border);
       display: grid;
@@ -1098,6 +1164,11 @@
       grid-template-columns: 220px minmax(0, 1fr);
       margin-top: 22px;
       padding-top: 22px;
+      scroll-margin-top: 16px;
+    }
+
+    #setup-section-metrics {
+      scroll-margin-top: 16px;
     }
 
     .setup-section-info {
@@ -1815,6 +1886,8 @@
 
     @media (max-width: 560px) {
       .setup-panel { padding: 18px 16px; }
+      .setup-progress { gap: 6px; padding: 8px; }
+      .setup-progress-step { font-size: 12px; padding: 5px 10px 5px 6px; }
       .setup-actions { flex-direction: column; align-items: stretch; }
       .setup-actions--sticky { margin: 24px -16px -16px; padding: 16px; }
       .setup-save-group { align-items: stretch; flex-direction: column; }
@@ -4512,31 +4585,61 @@
       `;
     }
 
-    function renderClientSetupPanel(account) {
-      if (!IS_ADMIN_CLIENT || !account) return '';
-      const setupDisabled = !account.metricsModelSetAt ? ' is-disabled' : '';
-      return `
-        <div class="setup-panel">
-          <nav class="admin-breadcrumb">
-            <a href="/admin">Admin</a> / ${esc(account.accountName)}
-          </nav>
-          <div class="setup-panel-header">
-            <div class="setup-panel-identity">
-              <span class="setup-avatar" aria-hidden="true">${esc(clientInitials(account.accountName))}</span>
-              <div>
-                <h2>${esc(account.accountName)}</h2>
-                <div class="setup-meta">
-                  <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
-                  <span class="setup-meta-divider">·</span>
-                  <span>${formatRelativeSync(account.lastSyncAt)}</span>
-                </div>
-              </div>
-            </div>
-            ${renderCardMenu(CLIENT_SLUG, account.accountName)}
-          </div>
-          ${renderMetricsModelPanel(account)}
+    function getSetupProgressSteps(account) {
+      return [
+        {
+          id: 'metrics',
+          label: 'Metrics',
+          done: Boolean(account.metricsModelSetAt),
+        },
+        {
+          id: 'ghl',
+          label: 'GHL',
+          done: Boolean(account.hasGhlToken && account.locationId),
+        },
+        {
+          id: 'pipelines',
+          label: 'Pipelines',
+          done: Boolean(account.newLeadsPipelineId && account.salesPipelineId),
+        },
+        {
+          id: 'meta',
+          label: 'Meta',
+          done: account.metaSyncStatus === 'ok',
+          partial: Boolean(account.metaAdAccountId && account.metaSyncStatus !== 'ok'),
+        },
+      ];
+    }
 
-          <div class="setup-section">
+    function renderSetupProgressStrip(account) {
+      const steps = getSetupProgressSteps(account);
+      return `
+        <nav class="setup-progress" aria-label="Setup progress">
+          ${steps.map((step, index) => {
+            const stateClass = step.done ? ' is-done' : (step.partial ? ' is-partial' : '');
+            const marker = step.done
+              ? `<span class="setup-progress-marker">${ICON_CHECK}</span>`
+              : `<span class="setup-progress-marker">${index + 1}</span>`;
+            return `
+              <button type="button" class="setup-progress-step${stateClass}" onclick="scrollToSetupSection('${step.id}')">
+                ${marker}
+                <span>${step.label}</span>
+              </button>
+            `;
+          }).join('')}
+        </nav>
+      `;
+    }
+
+    function scrollToSetupSection(sectionId) {
+      const target = document.getElementById(`setup-section-${sectionId}`);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderMetaSetupSection(account) {
+      return `
+          <div class="setup-section" id="setup-section-meta">
             <div class="setup-section-info">
               <div class="setup-section-title">Meta / Facebook connection</div>
             </div>
@@ -4583,8 +4686,37 @@
               ${account.hasSavedMetaSystemUserToken ? `<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>` : ''}
             </div>
           </div>
+      `;
+    }
 
-          <div class="setup-section${setupDisabled}">
+    function renderClientSetupPanel(account) {
+      if (!IS_ADMIN_CLIENT || !account) return '';
+      const setupDisabled = !account.metricsModelSetAt ? ' is-disabled' : '';
+      return `
+        <div class="setup-panel">
+          <nav class="admin-breadcrumb">
+            <a href="/admin">Admin</a> / ${esc(account.accountName)}
+          </nav>
+          <div class="setup-panel-header">
+            <div class="setup-panel-identity">
+              <span class="setup-avatar" aria-hidden="true">${esc(clientInitials(account.accountName))}</span>
+              <div>
+                <h2>${esc(account.accountName)}</h2>
+                <div class="setup-meta">
+                  <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
+                  <span class="setup-meta-divider">·</span>
+                  <span>${formatRelativeSync(account.lastSyncAt)}</span>
+                </div>
+              </div>
+            </div>
+            ${renderCardMenu(CLIENT_SLUG, account.accountName)}
+          </div>
+          ${renderSetupProgressStrip(account)}
+          <div id="setup-section-metrics">
+            ${renderMetricsModelPanel(account)}
+          </div>
+
+          <div class="setup-section${setupDisabled}" id="setup-section-ghl">
             <div class="setup-section-info">
               <div class="setup-section-title">GHL connection</div>
             </div>
@@ -4607,7 +4739,7 @@
             </div>
           </div>
 
-          <div class="setup-section${setupDisabled}">
+          <div class="setup-section${setupDisabled}" id="setup-section-pipelines">
             <div class="setup-section-info">
               <div class="setup-section-title">Pipeline slots</div>
             </div>
@@ -4617,6 +4749,8 @@
               ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines, 'Leave empty if this client has no after-sales pipeline.')}
             </div>
           </div>
+
+          ${renderMetaSetupSection(account)}
 
           <div class="setup-actions setup-actions--sticky${setupDisabled}">
             <div class="setup-actions-group">
