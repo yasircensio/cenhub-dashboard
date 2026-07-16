@@ -1083,69 +1083,129 @@
     .setup-meta-divider { color: var(--border); }
 
     .setup-progress {
+      background: linear-gradient(180deg, var(--panel-soft) 0%, #f3ede6 100%);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 16px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 20px;
-      padding: 10px 12px;
+      margin-bottom: 22px;
+      padding: 10px;
     }
 
     .setup-progress-step {
+      --step-accent: var(--primary);
+      --step-soft: var(--primary-soft);
+      --step-border: rgba(255, 106, 0, 0.18);
       align-items: center;
-      background: transparent;
-      border: 1px solid transparent;
+      background: var(--panel);
+      border: 1px solid var(--border);
       border-radius: 999px;
+      box-shadow: 0 1px 2px rgba(26, 18, 8, 0.05);
       color: var(--text-muted);
       cursor: pointer;
       display: inline-flex;
-      font: inherit;
+      font-family: 'Poppins', sans-serif;
       font-size: 13px;
-      font-weight: 500;
-      gap: 8px;
-      padding: 6px 12px 6px 8px;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      font-weight: 600;
+      gap: 9px;
+      letter-spacing: -0.01em;
+      padding: 7px 16px 7px 7px;
+      transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+    }
+
+    .setup-progress-step.step-metrics {
+      --step-accent: #0085f2;
+      --step-soft: #eef6ff;
+      --step-border: rgba(0, 133, 242, 0.22);
+    }
+
+    .setup-progress-step.step-ghl {
+      --step-accent: #138b53;
+      --step-soft: #ecfdf5;
+      --step-border: rgba(19, 139, 83, 0.22);
+    }
+
+    .setup-progress-step.step-pipelines {
+      --step-accent: #ff6a00;
+      --step-soft: #fff4eb;
+      --step-border: rgba(255, 106, 0, 0.24);
+    }
+
+    .setup-progress-step.step-meta {
+      --step-accent: #1877f2;
+      --step-soft: #eef4ff;
+      --step-border: rgba(24, 119, 242, 0.22);
     }
 
     .setup-progress-step:hover {
-      background: rgba(255, 106, 0, 0.06);
-      border-color: rgba(255, 106, 0, 0.15);
+      border-color: var(--step-border);
+      box-shadow: 0 4px 14px rgba(26, 18, 8, 0.08);
       color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .setup-progress-step:focus-visible {
+      outline: 2px solid var(--step-accent);
+      outline-offset: 2px;
     }
 
     .setup-progress-marker {
       align-items: center;
-      border: 1.5px solid var(--border);
+      background: var(--step-soft);
+      border: 1px solid transparent;
       border-radius: 50%;
-      color: var(--text-soft);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+      color: var(--step-accent);
       display: inline-flex;
       flex-shrink: 0;
       font-size: 11px;
       font-weight: 700;
-      height: 22px;
+      height: 28px;
       justify-content: center;
       line-height: 1;
-      width: 22px;
+      width: 28px;
+    }
+
+    .setup-progress-label {
+      line-height: 1;
+      white-space: nowrap;
     }
 
     .setup-progress-step.is-done {
-      color: var(--status-ok-text);
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-color: rgba(4, 120, 87, 0.22);
+      box-shadow: 0 2px 8px rgba(4, 120, 87, 0.08);
+      color: #065f46;
     }
 
     .setup-progress-step.is-done .setup-progress-marker {
-      background: var(--status-ok-bg);
-      border-color: rgba(4, 120, 87, 0.25);
-      color: var(--status-ok-text);
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.28);
+      color: #fff;
+    }
+
+    .setup-progress-step.is-done .setup-progress-marker svg {
+      stroke: currentColor;
     }
 
     .setup-progress-step.is-partial {
-      color: var(--text);
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border-color: rgba(255, 106, 0, 0.28);
+      box-shadow: 0 2px 8px rgba(255, 106, 0, 0.1);
+      color: #9a3412;
     }
 
     .setup-progress-step.is-partial .setup-progress-marker {
-      border-color: rgba(255, 106, 0, 0.45);
-      color: var(--primary);
+      background: linear-gradient(135deg, #ffb366 0%, #ff6a00 100%);
+      box-shadow: 0 2px 6px rgba(255, 106, 0, 0.28);
+      color: #fff;
     }
 
     .setup-section {
@@ -1877,8 +1937,9 @@
 
     @media (max-width: 560px) {
       .setup-panel { padding: 18px 16px; }
-      .setup-progress { gap: 6px; padding: 8px; }
-      .setup-progress-step { font-size: 12px; padding: 5px 10px 5px 6px; }
+      .setup-progress { border-radius: 14px; gap: 6px; padding: 8px; }
+      .setup-progress-step { font-size: 12px; padding: 6px 12px 6px 6px; }
+      .setup-progress-marker { height: 24px; width: 24px; }
       .setup-actions { flex-direction: column; align-items: stretch; }
       .setup-actions--sticky { margin: 24px -16px -16px; padding: 16px; }
       .setup-save-group { align-items: stretch; flex-direction: column; }
