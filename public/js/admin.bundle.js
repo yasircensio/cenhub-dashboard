@@ -441,9 +441,9 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
   `}function getSetupProgressSteps(e){return[{id:"metrics",label:"Metrics",done:!!e.metricsModelSetAt},{id:"ghl",label:"GHL",done:!!(e.hasGhlToken&&e.locationId)},{id:"pipelines",label:"Pipelines",done:!!(e.newLeadsPipelineId&&e.salesPipelineId)},{id:"meta",label:"Meta",done:e.metaSyncStatus==="ok",partial:!!(e.metaAdAccountId&&e.metaSyncStatus!=="ok")}]}function renderSetupProgressStrip(e){return`
     <nav class="setup-progress" aria-label="Setup progress">
       ${getSetupProgressSteps(e).map((n,a)=>{const s=n.done?" is-done":n.partial?" is-partial":"",i=n.done?`<span class="setup-progress-marker">${ICON_CHECK}</span>`:`<span class="setup-progress-marker">${a+1}</span>`;return`
-          <button type="button" class="setup-progress-step${s}" onclick="scrollToSetupSection('${n.id}')">
+          <button type="button" class="setup-progress-step step-${n.id}${s}" onclick="scrollToSetupSection('${n.id}')">
             ${i}
-            <span>${n.label}</span>
+            <span class="setup-progress-label">${n.label}</span>
           </button>
         `}).join("")}
     </nav>
