@@ -1208,6 +1208,13 @@
       align-content: start;
     }
 
+    .setup-section-info .setup-section-status {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
     .setup-section-content {
       display: grid;
       gap: 12px;
@@ -4686,6 +4693,11 @@
           <div class="setup-section" id="setup-section-meta">
             <div class="setup-section-info">
               <div class="setup-section-title">Meta / Facebook connection</div>
+              <div class="setup-section-status">
+                <span class="status-badge status-${account.metaSyncStatus === 'ok' ? 'ready' : account.metaSyncStatus === 'error' ? 'sync_error' : 'needs_sync'}">${account.metaSyncStatus === 'ok' ? 'Meta synced' : account.metaSyncStatus === 'error' ? 'Meta sync error' : 'Meta not synced'}</span>
+                ${account.metaLastSyncedAt ? `<span class="setup-section-sync-time">Last Meta sync: ${formatRelativeSync(account.metaLastSyncedAt)}</span>` : ''}
+                ${account.metaSyncError ? `<span class="setup-meta-sync-error">${esc(account.metaSyncError)}</span>` : ''}
+              </div>
             </div>
             <div class="setup-section-content">
               <div class="setup-grid setup-grid--2">
@@ -4720,11 +4732,6 @@
                   </div>
                   <input id="setup-meta-page-token" type="password" placeholder="${account.hasMetaPageAccessToken ? '••••••••  (saved — leave blank to keep)' : 'For future lead sync'}" autocomplete="off" />
                 </div>
-              </div>
-              <div class="setup-section-status">
-                <span class="status-badge status-${account.metaSyncStatus === 'ok' ? 'ready' : account.metaSyncStatus === 'error' ? 'sync_error' : 'needs_sync'}">${account.metaSyncStatus === 'ok' ? 'Meta synced' : account.metaSyncStatus === 'error' ? 'Meta sync error' : 'Meta not synced'}</span>
-                ${account.metaLastSyncedAt ? `<span class="setup-section-sync-time">Last Meta sync: ${formatRelativeSync(account.metaLastSyncedAt)}</span>` : ''}
-                ${account.metaSyncError ? `<span class="setup-meta-sync-error">${esc(account.metaSyncError)}</span>` : ''}
               </div>
               <div class="setup-actions-inline">
                 <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
@@ -4765,6 +4772,10 @@
           <div class="setup-section${setupDisabled}" id="setup-section-ghl">
             <div class="setup-section-info">
               <div class="setup-section-title">GHL connection</div>
+              <div class="setup-section-status">
+                <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
+                ${account.lastSyncAt ? `<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(account.lastSyncAt, account.status)}</span>` : ''}
+              </div>
             </div>
             <div class="setup-section-content">
               <div class="setup-grid setup-grid--2">
@@ -4784,10 +4795,6 @@
                   <input id="setup-ghl-token" type="password" placeholder="${account.hasGhlToken ? '••••••••  (saved — leave blank to keep)' : 'Paste private integration token'}" autocomplete="off" />
                 </div>
               </div>
-              <div class="setup-section-status">
-                <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
-                ${account.lastSyncAt ? `<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(account.lastSyncAt, account.status)}</span>` : ''}
-              </div>
               <div class="setup-actions-inline">
                 <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Sync GHL data" onclick="syncClient('${CLIENT_SLUG}', this)">${ICON_SYNC} Sync GHL data</button>
               </div>
@@ -4797,15 +4804,15 @@
           <div class="setup-section${setupDisabled}" id="setup-section-pipelines">
             <div class="setup-section-info">
               <div class="setup-section-title">Pipeline slots</div>
+              <div class="setup-section-status">
+                <span class="status-badge status-${setupPipelines.length ? 'ready' : 'needs_sync'}">${setupPipelines.length ? `${setupPipelines.length} pipeline(s) loaded` : 'Pipelines not fetched'}</span>
+              </div>
             </div>
             <div class="setup-section-content">
               <div class="setup-grid setup-grid--3">
                 ${renderPipelineSelect('setup-new-leads', 'New leads (required)', account.newLeadsPipelineId, setupPipelines)}
                 ${renderPipelineSelect('setup-sales', 'Sales (required)', account.salesPipelineId, setupPipelines)}
                 ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines, 'Leave empty if this client has no after-sales pipeline.')}
-              </div>
-              <div class="setup-section-status">
-                <span class="status-badge status-${setupPipelines.length ? 'ready' : 'needs_sync'}">${setupPipelines.length ? `${setupPipelines.length} pipeline(s) loaded` : 'Pipelines not fetched'}</span>
               </div>
               <div class="setup-actions-inline">
                 <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Fetch pipelines from GHL" onclick="fetchSetupPipelines(false, this)">${ICON_SYNC} Fetch pipelines from GHL</button>

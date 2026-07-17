@@ -451,6 +451,11 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
       <div class="setup-section" id="setup-section-meta">
         <div class="setup-section-info">
           <div class="setup-section-title">Meta / Facebook connection</div>
+          <div class="setup-section-status">
+            <span class="status-badge status-${e.metaSyncStatus==="ok"?"ready":e.metaSyncStatus==="error"?"sync_error":"needs_sync"}">${e.metaSyncStatus==="ok"?"Meta synced":e.metaSyncStatus==="error"?"Meta sync error":"Meta not synced"}</span>
+            ${e.metaLastSyncedAt?`<span class="setup-section-sync-time">Last Meta sync: ${formatRelativeSync(e.metaLastSyncedAt)}</span>`:""}
+            ${e.metaSyncError?`<span class="setup-meta-sync-error">${esc(e.metaSyncError)}</span>`:""}
+          </div>
         </div>
         <div class="setup-section-content">
           <div class="setup-grid setup-grid--2">
@@ -486,11 +491,6 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
               <input id="setup-meta-page-token" type="password" placeholder="${e.hasMetaPageAccessToken?"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022  (saved \u2014 leave blank to keep)":"For future lead sync"}" autocomplete="off" />
             </div>
           </div>
-          <div class="setup-section-status">
-            <span class="status-badge status-${e.metaSyncStatus==="ok"?"ready":e.metaSyncStatus==="error"?"sync_error":"needs_sync"}">${e.metaSyncStatus==="ok"?"Meta synced":e.metaSyncStatus==="error"?"Meta sync error":"Meta not synced"}</span>
-            ${e.metaLastSyncedAt?`<span class="setup-section-sync-time">Last Meta sync: ${formatRelativeSync(e.metaLastSyncedAt)}</span>`:""}
-            ${e.metaSyncError?`<span class="setup-meta-sync-error">${esc(e.metaSyncError)}</span>`:""}
-          </div>
           <div class="setup-actions-inline">
             <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
             ${e.hasSavedMetaSystemUserToken?`<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>`:""}
@@ -524,6 +524,10 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
       <div class="setup-section${t}" id="setup-section-ghl">
         <div class="setup-section-info">
           <div class="setup-section-title">GHL connection</div>
+          <div class="setup-section-status">
+            <span class="status-badge status-${e.status}">${statusLabel(e.status)}</span>
+            ${e.lastSyncAt?`<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(e.lastSyncAt,e.status)}</span>`:""}
+          </div>
         </div>
         <div class="setup-section-content">
           <div class="setup-grid setup-grid--2">
@@ -543,10 +547,6 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
               <input id="setup-ghl-token" type="password" placeholder="${e.hasGhlToken?"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022  (saved \u2014 leave blank to keep)":"Paste private integration token"}" autocomplete="off" />
             </div>
           </div>
-          <div class="setup-section-status">
-            <span class="status-badge status-${e.status}">${statusLabel(e.status)}</span>
-            ${e.lastSyncAt?`<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(e.lastSyncAt,e.status)}</span>`:""}
-          </div>
           <div class="setup-actions-inline">
             <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Sync GHL data" onclick="syncClient('${CLIENT_SLUG}', this)">${ICON_SYNC} Sync GHL data</button>
           </div>
@@ -556,15 +556,15 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
       <div class="setup-section${t}" id="setup-section-pipelines">
         <div class="setup-section-info">
           <div class="setup-section-title">Pipeline slots</div>
+          <div class="setup-section-status">
+            <span class="status-badge status-${setupPipelines.length?"ready":"needs_sync"}">${setupPipelines.length?`${setupPipelines.length} pipeline(s) loaded`:"Pipelines not fetched"}</span>
+          </div>
         </div>
         <div class="setup-section-content">
           <div class="setup-grid setup-grid--3">
             ${renderPipelineSelect("setup-new-leads","New leads (required)",e.newLeadsPipelineId,setupPipelines)}
             ${renderPipelineSelect("setup-sales","Sales (required)",e.salesPipelineId,setupPipelines)}
             ${renderPipelineSelect("setup-after-sales","After-sales (optional)",e.afterSalesPipelineId,setupPipelines,"Leave empty if this client has no after-sales pipeline.")}
-          </div>
-          <div class="setup-section-status">
-            <span class="status-badge status-${setupPipelines.length?"ready":"needs_sync"}">${setupPipelines.length?`${setupPipelines.length} pipeline(s) loaded`:"Pipelines not fetched"}</span>
           </div>
           <div class="setup-actions-inline">
             <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Fetch pipelines from GHL" onclick="fetchSetupPipelines(false, this)">${ICON_SYNC} Fetch pipelines from GHL</button>

@@ -1199,6 +1199,13 @@
       align-content: start;
     }
 
+    .setup-section-info .setup-section-status {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
     .setup-section-content {
       display: grid;
       gap: 12px;
