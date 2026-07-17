@@ -1083,62 +1083,103 @@
     .setup-meta-divider { color: var(--border); }
 
     .setup-progress {
+      background: linear-gradient(180deg, #faf7f3 0%, #f4efe9 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
+      padding: 10px;
     }
 
     .setup-progress-step {
       align-items: center;
-      background: var(--panel);
-      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(232, 224, 216, 0.95);
       border-radius: 999px;
+      box-shadow: 0 1px 2px rgba(26, 18, 8, 0.04);
       color: var(--text-muted);
       cursor: pointer;
       display: inline-flex;
-      font: inherit;
-      font-size: 12.5px;
-      font-weight: 600;
-      gap: 7px;
-      letter-spacing: 0.01em;
-      padding: 6px 13px 6px 11px;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      gap: 8px;
+      letter-spacing: -0.01em;
+      padding: 6px 14px 6px 6px;
+      transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
     }
 
     .setup-progress-step:hover {
       border-color: var(--border-strong);
-      box-shadow: 0 1px 4px rgba(26, 18, 8, 0.05);
+      box-shadow: 0 3px 10px rgba(26, 18, 8, 0.07);
       color: var(--text);
+      transform: translateY(-1px);
     }
 
     .setup-progress-step:focus-visible {
       outline: 2px solid var(--primary);
-      outline-offset: 1px;
+      outline-offset: 2px;
     }
 
-    .setup-progress-dot {
-      background: var(--border-strong);
+    .setup-progress-mark {
+      align-items: center;
+      border: 1.5px solid #d8cdc3;
       border-radius: 50%;
+      color: var(--text-soft);
+      display: inline-flex;
       flex-shrink: 0;
-      height: 7px;
-      width: 7px;
+      font-size: 10.5px;
+      font-weight: 700;
+      height: 24px;
+      justify-content: center;
+      line-height: 1;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+      width: 24px;
+    }
+
+    .setup-progress-mark svg {
+      display: block;
+      height: 12px;
+      stroke-width: 2.75;
+      width: 12px;
+    }
+
+    .setup-progress-label {
+      line-height: 1;
+      white-space: nowrap;
     }
 
     .setup-progress-step.is-done {
-      color: var(--text);
+      background: #fff;
+      border-color: rgba(16, 120, 90, 0.16);
+      color: #1f2a24;
     }
 
-    .setup-progress-step.is-done .setup-progress-dot {
-      background: var(--status-ok-text);
+    .setup-progress-step.is-done .setup-progress-mark {
+      background: linear-gradient(145deg, #1aa06a 0%, #0f7a52 100%);
+      border-color: transparent;
+      box-shadow: 0 2px 6px rgba(15, 122, 82, 0.28);
+      color: #fff;
     }
 
     .setup-progress-step.is-partial {
-      color: var(--text);
+      background: #fff;
+      border-color: rgba(255, 106, 0, 0.22);
+      color: #1a1208;
     }
 
-    .setup-progress-step.is-partial .setup-progress-dot {
-      background: var(--primary);
+    .setup-progress-step.is-partial .setup-progress-mark {
+      background: linear-gradient(145deg, #ff8a33 0%, #ff6a00 100%);
+      border-color: transparent;
+      box-shadow: 0 2px 6px rgba(255, 106, 0, 0.25);
+      color: #fff;
     }
 
     .setup-section {
@@ -1870,7 +1911,10 @@
 
     @media (max-width: 560px) {
       .setup-panel { padding: 18px 16px; }
-      .setup-progress-step { font-size: 12px; padding: 5px 10px 5px 9px; }
+      .setup-progress { border-radius: 12px; gap: 6px; padding: 8px; }
+      .setup-progress-step { font-size: 12px; padding: 5px 11px 5px 5px; }
+      .setup-progress-mark { height: 22px; width: 22px; }
+      .setup-progress-mark svg { height: 11px; width: 11px; }
       .setup-actions { flex-direction: column; align-items: stretch; }
       .setup-actions--sticky { margin: 24px -16px -16px; padding: 16px; }
       .setup-save-group { align-items: stretch; flex-direction: column; }

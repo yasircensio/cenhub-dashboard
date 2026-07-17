@@ -438,14 +438,14 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
       </select>
       ${s?`<p class="field-hint">${esc(s)}</p>`:""}
     </div>
-  `}function getSetupProgressSteps(e){return[{id:"metrics",label:"Metrics",done:!!e.metricsModelSetAt},{id:"ghl",label:"GHL",done:!!(e.hasGhlToken&&e.locationId)},{id:"pipelines",label:"Pipelines",done:!!(e.newLeadsPipelineId&&e.salesPipelineId)},{id:"meta",label:"Meta",done:e.metaSyncStatus==="ok",partial:!!(e.metaAdAccountId&&e.metaSyncStatus!=="ok")}]}function renderSetupProgressStrip(e){return`
+  `}function getSetupProgressSteps(e){return[{id:"metrics",label:"Metrics",done:!!e.metricsModelSetAt},{id:"ghl",label:"GHL",done:!!(e.hasGhlToken&&e.locationId)},{id:"pipelines",label:"Pipelines",done:!!(e.newLeadsPipelineId&&e.salesPipelineId)},{id:"meta",label:"Meta",done:e.metaSyncStatus==="ok",partial:!!(e.metaAdAccountId&&e.metaSyncStatus!=="ok")}]}function renderSetupProgressStrip(e){const t=getSetupProgressSteps(e),n='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>';return`
     <nav class="setup-progress" aria-label="Setup progress">
-      ${getSetupProgressSteps(e).map(n=>`
-          <button type="button" class="setup-progress-step${n.done?" is-done":n.partial?" is-partial":""}" onclick="scrollToSetupSection('${n.id}')">
-            <span class="setup-progress-dot"></span>
-            <span>${n.label}</span>
+      ${t.map((a,s)=>{const i=a.done?" is-done":a.partial?" is-partial":"",o=a.done?`<span class="setup-progress-mark">${n}</span>`:`<span class="setup-progress-mark">${s+1}</span>`;return`
+          <button type="button" class="setup-progress-step${i}" onclick="scrollToSetupSection('${a.id}')">
+            ${o}
+            <span class="setup-progress-label">${a.label}</span>
           </button>
-        `).join("")}
+        `}).join("")}
     </nav>
   `}function scrollToSetupSection(e){const t=document.getElementById(`setup-section-${e}`);t&&t.scrollIntoView({behavior:"smooth",block:"start"})}function renderMetaSetupSection(e){return`
       <div class="setup-section" id="setup-section-meta">
