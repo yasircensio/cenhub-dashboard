@@ -4377,7 +4377,8 @@
       } finally {
         if (button) {
           button.disabled = false;
-          button.textContent = 'Sync';
+          const label = button.dataset.syncLabel || 'Sync';
+          button.innerHTML = button.dataset.syncLabel ? `${ICON_SYNC} ${label}` : label;
         }
       }
     }
@@ -4771,6 +4772,9 @@
                 <input id="setup-ghl-token" type="password" placeholder="${account.hasGhlToken ? '••••••••  (saved — leave blank to keep)' : 'Paste private integration token'}" autocomplete="off" />
               </div>
             </div>
+            <div class="setup-actions-inline">
+              <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Sync GHL data" onclick="syncClient('${CLIENT_SLUG}', this)">${ICON_SYNC} Sync GHL data</button>
+            </div>
           </div>
 
           <div class="setup-section${setupDisabled}" id="setup-section-pipelines">
@@ -4782,14 +4786,15 @@
               ${renderPipelineSelect('setup-sales', 'Sales (required)', account.salesPipelineId, setupPipelines)}
               ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines, 'Leave empty if this client has no after-sales pipeline.')}
             </div>
+            <div class="setup-actions-inline">
+              <button class="admin-btn" type="button" onclick="fetchSetupPipelines()">Fetch pipelines from GHL</button>
+            </div>
           </div>
 
           ${renderMetaSetupSection(account)}
 
           <div class="setup-actions setup-actions--sticky${setupDisabled}">
             <div class="setup-actions-group">
-              <button class="admin-btn" type="button" onclick="fetchSetupPipelines()">Fetch pipelines</button>
-              <button class="admin-btn admin-btn--secondary" type="button" onclick="syncClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync data</button>
               <a class="admin-btn" href="/${encodeURIComponent(CLIENT_SLUG)}" target="_blank" rel="noopener noreferrer">${ICON_CHART} Open dashboard</a>
             </div>
             <div class="setup-save-group">
