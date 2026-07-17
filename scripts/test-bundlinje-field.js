@@ -1,5 +1,13 @@
 const assert = require('assert');
-const { resolveBundlinjeFieldId } = require('../lib/ghl-sync');
+const {
+  BUNDLINJE_FIELD_KEY,
+  enrichOpportunityCustomFields,
+  findBundlinjeField,
+  isBundlinjeField,
+  resolveBundlinjeFieldId,
+} = require('../lib/bundlinje-field');
+
+assert.strictEqual(BUNDLINJE_FIELD_KEY, 'opportunity.bundlinje');
 
 assert.strictEqual(
   resolveBundlinjeFieldId([
@@ -17,5 +25,29 @@ assert.strictEqual(
 );
 
 assert.strictEqual(resolveBundlinjeFieldId([]), null);
+
+assert.strictEqual(
+  isBundlinjeField({ fieldKey: 'opportunity.bundlinje' }),
+  true,
+);
+
+assert.strictEqual(
+  isBundlinjeField({ id: 'legacy-id' }, 'legacy-id'),
+  true,
+);
+
+const enriched = enrichOpportunityCustomFields(
+  [{
+    id: 'opp-1',
+    customFields: [{ id: 'def', fieldValueString: '15000' }],
+  }],
+  [{ id: 'def', name: 'Bundlinje', fieldKey: 'opportunity.bundlinje' }],
+);
+
+assert.strictEqual(enriched[0].customFields[0].fieldKey, 'opportunity.bundlinje');
+assert.strictEqual(
+  findBundlinjeField(enriched[0].customFields)?.fieldValueString,
+  '15000',
+);
 
 console.log('Bundlinje field resolver tests passed.');
