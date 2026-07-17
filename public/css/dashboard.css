@@ -1199,6 +1199,12 @@
       align-content: start;
     }
 
+    .setup-section-content {
+      display: grid;
+      gap: 12px;
+      grid-column: 2;
+    }
+
     .setup-section-title {
       color: var(--text);
       font-family: 'Poppins', sans-serif;
@@ -1379,14 +1385,14 @@
       white-space: nowrap;
     }
 
-    .setup-meta-status {
+    .setup-section-status {
       align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 12px;
     }
 
+    .setup-section-sync-time,
     .setup-meta-sync-time {
       color: var(--muted);
       font-size: 12px;
@@ -1398,7 +1404,9 @@
     }
 
     .setup-actions-inline {
-      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .metrics-model-panel {
@@ -1899,6 +1907,7 @@
       .setup-grid--3 { grid-template-columns: 1fr; }
       .setup-grid--2 { grid-template-columns: 1fr; }
       .setup-section { grid-template-columns: 1fr; gap: 14px; }
+      .setup-section-content { grid-column: auto; }
       .metrics-option-cards { grid-template-columns: 1fr; }
       .metrics-confirm-strip-row { grid-template-columns: 1fr; }
       .client-card-actions { grid-template-columns: 1fr; }

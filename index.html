@@ -1208,6 +1208,12 @@
       align-content: start;
     }
 
+    .setup-section-content {
+      display: grid;
+      gap: 12px;
+      grid-column: 2;
+    }
+
     .setup-section-title {
       color: var(--text);
       font-family: 'Poppins', sans-serif;
@@ -1388,14 +1394,14 @@
       white-space: nowrap;
     }
 
-    .setup-meta-status {
+    .setup-section-status {
       align-items: center;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 12px;
     }
 
+    .setup-section-sync-time,
     .setup-meta-sync-time {
       color: var(--muted);
       font-size: 12px;
@@ -1407,7 +1413,9 @@
     }
 
     .setup-actions-inline {
-      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .metrics-model-panel {
@@ -1908,6 +1916,7 @@
       .setup-grid--3 { grid-template-columns: 1fr; }
       .setup-grid--2 { grid-template-columns: 1fr; }
       .setup-section { grid-template-columns: 1fr; gap: 14px; }
+      .setup-section-content { grid-column: auto; }
       .metrics-option-cards { grid-template-columns: 1fr; }
       .metrics-confirm-strip-row { grid-template-columns: 1fr; }
       .client-card-actions { grid-template-columns: 1fr; }
@@ -4678,47 +4687,49 @@
             <div class="setup-section-info">
               <div class="setup-section-title">Meta / Facebook connection</div>
             </div>
-            <div class="setup-grid setup-grid--2">
-              <div class="field-group">
-                <label for="setup-meta-ad-account-id">Meta Ad Account ID (required for sync)</label>
-                <input id="setup-meta-ad-account-id" type="text" value="${account.metaAdAccountId || ''}" placeholder="154139302 or act_154139302" />
-              </div>
-              <div class="field-group">
-                <label for="setup-facebook-client-id">Facebook metrics client key</label>
-                <input id="setup-facebook-client-id" type="text" value="${account.facebookClientId || account.clientId || ''}" placeholder="${esc(account.clientId)}" />
-              </div>
-              <div class="field-group">
-                <label for="setup-meta-page-id">Meta Page ID (optional)</label>
-                <input id="setup-meta-page-id" type="text" value="${account.metaPageId || ''}" />
-              </div>
-              <div class="field-group">
-                <label for="setup-meta-pixel-id">Meta Pixel ID (optional)</label>
-                <input id="setup-meta-pixel-id" type="text" value="${account.metaPixelId || ''}" />
-              </div>
-              <div class="field-group" style="grid-column:1/-1">
-                <div class="field-label-row">
-                  <label for="setup-meta-system-token">Meta System User token (override — usually leave blank)</label>
-                  ${account.hasEnvMetaSystemUserToken ? '<span class="token-status-ok">Vercel env token set</span>' : '<span class="token-status-warn">No META_SYSTEM_USER_TOKEN on server</span>'}
-                  ${account.hasSavedMetaSystemUserToken ? '<span class="token-status-warn">Saved override in DB</span>' : ''}
+            <div class="setup-section-content">
+              <div class="setup-grid setup-grid--2">
+                <div class="field-group">
+                  <label for="setup-meta-ad-account-id">Meta Ad Account ID (required for sync)</label>
+                  <input id="setup-meta-ad-account-id" type="text" value="${account.metaAdAccountId || ''}" placeholder="154139302 or act_154139302" />
                 </div>
-                <input id="setup-meta-system-token" type="password" placeholder="${account.hasSavedMetaSystemUserToken ? 'Leave blank to use Vercel env and clear saved override' : 'Uses META_SYSTEM_USER_TOKEN on Vercel when blank'}" autocomplete="off" />
-              </div>
-              <div class="field-group" style="grid-column:1/-1">
-                <div class="field-label-row">
-                  <label for="setup-meta-page-token">Meta Page access token (optional)</label>
-                  ${account.hasMetaPageAccessToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+                <div class="field-group">
+                  <label for="setup-facebook-client-id">Facebook metrics client key</label>
+                  <input id="setup-facebook-client-id" type="text" value="${account.facebookClientId || account.clientId || ''}" placeholder="${esc(account.clientId)}" />
                 </div>
-                <input id="setup-meta-page-token" type="password" placeholder="${account.hasMetaPageAccessToken ? '••••••••  (saved — leave blank to keep)' : 'For future lead sync'}" autocomplete="off" />
+                <div class="field-group">
+                  <label for="setup-meta-page-id">Meta Page ID (optional)</label>
+                  <input id="setup-meta-page-id" type="text" value="${account.metaPageId || ''}" />
+                </div>
+                <div class="field-group">
+                  <label for="setup-meta-pixel-id">Meta Pixel ID (optional)</label>
+                  <input id="setup-meta-pixel-id" type="text" value="${account.metaPixelId || ''}" />
+                </div>
+                <div class="field-group" style="grid-column:1/-1">
+                  <div class="field-label-row">
+                    <label for="setup-meta-system-token">Meta System User token (override — usually leave blank)</label>
+                    ${account.hasEnvMetaSystemUserToken ? '<span class="token-status-ok">Vercel env token set</span>' : '<span class="token-status-warn">No META_SYSTEM_USER_TOKEN on server</span>'}
+                    ${account.hasSavedMetaSystemUserToken ? '<span class="token-status-warn">Saved override in DB</span>' : ''}
+                  </div>
+                  <input id="setup-meta-system-token" type="password" placeholder="${account.hasSavedMetaSystemUserToken ? 'Leave blank to use Vercel env and clear saved override' : 'Uses META_SYSTEM_USER_TOKEN on Vercel when blank'}" autocomplete="off" />
+                </div>
+                <div class="field-group" style="grid-column:1/-1">
+                  <div class="field-label-row">
+                    <label for="setup-meta-page-token">Meta Page access token (optional)</label>
+                    ${account.hasMetaPageAccessToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+                  </div>
+                  <input id="setup-meta-page-token" type="password" placeholder="${account.hasMetaPageAccessToken ? '••••••••  (saved — leave blank to keep)' : 'For future lead sync'}" autocomplete="off" />
+                </div>
               </div>
-            </div>
-            <div class="setup-meta-status">
-              <span class="status-badge status-${account.metaSyncStatus === 'ok' ? 'ready' : account.metaSyncStatus === 'error' ? 'sync_error' : 'needs_sync'}">${account.metaSyncStatus === 'ok' ? 'Meta synced' : account.metaSyncStatus === 'error' ? 'Meta sync error' : 'Meta not synced'}</span>
-              ${account.metaLastSyncedAt ? `<span class="setup-meta-sync-time">Last Meta sync: ${formatRelativeSync(account.metaLastSyncedAt)}</span>` : ''}
-              ${account.metaSyncError ? `<span class="setup-meta-sync-error">${esc(account.metaSyncError)}</span>` : ''}
-            </div>
-            <div class="setup-actions-inline">
-              <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
-              ${account.hasSavedMetaSystemUserToken ? `<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>` : ''}
+              <div class="setup-section-status">
+                <span class="status-badge status-${account.metaSyncStatus === 'ok' ? 'ready' : account.metaSyncStatus === 'error' ? 'sync_error' : 'needs_sync'}">${account.metaSyncStatus === 'ok' ? 'Meta synced' : account.metaSyncStatus === 'error' ? 'Meta sync error' : 'Meta not synced'}</span>
+                ${account.metaLastSyncedAt ? `<span class="setup-section-sync-time">Last Meta sync: ${formatRelativeSync(account.metaLastSyncedAt)}</span>` : ''}
+                ${account.metaSyncError ? `<span class="setup-meta-sync-error">${esc(account.metaSyncError)}</span>` : ''}
+              </div>
+              <div class="setup-actions-inline">
+                <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
+                ${account.hasSavedMetaSystemUserToken ? `<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>` : ''}
+              </div>
             </div>
           </div>
       `;
@@ -4755,25 +4766,31 @@
             <div class="setup-section-info">
               <div class="setup-section-title">GHL connection</div>
             </div>
-            <div class="setup-grid setup-grid--2">
-              <div class="field-group">
-                <label for="setup-location-id">Location ID</label>
-                <input id="setup-location-id" type="text" value="${account.locationId || ''}" />
-              </div>
-              <div class="field-group">
-                <label for="setup-timezone">Timezone</label>
-                <input id="setup-timezone" type="text" value="${account.timezone || 'Europe/Copenhagen'}" />
-              </div>
-              <div class="field-group" style="grid-column:1/-1">
-                <div class="field-label-row">
-                  <label for="setup-ghl-token">GHL token</label>
-                  ${account.hasGhlToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+            <div class="setup-section-content">
+              <div class="setup-grid setup-grid--2">
+                <div class="field-group">
+                  <label for="setup-location-id">Location ID</label>
+                  <input id="setup-location-id" type="text" value="${account.locationId || ''}" />
                 </div>
-                <input id="setup-ghl-token" type="password" placeholder="${account.hasGhlToken ? '••••••••  (saved — leave blank to keep)' : 'Paste private integration token'}" autocomplete="off" />
+                <div class="field-group">
+                  <label for="setup-timezone">Timezone</label>
+                  <input id="setup-timezone" type="text" value="${account.timezone || 'Europe/Copenhagen'}" />
+                </div>
+                <div class="field-group" style="grid-column:1/-1">
+                  <div class="field-label-row">
+                    <label for="setup-ghl-token">GHL token</label>
+                    ${account.hasGhlToken ? '<span class="token-status-ok">Token configured</span>' : ''}
+                  </div>
+                  <input id="setup-ghl-token" type="password" placeholder="${account.hasGhlToken ? '••••••••  (saved — leave blank to keep)' : 'Paste private integration token'}" autocomplete="off" />
+                </div>
               </div>
-            </div>
-            <div class="setup-actions-inline">
-              <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Sync GHL data" onclick="syncClient('${CLIENT_SLUG}', this)">${ICON_SYNC} Sync GHL data</button>
+              <div class="setup-section-status">
+                <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
+                ${account.lastSyncAt ? `<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(account.lastSyncAt, account.status)}</span>` : ''}
+              </div>
+              <div class="setup-actions-inline">
+                <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Sync GHL data" onclick="syncClient('${CLIENT_SLUG}', this)">${ICON_SYNC} Sync GHL data</button>
+              </div>
             </div>
           </div>
 
@@ -4781,13 +4798,18 @@
             <div class="setup-section-info">
               <div class="setup-section-title">Pipeline slots</div>
             </div>
-            <div class="setup-grid setup-grid--3">
-              ${renderPipelineSelect('setup-new-leads', 'New leads (required)', account.newLeadsPipelineId, setupPipelines)}
-              ${renderPipelineSelect('setup-sales', 'Sales (required)', account.salesPipelineId, setupPipelines)}
-              ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines, 'Leave empty if this client has no after-sales pipeline.')}
-            </div>
-            <div class="setup-actions-inline">
-              <button class="admin-btn" type="button" onclick="fetchSetupPipelines()">Fetch pipelines from GHL</button>
+            <div class="setup-section-content">
+              <div class="setup-grid setup-grid--3">
+                ${renderPipelineSelect('setup-new-leads', 'New leads (required)', account.newLeadsPipelineId, setupPipelines)}
+                ${renderPipelineSelect('setup-sales', 'Sales (required)', account.salesPipelineId, setupPipelines)}
+                ${renderPipelineSelect('setup-after-sales', 'After-sales (optional)', account.afterSalesPipelineId, setupPipelines, 'Leave empty if this client has no after-sales pipeline.')}
+              </div>
+              <div class="setup-section-status">
+                <span class="status-badge status-${setupPipelines.length ? 'ready' : 'needs_sync'}">${setupPipelines.length ? `${setupPipelines.length} pipeline(s) loaded` : 'Pipelines not fetched'}</span>
+              </div>
+              <div class="setup-actions-inline">
+                <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Fetch pipelines from GHL" onclick="fetchSetupPipelines(false, this)">${ICON_SYNC} Fetch pipelines from GHL</button>
+              </div>
             </div>
           </div>
 
@@ -4890,7 +4912,11 @@
       }
     }
 
-    async function fetchSetupPipelines(silent = false) {
+    async function fetchSetupPipelines(silent = false, button = null) {
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Fetching...';
+      }
       try {
         const data = await adminFetch(`/api/clients/${encodeURIComponent(CLIENT_SLUG)}/sync-pipelines`, {
           method: 'POST',
@@ -4901,6 +4927,12 @@
         await loadSetupAccount();
       } catch (error) {
         showToast(error.message, 'error');
+      } finally {
+        if (button) {
+          button.disabled = false;
+          const label = button.dataset.syncLabel || 'Fetch pipelines from GHL';
+          button.innerHTML = `${ICON_SYNC} ${label}`;
+        }
       }
     }
 
