@@ -281,7 +281,7 @@
       `:""}
       <div class="client-card-actions">
         <a class="admin-btn" href="/admin/${e.clientId}">Settings</a>
-        <a class="admin-btn admin-btn--primary" href="/${encodeURIComponent(e.clientId)}" title="Open client dashboard">Dashboard</a>
+        <a class="admin-btn admin-btn--primary" href="/${encodeURIComponent(e.clientId)}" target="_blank" rel="noopener noreferrer" title="Open client dashboard">Dashboard</a>
         <button class="admin-btn admin-btn--secondary" type="button" onclick="syncClient('${e.clientId}', this)">${ICON_SYNC} Sync</button>
       </div>
     </article>
