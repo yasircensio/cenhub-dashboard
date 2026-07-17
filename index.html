@@ -4396,9 +4396,9 @@
         if (IS_ADMIN_HUB) await loadAdminHub();
         else if (IS_ADMIN_CLIENT) {
           await loadSetupAccount();
-          if (accountCanPreviewDashboard(setupAccount)) loadDashboard(true, { background: true });
+          if (accountCanPreviewDashboard(setupAccount)) loadDashboard(true, { background: true, forceFresh: true });
         }
-        else loadDashboard(true, { background: true });
+        else loadDashboard(true, { background: true, forceFresh: true });
       } catch (error) {
         showToast(error.message, 'error');
       } finally {
@@ -5477,7 +5477,8 @@
     let chartFieldsCache = null;
     let chartFieldsCacheKey = null;
     let lastFetchedAt = 0;
-    const DATA_FRESH_MS = 60 * 1000;
+    const DATA_REFRESH_MS = 2 * 60 * 1000;
+    const DATA_FRESH_MS = DATA_REFRESH_MS;
 
     const CHART_FIELD_KEYS = [
       'weeklyRevenue',
@@ -7486,12 +7487,9 @@
 
       ensureChartsVisible();
       loadDashboard(true);
-      setTimeout(() => {
-        loadDashboard(true, { background: true, forceFresh: true });
-      }, 500);
       setInterval(() => {
-        loadDashboard(true, { background: true, forceFresh: true });
-      }, 2 * 60 * 1000);
+        loadDashboard(true, { background: true });
+      }, DATA_REFRESH_MS);
     }
 
     initDashboardApp();
