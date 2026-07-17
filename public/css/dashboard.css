@@ -1194,22 +1194,26 @@
     }
 
     .setup-section-info {
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: 6px;
-      align-content: start;
+      min-height: 100%;
     }
 
     .setup-section-info .setup-section-status {
       align-items: flex-start;
       flex-direction: column;
       gap: 6px;
-      margin-top: 4px;
+      margin-top: auto;
+      padding-top: 12px;
     }
 
     .setup-section-content {
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: 12px;
       grid-column: 2;
+      min-height: 100%;
     }
 
     .setup-section-title {
@@ -1414,6 +1418,8 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+      margin-top: auto;
+      padding-top: 12px;
     }
 
     .metrics-model-panel {
@@ -1915,6 +1921,11 @@
       .setup-grid--2 { grid-template-columns: 1fr; }
       .setup-section { grid-template-columns: 1fr; gap: 14px; }
       .setup-section-content { grid-column: auto; }
+      .setup-section-info .setup-section-status,
+      .setup-actions-inline {
+        margin-top: 0;
+        padding-top: 0;
+      }
       .metrics-option-cards { grid-template-columns: 1fr; }
       .metrics-confirm-strip-row { grid-template-columns: 1fr; }
       .client-card-actions { grid-template-columns: 1fr; }

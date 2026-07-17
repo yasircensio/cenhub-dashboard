@@ -564,7 +564,7 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
           <div class="setup-grid setup-grid--3">
             ${renderPipelineSelect("setup-new-leads","New leads (required)",e.newLeadsPipelineId,setupPipelines)}
             ${renderPipelineSelect("setup-sales","Sales (required)",e.salesPipelineId,setupPipelines)}
-            ${renderPipelineSelect("setup-after-sales","After-sales (optional)",e.afterSalesPipelineId,setupPipelines,"Leave empty if this client has no after-sales pipeline.")}
+            ${renderPipelineSelect("setup-after-sales","After-sales (optional)",e.afterSalesPipelineId,setupPipelines,"Leave empty if there is no after-sales pipeline.")}
           </div>
           <div class="setup-actions-inline">
             <button class="admin-btn admin-btn--secondary" type="button" data-sync-label="Fetch pipelines from GHL" onclick="fetchSetupPipelines(false, this)">${ICON_SYNC} Fetch pipelines from GHL</button>
