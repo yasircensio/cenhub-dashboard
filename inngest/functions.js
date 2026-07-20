@@ -144,8 +144,9 @@ const dailyMetaSyncAll = inngest.createFunction(
 
 module.exports = {
   dailySyncAll,
-  dailyMetaSyncAll,
   syncAllAccounts,
   syncOneAccount,
-  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts, dailyMetaSyncAll],
+  // Meta ad spend: use Vercel daily cron (/api/meta-sync-cron at 0 4 * * * UTC).
+  // Requires CRON_SECRET on Production. Inngest meta cron disabled to avoid duplicate runs.
+  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts],
 };
