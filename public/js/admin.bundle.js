@@ -253,16 +253,16 @@
         </div>
         <div class="sync-history-toolbar-actions">
           <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
-          ${e==="meta"&&isStaffAdmin()?'<button class="admin-btn admin-btn--secondary" type="button" id="sync-history-clear-meta">Clear log</button>':""}
+          ${isStaffAdmin()?'<button class="admin-btn admin-btn--secondary" type="button" id="sync-history-clear-log">Clear log</button>':""}
         </div>
       </div>
       ${renderSyncHistorySummary(t.summary,e)}
       ${renderSyncHistoryRows(t.runs||[],e)}
     </div>
     `)}
-  `}let syncHistoryRefreshTimer=null;async function clearMetaSyncHistoryLog(){if(!(!isStaffAdmin()||!window.confirm(`Delete all Meta sync log entries?
+  `}let syncHistoryRefreshTimer=null;async function clearSyncHistoryLog(e){if(!isStaffAdmin())return;const t=e==="meta"?"Meta":"GHL",n=e==="meta"?"This only clears the history table. It does not change ad spend data or client sync status.":"This only clears the history table. It does not change GHL snapshot data or client sync status.";if(window.confirm(`Delete all ${t} sync log entries?
 
-This only clears the history table. It does not change ad spend data or client sync status.`)))try{const t=await adminFetch("/api/sync-history?type=meta",{method:"DELETE"});showToast(`Cleared ${t.deleted||0} log entr${t.deleted===1?"y":"ies"}.`,"success"),await loadSyncHistoryPage("meta")}catch(t){showToast(t.message||"Failed to clear Meta sync log.","error")}}function renderSyncHistoryLoginPrompt(e){const t=e==="meta"?"Meta sync log":"GHL sync log";return`
+${n}`))try{const s=await adminFetch(`/api/sync-history?type=${encodeURIComponent(e)}`,{method:"DELETE"});showToast(`Cleared ${s.deleted||0} log entr${s.deleted===1?"y":"ies"}.`,"success"),await loadSyncHistoryPage(e)}catch(s){showToast(s.message||`Failed to clear ${t} sync log.`,"error")}}function renderSyncHistoryLoginPrompt(e){const t=e==="meta"?"Meta sync log":"GHL sync log";return`
     ${renderBrandTopbar("")}
     ${wrapDashboardShell(`
       <div class="page-hero admin-hub-hero">
@@ -279,7 +279,7 @@ This only clears the history table. It does not change ad spend data or client s
   `}async function loadSyncHistoryPage(e,{silent:t=!1}={}){const n=document.getElementById("dashboard");if(!n)return;const a=await fetchStaffMe();if(!a){t||(n.innerHTML=renderSyncHistoryLoginPrompt(e));return}currentStaffUser=a,t||(n.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
       ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading sync history...</p></div>')}
-    `);try{const s=await adminFetch(`/api/sync-history?type=${encodeURIComponent(e)}&limit=150`);n.innerHTML=renderSyncHistoryPage(e,s);const i=document.getElementById("sync-history-refresh");i&&(i.onclick=()=>loadSyncHistoryPage(e));const o=document.getElementById("sync-history-clear-meta");o&&(o.onclick=()=>clearMetaSyncHistoryLog()),syncHistoryRefreshTimer&&(clearInterval(syncHistoryRefreshTimer),syncHistoryRefreshTimer=null),syncHistoryRefreshTimer=window.setInterval(()=>{loadSyncHistoryPage(e,{silent:!0}).catch(()=>{})},6e4)}catch(s){n.innerHTML=`
+    `);try{const s=await adminFetch(`/api/sync-history?type=${encodeURIComponent(e)}&limit=150`);n.innerHTML=renderSyncHistoryPage(e,s);const i=document.getElementById("sync-history-refresh");i&&(i.onclick=()=>loadSyncHistoryPage(e));const o=document.getElementById("sync-history-clear-log");o&&(o.onclick=()=>clearSyncHistoryLog(e)),syncHistoryRefreshTimer&&(clearInterval(syncHistoryRefreshTimer),syncHistoryRefreshTimer=null),syncHistoryRefreshTimer=window.setInterval(()=>{loadSyncHistoryPage(e,{silent:!0}).catch(()=>{})},6e4)}catch(s){n.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
       ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(s.message)}</div>`)}
     `}}function renderAdminHubPage(e){const t=e.length,n=currentStaffUser?`

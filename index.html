@@ -4213,7 +4213,7 @@
             </div>
             <div class="sync-history-toolbar-actions">
               <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
-              ${kind === 'meta' && isStaffAdmin() ? `<button class="admin-btn admin-btn--secondary" type="button" id="sync-history-clear-meta">Clear log</button>` : ''}
+              ${isStaffAdmin() ? `<button class="admin-btn admin-btn--secondary" type="button" id="sync-history-clear-log">Clear log</button>` : ''}
             </div>
           </div>
           ${renderSyncHistorySummary(data.summary, kind)}
@@ -4225,19 +4225,21 @@
 
     let syncHistoryRefreshTimer = null;
 
-    async function clearMetaSyncHistoryLog() {
+    async function clearSyncHistoryLog(kind) {
       if (!isStaffAdmin()) return;
-      const confirmed = window.confirm(
-        'Delete all Meta sync log entries?\n\nThis only clears the history table. It does not change ad spend data or client sync status.',
-      );
+      const label = kind === 'meta' ? 'Meta' : 'GHL';
+      const note = kind === 'meta'
+        ? 'This only clears the history table. It does not change ad spend data or client sync status.'
+        : 'This only clears the history table. It does not change GHL snapshot data or client sync status.';
+      const confirmed = window.confirm(`Delete all ${label} sync log entries?\n\n${note}`);
       if (!confirmed) return;
 
       try {
-        const result = await adminFetch('/api/sync-history?type=meta', { method: 'DELETE' });
+        const result = await adminFetch(`/api/sync-history?type=${encodeURIComponent(kind)}`, { method: 'DELETE' });
         showToast(`Cleared ${result.deleted || 0} log entr${result.deleted === 1 ? 'y' : 'ies'}.`, 'success');
-        await loadSyncHistoryPage('meta');
+        await loadSyncHistoryPage(kind);
       } catch (error) {
-        showToast(error.message || 'Failed to clear Meta sync log.', 'error');
+        showToast(error.message || `Failed to clear ${label} sync log.`, 'error');
       }
     }
 
@@ -4287,9 +4289,9 @@
         if (refreshBtn) {
           refreshBtn.onclick = () => loadSyncHistoryPage(kind);
         }
-        const clearBtn = document.getElementById('sync-history-clear-meta');
+        const clearBtn = document.getElementById('sync-history-clear-log');
         if (clearBtn) {
-          clearBtn.onclick = () => clearMetaSyncHistoryLog();
+          clearBtn.onclick = () => clearSyncHistoryLog(kind);
         }
         if (syncHistoryRefreshTimer) {
           clearInterval(syncHistoryRefreshTimer);
