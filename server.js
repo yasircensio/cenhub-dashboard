@@ -248,8 +248,8 @@ const server = http.createServer(async (request, response) => {
   if (url === '/api/meta-sync-cron' || url === '/api/cron/meta-sync') {
     try {
       const localResponse = createLocalResponse(response);
-      const handler = require('../api/meta-sync-cron');
-      await handler({
+      const { handleMetaSyncCronRequest } = require('./lib/meta-sync-cron-handler');
+      await handleMetaSyncCronRequest({
         method: request.method,
         headers: request.headers,
         query: Object.fromEntries(requestUrl.searchParams),
