@@ -258,8 +258,8 @@
     }
 
     .header-presets .preset-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
-      border-color: rgba(255, 255, 255, 0.32);
+      background: rgba(255, 106, 0, 0.25);
+      border-color: var(--primary);
       color: #fff;
     }
 
@@ -479,9 +479,9 @@
     }
 
     .date-picker-nav-btn:hover {
-      background: var(--surface-hover);
-      border-color: var(--border-strong);
-      color: var(--text-muted);
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
     }
 
     .date-picker-nav-btn:disabled {
@@ -596,9 +596,8 @@
     }
 
     .date-picker-footer-btn:hover {
-      background: var(--surface-hover);
-      border-color: var(--border-strong);
-      color: var(--text-muted);
+      border-color: var(--primary);
+      color: var(--primary);
     }
 
     .date-picker-footer-btn.primary {
@@ -647,7 +646,7 @@
     }
 
     .admin-topbar-link:hover {
-      color: #fff;
+      color: var(--primary);
     }
 
     .admin-hub { padding-bottom: 48px; }
@@ -663,15 +662,12 @@
     }
 
     .admin-breadcrumb a {
-      color: rgba(255, 255, 255, 0.88);
+      color: var(--primary);
       font-weight: 500;
       text-decoration: none;
     }
 
-    .admin-breadcrumb a:hover {
-      color: #fff;
-      text-decoration: underline;
-    }
+    .admin-breadcrumb a:hover { text-decoration: underline; }
 
     .hub-toolbar-row {
       align-items: center;
@@ -1015,7 +1011,7 @@
     .link-btn {
       background: none;
       border: none;
-      color: var(--text);
+      color: var(--primary);
       cursor: pointer;
       font: inherit;
       font-size: 12px;
@@ -1023,10 +1019,7 @@
       text-decoration: underline;
     }
 
-    .link-btn:hover {
-      color: var(--text);
-      text-decoration: underline;
-    }
+    .link-btn:hover { color: var(--primary-dark); }
 
     .client-card-meta {
       align-items: center;
@@ -1525,18 +1518,6 @@
       font-size: 12px;
     }
 
-    a.setup-section-sync-time,
-    a.setup-meta-sync-time {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-
-    a.setup-section-sync-time:hover,
-    a.setup-meta-sync-time:hover {
-      color: var(--text);
-      text-decoration: underline;
-    }
-
     .setup-meta-sync-error {
       color: var(--status-error-text);
       font-size: 12px;
@@ -1911,8 +1892,8 @@
 
     .admin-btn--secondary:hover {
       background: var(--surface-hover);
-      border-color: var(--border-strong);
-      color: var(--text);
+      border-color: var(--primary);
+      color: var(--primary);
     }
 
     .admin-btn--danger {
@@ -2135,15 +2116,12 @@
     }
 
     .brand-footer a {
-      color: var(--text-muted);
+      color: var(--primary);
       font-weight: 600;
       text-decoration: none;
     }
 
-    .brand-footer a:hover {
-      color: var(--text);
-      text-decoration: underline;
-    }
+    .brand-footer a:hover { color: var(--primary-dark); }
 
     .auth-page {
       align-items: center;
@@ -2331,14 +2309,14 @@
 
     .auth-note a,
     .auth-help-link {
-      color: var(--text);
+      color: var(--primary);
       font-weight: 600;
-      text-decoration: underline;
+      text-decoration: none;
     }
 
     .auth-note a:hover,
     .auth-help-link:hover {
-      color: var(--text);
+      color: var(--primary-dark);
       text-decoration: underline;
     }
 
@@ -2849,9 +2827,8 @@
     }
 
     .preset-btn:hover, .widget-btn:hover {
-      background: var(--surface-hover);
-      border-color: var(--border-strong);
-      color: var(--text);
+      border-color: var(--primary);
+      color: var(--primary);
     }
 
     .preset-btn.active {
