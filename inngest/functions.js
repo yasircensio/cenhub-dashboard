@@ -88,11 +88,12 @@ const dailyMetaSyncAll = inngest.createFunction(
       await step.run('log-meta-cron-empty', async () => {
         await logMetaSyncRun(null, {
           status: 'skipped',
-          source: 'cron',
+          source: 'inngest',
           errorMessage: 'Inngest Meta cron ran but no syncable clients (check META_SYSTEM_USER_TOKEN and meta ad account IDs).',
           startedAt: new Date().toISOString(),
           finishedAt: new Date().toISOString(),
         });
+        return { logged: true };
       });
       return { synced: 0, skipped: 0, results: [], schedule: metaSyncCron };
     }
@@ -100,16 +101,17 @@ const dailyMetaSyncAll = inngest.createFunction(
     await step.run('log-meta-cron-start', async () => {
       await logMetaSyncRun(null, {
         status: 'cron_tick',
-        source: 'cron',
+        source: 'inngest',
         errorMessage: `Inngest Meta cron started for ${clientIds.length} client(s).`,
         startedAt: new Date().toISOString(),
         finishedAt: new Date().toISOString(),
       });
+      return { logged: true };
     });
 
     const results = [];
     for (const clientId of clientIds) {
-      const result = await step.run(`sync-meta-${clientId}`, () => syncMetaMetrics(clientId, { source: 'cron' }));
+      const result = await step.run(`sync-meta-${clientId}`, () => syncMetaMetrics(clientId, { source: 'inngest' }));
       results.push({ clientId, ...result });
     }
 
@@ -120,11 +122,12 @@ const dailyMetaSyncAll = inngest.createFunction(
     await step.run('log-meta-cron-finish', async () => {
       await logMetaSyncRun(null, {
         status: failed ? 'error' : 'success',
-        source: 'cron',
+        source: 'inngest',
         errorMessage: `Inngest Meta cron finished: ${synced} synced, ${skipped} skipped, ${failed} failed.`,
         startedAt: new Date().toISOString(),
         finishedAt: new Date().toISOString(),
       });
+      return { logged: true };
     });
 
     return { synced, skipped, failed, results };
