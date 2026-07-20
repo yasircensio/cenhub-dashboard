@@ -5,9 +5,42 @@ const { buildAccountSyncEvents, createBatchId } = require('../lib/sync-batch');
 const { syncAccount } = require('../lib/sync-service');
 const { syncMetaMetrics } = require('../lib/meta-sync-service');
 const { logMetaSyncRun } = require('../lib/sync-history');
+const { usePostgres } = require('../lib/db');
 
 async function listSyncableClientIds() {
   return listClientIds();
+}
+
+function metaSyncResultToHistory(clientId, result, source = 'inngest') {
+  const startedAt = result.startedAt || new Date().toISOString();
+  const finishedAt = result.finishedAt || new Date().toISOString();
+  if (result.skipped) {
+    return {
+      status: 'skipped',
+      source,
+      errorMessage: result.reason || 'Meta sync skipped.',
+      startedAt,
+      finishedAt,
+    };
+  }
+  if (result.success) {
+    return {
+      status: 'success',
+      source,
+      startedAt,
+      finishedAt,
+      thisMonthSpend: result.thisMonthSpend ?? null,
+      spendDateStop: result.spendDateStop ?? null,
+      metricsClientId: result.metricsClientId ?? null,
+    };
+  }
+  return {
+    status: 'error',
+    source,
+    errorMessage: result.reason || 'Meta sync failed.',
+    startedAt,
+    finishedAt,
+  };
 }
 
 const dailySyncAll = inngest.createFunction(
@@ -82,74 +115,91 @@ const dailyMetaSyncAll = inngest.createFunction(
     name: 'Sync Meta ad metrics (scheduled, sequential)',
     triggers: [cron(metaSyncCron)],
   },
-  async ({ step }) => {
-    // Log immediately so the admin Meta sync page always shows the cron fired,
-    // even if client listing / Meta API work fails afterward.
-    await step.run('log-meta-cron-tick', async () => {
-      const row = await logMetaSyncRun(null, {
-        status: 'cron_tick',
-        source: 'inngest',
-        errorMessage: `Inngest Meta cron fired (schedule: ${metaSyncCron}).`,
-        startedAt: new Date().toISOString(),
-        finishedAt: new Date().toISOString(),
-      });
-      return { logged: true, id: row.id };
+  async ({ step, runId }) => {
+    if (!usePostgres()) {
+      throw new Error(
+        'DATABASE_URL is not configured on this deployment. Inngest is likely invoking a preview URL without Production env vars. Sync Inngest to https://cenhub-dashboard.vercel.app/api/inngest only and set INNGEST_SERVE_ORIGIN on Vercel Production.',
+      );
+    }
+
+    const tickAt = new Date().toISOString();
+    await logMetaSyncRun(null, {
+      status: 'cron_tick',
+      source: 'inngest',
+      errorMessage: `Inngest Meta cron fired (run ${runId}, schedule: ${metaSyncCron}).`,
+      startedAt: tickAt,
+      finishedAt: tickAt,
     });
 
     const clientIds = await step.run('list-meta-clients', listMetaSyncableClientIds);
     if (!clientIds.length) {
-      await step.run('log-meta-cron-empty', async () => {
-        const row = await logMetaSyncRun(null, {
-          status: 'skipped',
-          source: 'inngest',
-          errorMessage: 'Inngest Meta cron ran but no syncable clients (check META_SYSTEM_USER_TOKEN and meta ad account IDs).',
-          startedAt: new Date().toISOString(),
-          finishedAt: new Date().toISOString(),
-        });
-        return { logged: true, id: row.id };
+      const emptyAt = new Date().toISOString();
+      await logMetaSyncRun(null, {
+        status: 'skipped',
+        source: 'inngest',
+        errorMessage: 'Inngest Meta cron ran but no syncable clients (check META_SYSTEM_USER_TOKEN and meta ad account IDs).',
+        startedAt: emptyAt,
+        finishedAt: emptyAt,
       });
       return { synced: 0, skipped: 0, failed: 0, results: [], schedule: metaSyncCron };
     }
 
     const results = [];
     for (const clientId of clientIds) {
-      const result = await step.run(`sync-meta-${clientId}`, async () => {
-        try {
-          const syncResult = await syncMetaMetrics(clientId, { source: 'inngest' });
-          return {
-            clientId,
-            success: Boolean(syncResult.success),
-            skipped: Boolean(syncResult.skipped),
-            reason: syncResult.reason || null,
-          };
-        } catch (error) {
-          return {
-            clientId,
-            success: false,
-            skipped: false,
-            reason: error.message || 'Meta sync failed.',
-          };
-        }
+      let syncResult;
+      try {
+        syncResult = await step.run(`sync-meta-${clientId}`, () => syncMetaMetrics(clientId, {
+          source: 'inngest',
+          skipHistoryLog: true,
+        }));
+      } catch (error) {
+        const failedAt = new Date().toISOString();
+        await logMetaSyncRun(clientId, {
+          status: 'error',
+          source: 'inngest',
+          errorMessage: error.message || 'Meta sync failed.',
+          startedAt: failedAt,
+          finishedAt: failedAt,
+        });
+        results.push({
+          clientId,
+          success: false,
+          skipped: false,
+          reason: error.message || 'Meta sync failed.',
+        });
+        continue;
+      }
+
+      const historyPayload = metaSyncResultToHistory(clientId, {
+        ...syncResult,
+        thisMonthSpend: syncResult.thisMonthSpend,
+        spendDateStop: syncResult.spendDateStop,
+        metricsClientId: syncResult.metricsClientId,
+        reason: syncResult.reason,
       });
-      results.push(result);
+      await logMetaSyncRun(clientId, historyPayload);
+      results.push({
+        clientId,
+        success: Boolean(syncResult.success),
+        skipped: Boolean(syncResult.skipped),
+        reason: syncResult.reason || null,
+      });
     }
 
     const synced = results.filter((row) => row.success).length;
     const skipped = results.filter((row) => row.skipped).length;
     const failed = results.filter((row) => !row.success && !row.skipped).length;
 
-    await step.run('log-meta-cron-finish', async () => {
-      const row = await logMetaSyncRun(null, {
-        status: failed ? 'error' : 'success',
-        source: 'inngest',
-        errorMessage: `Inngest Meta cron finished: ${synced} synced, ${skipped} skipped, ${failed} failed.`,
-        startedAt: new Date().toISOString(),
-        finishedAt: new Date().toISOString(),
-      });
-      return { logged: true, id: row.id };
+    const finishAt = new Date().toISOString();
+    await logMetaSyncRun(null, {
+      status: failed ? 'error' : 'success',
+      source: 'inngest',
+      errorMessage: `Inngest Meta cron finished: ${synced} synced, ${skipped} skipped, ${failed} failed.`,
+      startedAt: finishAt,
+      finishedAt: finishAt,
     });
 
-    return { synced, skipped, failed, schedule: metaSyncCron };
+    return { synced, skipped, failed, schedule: metaSyncCron, runId };
   },
 );
 
