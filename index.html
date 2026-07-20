@@ -4191,6 +4191,7 @@
               <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${otherKind}">${esc(otherLabel)}</a>
             </div>
             <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
+            ${kind === 'meta' && isStaffAdmin() ? `<button class="admin-btn admin-btn--secondary" type="button" id="sync-history-clear-meta">Clear log</button>` : ''}
           </div>
           ${renderSyncHistorySummary(data.summary, kind)}
           ${renderSyncHistoryRows(data.runs || [], kind)}
@@ -4200,6 +4201,22 @@
     }
 
     let syncHistoryRefreshTimer = null;
+
+    async function clearMetaSyncHistoryLog() {
+      if (!isStaffAdmin()) return;
+      const confirmed = window.confirm(
+        'Delete all Meta sync log entries?\n\nThis only clears the history table. It does not change ad spend data or client sync status.',
+      );
+      if (!confirmed) return;
+
+      try {
+        const result = await adminFetch('/api/sync-history?type=meta', { method: 'DELETE' });
+        showToast(`Cleared ${result.deleted || 0} log entr${result.deleted === 1 ? 'y' : 'ies'}.`, 'success');
+        await loadSyncHistoryPage('meta');
+      } catch (error) {
+        showToast(error.message || 'Failed to clear Meta sync log.', 'error');
+      }
+    }
 
     function renderSyncHistoryLoginPrompt(kind) {
       const title = kind === 'meta' ? 'Meta sync log' : 'GHL sync log';
@@ -4246,6 +4263,10 @@
         const refreshBtn = document.getElementById('sync-history-refresh');
         if (refreshBtn) {
           refreshBtn.onclick = () => loadSyncHistoryPage(kind);
+        }
+        const clearBtn = document.getElementById('sync-history-clear-meta');
+        if (clearBtn) {
+          clearBtn.onclick = () => clearMetaSyncHistoryLog();
         }
         if (syncHistoryRefreshTimer) {
           clearInterval(syncHistoryRefreshTimer);
