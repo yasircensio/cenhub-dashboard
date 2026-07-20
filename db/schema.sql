@@ -61,7 +61,7 @@ CREATE INDEX IF NOT EXISTS sync_runs_client_id_started_at_idx
 
 CREATE TABLE IF NOT EXISTS meta_sync_runs (
   id BIGSERIAL PRIMARY KEY,
-  client_id TEXT NOT NULL REFERENCES accounts (client_id) ON DELETE CASCADE,
+  client_id TEXT REFERENCES accounts (client_id) ON DELETE CASCADE,
   started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   finished_at TIMESTAMPTZ,
   status TEXT NOT NULL DEFAULT 'running',

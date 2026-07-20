@@ -3,7 +3,7 @@
     "api/inngest.js": {
       "maxDuration": 300
     },
-    "api/cron/meta-sync.js": {
+    "api/meta-sync-cron.js": {
       "maxDuration": 120
     },
     "api/clients.js": {
@@ -63,7 +63,7 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/meta-sync",
+      "path": "/api/meta-sync-cron",
       "schedule": "*/2 * * * *"
     }
   ]

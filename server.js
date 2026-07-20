@@ -245,10 +245,10 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (url === '/api/cron/meta-sync') {
+  if (url === '/api/meta-sync-cron' || url === '/api/cron/meta-sync') {
     try {
       const localResponse = createLocalResponse(response);
-      const handler = require('../api/cron/meta-sync');
+      const handler = require('../api/meta-sync-cron');
       await handler({
         method: request.method,
         headers: request.headers,

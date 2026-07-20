@@ -4076,7 +4076,7 @@
     function renderSyncStatusBadge(status) {
       const normalized = String(status || 'unknown').toLowerCase();
       let modifier = 'running';
-      if (normalized === 'success' || normalized === 'ok') modifier = 'success';
+      if (normalized === 'success' || normalized === 'ok' || normalized === 'cron_tick') modifier = 'success';
       else if (normalized === 'error' || normalized === 'failed') modifier = 'error';
       else if (normalized === 'skipped') modifier = 'skipped';
       return `<span class="sync-status-badge sync-status-badge--${modifier}">${esc(normalized)}</span>`;
