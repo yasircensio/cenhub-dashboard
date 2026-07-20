@@ -74,7 +74,7 @@ const syncAllAccounts = inngest.createFunction(
   },
 );
 
-const metaSyncCron = process.env.META_SYNC_CRON || '*/2 * * * *';
+const metaSyncCron = process.env.META_SYNC_CRON || 'TZ=Europe/Copenhagen 0 */2 * * *';
 
 const dailyMetaSyncAll = inngest.createFunction(
   {

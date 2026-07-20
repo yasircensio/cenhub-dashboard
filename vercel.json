@@ -66,7 +66,7 @@
   "crons": [
     {
       "path": "/api/meta-sync-cron",
-      "schedule": "*/2 * * * *"
+      "schedule": "0 4 * * *"
     }
   ]
 }
