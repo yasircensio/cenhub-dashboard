@@ -243,7 +243,7 @@
         <span>${esc(n)}</span>
       </div>
       <h1>${esc(n)}</h1>
-      <p>${esc(a)}</p>
+      <p>${esc(a)}${t.summary?.totalShown?` \xB7 ${t.summary.totalShown} run(s) shown`:""}</p>
     </div>
     <div class="sync-history-page">
       <div class="sync-history-toolbar">
@@ -257,13 +257,27 @@
       ${renderSyncHistoryRows(t.runs||[],e)}
     </div>
     `)}
-  `}let syncHistoryRefreshTimer=null;async function loadSyncHistoryPage(e,{silent:t=!1}={}){const n=document.getElementById("dashboard");if(n){t||(n.innerHTML=`
+  `}let syncHistoryRefreshTimer=null;function renderSyncHistoryLoginPrompt(e){const t=e==="meta"?"Meta sync log":"GHL sync log";return`
+    ${renderBrandTopbar("")}
+    ${wrapDashboardShell(`
+      <div class="page-hero admin-hub-hero">
+        <h1>${esc(t)}</h1>
+        <p>Sign in with your staff account to view sync run history.</p>
+      </div>
+      <div class="sync-history-page">
+        <div class="sync-history-empty" style="padding:24px;text-align:center">
+          <p style="margin-bottom:16px">Staff login is required. The public health endpoint shows DB totals, but this page reads authenticated sync history.</p>
+          <a class="admin-btn admin-btn--primary" href="/login?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}">Sign in</a>
+        </div>
+      </div>
+    `)}
+  `}async function loadSyncHistoryPage(e,{silent:t=!1}={}){const n=document.getElementById("dashboard");if(!n)return;const a=await fetchStaffMe();if(!a){t||(n.innerHTML=renderSyncHistoryLoginPrompt(e));return}currentStaffUser=a,t||(n.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
       ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading sync history...</p></div>')}
-    `);try{await requireStaffAuth();const a=await adminFetch(`/api/sync-history?type=${encodeURIComponent(e)}&limit=150`);n.innerHTML=renderSyncHistoryPage(e,a);const s=document.getElementById("sync-history-refresh");s&&(s.onclick=()=>loadSyncHistoryPage(e)),syncHistoryRefreshTimer&&(clearInterval(syncHistoryRefreshTimer),syncHistoryRefreshTimer=null),syncHistoryRefreshTimer=window.setInterval(()=>{loadSyncHistoryPage(e,{silent:!0}).catch(()=>{})},6e4)}catch(a){n.innerHTML=`
+    `);try{const s=await adminFetch(`/api/sync-history?type=${encodeURIComponent(e)}&limit=150`);n.innerHTML=renderSyncHistoryPage(e,s);const i=document.getElementById("sync-history-refresh");i&&(i.onclick=()=>loadSyncHistoryPage(e)),syncHistoryRefreshTimer&&(clearInterval(syncHistoryRefreshTimer),syncHistoryRefreshTimer=null),syncHistoryRefreshTimer=window.setInterval(()=>{loadSyncHistoryPage(e,{silent:!0}).catch(()=>{})},6e4)}catch(s){n.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
-      ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(a.message)}</div>`)}
-    `}}}function renderAdminHubPage(e){const t=e.length,n=currentStaffUser?`
+      ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(s.message)}</div>`)}
+    `}}function renderAdminHubPage(e){const t=e.length,n=currentStaffUser?`
           <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/ghl">GHL sync log</a>
           <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
   `:"",a=isStaffAdmin()?`
@@ -1103,4 +1117,4 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
           <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
         </div>
       `)}
-    `}}function syncFiltersFromDom(){["status","source","assignedTo","dateField"].forEach(t=>{const n=document.getElementById(t);n&&(state[t]=n.value)});const e=document.getElementById("adSpend");if(e&&(state.adSpend=e.value),state.preset==="custom"){const t=document.getElementById("dateFrom"),n=document.getElementById("dateTo");t&&(state.dateFrom=t.value),n&&(state.dateTo=n.value),state.dateField="createdAt"}}function hasPartialDateRange(){return!!(state.dateFrom&&!state.dateTo||!state.dateFrom&&state.dateTo)}function applyPreset(e){if(clearDateRangeError(),closeDatePicker(),setPreset(e),updateFilterUi(),e==="custom"){const t=document.getElementById("dateFrom-trigger");t&&openDatePicker("dateFrom",t);return}applyDataFilters(!1)}function applyDataFilters(e=!0){if(e&&syncFiltersFromDom(),state.preset==="custom"){if(hasPartialDateRange()){showDateRangeError("Select both From and To dates.");return}if(state.dateFrom&&state.dateTo&&state.dateFrom>state.dateTo){showDateRangeError("From date must be on or before To date.");return}if(state.dateFrom&&isStartDateDisabled(state.dateFrom)){showDateRangeError("Start date must be before today.");return}if(state.dateTo&&isFutureDateDisabled(state.dateTo)){showDateRangeError("End date cannot be after today.");return}}clearDateRangeError(),!state.pipelineIds.length&&availablePipelines.length&&ensurePipelineDefaults(availablePipelines,cachedData?.account?.defaultPipelineIds),state.pipelineIds.length&&loadDashboard(!0)}async function bootAdminApp(){if(IS_LOGIN_PAGE){renderLoginPage();return}if(IS_ADMIN_HUB){loadAdminHub();return}if(IS_ADMIN_SYNC_HISTORY_GHL){loadSyncHistoryPage("ghl");return}if(IS_ADMIN_SYNC_HISTORY_META){loadSyncHistoryPage("meta");return}if(IS_TEAM_PAGE){loadTeamPage();return}try{tenantParams=await resolveTenantParams()}catch(e){document.getElementById("dashboard").innerHTML='<div class="error-state" style="padding:24px">'+esc(e.message)+"</div>";return}if(IS_ADMIN_CLIENT){await initAdminClientPage();return}ensureChartsVisible(),loadDashboard(!0),setTimeout(function(){loadDashboard(!0,{background:!0,forceFresh:!0})},500),setInterval(function(){loadDashboard(!0,{background:!0,forceFresh:!0})},120*1e3)}bootAdminApp(),document.addEventListener("click",function(){closeCardMenus(),closeStaffUserMenu()}),document.addEventListener("visibilitychange",function(){document.visibilityState==="visible"&&(isFetching&&Date.now()-fetchStartedAt>FETCH_TIMEOUT_MS&&(cancelActiveFetch(),fetchGeneration+=1,resetFetchUiState()),!IS_ADMIN_HUB&&cachedData&&needsFreshData()&&loadDashboard(!0,{background:!0,forceFresh:!0}))});
+    `}}function syncFiltersFromDom(){["status","source","assignedTo","dateField"].forEach(t=>{const n=document.getElementById(t);n&&(state[t]=n.value)});const e=document.getElementById("adSpend");if(e&&(state.adSpend=e.value),state.preset==="custom"){const t=document.getElementById("dateFrom"),n=document.getElementById("dateTo");t&&(state.dateFrom=t.value),n&&(state.dateTo=n.value),state.dateField="createdAt"}}function hasPartialDateRange(){return!!(state.dateFrom&&!state.dateTo||!state.dateFrom&&state.dateTo)}function applyPreset(e){if(clearDateRangeError(),closeDatePicker(),setPreset(e),updateFilterUi(),e==="custom"){const t=document.getElementById("dateFrom-trigger");t&&openDatePicker("dateFrom",t);return}applyDataFilters(!1)}function applyDataFilters(e=!0){if(e&&syncFiltersFromDom(),state.preset==="custom"){if(hasPartialDateRange()){showDateRangeError("Select both From and To dates.");return}if(state.dateFrom&&state.dateTo&&state.dateFrom>state.dateTo){showDateRangeError("From date must be on or before To date.");return}if(state.dateFrom&&isStartDateDisabled(state.dateFrom)){showDateRangeError("Start date must be before today.");return}if(state.dateTo&&isFutureDateDisabled(state.dateTo)){showDateRangeError("End date cannot be after today.");return}}clearDateRangeError(),!state.pipelineIds.length&&availablePipelines.length&&ensurePipelineDefaults(availablePipelines,cachedData?.account?.defaultPipelineIds),state.pipelineIds.length&&loadDashboard(!0)}async function bootAdminApp(){if(IS_LOGIN_PAGE){renderLoginPage();return}if(IS_ADMIN_HUB){loadAdminHub();return}if(IS_ADMIN_SYNC_HISTORY_GHL){await loadSyncHistoryPage("ghl");return}if(IS_ADMIN_SYNC_HISTORY_META){await loadSyncHistoryPage("meta");return}if(IS_TEAM_PAGE){loadTeamPage();return}try{tenantParams=await resolveTenantParams()}catch(e){document.getElementById("dashboard").innerHTML='<div class="error-state" style="padding:24px">'+esc(e.message)+"</div>";return}if(IS_ADMIN_CLIENT){await initAdminClientPage();return}ensureChartsVisible(),loadDashboard(!0),setTimeout(function(){loadDashboard(!0,{background:!0,forceFresh:!0})},500),setInterval(function(){loadDashboard(!0,{background:!0,forceFresh:!0})},120*1e3)}bootAdminApp(),document.addEventListener("click",function(){closeCardMenus(),closeStaffUserMenu()}),document.addEventListener("visibilitychange",function(){document.visibilityState==="visible"&&(isFetching&&Date.now()-fetchStartedAt>FETCH_TIMEOUT_MS&&(cancelActiveFetch(),fetchGeneration+=1,resetFetchUiState()),!IS_ADMIN_HUB&&cachedData&&needsFreshData()&&loadDashboard(!0,{background:!0,forceFresh:!0}))});

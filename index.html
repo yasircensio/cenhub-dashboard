@@ -4182,7 +4182,7 @@
             <span>${esc(title)}</span>
           </div>
           <h1>${esc(title)}</h1>
-          <p>${esc(subtitle)}</p>
+          <p>${esc(subtitle)}${data.summary?.totalShown ? ` · ${data.summary.totalShown} run(s) shown` : ''}</p>
         </div>
         <div class="sync-history-page">
           <div class="sync-history-toolbar">
@@ -4201,9 +4201,38 @@
 
     let syncHistoryRefreshTimer = null;
 
+    function renderSyncHistoryLoginPrompt(kind) {
+      const title = kind === 'meta' ? 'Meta sync log' : 'GHL sync log';
+      return `
+        ${renderBrandTopbar('')}
+        ${wrapDashboardShell(`
+          <div class="page-hero admin-hub-hero">
+            <h1>${esc(title)}</h1>
+            <p>Sign in with your staff account to view sync run history.</p>
+          </div>
+          <div class="sync-history-page">
+            <div class="sync-history-empty" style="padding:24px;text-align:center">
+              <p style="margin-bottom:16px">Staff login is required. The public health endpoint shows DB totals, but this page reads authenticated sync history.</p>
+              <a class="admin-btn admin-btn--primary" href="/login?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}">Sign in</a>
+            </div>
+          </div>
+        `)}
+      `;
+    }
+
     async function loadSyncHistoryPage(kind, { silent = false } = {}) {
       const dashboard = document.getElementById('dashboard');
       if (!dashboard) return;
+
+      const user = await fetchStaffMe();
+      if (!user) {
+        if (!silent) {
+          dashboard.innerHTML = renderSyncHistoryLoginPrompt(kind);
+        }
+        return;
+      }
+      currentStaffUser = user;
+
       if (!silent) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome(kind === 'meta' ? 'meta-sync' : 'ghl-sync'))}
@@ -4212,7 +4241,6 @@
       }
 
       try {
-        await requireStaffAuth();
         const data = await adminFetch(`/api/sync-history?type=${encodeURIComponent(kind)}&limit=150`);
         dashboard.innerHTML = renderSyncHistoryPage(kind, data);
         const refreshBtn = document.getElementById('sync-history-refresh');
