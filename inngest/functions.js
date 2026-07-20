@@ -4,6 +4,7 @@ const { listClientIds, listMetaSyncableClientIds } = require('../lib/account-sto
 const { buildAccountSyncEvents, createBatchId } = require('../lib/sync-batch');
 const { syncAccount } = require('../lib/sync-service');
 const { syncMetaMetrics } = require('../lib/meta-sync-service');
+const { logMetaSyncRun } = require('../lib/sync-history');
 
 async function listSyncableClientIds() {
   return listClientIds();
@@ -84,8 +85,27 @@ const dailyMetaSyncAll = inngest.createFunction(
   async ({ step }) => {
     const clientIds = await step.run('list-meta-clients', listMetaSyncableClientIds);
     if (!clientIds.length) {
+      await step.run('log-meta-cron-empty', async () => {
+        await logMetaSyncRun(null, {
+          status: 'skipped',
+          source: 'cron',
+          errorMessage: 'Inngest Meta cron ran but no syncable clients (check META_SYSTEM_USER_TOKEN and meta ad account IDs).',
+          startedAt: new Date().toISOString(),
+          finishedAt: new Date().toISOString(),
+        });
+      });
       return { synced: 0, skipped: 0, results: [], schedule: metaSyncCron };
     }
+
+    await step.run('log-meta-cron-start', async () => {
+      await logMetaSyncRun(null, {
+        status: 'cron_tick',
+        source: 'cron',
+        errorMessage: `Inngest Meta cron started for ${clientIds.length} client(s).`,
+        startedAt: new Date().toISOString(),
+        finishedAt: new Date().toISOString(),
+      });
+    });
 
     const results = [];
     for (const clientId of clientIds) {
@@ -96,6 +116,16 @@ const dailyMetaSyncAll = inngest.createFunction(
     const synced = results.filter((row) => row.success).length;
     const skipped = results.filter((row) => row.skipped).length;
     const failed = results.filter((row) => !row.success && !row.skipped).length;
+
+    await step.run('log-meta-cron-finish', async () => {
+      await logMetaSyncRun(null, {
+        status: failed ? 'error' : 'success',
+        source: 'cron',
+        errorMessage: `Inngest Meta cron finished: ${synced} synced, ${skipped} skipped, ${failed} failed.`,
+        startedAt: new Date().toISOString(),
+        finishedAt: new Date().toISOString(),
+      });
+    });
 
     return { synced, skipped, failed, results };
   },
