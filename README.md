@@ -47,7 +47,7 @@ See `.env.example` for the full list. Key vars:
 | `DASHBOARD_ADMIN_API_KEY` | Protects `/api/clients` writes and admin list |
 | `ACCOUNT_CONFIG_ENCRYPTION_KEY` | Encrypts stored GHL tokens (optional locally — plaintext fallback in file store) |
 | `DATABASE_URL` | Neon Postgres (optional — file fallback if unset) |
-| `DASHBOARD_READ_SOURCE` | `snapshot` in production (Neon); set `live` to revert without deploy |
+| `DASHBOARD_READ_SOURCE` | Production auto-uses `snapshot`; rollback needs `live` + `DASHBOARD_LIVE_ROLLBACK=1` |
 | `DASHBOARD_CACHE_TTL_MINUTES` | Short server buffer for live mode filter clicks (default `2`) |
 | `GHL_WEBHOOK_ENABLED` | Set `1` after GHL marketplace webhook URL is live |
 | `GHL_SSO_SHARED_SECRET` | GHL marketplace app SSO validation |
