@@ -660,6 +660,21 @@
 
     .admin-breadcrumb a:hover { text-decoration: underline; }
 
+    .page-hero .admin-breadcrumb,
+    .admin-hub-hero .admin-breadcrumb {
+      color: rgba(255, 255, 255, 0.58);
+    }
+
+    .page-hero .admin-breadcrumb a,
+    .admin-hub-hero .admin-breadcrumb a {
+      color: rgba(255, 255, 255, 0.92);
+    }
+
+    .page-hero .admin-breadcrumb a:hover,
+    .admin-hub-hero .admin-breadcrumb a:hover {
+      color: #fff;
+    }
+
     .hub-toolbar-row {
       align-items: center;
       display: flex;
@@ -709,8 +724,14 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      justify-content: space-between;
+      justify-content: flex-start;
       margin-bottom: 14px;
+    }
+
+    .sync-history-toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .sync-history-table-wrap {
@@ -1884,7 +1905,7 @@
     .admin-btn--secondary:hover {
       background: var(--surface-hover);
       border-color: var(--primary);
-      color: var(--primary);
+      color: var(--text);
     }
 
     .admin-btn--danger {

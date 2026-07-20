@@ -247,12 +247,12 @@
     </div>
     <div class="sync-history-page">
       <div class="sync-history-toolbar">
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="sync-history-toolbar-actions">
           <a class="admin-btn admin-btn--secondary" href="/admin">\u2190 Back to clients</a>
           <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${s}">${esc(i)}</a>
+          <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
+          ${e==="meta"&&isStaffAdmin()?'<button class="admin-btn admin-btn--secondary" type="button" id="sync-history-clear-meta">Clear log</button>':""}
         </div>
-        <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
-        ${e==="meta"&&isStaffAdmin()?'<button class="admin-btn admin-btn--secondary" type="button" id="sync-history-clear-meta">Clear log</button>':""}
       </div>
       ${renderSyncHistorySummary(t.summary,e)}
       ${renderSyncHistoryRows(t.runs||[],e)}
