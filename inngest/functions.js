@@ -71,11 +71,13 @@ const syncAllAccounts = inngest.createFunction(
   },
 );
 
+const metaSyncCron = 'TZ=Europe/Copenhagen 0 4,10,16,22 * * *';
+
 const dailyMetaSyncAll = inngest.createFunction(
   {
     id: 'daily-sync-meta-metrics',
-    name: 'Daily sync Meta ad metrics (sequential)',
-    triggers: [cron('TZ=Europe/Copenhagen 0 4 * * *')],
+    name: 'Sync Meta ad metrics (4x daily, sequential)',
+    triggers: [cron(metaSyncCron)],
   },
   async ({ step }) => {
     const clientIds = await step.run('list-meta-clients', listMetaSyncableClientIds);
