@@ -75,6 +75,8 @@ const syncAllAccounts = inngest.createFunction(
 const metaSyncCron = process.env.META_SYNC_CRON || 'TZ=Europe/Copenhagen 0 */2 * * *';
 const PRODUCTION_APP_URL = (process.env.INNGEST_SERVE_ORIGIN || 'https://cenhub-dashboard.vercel.app').replace(/\/$/, '');
 const { debugIngest } = require('../lib/debug-ingest');
+const { usePostgres } = require('../lib/db');
+const { runMetaSyncInngestJob } = require('../lib/meta-sync-inngest-handler');
 
 function normalizeBearerToken(value) {
   return String(value || '').trim();
@@ -87,7 +89,23 @@ const dailyMetaSyncAll = inngest.createFunction(
     triggers: [cron(metaSyncCron)],
   },
   async ({ step, runId }) => {
-    return step.run('run-meta-sync-on-production', async () => {
+    const hasDatabase = usePostgres();
+    debugIngest('inngest/functions.js:dailyMetaSyncAll', 'cron invoked', {
+      runId,
+      hasDatabase,
+      vercelEnv: process.env.VERCEL_ENV || null,
+      vercelUrl: process.env.VERCEL_URL || null,
+      schedule: metaSyncCron,
+    }, 'H6');
+
+    if (hasDatabase) {
+      return step.run('run-meta-sync-direct-v2', () => runMetaSyncInngestJob({
+        runId,
+        schedule: metaSyncCron,
+      }));
+    }
+
+    return step.run('run-meta-sync-delegate-v2', async () => {
       const eventKey = normalizeBearerToken(process.env.INNGEST_EVENT_KEY);
       if (!eventKey) {
         throw new Error('INNGEST_EVENT_KEY is not configured.');
@@ -99,7 +117,7 @@ const dailyMetaSyncAll = inngest.createFunction(
         url,
         vercelEnv: process.env.VERCEL_ENV || null,
         hasEventKey: Boolean(eventKey),
-      }, 'H1');
+      }, 'H7');
 
       const response = await fetch(url, {
         method: 'POST',
@@ -126,7 +144,7 @@ const dailyMetaSyncAll = inngest.createFunction(
         ok: response.ok,
         error: body?.error || null,
         synced: body?.synced ?? null,
-      }, 'H1');
+      }, 'H7');
 
       if (!response.ok) {
         throw new Error(body?.error || text || `Production meta sync failed (${response.status})`);
