@@ -73,10 +73,12 @@ const syncAllAccounts = inngest.createFunction(
 );
 
 const metaSyncCron = process.env.META_SYNC_CRON || 'TZ=Europe/Copenhagen 0 */2 * * *';
-const PRODUCTION_APP_URL = (process.env.INNGEST_SERVE_ORIGIN || 'https://cenhub-dashboard.vercel.app').replace(/\/$/, '');
+// Always delegate to production — preview URLs have no persistent DB for sync logs.
+const PRODUCTION_APP_URL = 'https://cenhub-dashboard.vercel.app';
 const { debugIngest } = require('../lib/debug-ingest');
 const { usePostgres } = require('../lib/db');
 const { runMetaSyncInngestJob } = require('../lib/meta-sync-inngest-handler');
+const { logMetaSyncRun } = require('../lib/sync-history');
 
 function normalizeBearerToken(value) {
   return String(value || '').trim();
@@ -96,16 +98,25 @@ const dailyMetaSyncAll = inngest.createFunction(
       vercelEnv: process.env.VERCEL_ENV || null,
       vercelUrl: process.env.VERCEL_URL || null,
       schedule: metaSyncCron,
+      delegateTarget: PRODUCTION_APP_URL,
     }, 'H6');
 
     if (hasDatabase) {
-      return step.run('run-meta-sync-direct-v2', () => runMetaSyncInngestJob({
+      const hookAt = new Date().toISOString();
+      await logMetaSyncRun(null, {
+        status: 'cron_tick',
+        source: 'inngest',
+        errorMessage: `Inngest cron hook (${runId || 'unknown'}) on ${process.env.VERCEL_ENV || 'unknown'} before direct sync.`,
+        startedAt: hookAt,
+        finishedAt: hookAt,
+      });
+      return step.run('run-meta-sync-direct-v3', () => runMetaSyncInngestJob({
         runId,
         schedule: metaSyncCron,
       }));
     }
 
-    return step.run('run-meta-sync-delegate-v2', async () => {
+    return step.run('run-meta-sync-delegate-v3', async () => {
       const eventKey = normalizeBearerToken(process.env.INNGEST_EVENT_KEY);
       if (!eventKey) {
         throw new Error('INNGEST_EVENT_KEY is not configured.');
