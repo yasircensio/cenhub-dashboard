@@ -245,6 +245,22 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/cron/meta-sync') {
+    try {
+      const localResponse = createLocalResponse(response);
+      const handler = require('../api/cron/meta-sync');
+      await handler({
+        method: request.method,
+        headers: request.headers,
+        query: Object.fromEntries(requestUrl.searchParams),
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Meta cron failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/facebook-metrics') {
     try {
       const query = Object.fromEntries(requestUrl.searchParams);

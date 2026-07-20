@@ -3,6 +3,9 @@
     "api/inngest.js": {
       "maxDuration": 300
     },
+    "api/cron/meta-sync.js": {
+      "maxDuration": 120
+    },
     "api/clients.js": {
       "maxDuration": 60
     },
@@ -56,6 +59,12 @@
       "headers": [
         { "key": "X-Frame-Options", "value": "DENY" }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/meta-sync",
+      "schedule": "*/2 * * * *"
     }
   ]
 }
