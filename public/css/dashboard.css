@@ -1878,7 +1878,7 @@
 
     .admin-btn:hover {
       background: var(--surface-hover);
-      border-color: #e8e0d8;
+      border-color: var(--border-strong);
       color: var(--text);
     }
 
@@ -1904,7 +1904,7 @@
 
     .admin-btn--secondary:hover {
       background: var(--surface-hover);
-      border-color: #e8e0d8;
+      border-color: #c4b3a1;
       color: var(--text);
     }
 
