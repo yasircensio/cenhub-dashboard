@@ -74,6 +74,11 @@ const syncAllAccounts = inngest.createFunction(
 
 const metaSyncCron = process.env.META_SYNC_CRON || 'TZ=Europe/Copenhagen 0 */2 * * *';
 const PRODUCTION_APP_URL = (process.env.INNGEST_SERVE_ORIGIN || 'https://cenhub-dashboard.vercel.app').replace(/\/$/, '');
+const { debugIngest } = require('../lib/debug-ingest');
+
+function normalizeBearerToken(value) {
+  return String(value || '').trim();
+}
 
 const dailyMetaSyncAll = inngest.createFunction(
   {
@@ -83,12 +88,20 @@ const dailyMetaSyncAll = inngest.createFunction(
   },
   async ({ step, runId }) => {
     return step.run('run-meta-sync-on-production', async () => {
-      const eventKey = process.env.INNGEST_EVENT_KEY;
+      const eventKey = normalizeBearerToken(process.env.INNGEST_EVENT_KEY);
       if (!eventKey) {
         throw new Error('INNGEST_EVENT_KEY is not configured.');
       }
 
-      const response = await fetch(`${PRODUCTION_APP_URL}/api/meta-sync-inngest`, {
+      const url = `${PRODUCTION_APP_URL}/api/meta-sync-inngest`;
+      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'delegate fetch start', {
+        runId,
+        url,
+        vercelEnv: process.env.VERCEL_ENV || null,
+        hasEventKey: Boolean(eventKey),
+      }, 'H1');
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,6 +119,14 @@ const dailyMetaSyncAll = inngest.createFunction(
           body = { raw: text };
         }
       }
+
+      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'delegate fetch done', {
+        runId,
+        httpStatus: response.status,
+        ok: response.ok,
+        error: body?.error || null,
+        synced: body?.synced ?? null,
+      }, 'H1');
 
       if (!response.ok) {
         throw new Error(body?.error || text || `Production meta sync failed (${response.status})`);
