@@ -73,15 +73,16 @@ const syncAllAccounts = inngest.createFunction(
 );
 
 const metaSyncCron = process.env.META_SYNC_CRON || 'TZ=Europe/Copenhagen 0 */2 * * *';
-// Always delegate to production — preview URLs have no persistent DB for sync logs.
-const PRODUCTION_APP_URL = 'https://cenhub-dashboard.vercel.app';
+const PRODUCTION_META_SYNC_URL = 'https://cenhub-dashboard.vercel.app/api/meta-sync-inngest';
 const { debugIngest } = require('../lib/debug-ingest');
-const { usePostgres } = require('../lib/db');
-const { runMetaSyncInngestJob } = require('../lib/meta-sync-inngest-handler');
-const { logMetaSyncRun } = require('../lib/sync-history');
 
 function normalizeBearerToken(value) {
   return String(value || '').trim();
+}
+
+function getMetaSyncAuthToken() {
+  return normalizeBearerToken(process.env.CRON_SECRET)
+    || normalizeBearerToken(process.env.INNGEST_EVENT_KEY);
 }
 
 const dailyMetaSyncAll = inngest.createFunction(
@@ -91,52 +92,27 @@ const dailyMetaSyncAll = inngest.createFunction(
     triggers: [cron(metaSyncCron)],
   },
   async ({ step, runId }) => {
-    const hasDatabase = usePostgres();
-    debugIngest('inngest/functions.js:dailyMetaSyncAll', 'cron invoked', {
-      runId,
-      hasDatabase,
-      vercelEnv: process.env.VERCEL_ENV || null,
-      vercelUrl: process.env.VERCEL_URL || null,
-      schedule: metaSyncCron,
-      delegateTarget: PRODUCTION_APP_URL,
-    }, 'H6');
-
-    if (hasDatabase) {
-      const hookAt = new Date().toISOString();
-      await logMetaSyncRun(null, {
-        status: 'cron_tick',
-        source: 'inngest',
-        errorMessage: `Inngest cron hook (${runId || 'unknown'}) on ${process.env.VERCEL_ENV || 'unknown'} before direct sync.`,
-        startedAt: hookAt,
-        finishedAt: hookAt,
-      });
-      return step.run('run-meta-sync-direct-v3', () => runMetaSyncInngestJob({
-        runId,
-        schedule: metaSyncCron,
-      }));
-    }
-
-    return step.run('run-meta-sync-delegate-v3', async () => {
-      const eventKey = normalizeBearerToken(process.env.INNGEST_EVENT_KEY);
-      if (!eventKey) {
-        throw new Error('INNGEST_EVENT_KEY is not configured.');
+    return step.run('run-meta-sync-on-production-v4', async () => {
+      const authToken = getMetaSyncAuthToken();
+      if (!authToken) {
+        throw new Error('Set CRON_SECRET or INNGEST_EVENT_KEY for Meta sync cron auth.');
       }
 
-      const url = `${PRODUCTION_APP_URL}/api/meta-sync-inngest`;
-      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'delegate fetch start', {
+      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'production delegate start', {
         runId,
-        url,
+        url: PRODUCTION_META_SYNC_URL,
         vercelEnv: process.env.VERCEL_ENV || null,
-        hasEventKey: Boolean(eventKey),
-      }, 'H7');
+        hasCronSecret: Boolean(process.env.CRON_SECRET),
+        hasEventKey: Boolean(process.env.INNGEST_EVENT_KEY),
+      }, 'H8');
 
-      const response = await fetch(url, {
+      const response = await fetch(PRODUCTION_META_SYNC_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${eventKey}`,
+          Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ runId, schedule: metaSyncCron }),
+        body: JSON.stringify({ runId, schedule: metaSyncCron, trigger: 'inngest-cron' }),
       });
 
       const text = await response.text();
@@ -149,13 +125,13 @@ const dailyMetaSyncAll = inngest.createFunction(
         }
       }
 
-      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'delegate fetch done', {
+      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'production delegate done', {
         runId,
         httpStatus: response.status,
         ok: response.ok,
         error: body?.error || null,
         synced: body?.synced ?? null,
-      }, 'H7');
+      }, 'H8');
 
       if (!response.ok) {
         throw new Error(body?.error || text || `Production meta sync failed (${response.status})`);
