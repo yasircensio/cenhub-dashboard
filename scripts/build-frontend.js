@@ -97,6 +97,14 @@ async function bootAdminApp() {
     loadAdminHub();
     return;
   }
+  if (IS_ADMIN_SYNC_HISTORY_GHL) {
+    loadSyncHistoryPage('ghl');
+    return;
+  }
+  if (IS_ADMIN_SYNC_HISTORY_META) {
+    loadSyncHistoryPage('meta');
+    return;
+  }
   if (IS_TEAM_PAGE) {
     loadTeamPage();
     return;

@@ -68,7 +68,8 @@ function createLocalResponse(serverResponse) {
 }
 
 function serveDashboardHtml(response, mode, clientSlug = null) {
-  const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team';
+  const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team'
+    || mode === 'sync-history-ghl' || mode === 'sync-history-meta';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
   let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
   const bodyAttrs = [`data-dashboard-mode="${mode}"`];
@@ -229,6 +230,21 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/sync-history') {
+    try {
+      const localResponse = createLocalResponse(response);
+      await require('./lib/sync-history-handler').handleSyncHistoryRequest({
+        method: request.method,
+        headers: request.headers,
+        query: Object.fromEntries(requestUrl.searchParams),
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Sync history API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/facebook-metrics') {
     try {
       const query = Object.fromEntries(requestUrl.searchParams);
@@ -265,6 +281,16 @@ const server = http.createServer(async (request, response) => {
 
   if (url === '/admin' || url === '/admin.html') {
     serveDashboardHtml(response, 'hub');
+    return;
+  }
+
+  if (url === '/admin/sync-history/ghl') {
+    serveDashboardHtml(response, 'sync-history-ghl');
+    return;
+  }
+
+  if (url === '/admin/sync-history/meta') {
+    serveDashboardHtml(response, 'sync-history-meta');
     return;
   }
 

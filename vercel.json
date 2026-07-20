@@ -14,6 +14,7 @@
     { "source": "/login", "destination": "/admin.html" },
     { "source": "/team", "destination": "/admin.html" },
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/sync-history/:kind", "destination": "/admin.html" },
     { "source": "/admin/:client_id", "destination": "/admin.html" },
     { "source": "/:client_id", "destination": "/client.html" }
   ],

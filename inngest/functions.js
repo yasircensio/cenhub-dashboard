@@ -43,7 +43,9 @@ const syncOneAccount = inngest.createFunction(
       throw new Error('Missing clientId in event data.');
     }
 
-    return step.run(`sync-${clientId}`, () => syncAccount(clientId));
+    return step.run(`sync-${clientId}`, () => syncAccount(clientId, {
+      source: event.data?.source || 'inngest',
+    }));
   },
 );
 
@@ -71,23 +73,23 @@ const syncAllAccounts = inngest.createFunction(
   },
 );
 
-const metaSyncCron = 'TZ=Europe/Copenhagen 0 4,10,16,22 * * *';
+const metaSyncCron = process.env.META_SYNC_CRON || '*/2 * * * *';
 
 const dailyMetaSyncAll = inngest.createFunction(
   {
     id: 'daily-sync-meta-metrics',
-    name: 'Sync Meta ad metrics (4x daily, sequential)',
+    name: 'Sync Meta ad metrics (scheduled, sequential)',
     triggers: [cron(metaSyncCron)],
   },
   async ({ step }) => {
     const clientIds = await step.run('list-meta-clients', listMetaSyncableClientIds);
     if (!clientIds.length) {
-      return { synced: 0, skipped: 0, results: [] };
+      return { synced: 0, skipped: 0, results: [], schedule: metaSyncCron };
     }
 
     const results = [];
     for (const clientId of clientIds) {
-      const result = await step.run(`sync-meta-${clientId}`, () => syncMetaMetrics(clientId));
+      const result = await step.run(`sync-meta-${clientId}`, () => syncMetaMetrics(clientId, { source: 'cron' }));
       results.push({ clientId, ...result });
     }
 

@@ -63,6 +63,8 @@
     /* Admin surfaces keep the warm brand background but use near-black text for readability. */
     body[data-dashboard-mode="hub"],
     body[data-dashboard-mode="admin"],
+    body[data-dashboard-mode="sync-history-ghl"],
+    body[data-dashboard-mode="sync-history-meta"],
     body[data-dashboard-mode="team"],
     body[data-dashboard-mode="login"] {
       --text: #16120e;
@@ -680,6 +682,104 @@
       font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
+    }
+
+    .sync-history-page { padding-bottom: 48px; }
+
+    .sync-history-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .sync-history-stat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .sync-history-stat-label {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .sync-history-stat-value {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .sync-history-toolbar {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .sync-history-table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: auto;
+    }
+
+    .sync-history-table {
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 760px;
+      width: 100%;
+    }
+
+    .sync-history-table th,
+    .sync-history-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .sync-history-table th {
+      background: var(--panel-soft);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .sync-history-table tr:last-child td { border-bottom: none; }
+
+    .sync-status-badge {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      text-transform: capitalize;
+    }
+
+    .sync-status-badge--success { background: var(--status-ok-bg); color: var(--status-ok-text); }
+    .sync-status-badge--error { background: var(--danger-soft); color: var(--danger-text); }
+    .sync-status-badge--skipped { background: var(--status-warn-bg); color: var(--status-warn-text); }
+    .sync-status-badge--running { background: var(--primary-soft); color: var(--primary-dark); }
+
+    .sync-history-empty {
+      color: var(--text-soft);
+      padding: 28px 16px;
+      text-align: center;
+    }
+
+    .sync-history-detail {
+      color: var(--text-muted);
+      font-size: 12px;
+      max-width: 280px;
+      word-break: break-word;
     }
 
     .hub-toolbar-actions {
@@ -3106,6 +3206,11 @@
         return;
       }
       if (parts[0] === 'admin') {
+        if (parts[1] === 'sync-history' && (parts[2] === 'ghl' || parts[2] === 'meta')) {
+          document.body.dataset.dashboardMode = `sync-history-${parts[2]}`;
+          delete document.body.dataset.clientSlug;
+          return;
+        }
         document.body.dataset.dashboardMode = parts.length >= 2 ? 'admin' : 'hub';
         if (parts.length >= 2) document.body.dataset.clientSlug = parts[1];
         else delete document.body.dataset.clientSlug;
@@ -3122,12 +3227,15 @@
     const IS_TEAM_PAGE = DASHBOARD_MODE === 'team';
     const IS_ADMIN_HUB = DASHBOARD_MODE === 'hub';
     const IS_ADMIN_CLIENT = DASHBOARD_MODE === 'admin';
+    const IS_ADMIN_SYNC_HISTORY_GHL = DASHBOARD_MODE === 'sync-history-ghl';
+    const IS_ADMIN_SYNC_HISTORY_META = DASHBOARD_MODE === 'sync-history-meta';
+    const IS_ADMIN_SYNC_HISTORY = IS_ADMIN_SYNC_HISTORY_GHL || IS_ADMIN_SYNC_HISTORY_META;
     const IS_CLIENT_VIEW = DASHBOARD_MODE === 'client';
     const IS_PREVIEW = IS_CLIENT_VIEW && Boolean(new URLSearchParams(window.location.search).get('client'));
-    const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE
+    const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY
       || new URLSearchParams(window.location.search).get('view') === 'admin';
 
-    const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN;
+    const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN;
     const LOADING_MSG = ADMIN_UI ? 'Loading dashboard data...' : 'Henter dashboard data...';
     const RETRY_MSG = ADMIN_UI ? 'Try again' : 'Prøv igen';
 
@@ -3949,9 +4057,184 @@
       return (words[0][0] + words[1][0]).toUpperCase();
     }
 
+    function formatSyncHistoryTimestamp(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '—';
+      return date.toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+    }
+
+    function renderSyncStatusBadge(status) {
+      const normalized = String(status || 'unknown').toLowerCase();
+      let modifier = 'running';
+      if (normalized === 'success' || normalized === 'ok') modifier = 'success';
+      else if (normalized === 'error' || normalized === 'failed') modifier = 'error';
+      else if (normalized === 'skipped') modifier = 'skipped';
+      return `<span class="sync-status-badge sync-status-badge--${modifier}">${esc(normalized)}</span>`;
+    }
+
+    function formatSyncSource(source) {
+      const labels = {
+        cron: 'Scheduled (Inngest)',
+        manual: 'Manual (admin)',
+        inngest: 'Inngest job',
+        'auto-refresh': 'Dashboard auto-refresh',
+        unknown: 'Unknown',
+      };
+      return labels[source] || source;
+    }
+
+    function renderSyncHistorySummary(summary, kind) {
+      return `
+        <div class="sync-history-summary">
+          <div class="sync-history-stat">
+            <div class="sync-history-stat-label">Last run</div>
+            <div class="sync-history-stat-value">${esc(formatSyncHistoryTimestamp(summary?.lastRunAt))}</div>
+          </div>
+          <div class="sync-history-stat">
+            <div class="sync-history-stat-label">Last successful sync</div>
+            <div class="sync-history-stat-value">${esc(formatSyncHistoryTimestamp(summary?.lastSuccessAt))}</div>
+          </div>
+          <div class="sync-history-stat">
+            <div class="sync-history-stat-label">${kind === 'meta' ? 'Meta cron schedule' : 'GHL cron schedule'}</div>
+            <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary?.schedule || '—')}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSyncHistoryRows(runs, kind) {
+      if (!runs.length) {
+        return '<div class="sync-history-empty">No sync runs logged yet.</div>';
+      }
+
+      const detailHeader = kind === 'meta' ? 'Spend / details' : 'Details';
+      const rows = runs.map((run) => {
+        let detail = '—';
+        if (kind === 'meta') {
+          const parts = [];
+          if (run.thisMonthSpend != null) parts.push(`${fmtDkk(run.thisMonthSpend)} DKK this month`);
+          if (run.spendDateStop) parts.push(`through ${run.spendDateStop}`);
+          if (run.errorMessage) parts.push(run.errorMessage);
+          detail = parts.join(' · ') || '—';
+        } else if (run.opportunityCount != null) {
+          detail = `${run.opportunityCount} opportunities`;
+          if (run.errorMessage) detail += ` · ${run.errorMessage}`;
+        } else if (run.errorMessage) {
+          detail = run.errorMessage;
+        }
+
+        return `
+          <tr>
+            <td>${esc(formatSyncHistoryTimestamp(run.startedAt))}</td>
+            <td>${esc(run.accountName || run.clientId)}</td>
+            <td>${renderSyncStatusBadge(run.status)}</td>
+            <td>${esc(formatSyncSource(run.source))}</td>
+            <td class="sync-history-detail">${esc(detail)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <div class="sync-history-table-wrap">
+          <table class="sync-history-table">
+            <thead>
+              <tr>
+                <th>Started</th>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Source</th>
+                <th>${detailHeader}</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderSyncHistoryPage(kind, data) {
+      const title = kind === 'meta' ? 'Meta ad spend sync history' : 'GHL / Cenhub sync history';
+      const subtitle = kind === 'meta'
+        ? 'Every Meta metrics sync — scheduled, manual, and dashboard auto-refresh.'
+        : 'Every GHL snapshot sync — scheduled Inngest jobs and manual admin syncs.';
+      const otherKind = kind === 'meta' ? 'ghl' : 'meta';
+      const otherLabel = kind === 'meta' ? 'GHL sync log' : 'Meta sync log';
+
+      return `
+        ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
+        ${wrapDashboardShell(`
+        <div class="page-hero admin-hub-hero">
+          <div class="admin-breadcrumb">
+            <a href="/admin">Clients</a>
+            <span aria-hidden="true"> / </span>
+            <span>${esc(title)}</span>
+          </div>
+          <h1>${esc(title)}</h1>
+          <p>${esc(subtitle)}</p>
+        </div>
+        <div class="sync-history-page">
+          <div class="sync-history-toolbar">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <a class="admin-btn admin-btn--secondary" href="/admin">← Back to clients</a>
+              <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${otherKind}">${esc(otherLabel)}</a>
+            </div>
+            <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
+          </div>
+          ${renderSyncHistorySummary(data.summary, kind)}
+          ${renderSyncHistoryRows(data.runs || [], kind)}
+        </div>
+        `)}
+      `;
+    }
+
+    let syncHistoryRefreshTimer = null;
+
+    async function loadSyncHistoryPage(kind, { silent = false } = {}) {
+      const dashboard = document.getElementById('dashboard');
+      if (!dashboard) return;
+      if (!silent) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
+          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading sync history...</p></div>')}
+        `;
+      }
+
+      try {
+        await requireStaffAuth();
+        const data = await adminFetch(`/api/sync-history?type=${encodeURIComponent(kind)}&limit=150`);
+        dashboard.innerHTML = renderSyncHistoryPage(kind, data);
+        const refreshBtn = document.getElementById('sync-history-refresh');
+        if (refreshBtn) {
+          refreshBtn.onclick = () => loadSyncHistoryPage(kind);
+        }
+        if (syncHistoryRefreshTimer) {
+          clearInterval(syncHistoryRefreshTimer);
+          syncHistoryRefreshTimer = null;
+        }
+        syncHistoryRefreshTimer = window.setInterval(() => {
+          loadSyncHistoryPage(kind, { silent: true }).catch(() => {});
+        }, 60_000);
+      } catch (error) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
+          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+        `;
+      }
+    }
+
     function renderAdminHubPage(clients) {
       const count = clients.length;
       const adminActions = isStaffAdmin() ? `
+              <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/ghl">GHL sync log</a>
+              <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
               <button class="admin-btn" type="button" onclick="syncAllClients(this)">${ICON_SYNC} Sync all</button>
               <button class="admin-btn admin-btn--primary" type="button" onclick="focusAddClient()">${ICON_PLUS} Add client</button>
       ` : '';
@@ -4707,6 +4990,7 @@
               <div class="setup-section-status">
                 <span class="status-badge status-${account.metaSyncStatus === 'ok' ? 'ready' : account.metaSyncStatus === 'error' ? 'sync_error' : 'needs_sync'}">${account.metaSyncStatus === 'ok' ? 'Meta synced' : account.metaSyncStatus === 'error' ? 'Meta sync error' : 'Meta not synced'}</span>
                 ${account.metaLastSyncedAt ? `<span class="setup-section-sync-time">Last Meta sync: ${formatRelativeSync(account.metaLastSyncedAt)}</span>` : ''}
+                <a class="setup-section-sync-time" href="/admin/sync-history/meta" style="margin-left:12px">View Meta sync log →</a>
                 ${account.metaSyncError ? `<span class="setup-meta-sync-error">${esc(account.metaSyncError)}</span>` : ''}
               </div>
             </div>
@@ -4786,6 +5070,7 @@
               <div class="setup-section-status">
                 <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
                 ${account.lastSyncAt ? `<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(account.lastSyncAt, account.status)}</span>` : ''}
+                <a class="setup-section-sync-time" href="/admin/sync-history/ghl" style="margin-left:12px">View GHL sync log →</a>
               </div>
             </div>
             <div class="setup-section-content">

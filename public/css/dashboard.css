@@ -54,6 +54,8 @@
     /* Admin surfaces keep the warm brand background but use near-black text for readability. */
     body[data-dashboard-mode="hub"],
     body[data-dashboard-mode="admin"],
+    body[data-dashboard-mode="sync-history-ghl"],
+    body[data-dashboard-mode="sync-history-meta"],
     body[data-dashboard-mode="team"],
     body[data-dashboard-mode="login"] {
       --text: #16120e;
@@ -671,6 +673,104 @@
       font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
+    }
+
+    .sync-history-page { padding-bottom: 48px; }
+
+    .sync-history-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .sync-history-stat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .sync-history-stat-label {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .sync-history-stat-value {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .sync-history-toolbar {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .sync-history-table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: auto;
+    }
+
+    .sync-history-table {
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 760px;
+      width: 100%;
+    }
+
+    .sync-history-table th,
+    .sync-history-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .sync-history-table th {
+      background: var(--panel-soft);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .sync-history-table tr:last-child td { border-bottom: none; }
+
+    .sync-status-badge {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      text-transform: capitalize;
+    }
+
+    .sync-status-badge--success { background: var(--status-ok-bg); color: var(--status-ok-text); }
+    .sync-status-badge--error { background: var(--danger-soft); color: var(--danger-text); }
+    .sync-status-badge--skipped { background: var(--status-warn-bg); color: var(--status-warn-text); }
+    .sync-status-badge--running { background: var(--primary-soft); color: var(--primary-dark); }
+
+    .sync-history-empty {
+      color: var(--text-soft);
+      padding: 28px 16px;
+      text-align: center;
+    }
+
+    .sync-history-detail {
+      color: var(--text-muted);
+      font-size: 12px;
+      max-width: 280px;
+      word-break: break-word;
     }
 
     .hub-toolbar-actions {
