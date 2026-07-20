@@ -142,7 +142,7 @@ Admin Sync now  →  full sync override
 | Daily 03:00 Copenhagen | Full sync all clients (Inngest) |
 | Every 2 min while page open | Background snapshot re-read (no live GHL) |
 
-**Rollback:** set `DASHBOARD_READ_SOURCE=live` on Vercel to revert reads without redeploying.
+**Rollback:** set `DASHBOARD_READ_SOURCE=live` and `DASHBOARD_LIVE_ROLLBACK=1` on Vercel to revert reads without redeploying.
 
 ### GHL webhook setup
 
