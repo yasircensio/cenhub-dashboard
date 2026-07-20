@@ -245,6 +245,25 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/meta-sync-log') {
+    try {
+      const localResponse = createLocalResponse(response);
+      let rawBody = '';
+      if (request.method === 'POST') {
+        rawBody = await readRequestBody(request);
+      }
+      await require('./lib/meta-sync-log-handler').handleMetaSyncLogRequest({
+        method: request.method,
+        headers: request.headers,
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Meta sync log API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/meta-sync-cron' || url === '/api/cron/meta-sync') {
     try {
       const localResponse = createLocalResponse(response);
