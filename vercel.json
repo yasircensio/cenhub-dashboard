@@ -6,6 +6,9 @@
     "api/meta-sync-cron.js": {
       "maxDuration": 120
     },
+    "api/meta-sync-inngest.js": {
+      "maxDuration": 120
+    },
     "api/clients.js": {
       "maxDuration": 60
     },

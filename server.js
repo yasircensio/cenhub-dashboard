@@ -264,6 +264,25 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/meta-sync-inngest') {
+    try {
+      const localResponse = createLocalResponse(response);
+      let rawBody = '';
+      if (request.method === 'POST') {
+        rawBody = await readRequestBody(request);
+      }
+      await require('./lib/meta-sync-inngest-handler').handleMetaSyncInngestRequest({
+        method: request.method,
+        headers: request.headers,
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Meta sync Inngest API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/meta-sync-cron' || url === '/api/cron/meta-sync') {
     try {
       const localResponse = createLocalResponse(response);
