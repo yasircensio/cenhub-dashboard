@@ -15,7 +15,7 @@ async function main() {
   const ghl = await listGhlSyncRuns({ limit: 5 });
   assert(ghl.type === 'ghl', 'ghl type');
   assert(Array.isArray(ghl.runs), 'ghl runs array');
-  assert(ghl.summary.schedule.includes('3 * * *'), 'ghl schedule');
+  assert(ghl.summary.schedule.includes('3:00 Copenhagen'), 'ghl schedule');
 
   console.log('Sync history tests passed.');
 }

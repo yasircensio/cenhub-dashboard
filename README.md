@@ -47,8 +47,9 @@ See `.env.example` for the full list. Key vars:
 | `DASHBOARD_ADMIN_API_KEY` | Protects `/api/clients` writes and admin list |
 | `ACCOUNT_CONFIG_ENCRYPTION_KEY` | Encrypts stored GHL tokens (optional locally — plaintext fallback in file store) |
 | `DATABASE_URL` | Neon Postgres (optional — file fallback if unset) |
-| `DASHBOARD_READ_SOURCE` | `live` (default) or `snapshot` (debug only) |
-| `DASHBOARD_CACHE_TTL_MINUTES` | Short server buffer so filter clicks don’t re-hit GHL (default `2`) |
+| `DASHBOARD_READ_SOURCE` | `snapshot` in production (Neon); set `live` to revert without deploy |
+| `DASHBOARD_CACHE_TTL_MINUTES` | Short server buffer for live mode filter clicks (default `2`) |
+| `GHL_WEBHOOK_ENABLED` | Set `1` after GHL marketplace webhook URL is live |
 | `GHL_SSO_SHARED_SECRET` | GHL marketplace app SSO validation |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Daily cron sync (optional — manual sync works without) |
 | `DASHBOARD_ACCESS_KEY_SECRET` | Enables per-client access keys for read APIs (see below) |
@@ -107,6 +108,7 @@ API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipel
 - **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` (staff session).
 - **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }`. When Inngest is configured, this queues one background job per client and returns immediately (`202`). Without Inngest, it falls back to sequential sync in the same request.
 - **Scheduled:** Inngest daily cron at 03:00 Europe/Copenhagen fans out the same per-client jobs when Inngest keys are set. Until then, `/api/inngest` returns 503 with instructions.
+- **Webhooks:** GHL opportunity events hit `POST /api/ghl-webhook` and merge a single opportunity into the Neon snapshot (when `GHL_WEBHOOK_ENABLED=1`).
 
 Every sync attempt is logged to `sync_runs`. Failures surface as `sync_error` on hub cards.
 
@@ -120,35 +122,43 @@ Every sync attempt is logged to `sync_runs`. Failures surface as `sync_error` on
 
 When after-sales is set, dedupe pairs funnel + sales opportunities with after-sales wins by `contactId`. Win KPIs follow the account **metrics model** (`lib/metrics-model.js`).
 
-## Data flow (simplified)
+## Data flow (production)
 
-One client, low traffic — dashboard always reads **live GHL**, with a small buffer so clicking filters doesn’t hammer the API.
+Production reads **Neon snapshots** for fast dashboard loads. GHL webhooks patch individual opportunities near-real-time; daily Inngest sync at 03:00 Copenhagen is the safety net.
 
 ```
-Open dashboard / refresh after 1+ min  →  GHL live (fresh leads)
-Click filters within 1 min             →  same data, new filters only (fast)
-GHL down                               →  last Neon sync (fallback)
-Admin Sync now                         →  updates Neon backup
+GHL opportunity change  →  POST /api/ghl-webhook  →  verify + dedupe  →  Inngest worker
+  →  GET /opportunities/:id  →  merge into sync_snapshots (Neon)
+Dashboard GET /api/dashboard  →  read snapshot only (production)
+Daily 3am Inngest cron  →  full syncAccount  →  sync_snapshots
+Admin Sync now  →  full sync override
 ```
 
 | When | What happens |
 |------|----------------|
-| First open / browser refresh | GHL live |
-| Click preset or filter **within 1 min** | Reuses recent GHL data (fast) |
-| Click preset or filter **after 1 min** | GHL live again |
-| Tab hidden then visible after 1 min | Background GHL refresh |
-| Every 2 min while page is open | Background GHL refresh |
-| GHL error | Neon snapshot fallback |
+| Open dashboard / filter change | Neon snapshot (fast) |
+| GHL webhook (enabled) | Single opportunity merged into snapshot |
+| Admin **Sync now** | Full GHL pull → Neon snapshot |
+| Daily 03:00 Copenhagen | Full sync all clients (Inngest) |
+| Every 2 min while page open | Background snapshot re-read (no live GHL) |
 
-Neon is for **admin config, tokens, and backup** — not the normal read path.
+**Rollback:** set `DASHBOARD_READ_SOURCE=live` on Vercel to revert reads without redeploying.
 
-Optional env (defaults are fine for SunTech):
+### GHL webhook setup
+
+1. Run `npm run migrate:ghl-webhooks` on Neon (creates `ghl_webhook_events`).
+2. Deploy with `/api/ghl-webhook` live.
+3. In GHL marketplace app: webhook URL `https://cenhub-dashboard.vercel.app/api/ghl-webhook`, subscribe to opportunity create/update/delete events.
+4. Set `GHL_WEBHOOK_ENABLED=1` on production after the endpoint responds 200.
+
+Local dev defaults to **live GHL** reads (`DASHBOARD_READ_SOURCE=live` unless overridden).
+
+Optional env:
 
 ```
 DASHBOARD_CACHE_TTL_MINUTES=2
+GHL_WEBHOOK_ENABLED=1
 ```
-
-Remove `DASHBOARD_READ_SOURCE=live` if you added it for testing — live is already the default.
 
 ## Facebook metrics (temporary)
 

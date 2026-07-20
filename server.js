@@ -190,6 +190,23 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/ghl-webhook') {
+    try {
+      const rawBody = request.method === 'POST' ? await readRequestBody(request) : '';
+      const localResponse = createLocalResponse(response);
+      const { handleGhlWebhookRequest } = require('./lib/ghl-webhook-handler');
+      await handleGhlWebhookRequest({
+        method: request.method,
+        headers: request.headers,
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'GHL webhook failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/auth' || url.startsWith('/api/auth/')) {
     try {
       const rawBody = ['POST', 'PUT', 'PATCH'].includes(request.method)

@@ -122,11 +122,8 @@ async function bootAdminApp() {
   }
   ensureChartsVisible();
   loadDashboard(true);
-  setTimeout(function () {
-    loadDashboard(true, { background: true, forceFresh: true });
-  }, 500);
   setInterval(function () {
-    loadDashboard(true, { background: true, forceFresh: true });
+    loadDashboard(true, { background: true });
   }, 2 * 60 * 1000);
 }
 
@@ -145,7 +142,7 @@ document.addEventListener('visibilitychange', function () {
     resetFetchUiState();
   }
   if (!IS_ADMIN_HUB && cachedData && needsFreshData()) {
-    loadDashboard(true, { background: true, forceFresh: true });
+    loadDashboard(true, { background: true });
   }
 });
 `.trim();
@@ -161,11 +158,8 @@ async function bootClientApp() {
   }
   ensureChartsVisible();
   loadDashboard(true);
-  setTimeout(function () {
-    loadDashboard(true, { background: true, forceFresh: true });
-  }, 500);
   setInterval(function () {
-    loadDashboard(true, { background: true, forceFresh: true });
+    loadDashboard(true, { background: true });
   }, 2 * 60 * 1000);
 }
 
@@ -179,7 +173,7 @@ document.addEventListener('visibilitychange', function () {
     resetFetchUiState();
   }
   if (cachedData && needsFreshData()) {
-    loadDashboard(true, { background: true, forceFresh: true });
+    loadDashboard(true, { background: true });
   }
 });
 `.trim();

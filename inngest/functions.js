@@ -35,6 +35,10 @@ const syncOneAccount = inngest.createFunction(
     id: 'sync-one-account',
     name: 'Sync one dashboard account',
     triggers: [{ event: 'dashboard/sync.account' }],
+    concurrency: {
+      limit: 1,
+      key: 'event.data.clientId',
+    },
   },
   async ({ event, step }) => {
     const clientId = event.data?.clientId;
@@ -142,11 +146,32 @@ const dailyMetaSyncAll = inngest.createFunction(
   },
 );
 
+const { processGhlOpportunityWebhookSafe } = require('../lib/ghl-webhook-processor');
+
+const ghlOpportunityWebhook = inngest.createFunction(
+  {
+    id: 'ghl-opportunity-webhook',
+    name: 'Process GHL opportunity webhook',
+    triggers: [{ event: 'dashboard/ghl.opportunity' }],
+    concurrency: {
+      limit: 1,
+      key: 'event.data.locationId',
+    },
+  },
+  async ({ event, step }) => {
+    const payload = event.data || {};
+    return step.run('process-ghl-opportunity-webhook', () =>
+      processGhlOpportunityWebhookSafe(payload),
+    );
+  },
+);
+
 module.exports = {
   dailySyncAll,
   syncAllAccounts,
   syncOneAccount,
+  ghlOpportunityWebhook,
   // Meta ad spend: use Vercel daily cron (/api/meta-sync-cron at 0 4 * * * UTC).
   // Requires CRON_SECRET on Production. Inngest meta cron disabled to avoid duplicate runs.
-  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts],
+  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts, ghlOpportunityWebhook],
 };

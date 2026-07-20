@@ -4764,9 +4764,9 @@
         if (IS_ADMIN_HUB) await loadAdminHub();
         else if (IS_ADMIN_CLIENT) {
           await loadSetupAccount();
-          if (accountCanPreviewDashboard(setupAccount)) loadDashboard(true, { background: true, forceFresh: true });
+          if (accountCanPreviewDashboard(setupAccount)) loadDashboard(true, { background: true });
         }
-        else loadDashboard(true, { background: true, forceFresh: true });
+        else loadDashboard(true, { background: true });
       } catch (error) {
         showToast(error.message, 'error');
       } finally {
@@ -7590,7 +7590,7 @@
 
     async function loadDashboard(refetch = true, options = {}) {
       const { background = false, forceFresh = false } = options;
-      const shouldFetchFresh = Boolean(forceFresh) || (refetch && cachedData && needsFreshData());
+      const shouldFetchFresh = Boolean(forceFresh);
       const dashboard = document.getElementById('dashboard');
 
       if (isFetching && (refetch || !cachedData)) {
@@ -7886,7 +7886,7 @@
         resetFetchUiState();
       }
       if (!IS_ADMIN_HUB && cachedData && needsFreshData()) {
-        loadDashboard(true, { background: true, forceFresh: true });
+        loadDashboard(true, { background: true });
       }
     });
   </script>
