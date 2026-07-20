@@ -4,7 +4,8 @@ const { listClientIds, listMetaSyncableClientIds } = require('../lib/account-sto
 const { buildAccountSyncEvents, createBatchId } = require('../lib/sync-batch');
 const { syncAccount } = require('../lib/sync-service');
 const { syncMetaMetrics } = require('../lib/meta-sync-service');
-const { logMetaSyncRunRemote } = require('../lib/sync-history');
+const { logMetaSyncRunForInngest } = require('../lib/sync-history');
+const { debugIngest } = require('../lib/debug-ingest');
 
 async function listSyncableClientIds() {
   return listClientIds();
@@ -115,8 +116,17 @@ const dailyMetaSyncAll = inngest.createFunction(
     triggers: [cron(metaSyncCron)],
   },
   async ({ step, runId }) => {
+    debugIngest('inngest/functions.js:dailyMetaSyncAll', 'cron start', {
+      runId,
+      schedule: metaSyncCron,
+      vercelEnv: process.env.VERCEL_ENV || null,
+      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      hasCronSecret: Boolean(process.env.CRON_SECRET),
+      hasMetaToken: Boolean(process.env.META_SYSTEM_USER_TOKEN),
+    }, 'H3');
+
     const tickAt = new Date().toISOString();
-    await logMetaSyncRunRemote(null, {
+    await logMetaSyncRunForInngest(null, {
       status: 'cron_tick',
       source: 'inngest',
       errorMessage: `Inngest Meta cron fired (run ${runId}, schedule: ${metaSyncCron}).`,
@@ -125,9 +135,14 @@ const dailyMetaSyncAll = inngest.createFunction(
     });
 
     const clientIds = await step.run('list-meta-clients', listMetaSyncableClientIds);
+    debugIngest('inngest/functions.js:dailyMetaSyncAll', 'listed meta clients', {
+      runId,
+      clientCount: clientIds.length,
+      clientIds,
+    }, 'H4');
     if (!clientIds.length) {
       const emptyAt = new Date().toISOString();
-      await logMetaSyncRunRemote(null, {
+      await logMetaSyncRunForInngest(null, {
         status: 'skipped',
         source: 'inngest',
         errorMessage: 'Inngest Meta cron ran but no syncable clients (check META_SYSTEM_USER_TOKEN and meta ad account IDs).',
@@ -147,7 +162,7 @@ const dailyMetaSyncAll = inngest.createFunction(
         }));
       } catch (error) {
         const failedAt = new Date().toISOString();
-        await logMetaSyncRunRemote(clientId, {
+        await logMetaSyncRunForInngest(clientId, {
           status: 'error',
           source: 'inngest',
           errorMessage: error.message || 'Meta sync failed.',
@@ -170,7 +185,7 @@ const dailyMetaSyncAll = inngest.createFunction(
         metricsClientId: syncResult.metricsClientId,
         reason: syncResult.reason,
       });
-      await logMetaSyncRunRemote(clientId, historyPayload);
+      await logMetaSyncRunForInngest(clientId, historyPayload);
       results.push({
         clientId,
         success: Boolean(syncResult.success),
@@ -184,7 +199,7 @@ const dailyMetaSyncAll = inngest.createFunction(
     const failed = results.filter((row) => !row.success && !row.skipped).length;
 
     const finishAt = new Date().toISOString();
-    await logMetaSyncRunRemote(null, {
+    await logMetaSyncRunForInngest(null, {
       status: failed ? 'error' : 'success',
       source: 'inngest',
       errorMessage: `Inngest Meta cron finished: ${synced} synced, ${skipped} skipped, ${failed} failed.`,
