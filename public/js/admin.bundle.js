@@ -233,7 +233,7 @@
         <tbody>${a}</tbody>
       </table>
     </div>
-  `}function renderSyncHistoryPage(e,t){const n=e==="meta"?"Meta ad spend sync history":"GHL / Cenhub sync history",a=e==="meta"?"Every Meta metrics sync \u2014 scheduled, manual, and dashboard auto-refresh.":"Every GHL snapshot sync \u2014 scheduled Inngest jobs and manual admin syncs.",s=e==="meta"?"ghl":"meta",i=e==="meta"?"GHL sync log":"Meta sync log";return`
+  `}function renderSyncHistoryPage(e,t){const n=e==="meta"?"Meta ad spend sync history":"GHL / Cenhub sync history",a=e==="meta"?"Every Meta metrics sync \u2014 scheduled, manual, and dashboard auto-refresh.":"Every GHL snapshot sync \u2014 scheduled Inngest jobs and manual admin syncs.",o=e==="ghl"?`<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${e==="meta"?"ghl":"meta"}">${esc(e==="meta"?"GHL sync log":"Meta sync log")}</a>`:"";return`
     ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero">
@@ -249,7 +249,7 @@
       <div class="sync-history-toolbar">
         <div class="sync-history-toolbar-actions">
           <a class="admin-btn admin-btn--secondary" href="/admin">\u2190 Back to clients</a>
-          <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${s}">${esc(i)}</a>
+          ${o}
         </div>
         <div class="sync-history-toolbar-actions">
           <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
@@ -283,7 +283,6 @@ ${n}`))try{const s=await adminFetch(`/api/sync-history?type=${encodeURIComponent
       ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
       ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(s.message)}</div>`)}
     `}}function renderAdminHubPage(e){const t=e.length,n=currentStaffUser?`
-          <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/ghl">GHL sync log</a>
           <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
   `:"",a=isStaffAdmin()?`
           ${n}
@@ -621,7 +620,6 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
           <div class="setup-section-status">
             <span class="status-badge status-${e.status}">${statusLabel(e.status)}</span>
             ${e.lastSyncAt?`<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(e.lastSyncAt,e.status)}</span>`:""}
-            <a class="setup-section-sync-time" href="/admin/sync-history/ghl" style="margin-left:12px">View GHL sync log \u2192</a>
           </div>
         </div>
         <div class="setup-section-content">

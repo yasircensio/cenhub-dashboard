@@ -250,7 +250,7 @@
 
     .header-presets .preset-btn:hover {
       background: rgba(255, 106, 0, 0.25);
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
@@ -387,7 +387,7 @@
 
     .preset-controls--header .date-picker-trigger:hover {
       background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.28);
+      border-color: var(--border-strong);
     }
 
     .preset-controls--header .date-picker-trigger.is-empty .date-picker-value {
@@ -471,7 +471,7 @@
 
     .date-picker-nav-btn:hover {
       background: var(--primary-soft);
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: var(--primary);
     }
 
@@ -587,7 +587,7 @@
     }
 
     .date-picker-footer-btn:hover {
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: var(--primary);
     }
 
@@ -599,7 +599,7 @@
 
     .date-picker-footer-btn.primary:hover {
       background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
@@ -1804,7 +1804,7 @@
 
     .admin-btn--danger-solid:hover {
       background: var(--danger-text);
-      border-color: var(--danger-text);
+      border-color: var(--border-strong);
     }
 
 
@@ -1891,7 +1891,7 @@
 
     .admin-btn--primary:hover {
       background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
@@ -1904,7 +1904,7 @@
 
     .admin-btn--secondary:hover {
       background: var(--surface-hover);
-      border-color: #c4b3a1;
+      border-color: var(--border-strong);
       color: var(--text);
     }
 
@@ -1915,7 +1915,7 @@
 
     .admin-btn--danger:hover {
       background: rgba(198, 40, 40, 0.06);
-      border-color: #c62828;
+      border-color: var(--border-strong);
       color: #b71c1c;
     }
 
@@ -2363,6 +2363,7 @@
 
     .staff-header-btn:hover {
       background: rgba(255, 255, 255, 0.18);
+      border-color: var(--border-strong);
     }
 
     .staff-admin-chrome {
@@ -2423,6 +2424,7 @@
 
     .staff-user-trigger:hover {
       background: rgba(255, 255, 255, 0.18);
+      border-color: var(--border-strong);
     }
 
     .staff-user-dropdown {
@@ -2839,7 +2841,7 @@
     }
 
     .preset-btn:hover, .widget-btn:hover {
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: var(--primary);
     }
 
@@ -2867,7 +2869,7 @@
 
     .refresh-btn.primary:hover, .widget-btn.primary:hover {
       background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      border-color: var(--border-strong);
       color: #fff;
     }
 

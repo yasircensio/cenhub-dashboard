@@ -259,7 +259,7 @@
 
     .header-presets .preset-btn:hover {
       background: rgba(255, 106, 0, 0.25);
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
@@ -396,7 +396,7 @@
 
     .preset-controls--header .date-picker-trigger:hover {
       background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.28);
+      border-color: var(--border-strong);
     }
 
     .preset-controls--header .date-picker-trigger.is-empty .date-picker-value {
@@ -480,7 +480,7 @@
 
     .date-picker-nav-btn:hover {
       background: var(--primary-soft);
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: var(--primary);
     }
 
@@ -596,7 +596,7 @@
     }
 
     .date-picker-footer-btn:hover {
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: var(--primary);
     }
 
@@ -608,7 +608,7 @@
 
     .date-picker-footer-btn.primary:hover {
       background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
@@ -1813,7 +1813,7 @@
 
     .admin-btn--danger-solid:hover {
       background: var(--danger-text);
-      border-color: var(--danger-text);
+      border-color: var(--border-strong);
     }
 
 
@@ -1900,7 +1900,7 @@
 
     .admin-btn--primary:hover {
       background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
@@ -1913,7 +1913,7 @@
 
     .admin-btn--secondary:hover {
       background: var(--surface-hover);
-      border-color: #c4b3a1;
+      border-color: var(--border-strong);
       color: var(--text);
     }
 
@@ -1924,7 +1924,7 @@
 
     .admin-btn--danger:hover {
       background: rgba(198, 40, 40, 0.06);
-      border-color: #c62828;
+      border-color: var(--border-strong);
       color: #b71c1c;
     }
 
@@ -2372,6 +2372,7 @@
 
     .staff-header-btn:hover {
       background: rgba(255, 255, 255, 0.18);
+      border-color: var(--border-strong);
     }
 
     .staff-admin-chrome {
@@ -2432,6 +2433,7 @@
 
     .staff-user-trigger:hover {
       background: rgba(255, 255, 255, 0.18);
+      border-color: var(--border-strong);
     }
 
     .staff-user-dropdown {
@@ -2848,7 +2850,7 @@
     }
 
     .preset-btn:hover, .widget-btn:hover {
-      border-color: var(--primary);
+      border-color: var(--border-strong);
       color: var(--primary);
     }
 
@@ -2876,7 +2878,7 @@
 
     .refresh-btn.primary:hover, .widget-btn.primary:hover {
       background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
@@ -4191,6 +4193,9 @@
         : 'Every GHL snapshot sync — scheduled Inngest jobs and manual admin syncs.';
       const otherKind = kind === 'meta' ? 'ghl' : 'meta';
       const otherLabel = kind === 'meta' ? 'GHL sync log' : 'Meta sync log';
+      const otherLogLink = kind === 'ghl'
+        ? `<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${otherKind}">${esc(otherLabel)}</a>`
+        : '';
       const navTab = kind === 'meta' ? 'meta-sync' : 'ghl-sync';
 
       return `
@@ -4209,7 +4214,7 @@
           <div class="sync-history-toolbar">
             <div class="sync-history-toolbar-actions">
               <a class="admin-btn admin-btn--secondary" href="/admin">← Back to clients</a>
-              <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${otherKind}">${esc(otherLabel)}</a>
+              ${otherLogLink}
             </div>
             <div class="sync-history-toolbar-actions">
               <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
@@ -4311,7 +4316,6 @@
     function renderAdminHubPage(clients) {
       const count = clients.length;
       const syncLogActions = currentStaffUser ? `
-              <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/ghl">GHL sync log</a>
               <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
       ` : '';
       const adminActions = isStaffAdmin() ? `
@@ -5151,7 +5155,6 @@
               <div class="setup-section-status">
                 <span class="status-badge status-${account.status}">${statusLabel(account.status)}</span>
                 ${account.lastSyncAt ? `<span class="setup-section-sync-time">Last GHL sync: ${formatRelativeSync(account.lastSyncAt, account.status)}</span>` : ''}
-                <a class="setup-section-sync-time" href="/admin/sync-history/ghl" style="margin-left:12px">View GHL sync log →</a>
               </div>
             </div>
             <div class="setup-section-content">
