@@ -3473,6 +3473,8 @@
       const nav = `
         <nav class="staff-nav" aria-label="Admin navigation">
           <a href="/admin" class="staff-nav-link${activeTab === 'clients' ? ' is-active' : ''}">Clients</a>
+          <a href="/admin/sync-history/ghl" class="staff-nav-link${activeTab === 'ghl-sync' ? ' is-active' : ''}">GHL sync</a>
+          <a href="/admin/sync-history/meta" class="staff-nav-link${activeTab === 'meta-sync' ? ' is-active' : ''}">Meta sync</a>
           ${isStaffAdmin() ? `<a href="/team" class="staff-nav-link${activeTab === 'team' ? ' is-active' : ''}">Team</a>` : ''}
         </nav>
       `;
@@ -4167,9 +4169,10 @@
         : 'Every GHL snapshot sync — scheduled Inngest jobs and manual admin syncs.';
       const otherKind = kind === 'meta' ? 'ghl' : 'meta';
       const otherLabel = kind === 'meta' ? 'GHL sync log' : 'Meta sync log';
+      const navTab = kind === 'meta' ? 'meta-sync' : 'ghl-sync';
 
       return `
-        ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
+        ${renderBrandTopbar(renderStaffAdminChrome(navTab))}
         ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero">
           <div class="admin-breadcrumb">
@@ -4202,7 +4205,7 @@
       if (!dashboard) return;
       if (!silent) {
         dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
+          ${renderBrandTopbar(renderStaffAdminChrome(kind === 'meta' ? 'meta-sync' : 'ghl-sync'))}
           ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading sync history...</p></div>')}
         `;
       }
@@ -4224,7 +4227,7 @@
         }, 60_000);
       } catch (error) {
         dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
+          ${renderBrandTopbar(renderStaffAdminChrome(kind === 'meta' ? 'meta-sync' : 'ghl-sync'))}
           ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
         `;
       }
@@ -4232,12 +4235,15 @@
 
     function renderAdminHubPage(clients) {
       const count = clients.length;
-      const adminActions = isStaffAdmin() ? `
+      const syncLogActions = currentStaffUser ? `
               <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/ghl">GHL sync log</a>
               <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
+      ` : '';
+      const adminActions = isStaffAdmin() ? `
+              ${syncLogActions}
               <button class="admin-btn" type="button" onclick="syncAllClients(this)">${ICON_SYNC} Sync all</button>
               <button class="admin-btn admin-btn--primary" type="button" onclick="focusAddClient()">${ICON_PLUS} Add client</button>
-      ` : '';
+      ` : syncLogActions;
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
         ${wrapDashboardShell(`
