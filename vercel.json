@@ -1,8 +1,5 @@
 {
   "functions": {
-    "api/inngest.js": {
-      "maxDuration": 300
-    },
     "api/meta-sync-cron.js": {
       "maxDuration": 120
     },
@@ -11,9 +8,6 @@
     },
     "api/sync-history.js": {
       "maxDuration": 300
-    },
-    "api/meta-sync-inngest.js": {
-      "maxDuration": 120
     },
     "api/clients.js": {
       "maxDuration": 60

@@ -153,26 +153,6 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (url === '/api/inngest') {
-    try {
-      const rawBody = ['POST', 'PUT', 'PATCH'].includes(request.method)
-        ? await readRequestBody(request)
-        : '';
-      const localResponse = createLocalResponse(response);
-      const { handleInngestRequest, toExpressRequest } = require('./lib/inngest-handler');
-      await handleInngestRequest(toExpressRequest({
-        method: request.method,
-        headers: request.headers,
-        body: rawBody,
-        url,
-      }), localResponse);
-    } catch (error) {
-      response.writeHead(500, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ error: error.message || 'Inngest handler failed.' }));
-    }
-    return;
-  }
-
   if (url === '/api/ghl-sso') {
     try {
       const rawBody = request.method === 'POST' ? await readRequestBody(request) : '';
@@ -277,25 +257,6 @@ const server = http.createServer(async (request, response) => {
     } catch (error) {
       response.writeHead(500, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ error: error.message || 'Meta sync log API failed.' }));
-    }
-    return;
-  }
-
-  if (url === '/api/meta-sync-inngest') {
-    try {
-      const localResponse = createLocalResponse(response);
-      let rawBody = '';
-      if (request.method === 'POST') {
-        rawBody = await readRequestBody(request);
-      }
-      await require('./lib/meta-sync-inngest-handler').handleMetaSyncInngestRequest({
-        method: request.method,
-        headers: request.headers,
-        body: rawBody,
-      }, localResponse);
-    } catch (error) {
-      response.writeHead(500, { 'Content-Type': 'application/json' });
-      response.end(JSON.stringify({ error: error.message || 'Meta sync Inngest API failed.' }));
     }
     return;
   }

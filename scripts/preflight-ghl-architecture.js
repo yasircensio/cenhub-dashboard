@@ -87,7 +87,7 @@ async function checkWebhookPing() {
     return true;
   }
   if (status !== 200 || !body?.ok) return fail('webhook GET ping', `HTTP ${status}`);
-  pass('webhook GET ping', body.inline ? 'inline processing' : body.inngest ? 'Inngest queue' : 'inline fallback');
+  pass('webhook GET ping', body.inline ? 'inline processing' : 'inline disabled');
   return true;
 }
 
