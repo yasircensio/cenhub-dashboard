@@ -316,6 +316,22 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/ghl-sync-cron' || url === '/api/cron/ghl-sync') {
+    try {
+      const localResponse = createLocalResponse(response);
+      const { handleGhlSyncCronRequest } = require('./lib/ghl-sync-cron-handler');
+      await handleGhlSyncCronRequest({
+        method: request.method,
+        headers: request.headers,
+        query: Object.fromEntries(requestUrl.searchParams),
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'GHL cron failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/facebook-metrics') {
     try {
       const query = Object.fromEntries(requestUrl.searchParams);

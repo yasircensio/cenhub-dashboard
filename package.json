@@ -12,7 +12,7 @@
     "migrate:meta-cron-heartbeat": "node scripts/migrate-meta-cron-heartbeat.js",
     "migrate:ghl-webhooks": "node scripts/migrate-ghl-webhooks.js",
     "create-admin": "node scripts/create-admin.js",
-    "seed:suntech": "node scripts/seed-suntech.js",
+    "sync:all-ghl": "node scripts/run-ghl-sync-all.js",
     "test": "node scripts/check-lib-sync.js && node scripts/check-frontend-build.js && node scripts/test-frontend-bundle.js && node scripts/test-pipeline-slots.js && node scripts/test-metrics-model.js && node scripts/test-dedupe.js && node scripts/test-bundlinje-field.js && node scripts/test-ghl-sso.js && node scripts/test-sync.js && node scripts/test-sync-batch.js && node scripts/test-date-filters.js && node scripts/test-facebook-metrics.js && node scripts/test-meta-metrics-refresh.js && node scripts/test-sync-history.js && node scripts/test-meta-integration.js && node scripts/test-staff-auth.js && node scripts/test-snapshot-merge.js && node scripts/test-ghl-webhook-verify.js",
     "test:api": "node scripts/test-api.js",
     "test:ghl-sso": "node scripts/test-ghl-sso.js",

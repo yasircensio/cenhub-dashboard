@@ -6,6 +6,12 @@
     "api/meta-sync-cron.js": {
       "maxDuration": 120
     },
+    "api/ghl-sync-cron.js": {
+      "maxDuration": 300
+    },
+    "api/sync-history.js": {
+      "maxDuration": 300
+    },
     "api/meta-sync-inngest.js": {
       "maxDuration": 120
     },
@@ -22,6 +28,8 @@
   "rewrites": [
     { "source": "/api/meta-sync-cron", "destination": "/api/sync-history?__cron=meta" },
     { "source": "/api/cron/meta-sync", "destination": "/api/sync-history?__cron=meta" },
+    { "source": "/api/ghl-sync-cron", "destination": "/api/sync-history?__cron=ghl" },
+    { "source": "/api/cron/ghl-sync", "destination": "/api/sync-history?__cron=ghl" },
     { "source": "/login", "destination": "/admin.html" },
     { "source": "/team", "destination": "/admin.html" },
     { "source": "/admin", "destination": "/admin.html" },
@@ -73,6 +81,10 @@
     {
       "path": "/api/meta-sync-cron",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/ghl-sync-cron",
+      "schedule": "0 1 * * *"
     }
   ]
 }

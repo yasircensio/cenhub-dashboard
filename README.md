@@ -107,8 +107,8 @@ API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipel
 
 - **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` (staff session).
 - **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }`. When Inngest is configured, this queues one background job per client and returns immediately (`202`). Without Inngest, it falls back to sequential sync in the same request.
-- **Scheduled:** Inngest daily cron at 03:00 Europe/Copenhagen fans out the same per-client jobs when Inngest keys are set. Until then, `/api/inngest` returns 503 with instructions.
-- **Webhooks:** GHL opportunity events hit `POST /api/ghl-webhook` and merge a single opportunity into the Neon snapshot (when `GHL_WEBHOOK_ENABLED=1`).
+- **Scheduled:** Vercel daily cron at **01:00 UTC** (~3:00 Copenhagen in DST) syncs all GHL snapshots via `/api/ghl-sync-cron` (same pattern as Meta at 04:00 UTC). Requires `CRON_SECRET`. Inngest remains available for manual **Sync all** queueing and webhook workers.
+- **Webhooks:** GHL opportunity events hit `POST /api/ghl-webhook` (enabled in production by default). Configure the marketplace webhook URL, then subscribe to opportunity create/update/delete events.
 
 Every sync attempt is logged to `sync_runs`. Failures surface as `sync_error` on hub cards.
 
@@ -130,7 +130,7 @@ Production reads **Neon snapshots** for fast dashboard loads. GHL webhooks patch
 GHL opportunity change  →  POST /api/ghl-webhook  →  verify + dedupe  →  Inngest worker
   →  GET /opportunities/:id  →  merge into sync_snapshots (Neon)
 Dashboard GET /api/dashboard  →  read snapshot only (production)
-Daily 3am Inngest cron  →  full syncAccount  →  sync_snapshots
+Daily 3am Vercel cron  →  full syncAccount  →  sync_snapshots
 Admin Sync now  →  full sync override
 ```
 
