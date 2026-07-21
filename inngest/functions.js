@@ -130,6 +130,10 @@ const dailyMetaSyncAll = inngest.createFunction(
 );
 
 const { processGhlOpportunityWebhookSafe } = require('../lib/ghl-webhook-processor');
+const { SyncInProgressError } = require('../lib/snapshot-sync-lock');
+
+const GHL_WEBHOOK_MAX_SYNC_WAIT_ATTEMPTS = 5;
+const GHL_WEBHOOK_SYNC_WAIT = '30s';
 
 const ghlOpportunityWebhook = inngest.createFunction(
   {
@@ -143,9 +147,22 @@ const ghlOpportunityWebhook = inngest.createFunction(
   },
   async ({ event, step }) => {
     const payload = event.data || {};
-    return step.run('process-ghl-opportunity-webhook', () =>
-      processGhlOpportunityWebhookSafe(payload),
-    );
+
+    for (let attempt = 1; attempt <= GHL_WEBHOOK_MAX_SYNC_WAIT_ATTEMPTS; attempt += 1) {
+      try {
+        return await step.run(`process-ghl-opportunity-webhook-${attempt}`, () =>
+          processGhlOpportunityWebhookSafe(payload),
+        );
+      } catch (error) {
+        const syncBusy = error instanceof SyncInProgressError || error.code === 'SYNC_IN_PROGRESS';
+        if (!syncBusy || attempt >= GHL_WEBHOOK_MAX_SYNC_WAIT_ATTEMPTS) {
+          throw error;
+        }
+        await step.sleep(`wait-for-ghl-sync-${attempt}`, GHL_WEBHOOK_SYNC_WAIT);
+      }
+    }
+
+    throw new SyncInProgressError(payload.locationId || 'unknown');
   },
 );
 

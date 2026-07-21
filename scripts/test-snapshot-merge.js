@@ -86,6 +86,27 @@ async function testRemove() {
   assert.strictEqual(remaining[0].id, 'opp-2');
 }
 
+async function testSyncLockBlocksMerge() {
+  writeTestSnapshot([
+    { id: 'opp-1', name: 'First', status: 'open', monetaryValue: 100 },
+  ]);
+
+  const store = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  store.snapshots[TEST_CLIENT].sync_status = 'syncing';
+  fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
+
+  const { SyncInProgressError } = require('../lib/snapshot-sync-lock');
+  await assert.rejects(
+    () => mergeOpportunityIntoSnapshot(TEST_CLIENT, {
+      id: 'opp-1',
+      name: 'Blocked',
+      status: 'open',
+      monetaryValue: 100,
+    }),
+    (error) => error instanceof SyncInProgressError,
+  );
+}
+
 async function main() {
   if (process.env.DATABASE_URL) {
     console.log('Skipping file-store snapshot merge tests (DATABASE_URL is set — use a dev DB to test Postgres path).');
@@ -95,6 +116,7 @@ async function main() {
   await testMergeUpsert();
   await testMergeInsert();
   await testRemove();
+  await testSyncLockBlocksMerge();
   console.log('Snapshot merge tests passed.');
 }
 
