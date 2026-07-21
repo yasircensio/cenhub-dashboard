@@ -78,7 +78,6 @@ const syncAllAccounts = inngest.createFunction(
 
 const metaSyncCron = process.env.META_SYNC_CRON || 'TZ=Europe/Copenhagen 0 */2 * * *';
 const PRODUCTION_META_SYNC_URL = 'https://cenhub-dashboard.vercel.app/api/meta-sync-inngest';
-const { debugIngest } = require('../lib/debug-ingest');
 
 function normalizeBearerToken(value) {
   return String(value || '').trim();
@@ -102,14 +101,6 @@ const dailyMetaSyncAll = inngest.createFunction(
         throw new Error('Set CRON_SECRET or INNGEST_EVENT_KEY for Meta sync cron auth.');
       }
 
-      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'production delegate start', {
-        runId,
-        url: PRODUCTION_META_SYNC_URL,
-        vercelEnv: process.env.VERCEL_ENV || null,
-        hasCronSecret: Boolean(process.env.CRON_SECRET),
-        hasEventKey: Boolean(process.env.INNGEST_EVENT_KEY),
-      }, 'H8');
-
       const response = await fetch(PRODUCTION_META_SYNC_URL, {
         method: 'POST',
         headers: {
@@ -128,14 +119,6 @@ const dailyMetaSyncAll = inngest.createFunction(
           body = { raw: text };
         }
       }
-
-      debugIngest('inngest/functions.js:dailyMetaSyncAll', 'production delegate done', {
-        runId,
-        httpStatus: response.status,
-        ok: response.ok,
-        error: body?.error || null,
-        synced: body?.synced ?? null,
-      }, 'H8');
 
       if (!response.ok) {
         throw new Error(body?.error || text || `Production meta sync failed (${response.status})`);
