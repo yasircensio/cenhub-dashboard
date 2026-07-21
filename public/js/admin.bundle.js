@@ -611,19 +611,15 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
       </div>
       ${renderSetupProgressStrip(e)}
 
-      <div class="setup-section" id="setup-section-display">
+      <div class="setup-section setup-section--display" id="setup-section-display">
         <div class="setup-section-info">
           <div class="setup-section-title">Dashboard display</div>
-          <div class="setup-section-status">
-            <span class="setup-section-sync-time">Client slug: <code>${esc(e.clientId)}</code></span>
-          </div>
         </div>
         <div class="setup-section-content">
           <div class="setup-grid setup-grid--2">
             <div class="field-group" style="grid-column:1/-1">
               <label for="setup-account-name">Dashboard heading</label>
               <input id="setup-account-name" type="text" value="${esc(e.accountName||"")}" placeholder="e.g. ML Tagd\xE6kning" />
-              <p class="field-hint">Main title on the live client dashboard and browser tab. The URL slug (<code>/${esc(e.clientId)}</code>) does not change.</p>
             </div>
           </div>
         </div>
