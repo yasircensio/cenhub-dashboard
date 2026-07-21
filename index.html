@@ -7571,6 +7571,13 @@
     let fetchStartedAt = 0;
     const FETCH_TIMEOUT_MS = 90000;
 
+    function restoreDashboardContentAfterFailedFetch(hasLayout) {
+      if (!hasLayout || !cachedData) return;
+      cachedData = applyMarketingData(cachedData, cachedFacebookMetrics);
+      updateDashboardContent(cachedData);
+      updateFilterUi();
+    }
+
     function setPresetButtonsDisabled(disabled) {
       document.querySelectorAll('[data-preset]').forEach((button) => {
         button.disabled = disabled;
@@ -7704,6 +7711,8 @@
                     <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
                   </div>
                 `)}`;
+            } else {
+              restoreDashboardContentAfterFailedFetch(hasLayout);
             }
             return;
           }
@@ -7728,6 +7737,9 @@
                   <button class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
                 </div>
               `)}`;
+          } else if (hasLayout && cachedData) {
+            restoreDashboardContentAfterFailedFetch(hasLayout);
+            showToast(error.message || 'Failed to load filtered data.', 'error');
           } else if (applyBtn) {
             applyBtn.textContent = 'Apply failed - try again';
           }
@@ -7837,6 +7849,9 @@
       }
 
       if (!state.pipelineIds.length) {
+        if (!availablePipelines.length && isFetching) {
+          loadDashboard(true);
+        }
         return;
       }
 
