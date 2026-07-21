@@ -69,8 +69,9 @@ async function checkHealth() {
 
   const webhooks = ghlWebhooks;
   if (webhooks.configured) {
-    if (webhooks.ok) pass('webhook events (24h)', `${webhooks.processedLast24h} processed`);
-    else sectionOk = fail('webhook events (24h)', `${webhooks.failedLast24h} failed`) && sectionOk;
+    const detail = `${webhooks.processedLast24h} processed, ${webhooks.stuckReceivedLast24h || 0} stuck`;
+    if (webhooks.ok) pass('webhook events (24h)', detail);
+    else sectionOk = fail('webhook events (24h)', detail) && sectionOk;
   } else {
     pass('webhook events table', webhooks.migrationRequired ? 'migration required' : 'not configured');
   }
@@ -86,7 +87,7 @@ async function checkWebhookPing() {
     return true;
   }
   if (status !== 200 || !body?.ok) return fail('webhook GET ping', `HTTP ${status}`);
-  pass('webhook GET ping', body.inngest ? 'Inngest configured' : 'inline fallback');
+  pass('webhook GET ping', body.inline ? 'inline processing' : body.inngest ? 'Inngest queue' : 'inline fallback');
   return true;
 }
 

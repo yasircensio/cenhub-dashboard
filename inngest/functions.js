@@ -129,49 +129,11 @@ const dailyMetaSyncAll = inngest.createFunction(
   },
 );
 
-const { processGhlOpportunityWebhookSafe } = require('../lib/ghl-webhook-processor');
-const { SyncInProgressError } = require('../lib/snapshot-sync-lock');
-
-const GHL_WEBHOOK_MAX_SYNC_WAIT_ATTEMPTS = 5;
-const GHL_WEBHOOK_SYNC_WAIT = '30s';
-
-const ghlOpportunityWebhook = inngest.createFunction(
-  {
-    id: 'ghl-opportunity-webhook',
-    name: 'Process GHL opportunity webhook',
-    triggers: [{ event: 'dashboard/ghl.opportunity' }],
-    concurrency: {
-      limit: 1,
-      key: 'event.data.locationId',
-    },
-  },
-  async ({ event, step }) => {
-    const payload = event.data || {};
-
-    for (let attempt = 1; attempt <= GHL_WEBHOOK_MAX_SYNC_WAIT_ATTEMPTS; attempt += 1) {
-      try {
-        return await step.run(`process-ghl-opportunity-webhook-${attempt}`, () =>
-          processGhlOpportunityWebhookSafe(payload),
-        );
-      } catch (error) {
-        const syncBusy = error instanceof SyncInProgressError || error.code === 'SYNC_IN_PROGRESS';
-        if (!syncBusy || attempt >= GHL_WEBHOOK_MAX_SYNC_WAIT_ATTEMPTS) {
-          throw error;
-        }
-        await step.sleep(`wait-for-ghl-sync-${attempt}`, GHL_WEBHOOK_SYNC_WAIT);
-      }
-    }
-
-    throw new SyncInProgressError(payload.locationId || 'unknown');
-  },
-);
-
 module.exports = {
   dailySyncAll,
   syncAllAccounts,
   syncOneAccount,
-  ghlOpportunityWebhook,
+  // GHL opportunity webhooks: use inline processing (GHL_WEBHOOK_INLINE=1), not Inngest.
   // Meta ad spend: use Vercel daily cron (/api/meta-sync-cron at 0 4 * * * UTC).
-  // Requires CRON_SECRET on Production. Inngest meta cron disabled to avoid duplicate runs.
-  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts, ghlOpportunityWebhook],
+  inngestFunctions: [dailySyncAll, syncOneAccount, syncAllAccounts],
 };

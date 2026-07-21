@@ -51,6 +51,7 @@ See `.env.example` for the full list. Key vars:
 | `DASHBOARD_CACHE_TTL_MINUTES` | Short server buffer for live mode filter clicks (default `2`) |
 | `GHL_WEBHOOK_ENABLED` | Force webhooks on locally; production enables automatically unless `GHL_WEBHOOK_DISABLED=1` |
 | `GHL_WEBHOOK_DISABLED` | Set `1` to disable webhook processing in production |
+| `GHL_WEBHOOK_INLINE` | Set `1` to process GHL webhooks in the HTTP request (~2–3s). **Required in production** — do not queue webhooks via Inngest |
 | `GHL_SSO_SHARED_SECRET` | GHL marketplace app SSO validation |
 | `INNGEST_EVENT_KEY` / `INNGEST_SIGNING_KEY` | Daily cron sync (optional — manual sync works without) |
 | `DASHBOARD_ACCESS_KEY_SECRET` | Enables per-client access keys for read APIs (see below) |
@@ -109,7 +110,7 @@ API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipel
 - **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` (staff session).
 - **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }`. When Inngest is configured, this queues one background job per client and returns immediately (`202`). Without Inngest, it falls back to sequential sync in the same request.
 - **Scheduled:** Vercel daily cron at **01:00 UTC** (~3:00 Copenhagen in DST) syncs all GHL snapshots via `/api/ghl-sync-cron` (same pattern as Meta at 04:00 UTC). Requires `CRON_SECRET`. Inngest remains available for manual **Sync all** queueing and webhook workers.
-- **Webhooks:** GHL opportunity events hit `POST /api/ghl-webhook` (enabled in production by default). In GHL marketplace, set webhook URL to `https://cenhub-dashboard.vercel.app/api/ghl-webhook` and subscribe to **Opportunity Create / Update / Delete / Status Update**. Verify with `GET /api/ghl-webhook` or `npm run preflight:ghl`. When Inngest is configured, webhooks queue per location; otherwise they process inline. Webhook merges defer while a full sync is running (`sync_status=syncing`).
+- **Webhooks:** GHL opportunity events hit `POST /api/ghl-webhook` (enabled in production by default). Set **`GHL_WEBHOOK_INLINE=1`** on Vercel so each webhook merges into the snapshot in the same request (~2–3s). In GHL marketplace, webhook URL: `https://cenhub-dashboard.vercel.app/api/ghl-webhook`, events: **Opportunity Create / Update / Delete / Status Update**. Verify with `GET /api/ghl-webhook` (`"inline": true`) or `npm run preflight:ghl`. Webhook merges defer while a full sync is running (`sync_status=syncing`).
 
 Every sync attempt is logged to `sync_runs`. Failures surface as `sync_error` on hub cards.
 
@@ -128,8 +129,8 @@ When after-sales is set, dedupe pairs funnel + sales opportunities with after-sa
 Production reads **Neon snapshots** for fast dashboard loads. GHL webhooks patch individual opportunities near-real-time; daily Inngest sync at 03:00 Copenhagen is the safety net.
 
 ```
-GHL opportunity change  →  POST /api/ghl-webhook  →  verify + dedupe  →  Inngest worker
-  →  GET /opportunities/:id  →  merge into sync_snapshots (Neon)
+GHL opportunity change  →  POST /api/ghl-webhook  →  verify + dedupe  →  merge inline
+  →  GET /opportunities/:id  →  sync_snapshots (Neon)
 Dashboard GET /api/dashboard  →  read snapshot only (production)
 Daily 3am Vercel cron  →  full syncAccount  →  sync_snapshots
 Admin Sync now  →  full sync override
