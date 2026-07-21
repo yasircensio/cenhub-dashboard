@@ -13,7 +13,7 @@ async function main() {
   const tickAt = new Date().toISOString();
   await logMetaSyncRunForInngest(null, {
     status: 'cron_tick',
-    source: 'inngest',
+    source: 'vercel-cron',
     errorMessage: `Local debug script tick at ${tickAt}`,
     startedAt: tickAt,
     finishedAt: tickAt,
