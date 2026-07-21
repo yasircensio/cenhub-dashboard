@@ -78,7 +78,7 @@
     },
     {
       "path": "/api/ghl-sync-cron",
-      "schedule": "45 13 * * *"
+      "schedule": "5 14 * * *"
     }
   ]
 }
