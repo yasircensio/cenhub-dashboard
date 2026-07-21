@@ -5163,6 +5163,25 @@
             ${renderCardMenu(CLIENT_SLUG, account.accountName)}
           </div>
           ${renderSetupProgressStrip(account)}
+
+          <div class="setup-section" id="setup-section-display">
+            <div class="setup-section-info">
+              <div class="setup-section-title">Dashboard display</div>
+              <div class="setup-section-status">
+                <span class="setup-section-sync-time">Client slug: <code>${esc(account.clientId)}</code></span>
+              </div>
+            </div>
+            <div class="setup-section-content">
+              <div class="setup-grid setup-grid--2">
+                <div class="field-group" style="grid-column:1/-1">
+                  <label for="setup-account-name">Dashboard heading</label>
+                  <input id="setup-account-name" type="text" value="${esc(account.accountName || '')}" placeholder="e.g. ML Tagdækning" />
+                  <p class="field-hint">Main title on the live client dashboard and browser tab. The URL slug (<code>/${esc(account.clientId)}</code>) does not change.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div id="setup-section-metrics">
             ${renderMetricsModelPanel(account)}
           </div>
@@ -5370,7 +5389,13 @@
 
     async function saveSetupAccount() {
       try {
+        const accountName = document.getElementById('setup-account-name')?.value?.trim();
+        if (!accountName) {
+          showToast('Dashboard heading is required.', 'error');
+          return;
+        }
         const payload = {
+          accountName,
           locationId: document.getElementById('setup-location-id')?.value?.trim() || null,
           timezone: document.getElementById('setup-timezone')?.value?.trim() || 'Europe/Copenhagen',
           newLeadsPipelineId: document.getElementById('setup-new-leads')?.value || null,

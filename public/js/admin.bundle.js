@@ -610,6 +610,25 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
         ${renderCardMenu(CLIENT_SLUG,e.accountName)}
       </div>
       ${renderSetupProgressStrip(e)}
+
+      <div class="setup-section" id="setup-section-display">
+        <div class="setup-section-info">
+          <div class="setup-section-title">Dashboard display</div>
+          <div class="setup-section-status">
+            <span class="setup-section-sync-time">Client slug: <code>${esc(e.clientId)}</code></span>
+          </div>
+        </div>
+        <div class="setup-section-content">
+          <div class="setup-grid setup-grid--2">
+            <div class="field-group" style="grid-column:1/-1">
+              <label for="setup-account-name">Dashboard heading</label>
+              <input id="setup-account-name" type="text" value="${esc(e.accountName||"")}" placeholder="e.g. ML Tagd\xE6kning" />
+              <p class="field-hint">Main title on the live client dashboard and browser tab. The URL slug (<code>/${esc(e.clientId)}</code>) does not change.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="setup-section-metrics">
         ${renderMetricsModelPanel(e)}
       </div>
@@ -1103,7 +1122,7 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
               <div style="margin-top:12px">
                 <button type="button" class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
               </div>
-            </div>`)}else o?m&&(m.textContent="Apply failed - try again"):i.innerHTML=`
+            </div>`)}else o?o&&cachedData?(restoreDashboardContentAfterFailedFetch(o),showToast(h.message||"Failed to load filtered data.","error")):m&&(m.textContent="Apply failed - try again"):i.innerHTML=`
           ${renderBrandTopbar(IS_ADMIN?'<a class="admin-topbar-link" href="/admin">Admin hub</a>':"")}
           ${wrapDashboardShell(`
             <div class="error-state">

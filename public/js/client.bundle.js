@@ -405,7 +405,7 @@
               <div style="margin-top:12px">
                 <button type="button" class="refresh-btn primary" onclick="loadDashboard(true)">${RETRY_MSG}</button>
               </div>
-            </div>`)}else r?v&&(v.textContent="Apply failed - try again"):i.innerHTML=`
+            </div>`)}else r?r&&cachedData?(restoreDashboardContentAfterFailedFetch(r),showToast(m.message||"Failed to load filtered data.","error")):v&&(v.textContent="Apply failed - try again"):i.innerHTML=`
           ${renderBrandTopbar(IS_ADMIN?'<a class="admin-topbar-link" href="/admin">Admin hub</a>':"")}
           ${wrapDashboardShell(`
             <div class="error-state">
