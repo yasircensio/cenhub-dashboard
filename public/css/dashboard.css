@@ -172,6 +172,28 @@
       position: sticky;
     }
 
+    .brand-topbar--centered {
+      align-items: center;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr auto 1fr;
+      padding: 14px 24px;
+    }
+
+    .brand-topbar--centered .brand-topbar-inner {
+      display: contents;
+    }
+
+    .brand-topbar--centered .brand-topbar-left {
+      grid-column: 2;
+      justify-self: center;
+    }
+
+    .brand-topbar--centered .brand-topbar-right {
+      grid-column: 3;
+      justify-self: end;
+    }
+
     .brand-topbar-inner {
       align-items: center;
       display: flex;
@@ -3566,6 +3588,7 @@
       .custom-date-range { width: 100%; }
       .date-picker-trigger { min-width: 0; width: 100%; }
       .brand-topbar-inner { padding: 10px 16px; }
+      .brand-topbar--centered { padding: 12px 16px; }
       .dashboard-shell { padding: 0 16px 24px; }
       .page-hero { padding: 20px; }
     }

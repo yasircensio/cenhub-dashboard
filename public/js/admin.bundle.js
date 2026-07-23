@@ -3,7 +3,7 @@
         <span class="staff-nav-toggle-bar" aria-hidden="true"></span>
         <span class="staff-nav-toggle-bar" aria-hidden="true"></span>
       </button>`:"",i=e?t?`<div class="brand-topbar-right brand-topbar-panel" id="staff-topbar-panel">${e}</div>`:`<div class="brand-topbar-right">${e}</div>`:"";return`
-    <header class="brand-topbar${t?" brand-topbar--collapsible":""}">
+    <header class="brand-topbar${t?" brand-topbar--collapsible":""}${!t?" brand-topbar--centered":""}">
       <div class="brand-topbar-inner">
         <div class="brand-topbar-left">${a}</div>
         ${s}
