@@ -838,12 +838,12 @@
 
     .sync-history-table th:first-child,
     .sync-history-table td:first-child {
-      padding-left: 15px;
+      padding-left: 20px;
     }
 
     .sync-history-table th:last-child,
     .sync-history-table td:last-child {
-      padding-right: 15px;
+      padding-right: 20px;
     }
 
     .sync-history-table th {
