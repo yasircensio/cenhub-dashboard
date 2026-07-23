@@ -69,7 +69,7 @@ function createLocalResponse(serverResponse) {
 
 function serveDashboardHtml(response, mode, clientSlug = null) {
   const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team'
-    || mode === 'sync-history-ghl' || mode === 'sync-history-meta';
+    || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'fb-lead-sync';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
   let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
   const bodyAttrs = [`data-dashboard-mode="${mode}"`];
@@ -293,6 +293,43 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/fb-lead-sync-cron' || url === '/api/cron/fb-lead-sync') {
+    try {
+      const localResponse = createLocalResponse(response);
+      const { handleFbLeadSyncCronRequest } = require('./lib/fb-lead-sync-cron-handler');
+      await handleFbLeadSyncCronRequest({
+        method: request.method,
+        headers: request.headers,
+        query: Object.fromEntries(requestUrl.searchParams),
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'FB lead sync cron failed.' }));
+    }
+    return;
+  }
+
+  if (url === '/api/fb-lead-sync' || url.startsWith('/api/fb-lead-sync/')) {
+    try {
+      const localResponse = createLocalResponse(response);
+      let rawBody = '';
+      if (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH') {
+        rawBody = await readRequestBody(request);
+      }
+      await require('./lib/fb-lead-sync-handler').handleFbLeadSyncRequest({
+        method: request.method,
+        headers: request.headers,
+        url,
+        query: Object.fromEntries(requestUrl.searchParams),
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'FB lead sync API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/facebook-metrics') {
     try {
       const query = Object.fromEntries(requestUrl.searchParams);
@@ -339,6 +376,11 @@ const server = http.createServer(async (request, response) => {
 
   if (url === '/admin/sync-history/meta') {
     serveDashboardHtml(response, 'sync-history-meta');
+    return;
+  }
+
+  if (url === '/admin/fb-lead-sync') {
+    serveDashboardHtml(response, 'fb-lead-sync');
     return;
   }
 

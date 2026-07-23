@@ -17,6 +17,15 @@
     },
     "api/ghl-webhook.js": {
       "maxDuration": 60
+    },
+    "api/fb-lead-sync-cron.js": {
+      "maxDuration": 120
+    },
+    "api/fb-lead-sync.js": {
+      "maxDuration": 120
+    },
+    "api/fb-lead-sync/[...path].js": {
+      "maxDuration": 120
     }
   },
   "rewrites": [
@@ -28,6 +37,7 @@
     { "source": "/team", "destination": "/admin.html" },
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/admin/sync-history/:kind", "destination": "/admin.html" },
+    { "source": "/admin/fb-lead-sync", "destination": "/admin.html" },
     { "source": "/admin/:client_id", "destination": "/admin.html" },
     { "source": "/:client_id", "destination": "/client.html" }
   ],

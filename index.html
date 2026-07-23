@@ -65,6 +65,7 @@
     body[data-dashboard-mode="admin"],
     body[data-dashboard-mode="sync-history-ghl"],
     body[data-dashboard-mode="sync-history-meta"],
+    body[data-dashboard-mode="fb-lead-sync"],
     body[data-dashboard-mode="team"],
     body[data-dashboard-mode="login"] {
       --text: #16120e;
@@ -801,6 +802,81 @@
       font-size: 12px;
       max-width: 280px;
       word-break: break-word;
+    }
+
+    .fb-lead-banner {
+      background: #fff8f0;
+      border: 1px solid #ffd9b3;
+      border-radius: 12px;
+      color: #833b08;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+    }
+
+    .fb-lead-readiness {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .fb-lead-badge {
+      background: var(--panel-muted, #f4f4f5);
+      border-radius: 999px;
+      color: var(--text-soft);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+    }
+
+    .fb-lead-badge.is-ok {
+      background: #e8f7ef;
+      color: #138b53;
+    }
+
+    .fb-lead-badge.is-missing {
+      background: #fdeee8;
+      color: #dc640a;
+    }
+
+    .fb-lead-run-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-top: 16px;
+      padding: 16px;
+    }
+
+    .fb-lead-run-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .fb-lead-progress {
+      background: var(--panel-muted, #eee);
+      border-radius: 999px;
+      height: 8px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .fb-lead-progress-bar {
+      background: var(--accent, #ff6a00);
+      height: 100%;
+      transition: width 0.2s ease;
+      width: 0;
+    }
+
+    .fb-lead-audit-row td {
+      font-size: 12px;
+      vertical-align: top;
+    }
+
+    .fb-lead-toggle {
+      accent-color: var(--accent, #ff6a00);
     }
 
     .hub-toolbar-actions {
@@ -3239,6 +3315,11 @@
           delete document.body.dataset.clientSlug;
           return;
         }
+        if (parts[1] === 'fb-lead-sync') {
+          document.body.dataset.dashboardMode = 'fb-lead-sync';
+          delete document.body.dataset.clientSlug;
+          return;
+        }
         document.body.dataset.dashboardMode = parts.length >= 2 ? 'admin' : 'hub';
         if (parts.length >= 2) document.body.dataset.clientSlug = parts[1];
         else delete document.body.dataset.clientSlug;
@@ -3257,13 +3338,14 @@
     const IS_ADMIN_CLIENT = DASHBOARD_MODE === 'admin';
     const IS_ADMIN_SYNC_HISTORY_GHL = DASHBOARD_MODE === 'sync-history-ghl';
     const IS_ADMIN_SYNC_HISTORY_META = DASHBOARD_MODE === 'sync-history-meta';
+    const IS_ADMIN_FB_LEAD_SYNC = DASHBOARD_MODE === 'fb-lead-sync';
     const IS_ADMIN_SYNC_HISTORY = IS_ADMIN_SYNC_HISTORY_GHL || IS_ADMIN_SYNC_HISTORY_META;
     const IS_CLIENT_VIEW = DASHBOARD_MODE === 'client';
     const IS_PREVIEW = IS_CLIENT_VIEW && Boolean(new URLSearchParams(window.location.search).get('client'));
-    const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY
+    const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN_FB_LEAD_SYNC
       || new URLSearchParams(window.location.search).get('view') === 'admin';
 
-    const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN;
+    const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN_FB_LEAD_SYNC || IS_ADMIN;
     const LOADING_MSG = ADMIN_UI ? 'Loading dashboard data...' : 'Henter dashboard data...';
     const RETRY_MSG = ADMIN_UI ? 'Try again' : 'Prøv igen';
 
@@ -3503,6 +3585,7 @@
           <a href="/admin" class="staff-nav-link${activeTab === 'clients' ? ' is-active' : ''}">Clients</a>
           <a href="/admin/sync-history/ghl" class="staff-nav-link${activeTab === 'ghl-sync' ? ' is-active' : ''}">GHL sync</a>
           <a href="/admin/sync-history/meta" class="staff-nav-link${activeTab === 'meta-sync' ? ' is-active' : ''}">Meta sync</a>
+          <a href="/admin/fb-lead-sync" class="staff-nav-link${activeTab === 'fb-lead-sync' ? ' is-active' : ''}">FB lead sync</a>
           ${isStaffAdmin() ? `<a href="/team" class="staff-nav-link${activeTab === 'team' ? ' is-active' : ''}">Team</a>` : ''}
         </nav>
       `;
@@ -4128,6 +4211,8 @@
     function formatSyncSource(source) {
       const labels = {
         cron: 'Scheduled (cron)',
+        'github-actions': 'Scheduled (GitHub Actions)',
+        admin: 'Manual (admin)',
         'vercel-cron': 'Scheduled (Vercel cron)',
         manual: 'Manual (admin)',
         inngest: 'Scheduled (legacy)',
@@ -4331,6 +4416,508 @@
       } catch (error) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome(kind === 'meta' ? 'meta-sync' : 'ghl-sync'))}
+          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+        `;
+      }
+    }
+
+    let fbLeadSyncState = {
+      clients: [],
+      preflightByClient: {},
+      historyRuns: [],
+      activeRun: null,
+      previewOkByClient: {},
+    };
+    let fbLeadSyncRefreshTimer = null;
+
+    function renderFbLeadReadinessBadges(client) {
+      const checks = [
+        { key: 'metaPageId', label: 'Page', ok: Boolean(client.metaPageId) },
+        { key: 'ghl', label: 'GHL', ok: client.hasGhlToken && client.locationId },
+        { key: 'metaToken', label: 'Meta token', ok: client.hasMetaToken },
+        { key: 'field', label: 'Field id', ok: true },
+      ];
+      return `<div class="fb-lead-readiness">${checks.map((check) =>
+        `<span class="fb-lead-badge${check.ok ? ' is-ok' : ' is-missing'}">${esc(check.label)}</span>`,
+      ).join('')}</div>`;
+    }
+
+    function ghlContactUrl(locationId, contactId) {
+      if (!locationId || !contactId) return null;
+      return `https://app.gohighlevel.com/v2/location/${encodeURIComponent(locationId)}/contacts/detail/${encodeURIComponent(contactId)}`;
+    }
+
+    function renderFbLeadClientRows(clients) {
+      if (!clients.length) {
+        return '<div class="sync-history-empty">No clients configured yet.</div>';
+      }
+      const rows = clients.map((client) => {
+        const preflight = fbLeadSyncState.preflightByClient[client.clientId] || {};
+        const lastRun = client.lastRun;
+        const lastRunLabel = lastRun
+          ? `${lastRun.status} · ${lastRun.updated || 0} updated`
+          : '—';
+        const missing = preflight.estimatedMissing != null ? String(preflight.estimatedMissing) : '—';
+        const metaLeads = preflight.metaLeadCount90d != null ? String(preflight.metaLeadCount90d) : '—';
+        return `
+          <tr>
+            <td>
+              <strong>${esc(client.accountName)}</strong><br>
+              <span style="color:var(--text-soft);font-size:12px">${esc(client.clientId)}</span>
+            </td>
+            <td>
+              <input type="checkbox" class="fb-lead-toggle" data-fb-sync-toggle="${esc(client.clientId)}"
+                ${client.fbLeadSyncEnabled ? 'checked' : ''} aria-label="Enable auto-sync for ${esc(client.accountName)}" />
+            </td>
+            <td>${renderFbLeadReadinessBadges(client)}</td>
+            <td>${esc(metaLeads)}</td>
+            <td>${esc(missing)}</td>
+            <td>${esc(lastRunLabel)}</td>
+            <td>
+              <button class="admin-btn admin-btn--secondary admin-btn--small" type="button"
+                onclick="openFbLeadRunPanel('${esc(client.clientId)}', 'recent')">Preview</button>
+              <button class="admin-btn admin-btn--secondary admin-btn--small" type="button"
+                onclick="openFbLeadRunPanel('${esc(client.clientId)}', 'backfill')">Backfill</button>
+              <button class="admin-btn admin-btn--ghost admin-btn--small" type="button"
+                onclick="viewFbLeadClientHistory('${esc(client.clientId)}')">View log</button>
+              ${!client.metaPageId ? `<a class="admin-btn admin-btn--ghost admin-btn--small" href="/admin/${encodeURIComponent(client.clientId)}">Setup</a>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      return `
+        <div class="sync-history-table-wrap">
+          <table class="sync-history-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Auto-sync</th>
+                <th>Ready?</th>
+                <th>Meta leads (90d)</th>
+                <th>Missing (est.)</th>
+                <th>Last run</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderFbLeadHistoryRows(runs, locationByClient = {}) {
+      if (!runs.length) {
+        return '<div class="sync-history-empty">No FB lead sync runs logged yet.</div>';
+      }
+      const rows = runs.map((run) => {
+        const detail = [
+          run.mode,
+          run.dryRun ? 'dry-run' : 'apply',
+          `${run.updated || 0} updated`,
+          `${run.skippedNoMatch || 0} no match`,
+          run.errors ? `${run.errors} errors` : null,
+        ].filter(Boolean).join(' · ');
+        return `
+          <tr class="fb-lead-audit-row">
+            <td>${esc(formatSyncHistoryTimestamp(run.startedAt))}</td>
+            <td>${esc(run.accountName || run.clientId)}</td>
+            <td>${renderSyncStatusBadge(run.status)}</td>
+            <td>${esc(run.mode || 'recent')}</td>
+            <td>${esc(formatSyncSource(run.source))}</td>
+            <td class="sync-history-detail">${esc(detail)}</td>
+            <td><button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="expandFbLeadRun(${Number(run.id)})">Audit</button></td>
+          </tr>
+          <tr id="fb-lead-run-audit-${Number(run.id)}" hidden>
+            <td colspan="7">${renderFbLeadAuditTable(run.rows || [], locationByClient[run.clientId])}</td>
+          </tr>
+        `;
+      }).join('');
+      return `
+        <div class="sync-history-table-wrap">
+          <table class="sync-history-table">
+            <thead>
+              <tr>
+                <th>Started</th>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Mode</th>
+                <th>Source</th>
+                <th>Summary</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderFbLeadAuditTable(rows, locationId) {
+      if (!rows.length) {
+        return '<div class="sync-history-empty" style="padding:12px">No contact-level rows stored for this run.</div>';
+      }
+      const body = rows.map((row) => {
+        const ghlUrl = ghlContactUrl(locationId, row.contactId);
+        const ghlLink = ghlUrl
+          ? `<a href="${esc(ghlUrl)}" target="_blank" rel="noopener noreferrer">Open in GHL</a>`
+          : '—';
+        return `
+          <tr>
+            <td>${esc(row.email || row.phone || '—')}</td>
+            <td><code>${esc(row.metaLeadId || '—')}</code></td>
+            <td>${esc(row.contactId || '—')}</td>
+            <td>${renderSyncStatusBadge(row.status)}</td>
+            <td>${esc(row.error || '')}</td>
+            <td>${ghlLink}</td>
+          </tr>
+        `;
+      }).join('');
+      return `
+        <table class="sync-history-table">
+          <thead>
+            <tr>
+              <th>Email / phone</th>
+              <th>Meta lead id</th>
+              <th>GHL contact</th>
+              <th>Status</th>
+              <th>Error</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+      `;
+    }
+
+    function renderFbLeadSyncPage(data) {
+      const summary = data.summary || {};
+      return `
+        ${renderBrandTopbar(renderStaffAdminChrome('fb-lead-sync'))}
+        ${wrapDashboardShell(`
+        <div class="page-hero admin-hub-hero">
+          <div class="admin-breadcrumb">
+            <a href="/admin">Clients</a>
+            <span aria-hidden="true"> / </span>
+            <span>FB lead sync</span>
+          </div>
+          <h1>Facebook Lead ID sync</h1>
+          <p>Match Meta Lead Ads to GHL contacts and write the <code>Fb Lead id</code> custom field.</p>
+        </div>
+        <div class="sync-history-page">
+          <div class="fb-lead-banner">
+            Meta only stores Lead Ads for roughly the last <strong>90 days</strong>. Backfill cannot match older GHL contacts to leads outside that window.
+          </div>
+          <div class="sync-history-toolbar">
+            <div class="sync-history-toolbar-actions">
+              <a class="admin-btn admin-btn--secondary" href="/admin">← Back to clients</a>
+            </div>
+            <div class="sync-history-toolbar-actions">
+              <button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-sync-refresh">${ICON_SYNC} Refresh</button>
+            </div>
+          </div>
+          <div class="sync-history-summary">
+            <div class="sync-history-stat">
+              <div class="sync-history-stat-label">Last hourly run</div>
+              <div class="sync-history-stat-value">${esc(formatSyncHistoryTimestamp(summary.lastRunAt))}</div>
+            </div>
+            <div class="sync-history-stat">
+              <div class="sync-history-stat-label">Updated last 24h</div>
+              <div class="sync-history-stat-value">${esc(String(summary.updatedLast24h ?? 0))}</div>
+            </div>
+            <div class="sync-history-stat">
+              <div class="sync-history-stat-label">Auto-sync enabled</div>
+              <div class="sync-history-stat-value">${esc(String(summary.enabledCount ?? 0))} client(s)</div>
+            </div>
+            <div class="sync-history-stat">
+              <div class="sync-history-stat-label">Schedule</div>
+              <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary.schedule || '—')}</div>
+            </div>
+          </div>
+          <h2 style="font-size:16px;margin:18px 0 10px">Clients</h2>
+          ${renderFbLeadClientRows(data.clients || [])}
+          <div id="fb-lead-run-panel-mount"></div>
+          <h2 style="font-size:16px;margin:24px 0 10px">Run history</h2>
+          <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
+        </div>
+        `)}
+      `;
+    }
+
+    async function toggleFbLeadSyncEnabled(clientId, enabled) {
+      try {
+        await adminFetch(`/api/clients/${encodeURIComponent(clientId)}`, {
+          method: 'PUT',
+          body: JSON.stringify({ fbLeadSyncEnabled: enabled }),
+        });
+        showToast(enabled ? 'Hourly FB lead sync enabled' : 'Hourly FB lead sync disabled', 'success');
+        const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
+        if (client) client.fbLeadSyncEnabled = enabled;
+      } catch (error) {
+        showToast(error.message || 'Failed to update auto-sync setting.', 'error');
+        await loadFbLeadSyncPage({ silent: true });
+      }
+    }
+
+    function bindFbLeadSyncToggles() {
+      document.querySelectorAll('[data-fb-sync-toggle]').forEach((input) => {
+        input.onchange = () => toggleFbLeadSyncEnabled(input.dataset.fbSyncToggle, input.checked);
+      });
+    }
+
+    async function loadFbLeadPreflightForClients(clients) {
+      const preflightByClient = {};
+      await Promise.all(clients.map(async (client) => {
+        try {
+          preflightByClient[client.clientId] = await adminFetch(
+            `/api/fb-lead-sync/preflight?client=${encodeURIComponent(client.clientId)}`,
+          );
+        } catch (error) {
+          preflightByClient[client.clientId] = { preflightError: error.message };
+        }
+      }));
+      fbLeadSyncState.preflightByClient = preflightByClient;
+    }
+
+    async function loadFbLeadHistory(limit = 50) {
+      const data = await adminFetch(`/api/fb-lead-sync/history?limit=${limit}`);
+      fbLeadSyncState.historyRuns = data.runs || [];
+      return data;
+    }
+
+    function renderFbLeadRunPanel(clientId, mode = 'recent') {
+      const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
+      const modeLabel = mode === 'backfill' ? 'Backfill (90 days)' : 'Recent (2 days)';
+      return `
+        <div class="fb-lead-run-panel" id="fb-lead-run-panel">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+            <div>
+              <strong>${esc(client?.accountName || clientId)}</strong>
+              <div style="color:var(--text-soft);font-size:13px;margin-top:4px">${esc(modeLabel)}</div>
+            </div>
+            <button class="admin-btn admin-btn--ghost" type="button" onclick="closeFbLeadRunPanel()">Close</button>
+          </div>
+          ${mode === 'backfill' ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0">Run Preview first. Backfill only matches leads Meta still has (~90 days).</div>' : ''}
+          <div class="fb-lead-run-actions">
+            <button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-preview-btn">Preview (dry run)</button>
+            <button class="admin-btn admin-btn--primary" type="button" id="fb-lead-apply-btn" disabled>Apply sync</button>
+          </div>
+          <div class="fb-lead-progress" id="fb-lead-progress" hidden>
+            <div class="fb-lead-progress-bar" id="fb-lead-progress-bar"></div>
+          </div>
+          <div id="fb-lead-run-results" style="margin-top:12px"></div>
+        </div>
+      `;
+    }
+
+    function closeFbLeadRunPanel() {
+      const mount = document.getElementById('fb-lead-run-panel-mount');
+      if (mount) mount.innerHTML = '';
+      fbLeadSyncState.activeRun = null;
+    }
+
+    function openFbLeadRunPanel(clientId, mode) {
+      const mount = document.getElementById('fb-lead-run-panel-mount');
+      if (!mount) return;
+      fbLeadSyncState.activeRun = { clientId, mode, runId: null, previewOk: false };
+      mount.innerHTML = renderFbLeadRunPanel(clientId, mode);
+      const previewBtn = document.getElementById('fb-lead-preview-btn');
+      const applyBtn = document.getElementById('fb-lead-apply-btn');
+      if (previewBtn) previewBtn.onclick = () => runFbLeadSyncBatch({ clientId, mode, dryRun: true });
+      if (applyBtn) {
+        applyBtn.onclick = () => {
+          if (mode === 'backfill' && !fbLeadSyncState.previewOkByClient[clientId]) {
+            showToast('Run Preview first before backfill.', 'error');
+            return;
+          }
+          const confirmed = window.confirm(`Apply ${mode === 'backfill' ? '90-day backfill' : 'recent sync'} for ${clientId}?`);
+          if (!confirmed) return;
+          if (fbLeadSyncState.activeRun) fbLeadSyncState.activeRun.runId = null;
+          runFbLeadSyncBatch({ clientId, mode, dryRun: false });
+        };
+      }
+      mount.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderFbLeadRunResults(summary) {
+      const rows = (summary.rows || []).slice(0, 100);
+      if (!rows.length) {
+        return `<div class="sync-history-empty" style="padding:12px">No rows in this batch.</div>`;
+      }
+      const body = rows.map((row) => `
+        <tr>
+          <td>${esc(row.email || row.phone || '—')}</td>
+          <td><code>${esc(row.metaLeadId || '—')}</code></td>
+          <td>${esc(row.contactId || '—')}</td>
+          <td>${renderSyncStatusBadge(row.status)}</td>
+        </tr>
+      `).join('');
+      return `
+        <div class="sync-history-table-wrap">
+          <table class="sync-history-table">
+            <thead><tr><th>Email / phone</th><th>Meta lead id</th><th>GHL contact</th><th>Status</th></tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
+        <p style="color:var(--text-soft);font-size:12px;margin-top:8px">
+          Batch: ${summary.batchProcessed || 0} processed · ${summary.updated || 0} would update/updated · ${summary.errors || 0} errors
+        </p>
+      `;
+    }
+
+    async function runFbLeadSyncBatch({ clientId, mode, dryRun }) {
+      const previewBtn = document.getElementById('fb-lead-preview-btn');
+      const applyBtn = document.getElementById('fb-lead-apply-btn');
+      const progress = document.getElementById('fb-lead-progress');
+      const progressBar = document.getElementById('fb-lead-progress-bar');
+      const resultsMount = document.getElementById('fb-lead-run-results');
+      if (previewBtn) previewBtn.disabled = true;
+      if (applyBtn) applyBtn.disabled = true;
+
+      let runId = fbLeadSyncState.activeRun?.runId || null;
+      let offset = 0;
+      let lastSummary = null;
+      let allRows = [];
+
+      try {
+        if (progress) progress.hidden = false;
+        do {
+          lastSummary = await adminFetch('/api/fb-lead-sync/run', {
+            method: 'POST',
+            body: JSON.stringify({
+              clientId,
+              mode,
+              dryRun,
+              runId,
+              batchOffset: offset,
+              batchLimit: 25,
+            }),
+          });
+          const summary = lastSummary.summary || lastSummary;
+          runId = summary.runId;
+          offset = summary.batchOffset + (summary.batchProcessed || 0);
+          allRows = allRows.concat(summary.rows || []);
+          if (fbLeadSyncState.activeRun) {
+            fbLeadSyncState.activeRun.runId = runId;
+          }
+          const pct = summary.inWindow
+            ? Math.min(100, Math.round((offset / summary.inWindow) * 100))
+            : 100;
+          if (progressBar) progressBar.style.width = `${pct}%`;
+          if (resultsMount) {
+            resultsMount.innerHTML = renderFbLeadRunResults({ ...summary, rows: allRows });
+          }
+        } while (lastSummary.summary?.hasMore || lastSummary.hasMore);
+
+        if (dryRun) {
+          fbLeadSyncState.previewOkByClient[clientId] = true;
+          if (fbLeadSyncState.activeRun) fbLeadSyncState.activeRun.previewOk = true;
+          if (applyBtn) applyBtn.disabled = false;
+          showToast('Preview complete', 'success');
+        } else {
+          showToast('FB lead sync complete', 'success');
+          await loadFbLeadHistory();
+          const historyMount = document.getElementById('fb-lead-history-mount');
+          if (historyMount) {
+            const locationByClient = Object.fromEntries(
+              fbLeadSyncState.clients.map((row) => [row.clientId, row.locationId]),
+            );
+            historyMount.innerHTML = renderFbLeadHistoryRows(fbLeadSyncState.historyRuns, locationByClient);
+          }
+        }
+      } catch (error) {
+        showToast(error.message || 'FB lead sync failed.', 'error');
+      } finally {
+        if (previewBtn) previewBtn.disabled = false;
+        if (applyBtn) {
+          applyBtn.disabled = mode === 'backfill' && !fbLeadSyncState.previewOkByClient[clientId];
+        }
+        if (progress) progress.hidden = true;
+        if (progressBar) progressBar.style.width = '0%';
+      }
+    }
+
+    async function expandFbLeadRun(runId) {
+      const row = document.getElementById(`fb-lead-run-audit-${runId}`);
+      if (!row) return;
+      if (!row.hidden) {
+        row.hidden = true;
+        return;
+      }
+      try {
+        const data = await adminFetch(`/api/fb-lead-sync/history/${runId}`);
+        const client = fbLeadSyncState.clients.find((item) => item.clientId === data.run.clientId);
+        row.innerHTML = `<td colspan="7">${renderFbLeadAuditTable(data.run.rows || [], data.run.locationId || client?.locationId)}</td>`;
+        row.hidden = false;
+      } catch (error) {
+        showToast(error.message || 'Failed to load run audit.', 'error');
+      }
+    }
+
+    function viewFbLeadClientHistory(clientId) {
+      const filtered = fbLeadSyncState.historyRuns.filter((run) => run.clientId === clientId);
+      const historyMount = document.getElementById('fb-lead-history-mount');
+      if (!historyMount) return;
+      const locationByClient = Object.fromEntries(
+        fbLeadSyncState.clients.map((row) => [row.clientId, row.locationId]),
+      );
+      historyMount.innerHTML = filtered.length
+        ? renderFbLeadHistoryRows(filtered, locationByClient)
+        : `<div class="sync-history-empty">No runs for ${esc(clientId)} yet.</div>`;
+      historyMount.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function loadFbLeadSyncPage({ silent = false } = {}) {
+      const dashboard = document.getElementById('dashboard');
+      if (!dashboard) return;
+
+      const user = await fetchStaffMe();
+      if (!user) {
+        if (!silent) {
+          dashboard.innerHTML = `
+            ${renderBrandTopbar('')}
+            ${wrapDashboardShell(`
+              <div class="page-hero admin-hub-hero"><h1>FB lead sync</h1><p>Sign in to manage FB lead ID sync.</p></div>
+              <div class="sync-history-page">
+                <div class="sync-history-empty" style="padding:24px;text-align:center">
+                  <a class="admin-btn admin-btn--primary" href="/login?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}">Sign in</a>
+                </div>
+              </div>
+            `)}
+          `;
+        }
+        return;
+      }
+      currentStaffUser = user;
+
+      if (!silent) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('fb-lead-sync'))}
+          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading FB lead sync...</p></div>')}
+        `;
+      }
+
+      try {
+        const data = await adminFetch('/api/fb-lead-sync');
+        fbLeadSyncState.clients = data.clients || [];
+        await Promise.all([
+          loadFbLeadPreflightForClients(fbLeadSyncState.clients),
+          loadFbLeadHistory(),
+        ]);
+        dashboard.innerHTML = renderFbLeadSyncPage(data);
+        bindFbLeadSyncToggles();
+        const refreshBtn = document.getElementById('fb-lead-sync-refresh');
+        if (refreshBtn) refreshBtn.onclick = () => loadFbLeadSyncPage();
+        if (fbLeadSyncRefreshTimer) {
+          clearInterval(fbLeadSyncRefreshTimer);
+          fbLeadSyncRefreshTimer = null;
+        }
+        fbLeadSyncRefreshTimer = window.setInterval(() => {
+          loadFbLeadSyncPage({ silent: true }).catch(() => {});
+        }, 60_000);
+      } catch (error) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('fb-lead-sync'))}
           ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
         `;
       }
@@ -5133,12 +5720,23 @@
                     <label for="setup-meta-page-token">Meta Page access token (optional)</label>
                     ${account.hasMetaPageAccessToken ? '<span class="token-status-ok">Token configured</span>' : ''}
                   </div>
-                  <input id="setup-meta-page-token" type="password" placeholder="${account.hasMetaPageAccessToken ? '••••••••  (saved — leave blank to keep)' : 'For future lead sync'}" autocomplete="off" />
+                  <input id="setup-meta-page-token" type="password" placeholder="${account.hasMetaPageAccessToken ? '••••••••  (saved — leave blank to keep)' : 'For lead sync'}" autocomplete="off" />
+                </div>
+                <div class="field-group" style="grid-column:1/-1">
+                  <label class="setup-ready-toggle">
+                    <input id="setup-fb-lead-sync-enabled" type="checkbox" ${account.fbLeadSyncEnabled ? 'checked' : ''} />
+                    <span>Enable hourly FB lead ID sync</span>
+                  </label>
+                </div>
+                <div class="field-group" style="grid-column:1/-1">
+                  <label for="setup-ghl-fb-lead-field-id">GHL Fb Lead id field (optional override)</label>
+                  <input id="setup-ghl-fb-lead-field-id" type="text" value="${esc(account.ghlFbLeadFieldId || '')}" placeholder="Defaults to env GHL_FB_LEAD_FIELD_ID or Censio field" />
                 </div>
               </div>
               <div class="setup-actions-inline">
                 <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
                 ${account.hasSavedMetaSystemUserToken ? `<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>` : ''}
+                <a class="setup-section-sync-time" href="/admin/fb-lead-sync" style="margin-left:12px">Open FB lead sync dashboard →</a>
               </div>
             </div>
           </div>
@@ -5367,6 +5965,8 @@
         metaPageId: document.getElementById('setup-meta-page-id')?.value?.trim() || null,
         metaPixelId: document.getElementById('setup-meta-pixel-id')?.value?.trim() || null,
         facebookClientId: document.getElementById('setup-facebook-client-id')?.value?.trim() || null,
+        fbLeadSyncEnabled: Boolean(document.getElementById('setup-fb-lead-sync-enabled')?.checked),
+        ghlFbLeadFieldId: document.getElementById('setup-ghl-fb-lead-field-id')?.value?.trim() || null,
       };
       const metaSystemToken = document.getElementById('setup-meta-system-token')?.value?.trim();
       if (metaSystemToken) payload.metaSystemUserToken = metaSystemToken;
@@ -7902,6 +8502,11 @@
 
       if (IS_ADMIN_SYNC_HISTORY_META) {
         loadSyncHistoryPage('meta');
+        return;
+      }
+
+      if (IS_ADMIN_FB_LEAD_SYNC) {
+        loadFbLeadSyncPage();
         return;
       }
 
