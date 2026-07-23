@@ -100,7 +100,8 @@ CREATE TABLE IF NOT EXISTS fb_lead_sync_runs (
   batch_limit INTEGER,
   has_more BOOLEAN NOT NULL DEFAULT FALSE,
   error_message TEXT,
-  rows JSONB NOT NULL DEFAULT '[]'::jsonb
+  rows JSONB NOT NULL DEFAULT '[]'::jsonb,
+  leads_cache JSONB
 );
 
 CREATE INDEX IF NOT EXISTS fb_lead_sync_runs_client_id_started_at_idx

@@ -4795,7 +4795,7 @@
           });
           const summary = lastSummary.summary || lastSummary;
           runId = summary.runId;
-          offset = summary.batchOffset + (summary.batchProcessed || 0);
+          offset = summary.nextBatchOffset ?? (summary.batchOffset + (summary.batchProcessed || 0));
           allRows = allRows.concat(summary.rows || []);
           if (fbLeadSyncState.activeRun) {
             fbLeadSyncState.activeRun.runId = runId;
@@ -4826,7 +4826,11 @@
           }
         }
       } catch (error) {
-        showToast(error.message || 'FB lead sync failed.', 'error');
+        showToast(
+          (error.message || 'FB lead sync failed.')
+          + ' Partial progress may be saved — refresh the page and run Preview again.',
+          'error',
+        );
       } finally {
         if (previewBtn) previewBtn.disabled = false;
         if (applyBtn) {

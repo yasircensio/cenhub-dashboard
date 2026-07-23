@@ -12,6 +12,7 @@
     "migrate:meta-cron-heartbeat": "node scripts/migrate-meta-cron-heartbeat.js",
     "migrate:ghl-webhooks": "node scripts/migrate-ghl-webhooks.js",
     "migrate:fb-lead-sync": "node scripts/migrate-fb-lead-sync.js",
+    "migrate:fb-lead-sync-cache": "node scripts/migrate-fb-lead-sync-cache.js",
     "create-admin": "node scripts/create-admin.js",
     "sync:all-ghl": "node scripts/run-ghl-sync-all.js",
     "preflight:ghl": "node scripts/preflight-ghl-architecture.js",
