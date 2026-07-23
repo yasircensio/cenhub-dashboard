@@ -858,16 +858,55 @@
     .fb-lead-progress {
       background: var(--panel-muted, #eee);
       border-radius: 999px;
-      height: 8px;
+      height: 10px;
       margin-top: 12px;
       overflow: hidden;
+    }
+
+    .fb-lead-progress.is-visible {
+      display: block;
+    }
+
+    .fb-lead-progress-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .fb-lead-progress-wrap.is-complete .fb-lead-progress-bar {
+      background: #138b53;
     }
 
     .fb-lead-progress-bar {
       background: var(--accent, #ff6a00);
       height: 100%;
-      transition: width 0.2s ease;
+      min-width: 0;
+      transition: width 0.25s ease;
       width: 0;
+    }
+
+    .fb-lead-audit-scroll {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 8px;
+      max-height: 320px;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    .fb-lead-audit-scroll .sync-history-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--panel);
+    }
+
+    .fb-lead-history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
     }
 
     .fb-lead-audit-row td {
@@ -4526,10 +4565,15 @@
             <td>${esc(run.mode || 'recent')}</td>
             <td>${esc(formatSyncSource(run.source))}</td>
             <td class="sync-history-detail">${esc(detail)}</td>
-            <td><button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="expandFbLeadRun(${Number(run.id)})">Audit</button></td>
+            <td>
+              <div class="fb-lead-history-actions">
+                <button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="expandFbLeadRun(${Number(run.id)})">Audit</button>
+                ${isStaffAdmin() ? `<button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="deleteFbLeadRun(${Number(run.id)})">Delete</button>` : ''}
+              </div>
+            </td>
           </tr>
           <tr id="fb-lead-run-audit-${Number(run.id)}" hidden>
-            <td colspan="7">${renderFbLeadAuditTable(run.rows || [], locationByClient[run.clientId])}</td>
+            <td colspan="7"><div class="fb-lead-audit-scroll" id="fb-lead-audit-scroll-${Number(run.id)}">${renderFbLeadAuditTable(run.rows || [], locationByClient[run.clientId])}</div></td>
           </tr>
         `;
       }).join('');
@@ -4573,21 +4617,29 @@
           </tr>
         `;
       }).join('');
+      const rowLabel = rows.length === 1 ? '1 contact row' : `${rows.length} contact rows`;
       return `
-        <table class="sync-history-table">
-          <thead>
-            <tr>
-              <th>Email / phone</th>
-              <th>Meta lead id</th>
-              <th>GHL contact</th>
-              <th>Status</th>
-              <th>Error</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>${body}</tbody>
-        </table>
+        <div class="fb-lead-audit-scroll-inner">
+          <p style="color:var(--text-soft);font-size:12px;margin:0 0 8px;padding:8px 8px 0">${esc(rowLabel)} — scroll inside panel</p>
+          <table class="sync-history-table">
+            <thead>
+              <tr>
+                <th>Email / phone</th>
+                <th>Meta lead id</th>
+                <th>GHL contact</th>
+                <th>Status</th>
+                <th>Error</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>
       `;
+    }
+
+    function renderFbLeadAuditTableWrapped(rows, locationId) {
+      return `<div class="fb-lead-audit-scroll">${renderFbLeadAuditTable(rows, locationId)}</div>`;
     }
 
     function renderFbLeadSyncPage(data) {
@@ -4614,6 +4666,7 @@
             </div>
             <div class="sync-history-toolbar-actions">
               <button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-sync-refresh">${ICON_SYNC} Refresh</button>
+              ${isStaffAdmin() ? '<button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-sync-clear-log">Clear log</button>' : ''}
             </div>
           </div>
           <div class="sync-history-summary">
@@ -4702,8 +4755,11 @@
             <button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-preview-btn">Preview (dry run)</button>
             <button class="admin-btn admin-btn--primary" type="button" id="fb-lead-apply-btn" disabled>Apply sync</button>
           </div>
-          <div class="fb-lead-progress" id="fb-lead-progress" hidden>
-            <div class="fb-lead-progress-bar" id="fb-lead-progress-bar"></div>
+          <div class="fb-lead-progress-wrap" id="fb-lead-progress-wrap" hidden>
+            <div class="fb-lead-progress-label" id="fb-lead-progress-label">Starting…</div>
+            <div class="fb-lead-progress" id="fb-lead-progress">
+              <div class="fb-lead-progress-bar" id="fb-lead-progress-bar"></div>
+            </div>
           </div>
           <div id="fb-lead-run-results" style="margin-top:12px"></div>
         </div>
@@ -4740,7 +4796,7 @@
     }
 
     function renderFbLeadRunResults(summary) {
-      const rows = (summary.rows || []).slice(0, 100);
+      const rows = summary.rows || [];
       if (!rows.length) {
         return `<div class="sync-history-empty" style="padding:12px">No rows in this batch.</div>`;
       }
@@ -4752,24 +4808,92 @@
           <td>${renderSyncStatusBadge(row.status)}</td>
         </tr>
       `).join('');
+      const processed = summary.nextBatchOffset ?? ((summary.batchOffset || 0) + (summary.batchProcessed || 0));
+      const total = summary.inWindow || processed;
       return `
-        <div class="sync-history-table-wrap">
+        <div class="fb-lead-audit-scroll">
           <table class="sync-history-table">
             <thead><tr><th>Email / phone</th><th>Meta lead id</th><th>GHL contact</th><th>Status</th></tr></thead>
             <tbody>${body}</tbody>
           </table>
         </div>
         <p style="color:var(--text-soft);font-size:12px;margin-top:8px">
-          Batch: ${summary.batchProcessed || 0} processed · ${summary.updated || 0} would update/updated · ${summary.errors || 0} errors
+          ${processed} / ${total} leads scanned · ${summary.updated || 0} would update/updated · ${summary.errors || 0} errors
         </p>
       `;
+    }
+
+    function setFbLeadProgress({ processed = 0, total = 0, complete = false, label = '' } = {}) {
+      const wrap = document.getElementById('fb-lead-progress-wrap');
+      const progressBar = document.getElementById('fb-lead-progress-bar');
+      const progressLabel = document.getElementById('fb-lead-progress-label');
+      if (!wrap || !progressBar) return;
+      wrap.hidden = false;
+      wrap.classList.toggle('is-complete', complete);
+      const pct = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : (complete ? 100 : 0);
+      progressBar.style.width = `${pct}%`;
+      if (progressLabel) {
+        progressLabel.textContent = label
+          || (complete
+            ? `Complete — ${processed} / ${total} leads (${pct}%)`
+            : `Processing — ${processed} / ${total} leads (${pct}%)`);
+      }
+    }
+
+    function hideFbLeadProgress(reset = true) {
+      const wrap = document.getElementById('fb-lead-progress-wrap');
+      const progressBar = document.getElementById('fb-lead-progress-bar');
+      if (!wrap) return;
+      if (reset) {
+        wrap.hidden = true;
+        wrap.classList.remove('is-complete');
+        if (progressBar) progressBar.style.width = '0%';
+      }
+    }
+
+    async function refreshFbLeadHistoryUi() {
+      await loadFbLeadHistory();
+      const historyMount = document.getElementById('fb-lead-history-mount');
+      if (!historyMount) return;
+      const locationByClient = Object.fromEntries(
+        fbLeadSyncState.clients.map((row) => [row.clientId, row.locationId]),
+      );
+      historyMount.innerHTML = renderFbLeadHistoryRows(fbLeadSyncState.historyRuns, locationByClient);
+    }
+
+    async function clearFbLeadSyncHistory() {
+      if (!isStaffAdmin()) return;
+      const confirmed = window.confirm(
+        'Delete all FB lead sync run history?\n\nThis only clears the log — it does not change GHL contacts or Meta data.',
+      );
+      if (!confirmed) return;
+      try {
+        const result = await adminFetch('/api/fb-lead-sync/history', { method: 'DELETE' });
+        showToast(`Cleared ${result.deleted || 0} run(s).`, 'success');
+        await refreshFbLeadHistoryUi();
+        await loadFbLeadSyncPage({ silent: true });
+      } catch (error) {
+        showToast(error.message || 'Failed to clear FB lead sync log.', 'error');
+      }
+    }
+
+    async function deleteFbLeadRun(runId) {
+      if (!isStaffAdmin()) return;
+      const confirmed = window.confirm(`Delete run #${runId} from history?`);
+      if (!confirmed) return;
+      try {
+        await adminFetch(`/api/fb-lead-sync/history/${runId}`, { method: 'DELETE' });
+        showToast('Run deleted.', 'success');
+        await refreshFbLeadHistoryUi();
+        await loadFbLeadSyncPage({ silent: true });
+      } catch (error) {
+        showToast(error.message || 'Failed to delete run.', 'error');
+      }
     }
 
     async function runFbLeadSyncBatch({ clientId, mode, dryRun }) {
       const previewBtn = document.getElementById('fb-lead-preview-btn');
       const applyBtn = document.getElementById('fb-lead-apply-btn');
-      const progress = document.getElementById('fb-lead-progress');
-      const progressBar = document.getElementById('fb-lead-progress-bar');
       const resultsMount = document.getElementById('fb-lead-run-results');
       if (previewBtn) previewBtn.disabled = true;
       if (applyBtn) applyBtn.disabled = true;
@@ -4778,9 +4902,10 @@
       let offset = 0;
       let lastSummary = null;
       let allRows = [];
+      let completed = false;
 
       try {
-        if (progress) progress.hidden = false;
+        setFbLeadProgress({ processed: 0, total: 0, label: 'Starting sync…' });
         do {
           lastSummary = await adminFetch('/api/fb-lead-sync/run', {
             method: 'POST',
@@ -4800,14 +4925,23 @@
           if (fbLeadSyncState.activeRun) {
             fbLeadSyncState.activeRun.runId = runId;
           }
-          const pct = summary.inWindow
-            ? Math.min(100, Math.round((offset / summary.inWindow) * 100))
-            : 100;
-          if (progressBar) progressBar.style.width = `${pct}%`;
+          setFbLeadProgress({
+            processed: offset,
+            total: summary.inWindow || offset,
+            complete: !summary.hasMore,
+          });
           if (resultsMount) {
             resultsMount.innerHTML = renderFbLeadRunResults({ ...summary, rows: allRows });
           }
-        } while (lastSummary.summary?.hasMore || lastSummary.hasMore);
+        } while ((lastSummary.summary || lastSummary).hasMore);
+
+        completed = true;
+        const finalSummary = lastSummary.summary || lastSummary;
+        setFbLeadProgress({
+          processed: finalSummary.nextBatchOffset ?? offset,
+          total: finalSummary.inWindow || offset,
+          complete: true,
+        });
 
         if (dryRun) {
           fbLeadSyncState.previewOkByClient[clientId] = true;
@@ -4816,16 +4950,11 @@
           showToast('Preview complete', 'success');
         } else {
           showToast('FB lead sync complete', 'success');
-          await loadFbLeadHistory();
-          const historyMount = document.getElementById('fb-lead-history-mount');
-          if (historyMount) {
-            const locationByClient = Object.fromEntries(
-              fbLeadSyncState.clients.map((row) => [row.clientId, row.locationId]),
-            );
-            historyMount.innerHTML = renderFbLeadHistoryRows(fbLeadSyncState.historyRuns, locationByClient);
-          }
         }
+        await refreshFbLeadHistoryUi();
+        await loadFbLeadSyncPage({ silent: true });
       } catch (error) {
+        hideFbLeadProgress(true);
         showToast(
           (error.message || 'FB lead sync failed.')
           + ' Partial progress may be saved — refresh the page and run Preview again.',
@@ -4836,8 +4965,9 @@
         if (applyBtn) {
           applyBtn.disabled = mode === 'backfill' && !fbLeadSyncState.previewOkByClient[clientId];
         }
-        if (progress) progress.hidden = true;
-        if (progressBar) progressBar.style.width = '0%';
+        if (!completed) {
+          hideFbLeadProgress(true);
+        }
       }
     }
 
@@ -4851,8 +4981,12 @@
       try {
         const data = await adminFetch(`/api/fb-lead-sync/history/${runId}`);
         const client = fbLeadSyncState.clients.find((item) => item.clientId === data.run.clientId);
-        row.innerHTML = `<td colspan="7">${renderFbLeadAuditTable(data.run.rows || [], data.run.locationId || client?.locationId)}</td>`;
+        row.innerHTML = `<td colspan="7"><div class="fb-lead-audit-scroll" id="fb-lead-audit-scroll-${runId}">${renderFbLeadAuditTable(data.run.rows || [], data.run.locationId || client?.locationId)}</div></td>`;
         row.hidden = false;
+        const scrollHost = document.getElementById(`fb-lead-audit-scroll-${runId}`);
+        if (scrollHost) {
+          scrollHost.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       } catch (error) {
         showToast(error.message || 'Failed to load run audit.', 'error');
       }
@@ -4912,6 +5046,8 @@
         bindFbLeadSyncToggles();
         const refreshBtn = document.getElementById('fb-lead-sync-refresh');
         if (refreshBtn) refreshBtn.onclick = () => loadFbLeadSyncPage();
+        const clearBtn = document.getElementById('fb-lead-sync-clear-log');
+        if (clearBtn) clearBtn.onclick = () => clearFbLeadSyncHistory();
         if (fbLeadSyncRefreshTimer) {
           clearInterval(fbLeadSyncRefreshTimer);
           fbLeadSyncRefreshTimer = null;
