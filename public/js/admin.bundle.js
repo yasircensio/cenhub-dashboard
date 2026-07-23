@@ -452,7 +452,6 @@ ${o} contact(s) will get Fb Lead id written in GHL. This writes live data.`)&&(f
       </div>
       <h2 style="font-size:16px;margin:18px 0 10px">Clients</h2>
       <div id="fb-lead-field-warnings-mount">${renderFbLeadFieldWarnings(e.clients||[])}</div>
-      <p class="fb-lead-clients-note">Outstanding: estimated missing <code>Fb Lead id</code> before sync \xB7 would-update count after preview \xB7 no GHL match count after apply.</p>
       ${renderFbLeadClientRowsWrapper(e.clients||[])}
       <div id="fb-lead-run-panel-mount"></div>
       <div id="fb-lead-apply-progress-mount"></div>
