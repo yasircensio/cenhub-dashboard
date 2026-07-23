@@ -806,21 +806,29 @@
     .section-heading-row {
       align-items: center;
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      flex-wrap: nowrap;
+      gap: 12px;
       justify-content: space-between;
       margin: 24px 0 10px;
     }
 
     .section-heading-row h2 {
+      flex: 1 1 auto;
       font-size: 16px;
       margin: 0;
+      min-width: 0;
     }
 
     .section-heading-actions {
       display: flex;
-      flex-wrap: wrap;
+      flex: 0 0 auto;
+      flex-wrap: nowrap;
       gap: 8px;
+      margin-left: auto;
+    }
+
+    .fb-lead-history-section {
+      margin-top: 8px;
     }
 
     .sync-history-table-wrap {
@@ -1103,20 +1111,89 @@
       margin: -4px 0 12px;
     }
 
-    .fb-lead-clients-table .fb-lead-client-actions-cell {
-      min-width: 220px;
+    .fb-lead-clients-table {
+      font-size: 12px;
+      min-width: 680px;
+    }
+
+    .fb-lead-clients-table th,
+    .fb-lead-clients-table td {
+      padding: 6px 8px;
+      vertical-align: middle;
+    }
+
+    .fb-lead-clients-table th {
+      font-size: 10px;
+      letter-spacing: 0.03em;
       white-space: nowrap;
     }
 
+    .fb-lead-clients-table .fb-lead-client-cell {
+      max-width: 148px;
+      min-width: 108px;
+    }
+
+    .fb-lead-clients-table .fb-lead-client-name {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fb-lead-clients-table .fb-lead-client-id {
+      color: var(--text-soft);
+      display: block;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fb-lead-clients-table .fb-lead-sync-cell {
+      text-align: center;
+      width: 52px;
+    }
+
+    .fb-lead-clients-table .fb-lead-stat-cell {
+      text-align: right;
+      white-space: nowrap;
+      width: 1%;
+    }
+
+    .fb-lead-clients-table .fb-lead-last-run-cell {
+      max-width: 168px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fb-lead-clients-table .fb-lead-readiness {
+      flex-wrap: nowrap;
+      gap: 3px;
+    }
+
+    .fb-lead-clients-table .fb-lead-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+    }
+
+    .fb-lead-clients-table .fb-lead-client-actions-cell {
+      min-width: 0;
+      white-space: nowrap;
+      width: 1%;
+    }
+
     .fb-lead-client-actions {
-      display: flex;
-      flex-wrap: wrap;
+      display: inline-flex;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .fb-lead-client-actions .admin-btn {
-      flex: 0 1 auto;
+      flex: 0 0 auto;
       white-space: nowrap;
     }
 
@@ -2211,6 +2288,22 @@
       background: var(--surface-hover);
       border-color: var(--border-strong);
       color: var(--text);
+    }
+
+    .admin-btn--small {
+      border-radius: 8px;
+      font-size: 11px;
+      padding: 5px 9px;
+    }
+
+    .admin-btn--ghost {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .admin-btn--ghost:hover {
+      background: var(--surface-hover);
+      border-color: var(--border);
     }
 
     .admin-btn--primary {
@@ -3592,7 +3685,23 @@
         justify-content: center;
       }
       .section-heading-row {
-        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .section-heading-actions {
+        margin-left: 0;
+        width: auto;
+      }
+      .section-heading-actions .admin-btn {
+        width: auto;
+      }
+      .fb-lead-clients-table .fb-lead-readiness {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .section-heading-row {
+        align-items: stretch;
         flex-direction: column;
       }
       .section-heading-actions {
@@ -5265,18 +5374,18 @@
         const lastRunLabel = formatFbLeadLastRunLabel(client.lastRun);
         return `
           <tr>
-            <td>
-              <strong>${esc(client.accountName)}</strong><br>
-              <span style="color:var(--text-soft);font-size:12px">${esc(client.clientId)}</span>
+            <td class="fb-lead-client-cell">
+              <span class="fb-lead-client-name">${esc(client.accountName)}</span>
+              <span class="fb-lead-client-id">${esc(client.clientId)}</span>
             </td>
-            <td>
+            <td class="fb-lead-sync-cell">
               <input type="checkbox" class="fb-lead-toggle" data-fb-sync-toggle="${esc(client.clientId)}"
                 ${client.fbLeadSyncEnabled ? 'checked' : ''} aria-label="Enable auto-sync for ${esc(client.accountName)}" />
             </td>
             <td>${renderFbLeadReadinessBadges(client)}</td>
-            <td>${esc(stats.metaLeads)}</td>
-            <td title="${esc(stats.missingTitle || '')}">${esc(stats.missing)}</td>
-            <td>${esc(lastRunLabel)}</td>
+            <td class="fb-lead-stat-cell">${esc(stats.metaLeads)}</td>
+            <td class="fb-lead-stat-cell" title="${esc(stats.missingTitle || '')}">${esc(stats.missing)}</td>
+            <td class="fb-lead-last-run-cell" title="${esc(lastRunLabel)}">${esc(lastRunLabel)}</td>
             <td class="fb-lead-client-actions-cell">${renderFbLeadClientActions(client)}</td>
           </tr>
         `;
@@ -5288,12 +5397,12 @@
             <thead>
               <tr>
                 <th>Client</th>
-                <th>Auto-sync</th>
+                <th>Sync</th>
                 <th>Ready?</th>
-                <th>Meta leads (90d)</th>
+                <th>Meta 90d</th>
                 <th title="Before sync: estimated contacts missing Fb Lead id. After preview: would update count. After apply: Meta leads with no GHL match.">Outstanding</th>
                 <th>Last run</th>
-                <th>Actions</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -5462,20 +5571,22 @@
           ${renderFbLeadClientRowsWrapper(data.clients || [])}
           <div id="fb-lead-run-panel-mount"></div>
           <div id="fb-lead-apply-progress-mount"></div>
-          <div class="section-heading-row">
-            <h2>Run history</h2>
-            ${isStaffAdmin() ? `
-              <div class="section-heading-actions">
-                <button
-                  class="admin-btn admin-btn--secondary admin-btn--small"
-                  type="button"
-                  id="fb-lead-history-clear-all"
-                  ${(fbLeadSyncState.historyRuns || []).length ? '' : 'disabled'}
-                >Delete all history</button>
-              </div>
-            ` : ''}
+          <div class="fb-lead-history-section">
+            <div class="section-heading-row">
+              <h2>Run history</h2>
+              ${isStaffAdmin() ? `
+                <div class="section-heading-actions">
+                  <button
+                    class="admin-btn admin-btn--secondary admin-btn--small"
+                    type="button"
+                    id="fb-lead-history-clear-all"
+                    ${(fbLeadSyncState.historyRuns || []).length ? '' : 'disabled'}
+                  >Delete all history</button>
+                </div>
+              ` : ''}
+            </div>
+            <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
           </div>
-          <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
         </div>
         `)}
       `;
