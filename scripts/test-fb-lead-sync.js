@@ -4,6 +4,8 @@ const {
   filterLeadsByDays,
   resolveModeOptions,
   resolveFbLeadFieldId,
+  findFbLeadFieldDefinition,
+  isFbLeadFieldDefinition,
   BACKFILL_DAYS,
   DEFAULT_SYNC_DAYS,
 } = require('../lib/meta-lead-ghl-sync');
@@ -45,6 +47,14 @@ function main() {
 
   const fieldId = resolveFbLeadFieldId({ ghlFbLeadFieldId: 'custom-field' });
   assert(fieldId === 'custom-field', 'resolveFbLeadFieldId prefers account override');
+
+  const defs = [
+    { id: 'abc', name: 'Other field' },
+    { id: 'xyz', name: 'Fb Lead id', fieldKey: 'contact.fb_lead_id' },
+  ];
+  assert(isFbLeadFieldDefinition(defs[1]), 'detect fb lead field by name');
+  assert(findFbLeadFieldDefinition(defs, 'missing')?.id === 'xyz', 'find fb lead field by name when override missing');
+  assert(findFbLeadFieldDefinition(defs, 'abc')?.id === 'abc', 'prefer configured field id when present');
 
   assert(parseFbLeadSyncPath('/api/fb-lead-sync').kind === 'dashboard', 'dashboard path');
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/preflight').kind === 'preflight', 'preflight path');

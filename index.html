@@ -991,6 +991,32 @@
       font-style: italic;
     }
 
+    .fb-lead-field-warning {
+      background: #fdeee8;
+      border: 1px solid #f5c4b3;
+      border-radius: 12px;
+      color: #833b08;
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 16px;
+      padding: 14px 18px;
+    }
+
+    .fb-lead-field-warning strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .fb-lead-field-warning p {
+      margin: 0 0 10px;
+    }
+
+    .fb-lead-field-warning-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .fb-lead-clients-table .fb-lead-client-actions-cell {
       min-width: 220px;
       white-space: nowrap;
@@ -4569,12 +4595,41 @@
     };
     let fbLeadSyncRefreshTimer = null;
 
+    function clientFbLeadFieldReady(client) {
+      const preflight = fbLeadSyncState.preflightByClient[client?.clientId];
+      if (preflight?.fbLeadFieldMissing === true || preflight?.fbLeadFieldExists === false) return false;
+      return true;
+    }
+
+    function getClientFbLeadFieldHint(client) {
+      const preflight = fbLeadSyncState.preflightByClient[client?.clientId] || {};
+      return preflight.fbLeadFieldHint
+        || `Create a contact custom field named "Fb Lead id" in GHL (Settings → Custom Fields → Contact), then click Refresh.`;
+    }
+
+    function renderFbLeadFieldWarnings(clients) {
+      const missing = (clients || []).filter((client) => !clientFbLeadFieldReady(client));
+      if (!missing.length) return '';
+      return missing.map((client) => `
+        <div class="fb-lead-field-warning" id="fb-lead-field-warning-${esc(client.clientId)}">
+          <strong>${esc(client.accountName)} — Fb Lead id field missing in GHL</strong>
+          <p>${esc(getClientFbLeadFieldHint(client))}</p>
+          <div class="fb-lead-field-warning-actions">
+            <a class="admin-btn admin-btn--secondary admin-btn--small" href="/admin/${encodeURIComponent(client.clientId)}">Open client setup</a>
+            <button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="loadFbLeadSyncPage()">Refresh check</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
     function renderFbLeadReadinessBadges(client) {
+      const preflight = fbLeadSyncState.preflightByClient[client.clientId] || {};
+      const fieldOk = clientFbLeadFieldReady(client) && preflight.fbLeadFieldExists !== false;
       const checks = [
         { key: 'metaPageId', label: 'Page', ok: Boolean(client.metaPageId) },
         { key: 'ghl', label: 'GHL', ok: client.hasGhlToken && client.locationId },
         { key: 'metaToken', label: 'Meta token', ok: client.hasMetaToken },
-        { key: 'field', label: 'Field id', ok: true },
+        { key: 'field', label: 'Fb Lead id', ok: fieldOk },
       ];
       return `<div class="fb-lead-readiness">${checks.map((check) =>
         `<span class="fb-lead-badge${check.ok ? ' is-ok' : ' is-missing'}">${esc(check.label)}</span>`,
@@ -4645,6 +4700,11 @@
         showToast('Run not found. Refresh the page.', 'error');
         return;
       }
+      const client = fbLeadSyncState.clients.find((row) => row.clientId === run.clientId);
+      if (!clientFbLeadFieldReady(client)) {
+        showToast(getClientFbLeadFieldHint(client), 'error');
+        return;
+      }
       await applyFbLeadSync(run.clientId, run.mode || 'backfill', { previewRunId: runId });
     }
 
@@ -4654,10 +4714,15 @@
         return;
       }
 
+      const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
+      if (!clientFbLeadFieldReady(client)) {
+        showToast(getClientFbLeadFieldHint(client), 'error');
+        return;
+      }
+
       const previewRun = previewRunId != null
         ? fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(previewRunId))
         : null;
-      const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
       const hasPreview = previewRun
         ? dryRunIsReadyForApply(previewRun)
         : clientHasReadyPreview(client);
@@ -4690,8 +4755,12 @@
 
     async function refreshFbLeadClientRowsUi() {
       const mount = document.getElementById('fb-lead-clients-mount');
+      const warningsMount = document.getElementById('fb-lead-field-warnings-mount');
       if (mount) {
         mount.innerHTML = renderFbLeadClientRows(fbLeadSyncState.clients);
+      }
+      if (warningsMount) {
+        warningsMount.innerHTML = renderFbLeadFieldWarnings(fbLeadSyncState.clients);
       }
       bindFbLeadSyncToggles();
     }
@@ -4955,6 +5024,7 @@
             </div>
           </div>
           <h2 style="font-size:16px;margin:18px 0 10px">Clients</h2>
+          <div id="fb-lead-field-warnings-mount">${renderFbLeadFieldWarnings(data.clients || [])}</div>
           ${renderFbLeadClientRowsWrapper(data.clients || [])}
           <div id="fb-lead-run-panel-mount"></div>
           <div id="fb-lead-apply-progress-mount"></div>
@@ -5043,6 +5113,11 @@
     }
 
     function openFbLeadRunPanel(clientId, mode) {
+      const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
+      if (!clientFbLeadFieldReady(client)) {
+        showToast(getClientFbLeadFieldHint(client), 'error');
+        return;
+      }
       const mount = document.getElementById('fb-lead-run-panel-mount');
       if (!mount) return;
       fbLeadSyncState.activeRun = {
@@ -6324,7 +6399,11 @@
                 </div>
                 <div class="field-group" style="grid-column:1/-1">
                   <label for="setup-ghl-fb-lead-field-id">GHL Fb Lead id field (optional override)</label>
-                  <input id="setup-ghl-fb-lead-field-id" type="text" value="${esc(account.ghlFbLeadFieldId || '')}" placeholder="Defaults to env GHL_FB_LEAD_FIELD_ID or Censio field" />
+                  <input id="setup-ghl-fb-lead-field-id" type="text" value="${esc(account.ghlFbLeadFieldId || '')}" placeholder="Auto-detects a contact field named Fb Lead id" />
+                  <p class="field-hint" style="margin-top:8px;font-size:12px;color:var(--text-muted);line-height:1.5">
+                    Each GHL sub-account needs a <strong>contact</strong> custom field named <code>Fb Lead id</code>
+                    (Settings → Custom Fields → Contact). Leave blank to auto-detect by name on sync.
+                  </p>
                 </div>
               </div>
               <div class="setup-actions-inline">

@@ -982,6 +982,32 @@
       font-style: italic;
     }
 
+    .fb-lead-field-warning {
+      background: #fdeee8;
+      border: 1px solid #f5c4b3;
+      border-radius: 12px;
+      color: #833b08;
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 16px;
+      padding: 14px 18px;
+    }
+
+    .fb-lead-field-warning strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .fb-lead-field-warning p {
+      margin: 0 0 10px;
+    }
+
+    .fb-lead-field-warning-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .fb-lead-clients-table .fb-lead-client-actions-cell {
       min-width: 220px;
       white-space: nowrap;
