@@ -1017,6 +1017,13 @@
       gap: 8px;
     }
 
+    .fb-lead-clients-note {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin: -4px 0 12px;
+    }
+
     .fb-lead-clients-table .fb-lead-client-actions-cell {
       min-width: 220px;
       white-space: nowrap;
@@ -4797,18 +4804,42 @@
       `;
     }
 
+    function lastRunIsSuccessfulApply(lastRun) {
+      if (!lastRun || lastRun.dryRun) return false;
+      const status = String(lastRun.status || '').toLowerCase();
+      return status === 'success' || status === 'ok';
+    }
+
+    function lastRunIsSuccessfulPreview(lastRun) {
+      if (!lastRun || !lastRun.dryRun) return false;
+      const status = String(lastRun.status || '').toLowerCase();
+      return status === 'success' || status === 'ok';
+    }
+
     function resolveFbLeadClientStats(client, preflight = {}) {
       const lastRun = client?.lastRun;
       const metaLeads = preflight.metaLeadCount90d ?? lastRun?.inWindow ?? lastRun?.metaLeadCount ?? null;
-      let missing = preflight.estimatedMissing;
-      if (missing == null && lastRun) {
-        missing = lastRun.dryRun
-          ? (lastRun.updated ?? null)
-          : (lastRun.skippedNoMatch ?? null);
+      let missing = null;
+      let missingTitle = '';
+
+      if (lastRunIsSuccessfulApply(lastRun)) {
+        // After a live apply: only Meta leads we could not match to a GHL contact.
+        missing = lastRun.skippedNoMatch ?? 0;
+        missingTitle = 'Meta leads with no matching GHL contact after the last apply';
+      } else if (lastRunIsSuccessfulPreview(lastRun)) {
+        // After preview: contacts that would receive Fb Lead id on apply.
+        missing = lastRun.updated ?? preflight.estimatedMissing ?? null;
+        missingTitle = 'Contacts that would get Fb Lead id if you apply this preview';
+      } else {
+        // No recent run: sample-based estimate from Meta + GHL.
+        missing = preflight.estimatedMissing ?? null;
+        missingTitle = 'Estimated contacts still missing Fb Lead id (from a Meta sample)';
       }
+
       return {
         metaLeads: metaLeads != null ? String(metaLeads) : '—',
         missing: missing != null ? String(missing) : '—',
+        missingTitle,
       };
     }
 
@@ -4844,7 +4875,7 @@
             </td>
             <td>${renderFbLeadReadinessBadges(client)}</td>
             <td>${esc(stats.metaLeads)}</td>
-            <td>${esc(stats.missing)}</td>
+            <td title="${esc(stats.missingTitle || '')}">${esc(stats.missing)}</td>
             <td>${esc(lastRunLabel)}</td>
             <td class="fb-lead-client-actions-cell">${renderFbLeadClientActions(client)}</td>
           </tr>
@@ -4860,7 +4891,7 @@
                 <th>Auto-sync</th>
                 <th>Ready?</th>
                 <th>Meta leads (90d)</th>
-                <th>Missing (est.)</th>
+                <th title="Before sync: estimated contacts missing Fb Lead id. After preview: would update count. After apply: Meta leads with no GHL match.">Outstanding</th>
                 <th>Last run</th>
                 <th>Actions</th>
               </tr>
@@ -5025,6 +5056,7 @@
           </div>
           <h2 style="font-size:16px;margin:18px 0 10px">Clients</h2>
           <div id="fb-lead-field-warnings-mount">${renderFbLeadFieldWarnings(data.clients || [])}</div>
+          <p class="fb-lead-clients-note">Outstanding: estimated missing <code>Fb Lead id</code> before sync · would-update count after preview · no GHL match count after apply.</p>
           ${renderFbLeadClientRowsWrapper(data.clients || [])}
           <div id="fb-lead-run-panel-mount"></div>
           <div id="fb-lead-apply-progress-mount"></div>
