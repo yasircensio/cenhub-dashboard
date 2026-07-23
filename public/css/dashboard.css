@@ -831,9 +831,19 @@
     .sync-history-table th,
     .sync-history-table td {
       border-bottom: 1px solid var(--border);
-      padding: 10px 12px;
+      padding: 10px 5px;
       text-align: left;
       vertical-align: top;
+    }
+
+    .sync-history-table th:first-child,
+    .sync-history-table td:first-child {
+      padding-left: 15px;
+    }
+
+    .sync-history-table th:last-child,
+    .sync-history-table td:last-child {
+      padding-right: 15px;
     }
 
     .sync-history-table th {
