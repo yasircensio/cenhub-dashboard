@@ -170,10 +170,15 @@
       background: var(--brand-topbar-gradient);
       box-shadow: 0 2px 16px rgba(0, 0, 0, 0.14);
       margin: 0 0 24px;
+      overflow-x: clip;
       position: sticky;
       top: 0;
       width: 100%;
       z-index: 50;
+    }
+
+    .brand-topbar--collapsible {
+      position: sticky;
     }
 
     .brand-topbar-inner {
@@ -793,6 +798,26 @@
     }
 
     .sync-history-toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .section-heading-row {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      margin: 24px 0 10px;
+    }
+
+    .section-heading-row h2 {
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .section-heading-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
@@ -3461,19 +3486,6 @@
     }
 
     @media (max-width: 1100px) {
-      .staff-nav-link {
-        font-size: 11px;
-        padding: 6px 10px;
-      }
-
-      .staff-user-trigger {
-        font-size: 11px;
-        max-width: 160px;
-        padding: 6px 10px;
-      }
-    }
-
-    @media (max-width: 960px) {
       .brand-topbar--collapsible .staff-nav-toggle {
         display: inline-flex;
       }
@@ -3488,6 +3500,8 @@
         align-items: stretch;
         gap: 14px;
         left: 0;
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
         padding: 12px 16px 16px;
         position: absolute;
         right: 0;
@@ -3565,6 +3579,28 @@
     @media (max-width: 768px) {
       .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .kpi-grid > .card { min-height: 152px; }
+      .admin-hub-hero h1 { font-size: 18px; }
+      .sync-history-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .sync-history-toolbar-actions {
+        width: 100%;
+      }
+      .sync-history-toolbar-actions .admin-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+      }
+      .section-heading-row {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .section-heading-actions {
+        width: 100%;
+      }
+      .section-heading-actions .admin-btn {
+        width: 100%;
+      }
     }
 
     @media (max-width: 560px) {
@@ -4899,18 +4935,83 @@
       return `https://app.gohighlevel.com/v2/location/${encodeURIComponent(locationId)}/contacts/detail/${encodeURIComponent(contactId)}`;
     }
 
-    function clientHasReadyPreview(client) {
-      if (!client) return false;
-      if (fbLeadSyncState.previewOkByClient[client.clientId]) return true;
-      const last = client.lastRun;
+    function fbLeadRunHasLaterSuccessfulRun(runs, run, { dryRunOnly = false, applyOnly = false } = {}) {
+      const runTime = Date.parse(run.startedAt || '');
+      if (!Number.isFinite(runTime)) return false;
+      return (runs || []).some((other) => {
+        if (other.id === run.id) return false;
+        if (other.clientId !== run.clientId) return false;
+        if ((other.mode || 'recent') !== (run.mode || 'recent')) return false;
+        if (dryRunOnly && !other.dryRun) return false;
+        if (applyOnly && other.dryRun) return false;
+        const status = String(other.status || '').toLowerCase();
+        if (status !== 'success' && status !== 'ok') return false;
+        return Date.parse(other.startedAt || '') > runTime;
+      });
+    }
+
+    function fbLeadRunHasLaterApply(runs, run) {
+      return fbLeadRunHasLaterSuccessfulRun(runs, run, { applyOnly: true });
+    }
+
+    function dryRunIsReadyForApply(run, runs = fbLeadSyncState.historyRuns) {
+      if (!run) return false;
       return Boolean(
-        last?.dryRun
-        && String(last.status || '').toLowerCase() === 'success'
-        && (last.updated || 0) > 0,
+        run.dryRun
+        && String(run.status || '').toLowerCase() === 'success'
+        && (run.updated || 0) > 0
+        && !fbLeadRunHasLaterApply(runs, run)
+        && !fbLeadRunHasLaterSuccessfulRun(runs, run, { dryRunOnly: true }),
       );
     }
 
+    function findActionablePreviewRun(clientId, mode = 'backfill', runs = fbLeadSyncState.historyRuns) {
+      return (runs || [])
+        .filter((row) =>
+          row.clientId === clientId
+          && (row.mode || 'backfill') === mode
+          && dryRunIsReadyForApply(row, runs),
+        )
+        .sort((a, b) => Date.parse(b.startedAt || '') - Date.parse(a.startedAt || ''))[0] || null;
+    }
+
+    function clientPreviewAllSynced(client) {
+      if (!client?.lastRun) return false;
+      const last = client.lastRun;
+      return Boolean(
+        last.dryRun
+        && (last.mode || 'backfill') === 'backfill'
+        && String(last.status || '').toLowerCase() === 'success'
+        && (last.updated || 0) === 0
+        && !findActionablePreviewRun(client.clientId, 'backfill'),
+      );
+    }
+
+    function clientHasReadyPreview(client) {
+      if (!client) return false;
+      const cached = fbLeadSyncState.previewOkByClient[client.clientId];
+      if (cached && (cached.updated || 0) > 0) {
+        return Boolean(findActionablePreviewRun(client.clientId, cached.mode || 'backfill'));
+      }
+      return Boolean(findActionablePreviewRun(client.clientId, 'backfill'));
+    }
+
+    function clearFbLeadPreviewReady(clientId) {
+      delete fbLeadSyncState.previewOkByClient[clientId];
+      try {
+        const stored = JSON.parse(sessionStorage.getItem('fbLeadSyncPreviewOk') || '{}');
+        delete stored[clientId];
+        sessionStorage.setItem('fbLeadSyncPreviewOk', JSON.stringify(stored));
+      } catch {
+        // ignore storage errors
+      }
+    }
+
     function markFbLeadPreviewReady(clientId, mode, updatedCount) {
+      if ((updatedCount || 0) <= 0) {
+        clearFbLeadPreviewReady(clientId);
+        return;
+      }
       fbLeadSyncState.previewOkByClient[clientId] = { mode, updated: updatedCount, at: Date.now() };
       try {
         const stored = JSON.parse(sessionStorage.getItem('fbLeadSyncPreviewOk') || '{}');
@@ -4925,31 +5026,25 @@
       try {
         const stored = JSON.parse(sessionStorage.getItem('fbLeadSyncPreviewOk') || '{}');
         for (const [clientId, meta] of Object.entries(stored)) {
-          fbLeadSyncState.previewOkByClient[clientId] = meta;
+          if ((meta?.updated || 0) > 0) {
+            fbLeadSyncState.previewOkByClient[clientId] = meta;
+          }
         }
       } catch {
         // ignore
       }
       for (const client of clients || []) {
-        if (clientHasReadyPreview(client)) {
-          const last = client.lastRun;
+        const actionable = findActionablePreviewRun(client.clientId, 'backfill');
+        if (actionable) {
           fbLeadSyncState.previewOkByClient[client.clientId] = {
-            mode: last?.mode || 'backfill',
-            updated: last?.updated || 0,
-            at: Date.parse(last?.startedAt || '') || Date.now(),
+            mode: actionable.mode || 'backfill',
+            updated: actionable.updated || 0,
+            at: Date.parse(actionable.startedAt || '') || Date.now(),
           };
+        } else {
+          clearFbLeadPreviewReady(client.clientId);
         }
       }
-    }
-
-    function dryRunIsReadyForApply(run, runs = fbLeadSyncState.historyRuns) {
-      if (!run) return false;
-      return Boolean(
-        run.dryRun
-        && String(run.status || '').toLowerCase() === 'success'
-        && (run.updated || 0) > 0
-        && !fbLeadRunHasLaterApply(runs, run),
-      );
     }
 
     function isPartialSyncRun(run) {
@@ -5101,20 +5196,6 @@
         warningsMount.innerHTML = renderFbLeadFieldWarnings(fbLeadSyncState.clients);
       }
       bindFbLeadSyncToggles();
-    }
-
-    function fbLeadRunHasLaterApply(runs, run) {
-      const runTime = Date.parse(run.startedAt || '');
-      if (!Number.isFinite(runTime)) return false;
-      return (runs || []).some((other) => {
-        if (other.id === run.id) return false;
-        if (other.clientId !== run.clientId) return false;
-        if ((other.mode || 'recent') !== (run.mode || 'recent')) return false;
-        if (other.dryRun) return false;
-        const status = String(other.status || '').toLowerCase();
-        if (status !== 'success' && status !== 'ok') return false;
-        return Date.parse(other.startedAt || '') > runTime;
-      });
     }
 
     function renderFbLeadClientActions(client) {
@@ -5355,7 +5436,6 @@
             </div>
             <div class="sync-history-toolbar-actions">
               <button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-sync-refresh">${ICON_SYNC} Refresh</button>
-              ${isStaffAdmin() ? '<button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-sync-clear-log">Clear log</button>' : ''}
             </div>
           </div>
           <div class="sync-history-summary">
@@ -5382,7 +5462,19 @@
           ${renderFbLeadClientRowsWrapper(data.clients || [])}
           <div id="fb-lead-run-panel-mount"></div>
           <div id="fb-lead-apply-progress-mount"></div>
-          <h2 style="font-size:16px;margin:24px 0 10px">Run history</h2>
+          <div class="section-heading-row">
+            <h2>Run history</h2>
+            ${isStaffAdmin() ? `
+              <div class="section-heading-actions">
+                <button
+                  class="admin-btn admin-btn--secondary admin-btn--small"
+                  type="button"
+                  id="fb-lead-history-clear-all"
+                  ${(fbLeadSyncState.historyRuns || []).length ? '' : 'disabled'}
+                >Delete all history</button>
+              </div>
+            ` : ''}
+          </div>
           <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
         </div>
         `)}
@@ -5464,7 +5556,9 @@
           </div>
           ${mode === 'backfill' && ready
             ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0;background:#e8f7ef;border-color:#b8e6cf;color:#138b53">Preview complete — use <strong>Apply</strong> on that run in <strong>Run history</strong> below.</div>'
-            : (mode === 'backfill' ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0">Run Preview first. Backfill only matches leads Meta still has (~90 days).</div>' : '')}
+            : (mode === 'backfill' && clientPreviewAllSynced(client)
+              ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0;background:#e8f7ef;border-color:#b8e6cf;color:#138b53">All contacts already have <strong>Fb Lead id</strong> — nothing to apply.</div>'
+              : (mode === 'backfill' ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0">Run Preview first. Backfill only matches leads Meta still has (~90 days).</div>' : ''))}
           <div class="fb-lead-run-actions">
             <button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-preview-btn">Preview (dry run)</button>
           </div>
@@ -5694,6 +5788,13 @@
       }
     }
 
+    function updateFbLeadHistoryClearButton() {
+      const clearBtn = document.getElementById('fb-lead-history-clear-all');
+      if (!clearBtn) return;
+      const hasRuns = (fbLeadSyncState.historyRuns || []).length > 0;
+      clearBtn.disabled = !hasRuns;
+    }
+
     async function refreshFbLeadHistoryUi() {
       await loadFbLeadHistory();
       const historyMount = document.getElementById('fb-lead-history-mount');
@@ -5702,6 +5803,14 @@
         fbLeadSyncState.clients.map((row) => [row.clientId, row.locationId]),
       );
       historyMount.innerHTML = renderFbLeadHistoryRows(fbLeadSyncState.historyRuns, locationByClient);
+      updateFbLeadHistoryClearButton();
+    }
+
+    function bindFbLeadHistoryClearButton() {
+      const clearBtn = document.getElementById('fb-lead-history-clear-all');
+      if (!clearBtn) return;
+      clearBtn.onclick = () => clearFbLeadSyncHistory();
+      updateFbLeadHistoryClearButton();
     }
 
     async function clearFbLeadSyncHistory() {
@@ -5865,8 +5974,15 @@
             complete: true,
           });
           markFbLeadPreviewReady(clientId, mode, finalSummary.updated);
-          if (fbLeadSyncState.activeRun) fbLeadSyncState.activeRun.previewOk = true;
-          showToast('Preview complete — use Apply in Run history below.', 'success');
+          if (fbLeadSyncState.activeRun) {
+            fbLeadSyncState.activeRun.previewOk = (finalSummary.updated || 0) > 0;
+          }
+          showToast(
+            (finalSummary.updated || 0) > 0
+              ? 'Preview complete — use Apply in Run history below.'
+              : 'Preview complete — all contacts already have Fb Lead id. Nothing to apply.',
+            'success',
+          );
           await refreshFbLeadHistoryUi();
           document.getElementById('fb-lead-history-mount')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
@@ -6001,8 +6117,7 @@
           if (refreshBtn) {
             refreshBtn.onclick = () => loadFbLeadSyncPage({ fullPreflight: true });
           }
-          const clearBtn = document.getElementById('fb-lead-sync-clear-log');
-          if (clearBtn) clearBtn.onclick = () => clearFbLeadSyncHistory();
+          bindFbLeadHistoryClearButton();
           if (fbLeadSyncRefreshTimer) {
             clearInterval(fbLeadSyncRefreshTimer);
             fbLeadSyncRefreshTimer = null;
@@ -6855,7 +6970,6 @@
               <div class="setup-actions-inline">
                 <button class="admin-btn admin-btn--secondary" type="button" onclick="syncMetaMetricsClient('${CLIENT_SLUG}')">${ICON_SYNC} Sync Meta metrics</button>
                 ${account.hasSavedMetaSystemUserToken ? `<button class="admin-btn admin-btn--ghost" type="button" onclick="clearMetaSystemUserToken('${CLIENT_SLUG}')">Clear saved token override</button>` : ''}
-                <a class="setup-section-sync-time" href="/admin/fb-lead-sync" style="margin-left:12px">Open FB lead sync dashboard →</a>
               </div>
             </div>
           </div>
