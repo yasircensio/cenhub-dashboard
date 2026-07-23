@@ -167,13 +167,23 @@
     }
 
     .brand-topbar {
-      align-items: center;
       background: var(--brand-topbar-gradient);
-      display: grid;
-      gap: 12px;
-      grid-template-columns: 1fr auto 1fr;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.14);
       margin: 0 0 24px;
-      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      width: 100%;
+      z-index: 50;
+    }
+
+    .brand-topbar-inner {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin: 0 auto;
+      max-width: 1280px;
+      padding: 12px 24px;
       position: relative;
       width: 100%;
     }
@@ -181,25 +191,69 @@
     .brand-topbar-left {
       align-items: center;
       display: flex;
-      grid-column: 2;
-      justify-content: center;
-      justify-self: center;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-link {
+      display: inline-flex;
+      line-height: 0;
     }
 
     .brand-topbar-right {
       align-items: center;
       display: flex;
+      flex: 1;
       gap: 10px;
-      grid-column: 3;
       justify-content: flex-end;
-      justify-self: end;
       min-width: 0;
     }
 
     .brand-logo {
       display: block;
-      height: 41px;
+      height: 36px;
       width: auto;
+    }
+
+    .staff-nav-toggle {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      cursor: pointer;
+      display: none;
+      flex-direction: column;
+      flex-shrink: 0;
+      gap: 5px;
+      height: 40px;
+      justify-content: center;
+      margin-left: auto;
+      padding: 0;
+      width: 40px;
+    }
+
+    .staff-nav-toggle:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .staff-nav-toggle-bar {
+      background: #fff;
+      border-radius: 999px;
+      display: block;
+      height: 2px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      width: 18px;
+    }
+
+    .staff-nav-toggle.is-active .staff-nav-toggle-bar:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .staff-nav-toggle.is-active .staff-nav-toggle-bar:nth-child(2) {
+      opacity: 0;
+    }
+
+    .staff-nav-toggle.is-active .staff-nav-toggle-bar:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
     }
 
     .brand-tagline {
@@ -2622,14 +2676,19 @@
       align-items: center;
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
       justify-content: flex-end;
+      min-width: 0;
     }
 
     .staff-nav {
       align-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
       display: flex;
-      gap: 4px;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 3px;
     }
 
     .staff-nav-link {
@@ -3401,6 +3460,91 @@
       }
     }
 
+    @media (max-width: 1100px) {
+      .staff-nav-link {
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+
+      .staff-user-trigger {
+        font-size: 11px;
+        max-width: 160px;
+        padding: 6px 10px;
+      }
+    }
+
+    @media (max-width: 960px) {
+      .brand-topbar--collapsible .staff-nav-toggle {
+        display: inline-flex;
+      }
+
+      .brand-topbar--collapsible .brand-topbar-right {
+        background: var(--brand-topbar-gradient);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        display: none;
+        flex: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        left: 0;
+        padding: 12px 16px 16px;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        z-index: 60;
+      }
+
+      .brand-topbar--collapsible .brand-topbar-right.is-open {
+        display: flex;
+      }
+
+      .brand-topbar--collapsible .staff-admin-chrome {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .brand-topbar--collapsible .staff-nav {
+        background: transparent;
+        border-radius: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        padding: 0;
+        width: 100%;
+      }
+
+      .brand-topbar--collapsible .staff-nav-link {
+        border-radius: 10px;
+        font-size: 14px;
+        padding: 10px 14px;
+      }
+
+      .brand-topbar--collapsible .staff-user-menu {
+        width: 100%;
+      }
+
+      .brand-topbar--collapsible .staff-user-trigger {
+        justify-content: space-between;
+        max-width: none;
+        width: 100%;
+      }
+
+      .brand-topbar--collapsible .staff-user-dropdown {
+        left: 0;
+        right: 0;
+        width: 100%;
+      }
+
+      .brand-topbar--collapsible .admin-topbar-link {
+        display: block;
+        font-size: 14px;
+        padding: 10px 14px;
+        text-align: left;
+      }
+    }
+
     @media (max-width: 980px) {
       .charts-grid { grid-template-columns: 1fr; }
       .filters-row,
@@ -3413,7 +3557,7 @@
       .header-actions { width: 100%; justify-content: space-between; }
       .custom-date-range { width: 100%; }
       .date-picker-trigger { min-width: 0; width: 100%; }
-      .brand-topbar { padding: 12px 16px; }
+      .brand-topbar-inner { padding: 10px 16px; }
       .dashboard-shell { padding: 0 16px 24px; }
       .page-hero { padding: 20px; }
     }
@@ -3435,7 +3579,8 @@
 
     @media (max-width: 420px) {
       .dashboard-shell { padding: 0 12px 24px; }
-      .brand-topbar { padding: 10px 12px; }
+      .brand-topbar-inner { padding: 10px 12px; }
+      .brand-logo { height: 30px; }
       .page-hero { padding: 16px; }
     }
   </style>
@@ -3444,8 +3589,10 @@
   <div id="toast-host" class="toast-host" aria-live="polite"></div>
   <div class="dashboard" id="dashboard">
     <header class="brand-topbar">
-      <div class="brand-topbar-left">
-        <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+      <div class="brand-topbar-inner">
+        <div class="brand-topbar-left">
+          <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+        </div>
       </div>
     </header>
     <div class="dashboard-shell">
@@ -3541,12 +3688,33 @@
     }
 
     function renderBrandTopbar(rightHtml = '') {
+      const hasCollapsibleNav = Boolean(rightHtml && rightHtml.includes('staff-admin-chrome'));
+      const logoHref = hasCollapsibleNav || (rightHtml && rightHtml.includes('admin-topbar-link'))
+        ? '/admin'
+        : '';
+      const logoMarkup = logoHref
+        ? `<a href="${logoHref}" class="brand-logo-link" aria-label="Cenhub home"><img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" /></a>`
+        : `<img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />`;
+      const toggle = hasCollapsibleNav
+        ? `<button type="button" class="staff-nav-toggle" id="staff-nav-toggle" aria-expanded="false" aria-controls="staff-topbar-panel" aria-label="Open menu">
+            <span class="staff-nav-toggle-bar" aria-hidden="true"></span>
+            <span class="staff-nav-toggle-bar" aria-hidden="true"></span>
+            <span class="staff-nav-toggle-bar" aria-hidden="true"></span>
+          </button>`
+        : '';
+      const rightPanel = rightHtml
+        ? (hasCollapsibleNav
+          ? `<div class="brand-topbar-right brand-topbar-panel" id="staff-topbar-panel">${rightHtml}</div>`
+          : `<div class="brand-topbar-right">${rightHtml}</div>`)
+        : '';
+
       return `
-        <header class="brand-topbar">
-          <div class="brand-topbar-left">
-            <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+        <header class="brand-topbar${hasCollapsibleNav ? ' brand-topbar--collapsible' : ''}">
+          <div class="brand-topbar-inner">
+            <div class="brand-topbar-left">${logoMarkup}</div>
+            ${toggle}
+            ${rightPanel}
           </div>
-          ${rightHtml ? `<div class="brand-topbar-right">${rightHtml}</div>` : ''}
         </header>
       `;
     }
@@ -3777,6 +3945,28 @@
       const trigger = document.querySelector('.staff-user-trigger');
       if (dropdown) dropdown.hidden = true;
       if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleStaffTopbarNav(toggle) {
+      const panel = document.getElementById('staff-topbar-panel');
+      if (!panel) return;
+      const willOpen = !panel.classList.contains('is-open');
+      panel.classList.toggle('is-open', willOpen);
+      toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      toggle.setAttribute('aria-label', willOpen ? 'Close menu' : 'Open menu');
+      toggle.classList.toggle('is-active', willOpen);
+      if (willOpen) closeStaffUserMenu();
+    }
+
+    function closeStaffTopbarNav() {
+      const panel = document.getElementById('staff-topbar-panel');
+      const toggle = document.getElementById('staff-nav-toggle');
+      if (panel) panel.classList.remove('is-open');
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Open menu');
+        toggle.classList.remove('is-active');
+      }
     }
 
     function formatStaffLastLogin(value) {
@@ -4367,6 +4557,10 @@
       let label = normalized;
       if (normalized === 'success' || normalized === 'ok' || normalized === 'cron_tick') modifier = 'success';
       else if (normalized === 'error' || normalized === 'failed') modifier = 'error';
+      else if (normalized === 'interrupted') {
+        modifier = 'running';
+        label = 'Interrupted';
+      }
       else if (normalized === 'skipped') modifier = 'skipped';
       else if (normalized === 'applying') {
         modifier = 'running';
@@ -4701,6 +4895,60 @@
       );
     }
 
+    function isPartialApplyRun(run) {
+      if (!run || run.dryRun) return false;
+      const offset = Number(run.batchOffset) || 0;
+      const total = Number(run.inWindow) || 0;
+      if (total <= 0 || offset <= 0 || offset >= total) return false;
+      const status = String(run.status || '').toLowerCase();
+      return status === 'interrupted' || status === 'error' || status === 'running';
+    }
+
+    function findPartialApplyRun(clientId, mode = 'backfill') {
+      return (fbLeadSyncState.historyRuns || []).find((row) =>
+        isPartialApplyRun(row)
+        && row.clientId === clientId
+        && (row.mode || 'backfill') === mode,
+      ) || null;
+    }
+
+    function partialApplyRemaining(run) {
+      return Math.max(0, (Number(run.inWindow) || 0) - (Number(run.batchOffset) || 0));
+    }
+
+    async function resumeFbLeadApplyFromHistory(runId) {
+      const run = fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(runId));
+      if (!run || !isPartialApplyRun(run)) {
+        showToast('Nothing to resume for this run.', 'error');
+        return;
+      }
+      const client = fbLeadSyncState.clients.find((row) => row.clientId === run.clientId);
+      if (!clientFbLeadFieldReady(client)) {
+        showToast(getClientFbLeadFieldHint(client), 'error');
+        return;
+      }
+      const remaining = partialApplyRemaining(run);
+      const confirmed = window.confirm(
+        `Resume interrupted apply for ${run.clientId}?\n\n`
+        + `${run.updated || 0} already written · ${remaining} contact(s) remaining.`,
+      );
+      if (!confirmed) return;
+
+      fbLeadSyncState.activeRun = {
+        clientId: run.clientId,
+        mode: run.mode || 'backfill',
+        runId: run.id,
+        previewOk: true,
+        previewRunId: null,
+      };
+      await runFbLeadSyncBatch({
+        clientId: run.clientId,
+        mode: run.mode || 'backfill',
+        dryRun: false,
+        resumeRunId: run.id,
+      });
+    }
+
     async function applyFbLeadSyncFromHistory(runId) {
       const run = fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(runId));
       if (!run) {
@@ -4743,6 +4991,30 @@
         ?? fbLeadSyncState.previewOkByClient[clientId]?.updated
         ?? client?.lastRun?.updated
         ?? 0;
+
+      const partialApply = findPartialApplyRun(clientId, mode);
+      if (partialApply) {
+        const remaining = partialApplyRemaining(partialApply);
+        const confirmed = window.confirm(
+          `An apply for ${clientId} was interrupted (${partialApply.updated || 0} already written, ${remaining} remaining).\n\n`
+          + 'Resume the interrupted apply instead of starting over?',
+        );
+        if (!confirmed) return;
+        fbLeadSyncState.activeRun = {
+          clientId,
+          mode,
+          runId: partialApply.id,
+          previewOk: true,
+          previewRunId,
+        };
+        await runFbLeadSyncBatch({
+          clientId,
+          mode,
+          dryRun: false,
+          resumeRunId: partialApply.id,
+        });
+        return;
+      }
 
       const confirmed = window.confirm(
         `Apply ${mode === 'backfill' ? '90-day backfill' : 'recent sync'} for ${clientId}?\n\n`
@@ -4817,24 +5089,12 @@
     }
 
     function resolveFbLeadClientStats(client, preflight = {}) {
-      const lastRun = client?.lastRun;
-      const metaLeads = preflight.metaLeadCount90d ?? lastRun?.inWindow ?? lastRun?.metaLeadCount ?? null;
-      let missing = null;
-      let missingTitle = '';
-
-      if (lastRunIsSuccessfulApply(lastRun)) {
-        // After a live apply: only Meta leads we could not match to a GHL contact.
-        missing = lastRun.skippedNoMatch ?? 0;
-        missingTitle = 'Meta leads with no matching GHL contact after the last apply';
-      } else if (lastRunIsSuccessfulPreview(lastRun)) {
-        // After preview: contacts that would receive Fb Lead id on apply.
-        missing = lastRun.updated ?? preflight.estimatedMissing ?? null;
-        missingTitle = 'Contacts that would get Fb Lead id if you apply this preview';
-      } else {
-        // No recent run: sample-based estimate from Meta + GHL.
-        missing = preflight.estimatedMissing ?? null;
-        missingTitle = 'Estimated contacts still missing Fb Lead id (from a Meta sample)';
-      }
+      const base = client?.displayStats || {};
+      const metaLeads = preflight.metaLeadCount90d ?? base.metaLeadCount90d ?? null;
+      const missing = preflight.estimatedMissing ?? base.outstanding ?? null;
+      const missingTitle = preflight.estimatedMissing != null
+        ? 'Estimated contacts still missing Fb Lead id (from a Meta sample)'
+        : (base.outstandingHint || 'Estimated contacts still missing Fb Lead id (from a Meta sample)');
 
       return {
         metaLeads: metaLeads != null ? String(metaLeads) : '—',
@@ -4919,6 +5179,7 @@
           run.errors ? `${run.errors} errors` : null,
         ].filter(Boolean).join(' · ');
         const canApply = dryRunIsReadyForApply(run, runs) && !fbLeadSyncState.isApplying;
+        const canResume = isPartialApplyRun(run) && !fbLeadSyncState.isApplying;
         const isApplyingFromThis = fbLeadSyncState.isApplying && fbLeadSyncState.applyingRunId === run.id;
         const statusBadge = isApplyingFromThis
           ? renderSyncStatusBadge('applying')
@@ -4935,9 +5196,11 @@
               <div class="fb-lead-history-actions">
                 ${isApplyingFromThis
                   ? '<span class="fb-lead-history-status-note">In progress above</span>'
-                  : (canApply
-                    ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" data-fb-apply-run="${Number(run.id)}" data-apply-count="${Number(run.updated || 0)}" onclick="applyFbLeadSyncFromHistory(${Number(run.id)})">Apply (${run.updated})</button>`
-                    : '')}
+                  : (canResume
+                    ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" onclick="resumeFbLeadApplyFromHistory(${Number(run.id)})">Resume (${partialApplyRemaining(run)})</button>`
+                    : (canApply
+                      ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" data-fb-apply-run="${Number(run.id)}" data-apply-count="${Number(run.updated || 0)}" onclick="applyFbLeadSyncFromHistory(${Number(run.id)})">Apply (${run.updated})</button>`
+                      : ''))}
                 <button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="expandFbLeadRun(${Number(run.id)})">Audit</button>
                 ${isStaffAdmin() ? `<button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="deleteFbLeadRun(${Number(run.id)})">Delete</button>` : ''}
               </div>
@@ -5091,13 +5354,23 @@
     async function loadFbLeadPreflightForClients(clients, { quick = false } = {}) {
       const suffix = quick ? '&quick=1' : '';
       await Promise.all((clients || []).map(async (client) => {
+        const prev = fbLeadSyncState.preflightByClient[client.clientId] || {};
         try {
-          fbLeadSyncState.preflightByClient[client.clientId] = await adminFetch(
+          const next = await adminFetch(
             `/api/fb-lead-sync/preflight?client=${encodeURIComponent(client.clientId)}${suffix}`,
           );
+          fbLeadSyncState.preflightByClient[client.clientId] = quick
+            ? {
+              ...next,
+              metaLeadCount90d: next.metaLeadCount90d ?? prev.metaLeadCount90d ?? null,
+              estimatedMissing: next.estimatedMissing ?? prev.estimatedMissing ?? null,
+              sampleSize: next.sampleSize || prev.sampleSize || 0,
+              sampleWouldUpdate: next.sampleWouldUpdate ?? prev.sampleWouldUpdate ?? 0,
+            }
+            : next;
         } catch (error) {
           fbLeadSyncState.preflightByClient[client.clientId] = {
-            ...(fbLeadSyncState.preflightByClient[client.clientId] || {}),
+            ...prev,
             preflightError: error.message,
           };
         }
@@ -5402,23 +5675,28 @@
       }
     }
 
-    async function runFbLeadSyncBatch({ clientId, mode, dryRun }) {
+    async function runFbLeadSyncBatch({ clientId, mode, dryRun, resumeRunId = null }) {
       const previewBtn = document.getElementById('fb-lead-preview-btn');
       const resultsMount = document.getElementById('fb-lead-run-results');
       if (previewBtn) previewBtn.disabled = true;
 
-      let runId = fbLeadSyncState.activeRun?.runId || null;
-      let offset = 0;
+      const resumeRun = resumeRunId != null
+        ? fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(resumeRunId))
+        : null;
+      let runId = resumeRun?.id || fbLeadSyncState.activeRun?.runId || null;
+      let offset = resumeRun ? (Number(resumeRun.batchOffset) || 0) : 0;
       let lastSummary = null;
       let allRows = [];
       let completed = false;
-      const applyRunId = fbLeadSyncState.activeRun?.previewRunId ?? null;
+      const applyRunId = resumeRunId ?? fbLeadSyncState.activeRun?.previewRunId ?? null;
       const previewRun = applyRunId != null
         ? fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(applyRunId))
         : null;
-      const expectedContacts = previewRun?.updated
-        ?? fbLeadSyncState.previewOkByClient[clientId]?.updated
-        ?? 0;
+      const expectedContacts = resumeRun
+        ? partialApplyRemaining(resumeRun)
+        : (previewRun?.updated
+          ?? fbLeadSyncState.previewOkByClient[clientId]?.updated
+          ?? 0);
 
       if (!dryRun) {
         fbLeadSyncState.applyingRunId = applyRunId;
@@ -5442,7 +5720,7 @@
               runId,
               previewRunId: dryRun ? null : applyRunId,
               batchOffset: offset,
-              batchLimit: dryRun ? 25 : 15,
+              batchLimit: dryRun ? 25 : 20,
             }),
           });
           const summary = lastSummary.summary || lastSummary;
@@ -5630,7 +5908,9 @@
           }, 60_000);
         }
 
-        await loadFbLeadPreflightForClients(fbLeadSyncState.clients, { quick: !fullPreflight });
+        if (!silent || fullPreflight) {
+          await loadFbLeadPreflightForClients(fbLeadSyncState.clients, { quick: !fullPreflight });
+        }
         if (silent) {
           await refreshFbLeadHistoryUi();
           await refreshFbLeadClientRowsUi();
@@ -9272,7 +9552,18 @@
 
     initDashboardApp();
 
-    document.addEventListener('click', () => {
+    document.addEventListener('click', (event) => {
+      const toggle = event.target.closest('#staff-nav-toggle');
+      if (toggle) {
+        event.stopPropagation();
+        toggleStaffTopbarNav(toggle);
+        return;
+      }
+      if (event.target.closest('.staff-nav-link')) {
+        closeStaffTopbarNav();
+      } else if (!event.target.closest('.brand-topbar-right')) {
+        closeStaffTopbarNav();
+      }
       closeCardMenus();
       closeStaffUserMenu();
     });

@@ -67,6 +67,20 @@ function main() {
   assert(isSuccessfulApplyRun({ startedAt: nowIso, status: 'success', dryRun: false, updated: 190 }), 'apply run counts');
   assert(!isSuccessfulApplyRun({ startedAt: nowIso, status: 'success', dryRun: true, updated: 190 }), 'dry run excluded');
 
+  const { buildClientFbLeadDisplayStats } = require('../lib/fb-lead-sync-history');
+  const applyStats = buildClientFbLeadDisplayStats(
+    { status: 'success', dryRun: false, mode: 'recent', inWindow: 6, metaLeadCount: 191, skippedNoMatch: 0 },
+    { status: 'success', dryRun: false, mode: 'backfill', inWindow: 191, metaLeadCount: 191, skippedNoMatch: 1 },
+  );
+  assert(applyStats.metaLeadCount90d === 191, 'meta leads use last backfill window, not recent inWindow');
+  assert(applyStats.outstanding === 0, 'outstanding follows latest apply skippedNoMatch');
+
+  const previewStats = buildClientFbLeadDisplayStats(
+    { status: 'success', dryRun: true, mode: 'backfill', inWindow: 191, updated: 12 },
+    { status: 'success', dryRun: true, mode: 'backfill', inWindow: 191, updated: 12 },
+  );
+  assert(previewStats.outstanding === 12, 'outstanding uses preview would-update count');
+
   console.log('FB lead sync tests passed.');
 }
 
