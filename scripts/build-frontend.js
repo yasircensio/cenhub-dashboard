@@ -105,6 +105,10 @@ async function bootAdminApp() {
     await loadSyncHistoryPage('meta');
     return;
   }
+  if (IS_ADMIN_FB_LEAD_SYNC) {
+    await loadFbLeadSyncPage();
+    return;
+  }
   if (IS_TEAM_PAGE) {
     loadTeamPage();
     return;
