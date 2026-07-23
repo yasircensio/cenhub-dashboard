@@ -3878,6 +3878,63 @@
       return data;
     }
 
+    function sleepMs(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function adminFetchWithRetry(path, options = {}, { retries = 3, timeoutMs = 130000 } = {}) {
+      let lastError = null;
+      for (let attempt = 1; attempt <= retries; attempt += 1) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const headers = {
+            'Content-Type': 'application/json',
+            ...(options.headers || {}),
+          };
+          const legacyKey = getAdminApiKey();
+          if (legacyKey) headers['x-api-key'] = legacyKey;
+
+          const response = await fetch(path, {
+            ...options,
+            headers,
+            credentials: 'include',
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+          const data = await response.json().catch(() => ({}));
+          if (response.status === 401 && ADMIN_UI) {
+            redirectToLogin();
+            throw new Error(data.error || 'Unauthorized.');
+          }
+          if (!response.ok) {
+            const err = new Error(data.error || `Request failed (${response.status})`);
+            if (response.status >= 500 && attempt < retries) {
+              lastError = err;
+              await sleepMs(1200 * attempt);
+              continue;
+            }
+            throw err;
+          }
+          return data;
+        } catch (error) {
+          clearTimeout(timer);
+          lastError = error;
+          const retryable = error.name === 'AbortError'
+            || /fetch failed|network|timeout|timed out|502|503|504/i.test(String(error.message || ''));
+          if (retryable && attempt < retries) {
+            await sleepMs(1200 * attempt);
+            continue;
+          }
+          if (error.name === 'AbortError') {
+            throw new Error('Request timed out — the server may still be processing. Try Resume if a partial run exists.');
+          }
+          throw error;
+        }
+      }
+      throw lastError || new Error('Request failed after retries.');
+    }
+
     async function staffLogout() {
       try {
         await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
@@ -4895,8 +4952,8 @@
       );
     }
 
-    function isPartialApplyRun(run) {
-      if (!run || run.dryRun) return false;
+    function isPartialSyncRun(run) {
+      if (!run) return false;
       const offset = Number(run.batchOffset) || 0;
       const total = Number(run.inWindow) || 0;
       if (total <= 0 || offset <= 0 || offset >= total) return false;
@@ -4904,21 +4961,22 @@
       return status === 'interrupted' || status === 'error' || status === 'running';
     }
 
-    function findPartialApplyRun(clientId, mode = 'backfill') {
+    function findPartialSyncRun(clientId, mode = 'backfill', dryRun = false) {
       return (fbLeadSyncState.historyRuns || []).find((row) =>
-        isPartialApplyRun(row)
+        isPartialSyncRun(row)
         && row.clientId === clientId
+        && Boolean(row.dryRun) === Boolean(dryRun)
         && (row.mode || 'backfill') === mode,
       ) || null;
     }
 
-    function partialApplyRemaining(run) {
+    function partialSyncRemaining(run) {
       return Math.max(0, (Number(run.inWindow) || 0) - (Number(run.batchOffset) || 0));
     }
 
-    async function resumeFbLeadApplyFromHistory(runId) {
+    async function resumeFbLeadRunFromHistory(runId) {
       const run = fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(runId));
-      if (!run || !isPartialApplyRun(run)) {
+      if (!run || !isPartialSyncRun(run)) {
         showToast('Nothing to resume for this run.', 'error');
         return;
       }
@@ -4927,10 +4985,11 @@
         showToast(getClientFbLeadFieldHint(client), 'error');
         return;
       }
-      const remaining = partialApplyRemaining(run);
+      const remaining = partialSyncRemaining(run);
+      const label = run.dryRun ? 'preview' : 'apply';
       const confirmed = window.confirm(
-        `Resume interrupted apply for ${run.clientId}?\n\n`
-        + `${run.updated || 0} already written · ${remaining} contact(s) remaining.`,
+        `Resume interrupted ${label} for ${run.clientId}?\n\n`
+        + `${run.updated || 0} processed so far · ${remaining} lead(s) remaining.`,
       );
       if (!confirmed) return;
 
@@ -4938,13 +4997,13 @@
         clientId: run.clientId,
         mode: run.mode || 'backfill',
         runId: run.id,
-        previewOk: true,
-        previewRunId: null,
+        previewOk: !run.dryRun,
+        previewRunId: run.dryRun ? null : run.id,
       };
       await runFbLeadSyncBatch({
         clientId: run.clientId,
         mode: run.mode || 'backfill',
-        dryRun: false,
+        dryRun: Boolean(run.dryRun),
         resumeRunId: run.id,
       });
     }
@@ -4992,11 +5051,11 @@
         ?? client?.lastRun?.updated
         ?? 0;
 
-      const partialApply = findPartialApplyRun(clientId, mode);
+      const partialApply = findPartialSyncRun(clientId, mode, false);
       if (partialApply) {
-        const remaining = partialApplyRemaining(partialApply);
+        const remaining = partialSyncRemaining(partialApply);
         const confirmed = window.confirm(
-          `An apply for ${clientId} was interrupted (${partialApply.updated || 0} already written, ${remaining} remaining).\n\n`
+          `An apply for ${clientId} was interrupted (${partialApply.updated || 0} already processed, ${remaining} remaining).\n\n`
           + 'Resume the interrupted apply instead of starting over?',
         );
         if (!confirmed) return;
@@ -5179,7 +5238,7 @@
           run.errors ? `${run.errors} errors` : null,
         ].filter(Boolean).join(' · ');
         const canApply = dryRunIsReadyForApply(run, runs) && !fbLeadSyncState.isApplying;
-        const canResume = isPartialApplyRun(run) && !fbLeadSyncState.isApplying;
+        const canResume = isPartialSyncRun(run) && !fbLeadSyncState.isApplying;
         const isApplyingFromThis = fbLeadSyncState.isApplying && fbLeadSyncState.applyingRunId === run.id;
         const statusBadge = isApplyingFromThis
           ? renderSyncStatusBadge('applying')
@@ -5197,7 +5256,7 @@
                 ${isApplyingFromThis
                   ? '<span class="fb-lead-history-status-note">In progress above</span>'
                   : (canResume
-                    ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" onclick="resumeFbLeadApplyFromHistory(${Number(run.id)})">Resume (${partialApplyRemaining(run)})</button>`
+                    ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" onclick="resumeFbLeadRunFromHistory(${Number(run.id)})">Resume (${partialSyncRemaining(run)})</button>`
                     : (canApply
                       ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" data-fb-apply-run="${Number(run.id)}" data-apply-count="${Number(run.updated || 0)}" onclick="applyFbLeadSyncFromHistory(${Number(run.id)})">Apply (${run.updated})</button>`
                       : ''))}
@@ -5680,6 +5739,7 @@
       const resultsMount = document.getElementById('fb-lead-run-results');
       if (previewBtn) previewBtn.disabled = true;
 
+      const batchLimit = dryRun ? 12 : 10;
       const resumeRun = resumeRunId != null
         ? fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(resumeRunId))
         : null;
@@ -5693,7 +5753,7 @@
         ? fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(applyRunId))
         : null;
       const expectedContacts = resumeRun
-        ? partialApplyRemaining(resumeRun)
+        ? partialSyncRemaining(resumeRun)
         : (previewRun?.updated
           ?? fbLeadSyncState.previewOkByClient[clientId]?.updated
           ?? 0);
@@ -5705,13 +5765,56 @@
       }
 
       try {
+        if (!resumeRunId) {
+          const partial = findPartialSyncRun(clientId, mode, dryRun);
+          if (partial) {
+            const remaining = partialSyncRemaining(partial);
+            const label = dryRun ? 'preview' : 'apply';
+            const confirmed = window.confirm(
+              `A ${label} for ${clientId} was interrupted (${partial.updated || 0} processed, ${remaining} remaining).\n\n`
+              + `Resume the interrupted ${label}?`,
+            );
+            if (confirmed) {
+              runId = partial.id;
+              offset = Number(partial.batchOffset) || 0;
+            }
+          }
+        }
+
         if (dryRun) {
-          setFbLeadProgress({ processed: 0, total: 0, label: 'Starting preview…' });
+          setFbLeadProgress({ processed: offset, total: 0, label: offset > 0 ? 'Resuming preview…' : 'Fetching Meta leads…' });
         } else {
           updateGlobalApplyProgress({ waiting: true, elapsed: 0 });
         }
+
+        if (dryRun && offset === 0) {
+          const prepared = await adminFetchWithRetry('/api/fb-lead-sync/prepare', {
+            method: 'POST',
+            body: JSON.stringify({
+              clientId,
+              mode,
+              dryRun,
+              runId,
+            }),
+          });
+          const prep = prepared.summary || prepared;
+          runId = prep.runId;
+          offset = 0;
+          setFbLeadProgress({
+            processed: 0,
+            total: prep.inWindow || 0,
+            label: `Matching ${prep.inWindow || 0} Meta leads to GHL…`,
+          });
+        } else if (!dryRun && offset === 0) {
+          updateGlobalApplyProgress({
+            waiting: false,
+            processed: 0,
+            total: expectedContacts || previewRun?.updated || 0,
+          });
+        }
+
         do {
-          lastSummary = await adminFetch('/api/fb-lead-sync/run', {
+          lastSummary = await adminFetchWithRetry('/api/fb-lead-sync/run', {
             method: 'POST',
             body: JSON.stringify({
               clientId,
@@ -5720,7 +5823,7 @@
               runId,
               previewRunId: dryRun ? null : applyRunId,
               batchOffset: offset,
-              batchLimit: dryRun ? 25 : 20,
+              batchLimit,
             }),
           });
           const summary = lastSummary.summary || lastSummary;
@@ -5800,9 +5903,10 @@
         }
         showToast(
           (error.message || (dryRun ? 'FB lead preview failed.' : 'FB lead apply failed.'))
-          + (dryRun ? ' Partial progress may be saved — refresh and try Preview again.' : ''),
+          + (dryRun ? ' Partial progress is saved — use Resume in Run history or try Preview again.' : ' Partial progress is saved — use Resume in Run history.'),
           'error',
         );
+        await refreshFbLeadHistoryUi();
       } finally {
         if (previewBtn) previewBtn.disabled = false;
         fbLeadSyncState.applyingRunId = null;

@@ -58,6 +58,7 @@ function main() {
 
   assert(parseFbLeadSyncPath('/api/fb-lead-sync').kind === 'dashboard', 'dashboard path');
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/preflight').kind === 'preflight', 'preflight path');
+  assert(parseFbLeadSyncPath('/api/fb-lead-sync/prepare').kind === 'prepare', 'prepare path');
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/run').kind === 'run', 'run path');
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/history').kind === 'history', 'history path');
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/history/42').kind === 'history-run', 'history run path');
