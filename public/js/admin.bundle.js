@@ -456,22 +456,20 @@ ${o} contact(s) will get Fb Lead id written in GHL. This writes live data.`)&&(f
       ${renderFbLeadClientRowsWrapper(e.clients||[])}
       <div id="fb-lead-run-panel-mount"></div>
       <div id="fb-lead-apply-progress-mount"></div>
-      <div class="fb-lead-history-section">
-        <div class="section-heading-row">
-          <h2>Run history</h2>
-          ${isStaffAdmin()?`
-            <div class="section-heading-actions">
-              <button
-                class="admin-btn admin-btn--secondary admin-btn--small"
-                type="button"
-                id="fb-lead-history-clear-all"
-                ${(fbLeadSyncState.historyRuns||[]).length?"":"disabled"}
-              >Delete all history</button>
-            </div>
-          `:""}
-        </div>
-        <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
+      <div class="section-heading-row">
+        <h2>Run history</h2>
+        ${isStaffAdmin()?`
+          <div class="section-heading-actions">
+            <button
+              class="admin-btn admin-btn--secondary admin-btn--small"
+              type="button"
+              id="fb-lead-history-clear-all"
+              ${(fbLeadSyncState.historyRuns||[]).length?"":"disabled"}
+            >Delete all history</button>
+          </div>
+        `:""}
       </div>
+      <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
     </div>
     `)}
   `}async function toggleFbLeadSyncEnabled(e,t){try{await adminFetch(`/api/clients/${encodeURIComponent(e)}`,{method:"PUT",body:JSON.stringify({fbLeadSyncEnabled:t})}),showToast(t?"Hourly FB lead sync enabled":"Hourly FB lead sync disabled","success");const n=fbLeadSyncState.clients.find(a=>a.clientId===e);n&&(n.fbLeadSyncEnabled=t)}catch(n){showToast(n.message||"Failed to update auto-sync setting.","error"),await loadFbLeadSyncPage({silent:!0})}}function bindFbLeadSyncToggles(){document.querySelectorAll("[data-fb-sync-toggle]").forEach(e=>{e.onchange=()=>toggleFbLeadSyncEnabled(e.dataset.fbSyncToggle,e.checked)})}async function loadFbLeadPreflightForClients(e,{quick:t=!1}={}){const n=t?"&quick=1":"";await Promise.all((e||[]).map(async a=>{const s=fbLeadSyncState.preflightByClient[a.clientId]||{};try{const i=await adminFetch(`/api/fb-lead-sync/preflight?client=${encodeURIComponent(a.clientId)}${n}`);fbLeadSyncState.preflightByClient[a.clientId]=t?{...i,metaLeadCount90d:i.metaLeadCount90d??s.metaLeadCount90d??null,estimatedMissing:i.estimatedMissing??s.estimatedMissing??null,sampleSize:i.sampleSize||s.sampleSize||0,sampleWouldUpdate:i.sampleWouldUpdate??s.sampleWouldUpdate??0}:i}catch(i){fbLeadSyncState.preflightByClient[a.clientId]={...s,preflightError:i.message}}}))}function scheduleFbLeadFullPreflight(e){e?.length&&loadFbLeadPreflightForClients(e,{quick:!1}).then(()=>refreshFbLeadClientRowsUi()).catch(()=>{})}async function loadFbLeadHistory(e=50){const t=await adminFetch(`/api/fb-lead-sync/history?limit=${e}`);return fbLeadSyncState.historyRuns=t.runs||[],t}function renderFbLeadRunPanel(e,t="recent"){const n=fbLeadSyncState.clients.find(i=>i.clientId===e),a=clientHasReadyPreview(n),s=t==="backfill"?"Backfill (90 days)":"Recent (2 days)";return`
