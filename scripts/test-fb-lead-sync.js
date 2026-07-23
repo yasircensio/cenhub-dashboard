@@ -2,6 +2,7 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 
 const {
   filterLeadsByDays,
+  filterLeadsForApplyFromPreview,
   resolveModeOptions,
   resolveFbLeadFieldId,
   findFbLeadFieldDefinition,
@@ -38,6 +39,18 @@ function main() {
   assert(recentLeads.length === 1, '2-day window filters old leads');
   const backfillLeads = filterLeadsByDays(leads, 90);
   assert(backfillLeads.length === 2, '90-day window keeps two leads');
+
+  const cachedLeads = [
+    { id: 'a', created_time: leads[0].created_time },
+    { id: 'b', created_time: leads[1].created_time },
+    { id: 'c', created_time: leads[2].created_time },
+  ];
+  const applyLeads = filterLeadsForApplyFromPreview(
+    [{ status: 'would_update', metaLeadId: 'b' }, { status: 'already_correct', metaLeadId: 'c' }],
+    cachedLeads,
+  );
+  assert(applyLeads.length === 1 && applyLeads[0].id === 'b', 'apply uses preview would_update leads only');
+  assert(filterLeadsForApplyFromPreview([], cachedLeads).length === 0, 'apply with no would_update is empty');
 
   const merged = mergeAuditRows(
     [{ status: 'updated', metaLeadId: 'a' }],
