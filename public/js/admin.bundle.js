@@ -319,28 +319,28 @@ ${o} contact(s) will get Fb Lead id written in GHL. This writes live data.`)&&(f
         <thead>
           <tr>
             <th>Client</th>
-            <th>Sync</th>
+            <th>Auto-sync</th>
             <th>Ready?</th>
-            <th>Meta 90d</th>
+            <th>Meta leads (90d)</th>
             <th title="Before sync: estimated contacts missing Fb Lead id. After preview: would update count. After apply: Meta leads with no GHL match.">Outstanding</th>
             <th>Last run</th>
-            <th></th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>${e.map(n=>{const a=fbLeadSyncState.preflightByClient[n.clientId]||{},s=resolveFbLeadClientStats(n,a),i=formatFbLeadLastRunLabel(n.lastRun);return`
       <tr>
-        <td class="fb-lead-client-cell">
-          <span class="fb-lead-client-name">${esc(n.accountName)}</span>
-          <span class="fb-lead-client-id">${esc(n.clientId)}</span>
+        <td>
+          <strong>${esc(n.accountName)}</strong><br>
+          <span style="color:var(--text-soft);font-size:12px">${esc(n.clientId)}</span>
         </td>
-        <td class="fb-lead-sync-cell">
+        <td>
           <input type="checkbox" class="fb-lead-toggle" data-fb-sync-toggle="${esc(n.clientId)}"
             ${n.fbLeadSyncEnabled?"checked":""} aria-label="Enable auto-sync for ${esc(n.accountName)}" />
         </td>
         <td>${renderFbLeadReadinessBadges(n)}</td>
-        <td class="fb-lead-stat-cell">${esc(s.metaLeads)}</td>
-        <td class="fb-lead-stat-cell" title="${esc(s.missingTitle||"")}">${esc(s.missing)}</td>
-        <td class="fb-lead-last-run-cell" title="${esc(i)}">${esc(i)}</td>
+        <td>${esc(s.metaLeads)}</td>
+        <td title="${esc(s.missingTitle||"")}">${esc(s.missing)}</td>
+        <td>${esc(i)}</td>
         <td class="fb-lead-client-actions-cell">${renderFbLeadClientActions(n)}</td>
       </tr>
     `}).join("")}</tbody>

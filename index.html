@@ -1112,84 +1112,49 @@
     }
 
     .fb-lead-clients-table {
-      font-size: 12px;
-      min-width: 680px;
+      max-width: 100%;
+      width: auto;
     }
 
     .fb-lead-clients-table th,
     .fb-lead-clients-table td {
-      padding: 6px 8px;
-      vertical-align: middle;
+      padding: 10px 6px;
     }
 
-    .fb-lead-clients-table th {
-      font-size: 10px;
-      letter-spacing: 0.03em;
-      white-space: nowrap;
+    .fb-lead-clients-table th:first-child,
+    .fb-lead-clients-table td:first-child {
+      padding-left: 12px;
     }
 
-    .fb-lead-clients-table .fb-lead-client-cell {
-      max-width: 148px;
-      min-width: 108px;
+    .fb-lead-clients-table th:last-child,
+    .fb-lead-clients-table td:last-child {
+      padding-right: 12px;
     }
 
-    .fb-lead-clients-table .fb-lead-client-name {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .fb-lead-clients-table .fb-lead-client-id {
-      color: var(--text-soft);
-      display: block;
-      font-size: 11px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .fb-lead-clients-table .fb-lead-sync-cell {
-      text-align: center;
-      width: 52px;
-    }
-
-    .fb-lead-clients-table .fb-lead-stat-cell {
-      text-align: right;
-      white-space: nowrap;
+    .fb-lead-clients-table th:nth-child(2),
+    .fb-lead-clients-table td:nth-child(2),
+    .fb-lead-clients-table th:nth-child(3),
+    .fb-lead-clients-table td:nth-child(3),
+    .fb-lead-clients-table th:nth-child(4),
+    .fb-lead-clients-table td:nth-child(4),
+    .fb-lead-clients-table th:nth-child(5),
+    .fb-lead-clients-table td:nth-child(5),
+    .fb-lead-clients-table th:nth-child(7),
+    .fb-lead-clients-table td:nth-child(7) {
       width: 1%;
-    }
-
-    .fb-lead-clients-table .fb-lead-last-run-cell {
-      max-width: 168px;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .fb-lead-clients-table .fb-lead-readiness {
-      flex-wrap: nowrap;
-      gap: 3px;
-    }
-
-    .fb-lead-clients-table .fb-lead-badge {
-      font-size: 10px;
-      padding: 1px 6px;
     }
 
     .fb-lead-clients-table .fb-lead-client-actions-cell {
-      min-width: 0;
+      min-width: 220px;
       white-space: nowrap;
-      width: 1%;
     }
 
     .fb-lead-client-actions {
-      display: inline-flex;
+      display: flex;
       flex-wrap: nowrap;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
 
     .fb-lead-client-actions .admin-btn {
@@ -3694,7 +3659,7 @@
       .section-heading-actions .admin-btn {
         width: auto;
       }
-      .fb-lead-clients-table .fb-lead-readiness {
+      .fb-lead-clients-table .fb-lead-client-actions {
         flex-wrap: wrap;
       }
     }
@@ -5374,18 +5339,18 @@
         const lastRunLabel = formatFbLeadLastRunLabel(client.lastRun);
         return `
           <tr>
-            <td class="fb-lead-client-cell">
-              <span class="fb-lead-client-name">${esc(client.accountName)}</span>
-              <span class="fb-lead-client-id">${esc(client.clientId)}</span>
+            <td>
+              <strong>${esc(client.accountName)}</strong><br>
+              <span style="color:var(--text-soft);font-size:12px">${esc(client.clientId)}</span>
             </td>
-            <td class="fb-lead-sync-cell">
+            <td>
               <input type="checkbox" class="fb-lead-toggle" data-fb-sync-toggle="${esc(client.clientId)}"
                 ${client.fbLeadSyncEnabled ? 'checked' : ''} aria-label="Enable auto-sync for ${esc(client.accountName)}" />
             </td>
             <td>${renderFbLeadReadinessBadges(client)}</td>
-            <td class="fb-lead-stat-cell">${esc(stats.metaLeads)}</td>
-            <td class="fb-lead-stat-cell" title="${esc(stats.missingTitle || '')}">${esc(stats.missing)}</td>
-            <td class="fb-lead-last-run-cell" title="${esc(lastRunLabel)}">${esc(lastRunLabel)}</td>
+            <td>${esc(stats.metaLeads)}</td>
+            <td title="${esc(stats.missingTitle || '')}">${esc(stats.missing)}</td>
+            <td>${esc(lastRunLabel)}</td>
             <td class="fb-lead-client-actions-cell">${renderFbLeadClientActions(client)}</td>
           </tr>
         `;
@@ -5397,12 +5362,12 @@
             <thead>
               <tr>
                 <th>Client</th>
-                <th>Sync</th>
+                <th>Auto-sync</th>
                 <th>Ready?</th>
-                <th>Meta 90d</th>
+                <th>Meta leads (90d)</th>
                 <th title="Before sync: estimated contacts missing Fb Lead id. After preview: would update count. After apply: Meta leads with no GHL match.">Outstanding</th>
                 <th>Last run</th>
-                <th></th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
