@@ -929,15 +929,57 @@
       border: 1px solid #ffd9b3;
       border-radius: 12px;
       margin-bottom: 16px;
-      padding: 14px 16px;
+      padding: 16px 18px;
     }
 
-    .fb-lead-apply-progress-card .fb-lead-progress-wrap {
-      margin-top: 12px;
+    .fb-lead-apply-progress-card.is-complete {
+      background: #e8f7ef;
+      border-color: #b8e6cf;
     }
 
-    .fb-lead-apply-progress-card .fb-lead-progress-wrap[hidden] {
-      display: none;
+    .fb-lead-apply-progress-card.is-error {
+      background: #fdeee8;
+      border-color: #f5c4b3;
+    }
+
+    .fb-lead-apply-progress-header {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .fb-lead-apply-progress-sub {
+      color: var(--text-soft);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .fb-lead-apply-progress-stats {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .fb-lead-apply-progress-card .fb-lead-progress {
+      margin-top: 10px;
+    }
+
+    .fb-lead-progress.is-indeterminate .fb-lead-progress-bar {
+      animation: fb-lead-progress-indeterminate 1.4s ease-in-out infinite;
+      width: 35% !important;
+    }
+
+    @keyframes fb-lead-progress-indeterminate {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(420%); }
+    }
+
+    .fb-lead-history-status-note {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-style: italic;
     }
 
     .fb-lead-clients-table .fb-lead-client-actions-cell {
@@ -4280,10 +4322,15 @@
     function renderSyncStatusBadge(status) {
       const normalized = String(status || 'unknown').toLowerCase();
       let modifier = 'running';
+      let label = normalized;
       if (normalized === 'success' || normalized === 'ok' || normalized === 'cron_tick') modifier = 'success';
       else if (normalized === 'error' || normalized === 'failed') modifier = 'error';
       else if (normalized === 'skipped') modifier = 'skipped';
-      return `<span class="sync-status-badge sync-status-badge--${modifier}">${esc(normalized)}</span>`;
+      else if (normalized === 'applying') {
+        modifier = 'running';
+        label = 'Applying';
+      }
+      return `<span class="sync-status-badge sync-status-badge--${modifier}">${esc(label)}</span>`;
     }
 
     function formatSyncSource(source) {
@@ -4506,6 +4553,9 @@
       activeRun: null,
       previewOkByClient: {},
       applyingRunId: null,
+      isApplying: false,
+      applyStartedAt: 0,
+      applyWaitTimer: null,
     };
     let fbLeadSyncRefreshTimer = null;
 
@@ -4758,19 +4808,26 @@
           `${run.skippedNoMatch || 0} no match`,
           run.errors ? `${run.errors} errors` : null,
         ].filter(Boolean).join(' · ');
-        const canApply = dryRunIsReadyForApply(run, runs);
-        const isApplying = fbLeadSyncState.applyingRunId === run.id;
+        const canApply = dryRunIsReadyForApply(run, runs) && !fbLeadSyncState.isApplying;
+        const isApplyingFromThis = fbLeadSyncState.isApplying && fbLeadSyncState.applyingRunId === run.id;
+        const statusBadge = isApplyingFromThis
+          ? renderSyncStatusBadge('applying')
+          : renderSyncStatusBadge(run.status);
         return `
-          <tr class="fb-lead-audit-row">
+          <tr class="fb-lead-audit-row${isApplyingFromThis ? ' is-applying' : ''}">
             <td>${esc(formatSyncHistoryTimestamp(run.startedAt))}</td>
             <td>${esc(run.accountName || run.clientId)}</td>
-            <td>${renderSyncStatusBadge(run.status)}</td>
+            <td>${statusBadge}</td>
             <td>${esc(run.mode || 'recent')}</td>
             <td>${esc(formatSyncSource(run.source))}</td>
             <td class="sync-history-detail">${esc(detail)}</td>
             <td>
               <div class="fb-lead-history-actions">
-                ${canApply ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" data-fb-apply-run="${Number(run.id)}" data-apply-count="${Number(run.updated || 0)}"${isApplying ? ' disabled' : ''} onclick="applyFbLeadSyncFromHistory(${Number(run.id)})">${isApplying ? 'Applying…' : `Apply (${run.updated})`}</button>` : ''}
+                ${isApplyingFromThis
+                  ? '<span class="fb-lead-history-status-note">In progress above</span>'
+                  : (canApply
+                    ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" data-fb-apply-run="${Number(run.id)}" data-apply-count="${Number(run.updated || 0)}" onclick="applyFbLeadSyncFromHistory(${Number(run.id)})">Apply (${run.updated})</button>`
+                    : '')}
                 <button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="expandFbLeadRun(${Number(run.id)})">Audit</button>
                 ${isStaffAdmin() ? `<button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="deleteFbLeadRun(${Number(run.id)})">Delete</button>` : ''}
               </div>
@@ -5018,73 +5075,115 @@
       `;
     }
 
-    function renderGlobalApplyProgress(clientId, mode) {
+    function renderGlobalApplyProgress(clientId, mode, contactCount = 0) {
       const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
       const modeLabel = mode === 'backfill' ? '90-day backfill' : 'recent sync';
+      const countLabel = contactCount > 0 ? `${contactCount} contact(s)` : 'contacts';
       return `
         <div class="fb-lead-apply-progress-card" id="fb-lead-global-progress-card">
-          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+          <div class="fb-lead-apply-progress-header">
             <div>
-              <strong>Applying ${esc(modeLabel)} to GHL</strong>
-              <div style="color:var(--text-soft);font-size:13px;margin-top:4px">${esc(client?.accountName || clientId)}</div>
+              <strong>Writing to GHL — ${esc(modeLabel)}</strong>
+              <div class="fb-lead-apply-progress-sub">${esc(client?.accountName || clientId)} · ${esc(countLabel)}</div>
             </div>
             <span class="fb-lead-badge is-ok" id="fb-lead-apply-status-badge">Running</span>
           </div>
-          <div class="fb-lead-progress-wrap" id="fb-lead-global-progress-wrap">
-            <div class="fb-lead-progress-label" id="fb-lead-global-progress-label">Starting…</div>
-            <div class="fb-lead-progress is-visible">
-              <div class="fb-lead-progress-bar" id="fb-lead-global-progress-bar"></div>
-            </div>
+          <div class="fb-lead-apply-progress-stats" id="fb-lead-global-progress-stats">Preparing…</div>
+          <div class="fb-lead-progress is-visible is-indeterminate" id="fb-lead-global-progress">
+            <div class="fb-lead-progress-bar" id="fb-lead-global-progress-bar"></div>
           </div>
+          <div class="fb-lead-progress-label" id="fb-lead-global-progress-label">Starting apply — do not close this page</div>
         </div>
       `;
     }
 
-    function showGlobalApplyProgress(clientId, mode) {
+    function startGlobalApplyProgress(clientId, mode, contactCount = 0) {
       const mount = document.getElementById('fb-lead-apply-progress-mount');
       if (!mount) return;
-      mount.innerHTML = renderGlobalApplyProgress(clientId, mode);
+      fbLeadSyncState.isApplying = true;
+      fbLeadSyncState.applyStartedAt = Date.now();
+      mount.innerHTML = renderGlobalApplyProgress(clientId, mode, contactCount);
       mount.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (fbLeadSyncState.applyWaitTimer) clearInterval(fbLeadSyncState.applyWaitTimer);
+      fbLeadSyncState.applyWaitTimer = window.setInterval(() => {
+        if (!fbLeadSyncState.isApplying) return;
+        const elapsed = Math.floor((Date.now() - fbLeadSyncState.applyStartedAt) / 1000);
+        updateGlobalApplyProgress({ waiting: true, elapsed });
+      }, 1000);
     }
 
-    function finishGlobalApplyProgress(success) {
+    function updateGlobalApplyProgress({
+      processed = 0,
+      total = 0,
+      written = 0,
+      waiting = false,
+      elapsed = 0,
+      complete = false,
+      error = '',
+    } = {}) {
+      const card = document.getElementById('fb-lead-global-progress-card');
+      const progress = document.getElementById('fb-lead-global-progress');
+      const bar = document.getElementById('fb-lead-global-progress-bar');
+      const label = document.getElementById('fb-lead-global-progress-label');
+      const stats = document.getElementById('fb-lead-global-progress-stats');
       const badge = document.getElementById('fb-lead-apply-status-badge');
-      if (badge) {
-        badge.textContent = success ? 'Complete' : 'Failed';
-        badge.classList.toggle('is-ok', success);
-        badge.classList.toggle('is-missing', !success);
+      if (!card || !progress || !bar || !label) return;
+
+      if (waiting && processed === 0 && total === 0 && !complete) {
+        progress.classList.add('is-indeterminate');
+        bar.style.width = '35%';
+        if (stats) stats.textContent = 'Contacting Meta and GHL…';
+        label.textContent = `Writing to GHL… (${elapsed}s — do not close this page)`;
+        return;
+      }
+
+      progress.classList.remove('is-indeterminate');
+      const pct = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : (complete ? 100 : 0);
+      bar.style.width = `${pct}%`;
+      if (stats) {
+        stats.textContent = complete
+          ? `${written} written to GHL · ${processed} / ${total} leads processed`
+          : `${written} written · ${processed} / ${total} leads scanned (${pct}%)`;
+      }
+      if (complete) {
+        card.classList.add('is-complete');
+        card.classList.remove('is-error');
+        label.textContent = `Complete — ${written} contact(s) updated in GHL`;
+        if (badge) {
+          badge.textContent = 'Complete';
+          badge.classList.add('is-ok');
+          badge.classList.remove('is-missing');
+        }
+      } else if (error) {
+        card.classList.add('is-error');
+        card.classList.remove('is-complete');
+        label.textContent = error;
+        if (badge) {
+          badge.textContent = 'Failed';
+          badge.classList.remove('is-ok');
+          badge.classList.add('is-missing');
+        }
+      } else {
+        label.textContent = `Writing to GHL — batch in progress (${pct}%)`;
+      }
+    }
+
+    function stopGlobalApplyProgress({ success = true, keepVisibleMs = 6000 } = {}) {
+      fbLeadSyncState.isApplying = false;
+      if (fbLeadSyncState.applyWaitTimer) {
+        clearInterval(fbLeadSyncState.applyWaitTimer);
+        fbLeadSyncState.applyWaitTimer = null;
       }
       window.setTimeout(() => {
         const mount = document.getElementById('fb-lead-apply-progress-mount');
-        if (mount && fbLeadSyncState.applyingRunId == null) mount.innerHTML = '';
-      }, success ? 5000 : 10000);
+        if (mount && !fbLeadSyncState.isApplying) mount.innerHTML = '';
+      }, keepVisibleMs);
     }
 
-    function getFbLeadProgressElements(useGlobal = false) {
-      if (useGlobal) {
-        return {
-          wrap: document.getElementById('fb-lead-global-progress-wrap'),
-          bar: document.getElementById('fb-lead-global-progress-bar'),
-          label: document.getElementById('fb-lead-global-progress-label'),
-        };
-      }
-      return {
-        wrap: document.getElementById('fb-lead-progress-wrap'),
-        bar: document.getElementById('fb-lead-progress-bar'),
-        label: document.getElementById('fb-lead-progress-label'),
-      };
-    }
-
-    function setHistoryApplyButtonState(runId, applying) {
-      const btn = document.querySelector(`[data-fb-apply-run="${Number(runId)}"]`);
-      if (!btn) return;
-      btn.disabled = applying;
-      const count = btn.dataset.applyCount || '0';
-      btn.textContent = applying ? 'Applying…' : `Apply (${count})`;
-    }
-
-    function setFbLeadProgress({ processed = 0, total = 0, complete = false, label = '', global = false } = {}) {
-      const { wrap, bar: progressBar, label: progressLabel } = getFbLeadProgressElements(global);
+    function setFbLeadProgress({ processed = 0, total = 0, complete = false, label = '' } = {}) {
+      const wrap = document.getElementById('fb-lead-progress-wrap');
+      const progressBar = document.getElementById('fb-lead-progress-bar');
+      const progressLabel = document.getElementById('fb-lead-progress-label');
       if (!wrap || !progressBar) return;
       wrap.hidden = false;
       wrap.classList.toggle('is-complete', complete);
@@ -5094,12 +5193,13 @@
         progressLabel.textContent = label
           || (complete
             ? `Complete — ${processed} / ${total} leads (${pct}%)`
-            : `${global ? 'Writing to GHL' : 'Processing'} — ${processed} / ${total} leads (${pct}%)`);
+            : `Processing — ${processed} / ${total} leads (${pct}%)`);
       }
     }
 
-    function hideFbLeadProgress(reset = true, global = false) {
-      const { wrap, bar: progressBar } = getFbLeadProgressElements(global);
+    function hideFbLeadProgress(reset = true) {
+      const wrap = document.getElementById('fb-lead-progress-wrap');
+      const progressBar = document.getElementById('fb-lead-progress-bar');
       if (!wrap) return;
       if (reset) {
         wrap.hidden = true;
@@ -5159,20 +5259,23 @@
       let allRows = [];
       let completed = false;
       const applyRunId = fbLeadSyncState.activeRun?.previewRunId ?? null;
+      const previewRun = applyRunId != null
+        ? fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(applyRunId))
+        : null;
+      const expectedContacts = previewRun?.updated
+        ?? fbLeadSyncState.previewOkByClient[clientId]?.updated
+        ?? 0;
 
       if (!dryRun) {
-        showGlobalApplyProgress(clientId, mode);
         fbLeadSyncState.applyingRunId = applyRunId;
-        if (applyRunId != null) setHistoryApplyButtonState(applyRunId, true);
+        startGlobalApplyProgress(clientId, mode, expectedContacts);
+        await refreshFbLeadHistoryUi();
       }
 
       try {
-        setFbLeadProgress({
-          processed: 0,
-          total: 0,
-          label: dryRun ? 'Starting preview…' : 'Starting apply…',
-          global: !dryRun,
-        });
+        if (dryRun) {
+          setFbLeadProgress({ processed: 0, total: 0, label: 'Starting preview…' });
+        }
         do {
           lastSummary = await adminFetch('/api/fb-lead-sync/run', {
             method: 'POST',
@@ -5192,34 +5295,49 @@
           if (fbLeadSyncState.activeRun) {
             fbLeadSyncState.activeRun.runId = runId;
           }
-          setFbLeadProgress({
-            processed: offset,
-            total: summary.inWindow || offset,
-            complete: !summary.hasMore,
-            global: !dryRun,
-          });
-          if (resultsMount && dryRun) {
-            resultsMount.innerHTML = renderFbLeadRunResults({ ...summary, rows: allRows });
+          const total = summary.inWindow || offset || expectedContacts;
+          if (dryRun) {
+            setFbLeadProgress({
+              processed: offset,
+              total,
+              complete: !summary.hasMore,
+            });
+            if (resultsMount) {
+              resultsMount.innerHTML = renderFbLeadRunResults({ ...summary, rows: allRows });
+            }
+          } else {
+            updateGlobalApplyProgress({
+              processed: offset,
+              total,
+              written: summary.updated || 0,
+              complete: !summary.hasMore,
+            });
           }
         } while ((lastSummary.summary || lastSummary).hasMore);
 
         completed = true;
         const finalSummary = lastSummary.summary || lastSummary;
-        setFbLeadProgress({
-          processed: finalSummary.nextBatchOffset ?? offset,
-          total: finalSummary.inWindow || offset,
-          complete: true,
-          global: !dryRun,
-          label: dryRun ? undefined : 'Complete — written to GHL',
-        });
+        const finalTotal = finalSummary.inWindow || offset || expectedContacts;
+        const finalProcessed = finalSummary.nextBatchOffset ?? offset;
 
         if (dryRun) {
+          setFbLeadProgress({
+            processed: finalProcessed,
+            total: finalTotal,
+            complete: true,
+          });
           markFbLeadPreviewReady(clientId, mode, finalSummary.updated);
           if (fbLeadSyncState.activeRun) fbLeadSyncState.activeRun.previewOk = true;
           showToast('Preview complete — use Apply in Run history below.', 'success');
           await refreshFbLeadHistoryUi();
           document.getElementById('fb-lead-history-mount')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
+          updateGlobalApplyProgress({
+            processed: finalProcessed,
+            total: finalTotal,
+            written: finalSummary.updated || 0,
+            complete: true,
+          });
           delete fbLeadSyncState.previewOkByClient[clientId];
           try {
             const stored = JSON.parse(sessionStorage.getItem('fbLeadSyncPreviewOk') || '{}');
@@ -5228,8 +5346,8 @@
           } catch {
             // ignore
           }
-          finishGlobalApplyProgress(true);
           showToast('FB lead sync complete — Fb Lead id written to GHL', 'success');
+          stopGlobalApplyProgress({ success: true });
         }
         await refreshFbLeadHistoryUi();
         const dash = await adminFetch('/api/fb-lead-sync');
@@ -5238,16 +5356,12 @@
         await refreshFbLeadClientRowsUi();
       } catch (error) {
         if (dryRun) {
-          hideFbLeadProgress(true, false);
+          hideFbLeadProgress(true);
         } else {
-          finishGlobalApplyProgress(false);
-          setFbLeadProgress({
-            processed: 0,
-            total: 0,
-            complete: false,
-            global: true,
-            label: `Failed — ${error.message || 'Apply failed'}`,
+          updateGlobalApplyProgress({
+            error: `Failed — ${error.message || 'Apply failed'}`,
           });
+          stopGlobalApplyProgress({ success: false, keepVisibleMs: 12000 });
         }
         showToast(
           (error.message || (dryRun ? 'FB lead preview failed.' : 'FB lead apply failed.'))
@@ -5256,10 +5370,13 @@
         );
       } finally {
         if (previewBtn) previewBtn.disabled = false;
-        if (!dryRun && applyRunId != null) setHistoryApplyButtonState(applyRunId, false);
         fbLeadSyncState.applyingRunId = null;
         if (!completed && dryRun) {
-          hideFbLeadProgress(true, false);
+          hideFbLeadProgress(true);
+        }
+        if (!dryRun && !completed) {
+          fbLeadSyncState.isApplying = false;
+          await refreshFbLeadHistoryUi();
         }
       }
     }
@@ -5329,6 +5446,8 @@
       }
 
       try {
+        if (silent && fbLeadSyncState.isApplying) return;
+
         const data = await adminFetch('/api/fb-lead-sync');
         fbLeadSyncState.clients = data.clients || [];
         hydrateFbLeadPreviewState(fbLeadSyncState.clients);

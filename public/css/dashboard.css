@@ -920,15 +920,57 @@
       border: 1px solid #ffd9b3;
       border-radius: 12px;
       margin-bottom: 16px;
-      padding: 14px 16px;
+      padding: 16px 18px;
     }
 
-    .fb-lead-apply-progress-card .fb-lead-progress-wrap {
-      margin-top: 12px;
+    .fb-lead-apply-progress-card.is-complete {
+      background: #e8f7ef;
+      border-color: #b8e6cf;
     }
 
-    .fb-lead-apply-progress-card .fb-lead-progress-wrap[hidden] {
-      display: none;
+    .fb-lead-apply-progress-card.is-error {
+      background: #fdeee8;
+      border-color: #f5c4b3;
+    }
+
+    .fb-lead-apply-progress-header {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .fb-lead-apply-progress-sub {
+      color: var(--text-soft);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .fb-lead-apply-progress-stats {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .fb-lead-apply-progress-card .fb-lead-progress {
+      margin-top: 10px;
+    }
+
+    .fb-lead-progress.is-indeterminate .fb-lead-progress-bar {
+      animation: fb-lead-progress-indeterminate 1.4s ease-in-out infinite;
+      width: 35% !important;
+    }
+
+    @keyframes fb-lead-progress-indeterminate {
+      0% { transform: translateX(-120%); }
+      100% { transform: translateX(420%); }
+    }
+
+    .fb-lead-history-status-note {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-style: italic;
     }
 
     .fb-lead-clients-table .fb-lead-client-actions-cell {
