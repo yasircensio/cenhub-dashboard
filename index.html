@@ -4686,18 +4686,41 @@
       `;
     }
 
+    function resolveFbLeadClientStats(client, preflight = {}) {
+      const lastRun = client?.lastRun;
+      const metaLeads = preflight.metaLeadCount90d ?? lastRun?.inWindow ?? lastRun?.metaLeadCount ?? null;
+      let missing = preflight.estimatedMissing;
+      if (missing == null && lastRun) {
+        missing = lastRun.dryRun
+          ? (lastRun.updated ?? null)
+          : (lastRun.skippedNoMatch ?? null);
+      }
+      return {
+        metaLeads: metaLeads != null ? String(metaLeads) : '—',
+        missing: missing != null ? String(missing) : '—',
+      };
+    }
+
+    function formatFbLeadLastRunLabel(lastRun) {
+      if (!lastRun) return '—';
+      const parts = [
+        lastRun.dryRun ? 'preview' : lastRun.status,
+        `${lastRun.updated || 0} ${lastRun.dryRun ? 'would update' : 'updated'}`,
+      ];
+      if ((lastRun.skippedNoMatch ?? 0) > 0) {
+        parts.push(`${lastRun.skippedNoMatch} no match`);
+      }
+      return parts.join(' · ');
+    }
+
     function renderFbLeadClientRows(clients) {
       if (!clients.length) {
         return '<div class="sync-history-empty">No clients configured yet.</div>';
       }
       const rows = clients.map((client) => {
         const preflight = fbLeadSyncState.preflightByClient[client.clientId] || {};
-        const lastRun = client.lastRun;
-        const lastRunLabel = lastRun
-          ? `${lastRun.dryRun ? 'preview' : lastRun.status} · ${lastRun.updated || 0} ${lastRun.dryRun ? 'would update' : 'updated'}`
-          : '—';
-        const missing = preflight.estimatedMissing != null ? String(preflight.estimatedMissing) : '—';
-        const metaLeads = preflight.metaLeadCount90d != null ? String(preflight.metaLeadCount90d) : '—';
+        const stats = resolveFbLeadClientStats(client, preflight);
+        const lastRunLabel = formatFbLeadLastRunLabel(client.lastRun);
         return `
           <tr>
             <td>
@@ -4709,8 +4732,8 @@
                 ${client.fbLeadSyncEnabled ? 'checked' : ''} aria-label="Enable auto-sync for ${esc(client.accountName)}" />
             </td>
             <td>${renderFbLeadReadinessBadges(client)}</td>
-            <td>${esc(metaLeads)}</td>
-            <td>${esc(missing)}</td>
+            <td>${esc(stats.metaLeads)}</td>
+            <td>${esc(stats.missing)}</td>
             <td>${esc(lastRunLabel)}</td>
             <td class="fb-lead-client-actions-cell">${renderFbLeadClientActions(client)}</td>
           </tr>
