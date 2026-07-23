@@ -5056,18 +5056,27 @@
       });
     }
 
-    async function loadFbLeadPreflightForClients(clients) {
-      const preflightByClient = {};
-      await Promise.all(clients.map(async (client) => {
+    async function loadFbLeadPreflightForClients(clients, { quick = false } = {}) {
+      const suffix = quick ? '&quick=1' : '';
+      await Promise.all((clients || []).map(async (client) => {
         try {
-          preflightByClient[client.clientId] = await adminFetch(
-            `/api/fb-lead-sync/preflight?client=${encodeURIComponent(client.clientId)}`,
+          fbLeadSyncState.preflightByClient[client.clientId] = await adminFetch(
+            `/api/fb-lead-sync/preflight?client=${encodeURIComponent(client.clientId)}${suffix}`,
           );
         } catch (error) {
-          preflightByClient[client.clientId] = { preflightError: error.message };
+          fbLeadSyncState.preflightByClient[client.clientId] = {
+            ...(fbLeadSyncState.preflightByClient[client.clientId] || {}),
+            preflightError: error.message,
+          };
         }
       }));
-      fbLeadSyncState.preflightByClient = preflightByClient;
+    }
+
+    function scheduleFbLeadFullPreflight(clients) {
+      if (!clients?.length) return;
+      loadFbLeadPreflightForClients(clients, { quick: false })
+        .then(() => refreshFbLeadClientRowsUi())
+        .catch(() => {});
     }
 
     async function loadFbLeadHistory(limit = 50) {
@@ -5531,7 +5540,7 @@
       historyMount.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    async function loadFbLeadSyncPage({ silent = false } = {}) {
+    async function loadFbLeadSyncPage({ silent = false, fullPreflight = false } = {}) {
       const dashboard = document.getElementById('dashboard');
       if (!dashboard) return;
 
@@ -5564,31 +5573,52 @@
       try {
         if (silent && fbLeadSyncState.isApplying) return;
 
-        const data = await adminFetch('/api/fb-lead-sync');
-        fbLeadSyncState.clients = data.clients || [];
-        hydrateFbLeadPreviewState(fbLeadSyncState.clients);
-        await Promise.all([
-          loadFbLeadPreflightForClients(fbLeadSyncState.clients),
+        const [data] = await Promise.all([
+          adminFetch('/api/fb-lead-sync'),
           loadFbLeadHistory(),
         ]);
-        dashboard.innerHTML = renderFbLeadSyncPage(data);
-        bindFbLeadSyncToggles();
-        const refreshBtn = document.getElementById('fb-lead-sync-refresh');
-        if (refreshBtn) refreshBtn.onclick = () => loadFbLeadSyncPage();
-        const clearBtn = document.getElementById('fb-lead-sync-clear-log');
-        if (clearBtn) clearBtn.onclick = () => clearFbLeadSyncHistory();
-        if (fbLeadSyncRefreshTimer) {
-          clearInterval(fbLeadSyncRefreshTimer);
-          fbLeadSyncRefreshTimer = null;
+        fbLeadSyncState.clients = data.clients || [];
+        hydrateFbLeadPreviewState(fbLeadSyncState.clients);
+
+        if (!silent) {
+          dashboard.innerHTML = renderFbLeadSyncPage(data);
+          bindFbLeadSyncToggles();
+          const refreshBtn = document.getElementById('fb-lead-sync-refresh');
+          if (refreshBtn) {
+            refreshBtn.onclick = () => loadFbLeadSyncPage({ fullPreflight: true });
+          }
+          const clearBtn = document.getElementById('fb-lead-sync-clear-log');
+          if (clearBtn) clearBtn.onclick = () => clearFbLeadSyncHistory();
+          if (fbLeadSyncRefreshTimer) {
+            clearInterval(fbLeadSyncRefreshTimer);
+            fbLeadSyncRefreshTimer = null;
+          }
+          fbLeadSyncRefreshTimer = window.setInterval(() => {
+            loadFbLeadSyncPage({ silent: true }).catch(() => {});
+          }, 60_000);
         }
-        fbLeadSyncRefreshTimer = window.setInterval(() => {
-          loadFbLeadSyncPage({ silent: true }).catch(() => {});
-        }, 60_000);
+
+        await loadFbLeadPreflightForClients(fbLeadSyncState.clients, { quick: !fullPreflight });
+        if (silent) {
+          await refreshFbLeadHistoryUi();
+          await refreshFbLeadClientRowsUi();
+        } else {
+          await refreshFbLeadClientRowsUi();
+        }
+
+        if (fullPreflight) {
+          await loadFbLeadPreflightForClients(fbLeadSyncState.clients, { quick: false });
+          await refreshFbLeadClientRowsUi();
+        } else if (!silent) {
+          scheduleFbLeadFullPreflight(fbLeadSyncState.clients);
+        }
       } catch (error) {
-        dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome('fb-lead-sync'))}
-          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
-        `;
+        if (!silent) {
+          dashboard.innerHTML = `
+            ${renderBrandTopbar(renderStaffAdminChrome('fb-lead-sync'))}
+            ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+          `;
+        }
       }
     }
 
