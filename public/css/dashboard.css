@@ -920,7 +920,7 @@
       border: 1px solid #ffd9b3;
       border-radius: 12px;
       margin-bottom: 16px;
-      padding: 16px 18px;
+      padding: 20px 22px 22px;
     }
 
     .fb-lead-apply-progress-card.is-complete {
@@ -954,7 +954,16 @@
     }
 
     .fb-lead-apply-progress-card .fb-lead-progress {
-      margin-top: 10px;
+      margin-top: 12px;
+    }
+
+    .fb-lead-apply-progress-card .fb-lead-progress-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-top: 12px;
+      padding-bottom: 4px;
     }
 
     .fb-lead-progress.is-indeterminate .fb-lead-progress-bar {

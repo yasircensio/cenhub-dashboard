@@ -929,7 +929,7 @@
       border: 1px solid #ffd9b3;
       border-radius: 12px;
       margin-bottom: 16px;
-      padding: 16px 18px;
+      padding: 20px 22px 22px;
     }
 
     .fb-lead-apply-progress-card.is-complete {
@@ -963,7 +963,16 @@
     }
 
     .fb-lead-apply-progress-card .fb-lead-progress {
-      margin-top: 10px;
+      margin-top: 12px;
+    }
+
+    .fb-lead-apply-progress-card .fb-lead-progress-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+      margin-top: 12px;
+      padding-bottom: 4px;
     }
 
     .fb-lead-progress.is-indeterminate .fb-lead-progress-bar {
@@ -4556,6 +4565,7 @@
       isApplying: false,
       applyStartedAt: 0,
       applyWaitTimer: null,
+      applyProgress: null,
     };
     let fbLeadSyncRefreshTimer = null;
 
@@ -4804,7 +4814,7 @@
         const detail = [
           run.mode,
           run.dryRun ? 'dry-run' : 'apply',
-          `${run.updated || 0} updated`,
+          run.dryRun ? `${run.updated || 0} would update` : `${run.updated || 0} updated`,
           `${run.skippedNoMatch || 0} no match`,
           run.errors ? `${run.errors} errors` : null,
         ].filter(Boolean).join(' · ');
@@ -5102,20 +5112,26 @@
       if (!mount) return;
       fbLeadSyncState.isApplying = true;
       fbLeadSyncState.applyStartedAt = Date.now();
+      fbLeadSyncState.applyProgress = null;
       mount.innerHTML = renderGlobalApplyProgress(clientId, mode, contactCount);
       mount.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       if (fbLeadSyncState.applyWaitTimer) clearInterval(fbLeadSyncState.applyWaitTimer);
       fbLeadSyncState.applyWaitTimer = window.setInterval(() => {
         if (!fbLeadSyncState.isApplying) return;
         const elapsed = Math.floor((Date.now() - fbLeadSyncState.applyStartedAt) / 1000);
-        updateGlobalApplyProgress({ waiting: true, elapsed });
+        const saved = fbLeadSyncState.applyProgress;
+        if (saved?.total > 0) {
+          updateGlobalApplyProgress({ ...saved, waiting: true, elapsed });
+        } else {
+          updateGlobalApplyProgress({ waiting: true, elapsed });
+        }
       }, 1000);
     }
 
     function updateGlobalApplyProgress({
-      processed = 0,
-      total = 0,
-      written = 0,
+      processed,
+      total,
+      written,
       waiting = false,
       elapsed = 0,
       complete = false,
@@ -5129,7 +5145,22 @@
       const badge = document.getElementById('fb-lead-apply-status-badge');
       if (!card || !progress || !bar || !label) return;
 
-      if (waiting && processed === 0 && total === 0 && !complete) {
+      const prev = fbLeadSyncState.applyProgress || {};
+      const nextProcessed = processed ?? prev.processed ?? 0;
+      const nextTotal = total ?? prev.total ?? 0;
+      const nextWritten = written ?? prev.written ?? 0;
+
+      if (!complete && !error && (nextTotal > 0 || nextProcessed > 0)) {
+        fbLeadSyncState.applyProgress = {
+          processed: nextProcessed,
+          total: nextTotal,
+          written: nextWritten,
+        };
+      }
+
+      const hasProgress = nextTotal > 0 || nextProcessed > 0;
+
+      if (waiting && !hasProgress && !complete) {
         progress.classList.add('is-indeterminate');
         bar.style.width = '35%';
         if (stats) stats.textContent = 'Contacting Meta and GHL…';
@@ -5138,17 +5169,19 @@
       }
 
       progress.classList.remove('is-indeterminate');
-      const pct = total > 0 ? Math.min(100, Math.round((processed / total) * 100)) : (complete ? 100 : 0);
+      const pct = nextTotal > 0
+        ? Math.min(100, Math.round((nextProcessed / nextTotal) * 100))
+        : (complete ? 100 : 0);
       bar.style.width = `${pct}%`;
       if (stats) {
         stats.textContent = complete
-          ? `${written} written to GHL · ${processed} / ${total} leads processed`
-          : `${written} written · ${processed} / ${total} leads scanned (${pct}%)`;
+          ? `${nextWritten} written to GHL · ${nextProcessed} / ${nextTotal} leads processed`
+          : `${nextWritten} written · ${nextProcessed} / ${nextTotal} leads scanned (${pct}%)`;
       }
       if (complete) {
         card.classList.add('is-complete');
         card.classList.remove('is-error');
-        label.textContent = `Complete — ${written} contact(s) updated in GHL`;
+        label.textContent = `Complete — ${nextWritten} contact(s) updated in GHL`;
         if (badge) {
           badge.textContent = 'Complete';
           badge.classList.add('is-ok');
@@ -5163,13 +5196,18 @@
           badge.classList.remove('is-ok');
           badge.classList.add('is-missing');
         }
+      } else if (waiting && hasProgress) {
+        label.textContent = nextProcessed >= nextTotal
+          ? `Finishing up… (${elapsed}s)`
+          : `Batch in progress — ${nextProcessed} / ${nextTotal} leads (${pct}%) · ${elapsed}s`;
       } else {
-        label.textContent = `Writing to GHL — batch in progress (${pct}%)`;
+        label.textContent = `Writing to GHL — ${nextProcessed} / ${nextTotal} leads (${pct}%)`;
       }
     }
 
     function stopGlobalApplyProgress({ success = true, keepVisibleMs = 6000 } = {}) {
       fbLeadSyncState.isApplying = false;
+      fbLeadSyncState.applyProgress = null;
       if (fbLeadSyncState.applyWaitTimer) {
         clearInterval(fbLeadSyncState.applyWaitTimer);
         fbLeadSyncState.applyWaitTimer = null;
@@ -5275,6 +5313,8 @@
       try {
         if (dryRun) {
           setFbLeadProgress({ processed: 0, total: 0, label: 'Starting preview…' });
+        } else {
+          updateGlobalApplyProgress({ waiting: true, elapsed: 0 });
         }
         do {
           lastSummary = await adminFetch('/api/fb-lead-sync/run', {
@@ -5284,8 +5324,9 @@
               mode,
               dryRun,
               runId,
+              previewRunId: dryRun ? null : applyRunId,
               batchOffset: offset,
-              batchLimit: 25,
+              batchLimit: dryRun ? 25 : 15,
             }),
           });
           const summary = lastSummary.summary || lastSummary;
