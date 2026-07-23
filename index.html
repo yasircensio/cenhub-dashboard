@@ -924,33 +924,20 @@
       accent-color: var(--accent, #ff6a00);
     }
 
-    .fb-lead-ready-banner {
-      background: linear-gradient(135deg, #e8f7ef 0%, #f0faf4 100%);
-      border: 1px solid #b8e6cf;
+    .fb-lead-apply-progress-card {
+      background: #fff8f0;
+      border: 1px solid #ffd9b3;
       border-radius: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      justify-content: space-between;
       margin-bottom: 16px;
       padding: 14px 16px;
     }
 
-    .fb-lead-ready-banner-copy {
-      flex: 1 1 220px;
-      min-width: 0;
+    .fb-lead-apply-progress-card .fb-lead-progress-wrap {
+      margin-top: 12px;
     }
 
-    .fb-lead-ready-banner-copy strong {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .fb-lead-ready-banner-copy p {
-      color: var(--text-muted);
-      font-size: 13px;
-      margin: 0;
+    .fb-lead-apply-progress-card .fb-lead-progress-wrap[hidden] {
+      display: none;
     }
 
     .fb-lead-clients-table .fb-lead-client-actions-cell {
@@ -4518,6 +4505,7 @@
       historyRuns: [],
       activeRun: null,
       previewOkByClient: {},
+      applyingRunId: null,
     };
     let fbLeadSyncRefreshTimer = null;
 
@@ -4581,30 +4569,48 @@
       }
     }
 
-    function renderFbLeadApplyCta(clientId, mode, updatedCount) {
-      const label = mode === 'backfill' ? 'Apply backfill now' : 'Apply sync now';
-      return `
-        <div class="fb-lead-apply-cta" style="margin-top:16px;padding:14px 16px;background:#e8f7ef;border:1px solid #b8e6cf;border-radius:12px">
-          <strong>Preview complete</strong>
-          <p style="margin:8px 0 12px;color:var(--text-muted);font-size:13px">
-            ${esc(String(updatedCount || 0))} contact(s) are ready to receive <code>Fb Lead id</code> in GHL.
-          </p>
-          <button class="admin-btn admin-btn--primary" type="button"
-            onclick="applyFbLeadSync('${esc(clientId)}', '${esc(mode)}')">${label}</button>
-        </div>
-      `;
+    function dryRunIsReadyForApply(run, runs = fbLeadSyncState.historyRuns) {
+      if (!run) return false;
+      return Boolean(
+        run.dryRun
+        && String(run.status || '').toLowerCase() === 'success'
+        && (run.updated || 0) > 0
+        && !fbLeadRunHasLaterApply(runs, run),
+      );
     }
 
-    async function applyFbLeadSync(clientId, mode = 'backfill') {
-      const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
-      const preview = fbLeadSyncState.previewOkByClient[clientId];
-      const updatedCount = preview?.updated || client?.lastRun?.updated || 0;
-
-      if (mode === 'backfill' && !clientHasReadyPreview(client)) {
-        showToast('Run Preview first before applying backfill.', 'error');
-        openFbLeadRunPanel(clientId, mode);
+    async function applyFbLeadSyncFromHistory(runId) {
+      const run = fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(runId));
+      if (!run) {
+        showToast('Run not found. Refresh the page.', 'error');
         return;
       }
+      await applyFbLeadSync(run.clientId, run.mode || 'backfill', { previewRunId: runId });
+    }
+
+    async function applyFbLeadSync(clientId, mode = 'backfill', { previewRunId = null } = {}) {
+      if (fbLeadSyncState.applyingRunId != null) {
+        showToast('An apply is already running. Wait for it to finish.', 'error');
+        return;
+      }
+
+      const previewRun = previewRunId != null
+        ? fbLeadSyncState.historyRuns.find((row) => Number(row.id) === Number(previewRunId))
+        : null;
+      const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
+      const hasPreview = previewRun
+        ? dryRunIsReadyForApply(previewRun)
+        : clientHasReadyPreview(client);
+
+      if (mode === 'backfill' && !hasPreview) {
+        showToast('No completed preview found. Run Preview first.', 'error');
+        return;
+      }
+
+      const updatedCount = previewRun?.updated
+        ?? fbLeadSyncState.previewOkByClient[clientId]?.updated
+        ?? client?.lastRun?.updated
+        ?? 0;
 
       const confirmed = window.confirm(
         `Apply ${mode === 'backfill' ? '90-day backfill' : 'recent sync'} for ${clientId}?\n\n`
@@ -4612,46 +4618,22 @@
       );
       if (!confirmed) return;
 
-      openFbLeadRunPanel(clientId, mode);
-      fbLeadSyncState.activeRun = { clientId, mode, runId: null, previewOk: true };
-      const applyBtn = document.getElementById('fb-lead-apply-btn');
-      if (applyBtn) applyBtn.disabled = false;
+      fbLeadSyncState.activeRun = {
+        clientId,
+        mode,
+        runId: null,
+        previewOk: true,
+        previewRunId,
+      };
       await runFbLeadSyncBatch({ clientId, mode, dryRun: false });
     }
 
     async function refreshFbLeadClientRowsUi() {
       const mount = document.getElementById('fb-lead-clients-mount');
-      const bannerMount = document.getElementById('fb-lead-ready-banner-mount');
       if (mount) {
         mount.innerHTML = renderFbLeadClientRows(fbLeadSyncState.clients);
       }
-      if (bannerMount) {
-        bannerMount.innerHTML = renderFbLeadReadyBanners(fbLeadSyncState.clients);
-      }
       bindFbLeadSyncToggles();
-    }
-
-    function renderFbLeadReadyBanners(clients) {
-      const readyClients = (clients || []).filter((client) => clientHasReadyPreview(client));
-      if (!readyClients.length) return '';
-      return readyClients.map((client) => {
-        const applyCount = client.lastRun?.updated || fbLeadSyncState.previewOkByClient[client.clientId]?.updated || 0;
-        const applyMode = fbLeadSyncState.previewOkByClient[client.clientId]?.mode
-          || client.lastRun?.mode
-          || 'backfill';
-        return `
-          <div class="fb-lead-ready-banner">
-            <div class="fb-lead-ready-banner-copy">
-              <strong>${esc(client.accountName)} — preview complete</strong>
-              <p>${esc(String(applyCount))} contact(s) ready for <code>Fb Lead id</code>. Apply to write to GHL now.</p>
-            </div>
-            <button class="admin-btn admin-btn--primary" type="button"
-              onclick="applyFbLeadSync('${esc(client.clientId)}', '${esc(applyMode)}')">
-              Apply ${esc(String(applyCount))} to GHL
-            </button>
-          </div>
-        `;
-      }).join('');
     }
 
     function fbLeadRunHasLaterApply(runs, run) {
@@ -4776,10 +4758,8 @@
           `${run.skippedNoMatch || 0} no match`,
           run.errors ? `${run.errors} errors` : null,
         ].filter(Boolean).join(' · ');
-        const canApply = run.dryRun
-          && String(run.status || '').toLowerCase() === 'success'
-          && (run.updated || 0) > 0
-          && !fbLeadRunHasLaterApply(runs, run);
+        const canApply = dryRunIsReadyForApply(run, runs);
+        const isApplying = fbLeadSyncState.applyingRunId === run.id;
         return `
           <tr class="fb-lead-audit-row">
             <td>${esc(formatSyncHistoryTimestamp(run.startedAt))}</td>
@@ -4790,7 +4770,7 @@
             <td class="sync-history-detail">${esc(detail)}</td>
             <td>
               <div class="fb-lead-history-actions">
-                ${canApply ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" onclick="applyFbLeadSync('${esc(run.clientId)}', '${esc(run.mode || 'backfill')}')">Apply (${run.updated})</button>` : ''}
+                ${canApply ? `<button class="admin-btn admin-btn--primary admin-btn--small" type="button" data-fb-apply-run="${Number(run.id)}" data-apply-count="${Number(run.updated || 0)}"${isApplying ? ' disabled' : ''} onclick="applyFbLeadSyncFromHistory(${Number(run.id)})">${isApplying ? 'Applying…' : `Apply (${run.updated})`}</button>` : ''}
                 <button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="expandFbLeadRun(${Number(run.id)})">Audit</button>
                 ${isStaffAdmin() ? `<button class="admin-btn admin-btn--ghost admin-btn--small" type="button" onclick="deleteFbLeadRun(${Number(run.id)})">Delete</button>` : ''}
               </div>
@@ -4908,9 +4888,9 @@
             </div>
           </div>
           <h2 style="font-size:16px;margin:18px 0 10px">Clients</h2>
-          <div id="fb-lead-ready-banner-mount">${renderFbLeadReadyBanners(data.clients || [])}</div>
           ${renderFbLeadClientRowsWrapper(data.clients || [])}
           <div id="fb-lead-run-panel-mount"></div>
+          <div id="fb-lead-apply-progress-mount"></div>
           <h2 style="font-size:16px;margin:24px 0 10px">Run history</h2>
           <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
         </div>
@@ -4973,11 +4953,10 @@
             <button class="admin-btn admin-btn--ghost" type="button" onclick="closeFbLeadRunPanel()">Close</button>
           </div>
           ${mode === 'backfill' && ready
-            ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0;background:#e8f7ef;border-color:#b8e6cf;color:#138b53">Preview already completed — click <strong>Apply sync — write to GHL</strong> below.</div>'
+            ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0;background:#e8f7ef;border-color:#b8e6cf;color:#138b53">Preview complete — use <strong>Apply</strong> on that run in <strong>Run history</strong> below.</div>'
             : (mode === 'backfill' ? '<div class="fb-lead-banner" style="margin-top:12px;margin-bottom:0">Run Preview first. Backfill only matches leads Meta still has (~90 days).</div>' : '')}
           <div class="fb-lead-run-actions">
             <button class="admin-btn admin-btn--secondary" type="button" id="fb-lead-preview-btn">Preview (dry run)</button>
-            <button class="admin-btn admin-btn--primary" type="button" id="fb-lead-apply-btn"${mode === 'backfill' && !ready ? ' disabled' : ''}>Apply sync — write to GHL</button>
           </div>
           <div class="fb-lead-progress-wrap" id="fb-lead-progress-wrap" hidden>
             <div class="fb-lead-progress-label" id="fb-lead-progress-label">Starting…</div>
@@ -4999,15 +4978,15 @@
     function openFbLeadRunPanel(clientId, mode) {
       const mount = document.getElementById('fb-lead-run-panel-mount');
       if (!mount) return;
-      fbLeadSyncState.activeRun = { clientId, mode, runId: null, previewOk: clientHasReadyPreview(fbLeadSyncState.clients.find((row) => row.clientId === clientId)) };
+      fbLeadSyncState.activeRun = {
+        clientId,
+        mode,
+        runId: null,
+        previewOk: clientHasReadyPreview(fbLeadSyncState.clients.find((row) => row.clientId === clientId)),
+      };
       mount.innerHTML = renderFbLeadRunPanel(clientId, mode);
       const previewBtn = document.getElementById('fb-lead-preview-btn');
-      const applyBtn = document.getElementById('fb-lead-apply-btn');
       if (previewBtn) previewBtn.onclick = () => runFbLeadSyncBatch({ clientId, mode, dryRun: true });
-      if (applyBtn) {
-        applyBtn.disabled = mode === 'backfill' && !clientHasReadyPreview(client);
-        applyBtn.onclick = () => applyFbLeadSync(clientId, mode);
-      }
       mount.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
@@ -5039,10 +5018,73 @@
       `;
     }
 
-    function setFbLeadProgress({ processed = 0, total = 0, complete = false, label = '' } = {}) {
-      const wrap = document.getElementById('fb-lead-progress-wrap');
-      const progressBar = document.getElementById('fb-lead-progress-bar');
-      const progressLabel = document.getElementById('fb-lead-progress-label');
+    function renderGlobalApplyProgress(clientId, mode) {
+      const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
+      const modeLabel = mode === 'backfill' ? '90-day backfill' : 'recent sync';
+      return `
+        <div class="fb-lead-apply-progress-card" id="fb-lead-global-progress-card">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+            <div>
+              <strong>Applying ${esc(modeLabel)} to GHL</strong>
+              <div style="color:var(--text-soft);font-size:13px;margin-top:4px">${esc(client?.accountName || clientId)}</div>
+            </div>
+            <span class="fb-lead-badge is-ok" id="fb-lead-apply-status-badge">Running</span>
+          </div>
+          <div class="fb-lead-progress-wrap" id="fb-lead-global-progress-wrap">
+            <div class="fb-lead-progress-label" id="fb-lead-global-progress-label">Starting…</div>
+            <div class="fb-lead-progress is-visible">
+              <div class="fb-lead-progress-bar" id="fb-lead-global-progress-bar"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showGlobalApplyProgress(clientId, mode) {
+      const mount = document.getElementById('fb-lead-apply-progress-mount');
+      if (!mount) return;
+      mount.innerHTML = renderGlobalApplyProgress(clientId, mode);
+      mount.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function finishGlobalApplyProgress(success) {
+      const badge = document.getElementById('fb-lead-apply-status-badge');
+      if (badge) {
+        badge.textContent = success ? 'Complete' : 'Failed';
+        badge.classList.toggle('is-ok', success);
+        badge.classList.toggle('is-missing', !success);
+      }
+      window.setTimeout(() => {
+        const mount = document.getElementById('fb-lead-apply-progress-mount');
+        if (mount && fbLeadSyncState.applyingRunId == null) mount.innerHTML = '';
+      }, success ? 5000 : 10000);
+    }
+
+    function getFbLeadProgressElements(useGlobal = false) {
+      if (useGlobal) {
+        return {
+          wrap: document.getElementById('fb-lead-global-progress-wrap'),
+          bar: document.getElementById('fb-lead-global-progress-bar'),
+          label: document.getElementById('fb-lead-global-progress-label'),
+        };
+      }
+      return {
+        wrap: document.getElementById('fb-lead-progress-wrap'),
+        bar: document.getElementById('fb-lead-progress-bar'),
+        label: document.getElementById('fb-lead-progress-label'),
+      };
+    }
+
+    function setHistoryApplyButtonState(runId, applying) {
+      const btn = document.querySelector(`[data-fb-apply-run="${Number(runId)}"]`);
+      if (!btn) return;
+      btn.disabled = applying;
+      const count = btn.dataset.applyCount || '0';
+      btn.textContent = applying ? 'Applying…' : `Apply (${count})`;
+    }
+
+    function setFbLeadProgress({ processed = 0, total = 0, complete = false, label = '', global = false } = {}) {
+      const { wrap, bar: progressBar, label: progressLabel } = getFbLeadProgressElements(global);
       if (!wrap || !progressBar) return;
       wrap.hidden = false;
       wrap.classList.toggle('is-complete', complete);
@@ -5052,13 +5094,12 @@
         progressLabel.textContent = label
           || (complete
             ? `Complete — ${processed} / ${total} leads (${pct}%)`
-            : `Processing — ${processed} / ${total} leads (${pct}%)`);
+            : `${global ? 'Writing to GHL' : 'Processing'} — ${processed} / ${total} leads (${pct}%)`);
       }
     }
 
-    function hideFbLeadProgress(reset = true) {
-      const wrap = document.getElementById('fb-lead-progress-wrap');
-      const progressBar = document.getElementById('fb-lead-progress-bar');
+    function hideFbLeadProgress(reset = true, global = false) {
+      const { wrap, bar: progressBar } = getFbLeadProgressElements(global);
       if (!wrap) return;
       if (reset) {
         wrap.hidden = true;
@@ -5109,19 +5150,29 @@
 
     async function runFbLeadSyncBatch({ clientId, mode, dryRun }) {
       const previewBtn = document.getElementById('fb-lead-preview-btn');
-      const applyBtn = document.getElementById('fb-lead-apply-btn');
       const resultsMount = document.getElementById('fb-lead-run-results');
       if (previewBtn) previewBtn.disabled = true;
-      if (applyBtn) applyBtn.disabled = true;
 
       let runId = fbLeadSyncState.activeRun?.runId || null;
       let offset = 0;
       let lastSummary = null;
       let allRows = [];
       let completed = false;
+      const applyRunId = fbLeadSyncState.activeRun?.previewRunId ?? null;
+
+      if (!dryRun) {
+        showGlobalApplyProgress(clientId, mode);
+        fbLeadSyncState.applyingRunId = applyRunId;
+        if (applyRunId != null) setHistoryApplyButtonState(applyRunId, true);
+      }
 
       try {
-        setFbLeadProgress({ processed: 0, total: 0, label: 'Starting sync…' });
+        setFbLeadProgress({
+          processed: 0,
+          total: 0,
+          label: dryRun ? 'Starting preview…' : 'Starting apply…',
+          global: !dryRun,
+        });
         do {
           lastSummary = await adminFetch('/api/fb-lead-sync/run', {
             method: 'POST',
@@ -5145,8 +5196,9 @@
             processed: offset,
             total: summary.inWindow || offset,
             complete: !summary.hasMore,
+            global: !dryRun,
           });
-          if (resultsMount) {
+          if (resultsMount && dryRun) {
             resultsMount.innerHTML = renderFbLeadRunResults({ ...summary, rows: allRows });
           }
         } while ((lastSummary.summary || lastSummary).hasMore);
@@ -5157,16 +5209,16 @@
           processed: finalSummary.nextBatchOffset ?? offset,
           total: finalSummary.inWindow || offset,
           complete: true,
+          global: !dryRun,
+          label: dryRun ? undefined : 'Complete — written to GHL',
         });
 
         if (dryRun) {
           markFbLeadPreviewReady(clientId, mode, finalSummary.updated);
           if (fbLeadSyncState.activeRun) fbLeadSyncState.activeRun.previewOk = true;
-          if (applyBtn) applyBtn.disabled = false;
-          if (resultsMount) {
-            resultsMount.innerHTML += renderFbLeadApplyCta(clientId, mode, finalSummary.updated);
-          }
-          showToast('Preview complete — click Apply to write to GHL', 'success');
+          showToast('Preview complete — use Apply in Run history below.', 'success');
+          await refreshFbLeadHistoryUi();
+          document.getElementById('fb-lead-history-mount')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
           delete fbLeadSyncState.previewOkByClient[clientId];
           try {
@@ -5176,6 +5228,7 @@
           } catch {
             // ignore
           }
+          finishGlobalApplyProgress(true);
           showToast('FB lead sync complete — Fb Lead id written to GHL', 'success');
         }
         await refreshFbLeadHistoryUi();
@@ -5184,20 +5237,29 @@
         hydrateFbLeadPreviewState(fbLeadSyncState.clients);
         await refreshFbLeadClientRowsUi();
       } catch (error) {
-        hideFbLeadProgress(true);
+        if (dryRun) {
+          hideFbLeadProgress(true, false);
+        } else {
+          finishGlobalApplyProgress(false);
+          setFbLeadProgress({
+            processed: 0,
+            total: 0,
+            complete: false,
+            global: true,
+            label: `Failed — ${error.message || 'Apply failed'}`,
+          });
+        }
         showToast(
-          (error.message || 'FB lead sync failed.')
-          + ' Partial progress may be saved — refresh the page and run Preview again.',
+          (error.message || (dryRun ? 'FB lead preview failed.' : 'FB lead apply failed.'))
+          + (dryRun ? ' Partial progress may be saved — refresh and try Preview again.' : ''),
           'error',
         );
       } finally {
         if (previewBtn) previewBtn.disabled = false;
-        if (applyBtn) {
-          const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
-          applyBtn.disabled = mode === 'backfill' && !clientHasReadyPreview(client);
-        }
-        if (!completed) {
-          hideFbLeadProgress(true);
+        if (!dryRun && applyRunId != null) setHistoryApplyButtonState(applyRunId, false);
+        fbLeadSyncState.applyingRunId = null;
+        if (!completed && dryRun) {
+          hideFbLeadProgress(true, false);
         }
       }
     }
