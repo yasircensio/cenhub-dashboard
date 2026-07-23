@@ -849,16 +849,61 @@
     .fb-lead-progress {
       background: var(--panel-muted, #eee);
       border-radius: 999px;
-      height: 8px;
+      height: 10px;
       margin-top: 12px;
       overflow: hidden;
+    }
+
+    .fb-lead-progress.is-visible {
+      display: block;
+    }
+
+    .fb-lead-progress-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .fb-lead-progress-wrap.is-complete .fb-lead-progress-bar {
+      background: #138b53;
     }
 
     .fb-lead-progress-bar {
       background: var(--accent, #ff6a00);
       height: 100%;
-      transition: width 0.2s ease;
+      min-width: 0;
+      transition: width 0.25s ease;
       width: 0;
+    }
+
+    .fb-lead-audit-scroll {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 8px;
+      max-height: 320px;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    .fb-lead-audit-scroll .sync-history-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--panel);
+    }
+
+    .fb-lead-history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .fb-lead-history-actions .admin-btn {
+      flex: 0 1 auto;
+      white-space: nowrap;
     }
 
     .fb-lead-audit-row td {
@@ -868,6 +913,52 @@
 
     .fb-lead-toggle {
       accent-color: var(--accent, #ff6a00);
+    }
+
+    .fb-lead-ready-banner {
+      background: linear-gradient(135deg, #e8f7ef 0%, #f0faf4 100%);
+      border: 1px solid #b8e6cf;
+      border-radius: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 14px 16px;
+    }
+
+    .fb-lead-ready-banner-copy {
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+
+    .fb-lead-ready-banner-copy strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .fb-lead-ready-banner-copy p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .fb-lead-clients-table .fb-lead-client-actions-cell {
+      min-width: 220px;
+      white-space: nowrap;
+    }
+
+    .fb-lead-client-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fb-lead-client-actions .admin-btn {
+      flex: 0 1 auto;
+      white-space: nowrap;
     }
 
     .hub-toolbar-actions {

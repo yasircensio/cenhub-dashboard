@@ -904,15 +904,15 @@
 
     .fb-lead-history-actions {
       display: flex;
-      flex-direction: column;
-      align-items: stretch;
+      flex-wrap: wrap;
+      align-items: center;
       gap: 6px;
-      min-width: 108px;
+      min-width: 0;
     }
 
     .fb-lead-history-actions .admin-btn {
-      justify-content: center;
-      width: 100%;
+      flex: 0 1 auto;
+      white-space: nowrap;
     }
 
     .fb-lead-audit-row td {
@@ -954,26 +954,20 @@
     }
 
     .fb-lead-clients-table .fb-lead-client-actions-cell {
-      min-width: 176px;
-      width: 176px;
+      min-width: 220px;
+      white-space: nowrap;
     }
 
-    .fb-lead-client-actions-grid {
-      display: grid;
+    .fb-lead-client-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
       gap: 6px;
-      grid-template-columns: 1fr 1fr;
     }
 
-    .fb-lead-client-actions-grid .admin-btn {
-      justify-content: center;
-      min-width: 0;
-      padding-left: 8px;
-      padding-right: 8px;
-      width: 100%;
-    }
-
-    .fb-lead-client-actions-grid .fb-lead-action-span-2 {
-      grid-column: 1 / -1;
+    .fb-lead-client-actions .admin-btn {
+      flex: 0 1 auto;
+      white-space: nowrap;
     }
 
     .hub-toolbar-actions {
@@ -4660,18 +4654,32 @@
       }).join('');
     }
 
+    function fbLeadRunHasLaterApply(runs, run) {
+      const runTime = Date.parse(run.startedAt || '');
+      if (!Number.isFinite(runTime)) return false;
+      return (runs || []).some((other) => {
+        if (other.id === run.id) return false;
+        if (other.clientId !== run.clientId) return false;
+        if ((other.mode || 'recent') !== (run.mode || 'recent')) return false;
+        if (other.dryRun) return false;
+        const status = String(other.status || '').toLowerCase();
+        if (status !== 'success' && status !== 'ok') return false;
+        return Date.parse(other.startedAt || '') > runTime;
+      });
+    }
+
     function renderFbLeadClientActions(client) {
       const slug = esc(client.clientId);
       const setupLink = !client.metaPageId
-        ? `<a class="admin-btn admin-btn--ghost admin-btn--small fb-lead-action-span-2" href="/admin/${encodeURIComponent(client.clientId)}">Setup</a>`
+        ? `<a class="admin-btn admin-btn--ghost admin-btn--small" href="/admin/${encodeURIComponent(client.clientId)}">Setup</a>`
         : '';
       return `
-        <div class="fb-lead-client-actions-grid">
+        <div class="fb-lead-client-actions">
           <button class="admin-btn admin-btn--secondary admin-btn--small" type="button"
             onclick="openFbLeadRunPanel('${slug}', 'recent')">Preview</button>
           <button class="admin-btn admin-btn--secondary admin-btn--small" type="button"
             onclick="openFbLeadRunPanel('${slug}', 'backfill')">Backfill</button>
-          <button class="admin-btn admin-btn--ghost admin-btn--small fb-lead-action-span-2" type="button"
+          <button class="admin-btn admin-btn--ghost admin-btn--small" type="button"
             onclick="viewFbLeadClientHistory('${slug}')">View log</button>
           ${setupLink}
         </div>
@@ -4686,7 +4694,7 @@
         const preflight = fbLeadSyncState.preflightByClient[client.clientId] || {};
         const lastRun = client.lastRun;
         const lastRunLabel = lastRun
-          ? `${lastRun.status} · ${lastRun.updated || 0} updated`
+          ? `${lastRun.dryRun ? 'preview' : lastRun.status} · ${lastRun.updated || 0} ${lastRun.dryRun ? 'would update' : 'updated'}`
           : '—';
         const missing = preflight.estimatedMissing != null ? String(preflight.estimatedMissing) : '—';
         const metaLeads = preflight.metaLeadCount90d != null ? String(preflight.metaLeadCount90d) : '—';
@@ -4745,7 +4753,10 @@
           `${run.skippedNoMatch || 0} no match`,
           run.errors ? `${run.errors} errors` : null,
         ].filter(Boolean).join(' · ');
-        const canApply = run.dryRun && String(run.status || '').toLowerCase() === 'success' && (run.updated || 0) > 0;
+        const canApply = run.dryRun
+          && String(run.status || '').toLowerCase() === 'success'
+          && (run.updated || 0) > 0
+          && !fbLeadRunHasLaterApply(runs, run);
         return `
           <tr class="fb-lead-audit-row">
             <td>${esc(formatSyncHistoryTimestamp(run.startedAt))}</td>
@@ -4861,7 +4872,7 @@
               <div class="sync-history-stat-value">${esc(formatSyncHistoryTimestamp(summary.lastRunAt))}</div>
             </div>
             <div class="sync-history-stat">
-              <div class="sync-history-stat-label">Updated last 24h</div>
+              <div class="sync-history-stat-label">Applied last 24h (live)</div>
               <div class="sync-history-stat-value">${esc(String(summary.updatedLast24h ?? 0))}</div>
             </div>
             <div class="sync-history-stat">

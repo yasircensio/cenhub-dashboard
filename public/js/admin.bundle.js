@@ -305,13 +305,13 @@ ${s} contact(s) will get Fb Lead id written in GHL. This writes live data.`))ret
           Apply ${esc(String(a))} to GHL
         </button>
       </div>
-    `}).join(""):""}function renderFbLeadClientActions(e){const t=esc(e.clientId),n=e.metaPageId?"":`<a class="admin-btn admin-btn--ghost admin-btn--small fb-lead-action-span-2" href="/admin/${encodeURIComponent(e.clientId)}">Setup</a>`;return`
-    <div class="fb-lead-client-actions-grid">
+    `}).join(""):""}function fbLeadRunHasLaterApply(e,t){const n=Date.parse(t.startedAt||"");return Number.isFinite(n)?(e||[]).some(a=>{if(a.id===t.id||a.clientId!==t.clientId||(a.mode||"recent")!==(t.mode||"recent")||a.dryRun)return!1;const s=String(a.status||"").toLowerCase();return s!=="success"&&s!=="ok"?!1:Date.parse(a.startedAt||"")>n}):!1}function renderFbLeadClientActions(e){const t=esc(e.clientId),n=e.metaPageId?"":`<a class="admin-btn admin-btn--ghost admin-btn--small" href="/admin/${encodeURIComponent(e.clientId)}">Setup</a>`;return`
+    <div class="fb-lead-client-actions">
       <button class="admin-btn admin-btn--secondary admin-btn--small" type="button"
         onclick="openFbLeadRunPanel('${t}', 'recent')">Preview</button>
       <button class="admin-btn admin-btn--secondary admin-btn--small" type="button"
         onclick="openFbLeadRunPanel('${t}', 'backfill')">Backfill</button>
-      <button class="admin-btn admin-btn--ghost admin-btn--small fb-lead-action-span-2" type="button"
+      <button class="admin-btn admin-btn--ghost admin-btn--small" type="button"
         onclick="viewFbLeadClientHistory('${t}')">View log</button>
       ${n}
     </div>
@@ -329,7 +329,7 @@ ${s} contact(s) will get Fb Lead id written in GHL. This writes live data.`))ret
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>${e.map(n=>{const a=fbLeadSyncState.preflightByClient[n.clientId]||{},s=n.lastRun,i=s?`${s.status} \xB7 ${s.updated||0} updated`:"\u2014",o=a.estimatedMissing!=null?String(a.estimatedMissing):"\u2014",l=a.metaLeadCount90d!=null?String(a.metaLeadCount90d):"\u2014";return`
+        <tbody>${e.map(n=>{const a=fbLeadSyncState.preflightByClient[n.clientId]||{},s=n.lastRun,i=s?`${s.dryRun?"preview":s.status} \xB7 ${s.updated||0} ${s.dryRun?"would update":"updated"}`:"\u2014",o=a.estimatedMissing!=null?String(a.estimatedMissing):"\u2014",l=a.metaLeadCount90d!=null?String(a.metaLeadCount90d):"\u2014";return`
       <tr>
         <td>
           <strong>${esc(n.accountName)}</strong><br>
@@ -362,7 +362,7 @@ ${s} contact(s) will get Fb Lead id written in GHL. This writes live data.`))ret
             <th></th>
           </tr>
         </thead>
-        <tbody>${e.map(a=>{const s=[a.mode,a.dryRun?"dry-run":"apply",`${a.updated||0} updated`,`${a.skippedNoMatch||0} no match`,a.errors?`${a.errors} errors`:null].filter(Boolean).join(" \xB7 "),i=a.dryRun&&String(a.status||"").toLowerCase()==="success"&&(a.updated||0)>0;return`
+        <tbody>${e.map(a=>{const s=[a.mode,a.dryRun?"dry-run":"apply",`${a.updated||0} updated`,`${a.skippedNoMatch||0} no match`,a.errors?`${a.errors} errors`:null].filter(Boolean).join(" \xB7 "),i=a.dryRun&&String(a.status||"").toLowerCase()==="success"&&(a.updated||0)>0&&!fbLeadRunHasLaterApply(e,a);return`
       <tr class="fb-lead-audit-row">
         <td>${esc(formatSyncHistoryTimestamp(a.startedAt))}</td>
         <td>${esc(a.accountName||a.clientId)}</td>
@@ -441,7 +441,7 @@ ${s} contact(s) will get Fb Lead id written in GHL. This writes live data.`))ret
           <div class="sync-history-stat-value">${esc(formatSyncHistoryTimestamp(t.lastRunAt))}</div>
         </div>
         <div class="sync-history-stat">
-          <div class="sync-history-stat-label">Updated last 24h</div>
+          <div class="sync-history-stat-label">Applied last 24h (live)</div>
           <div class="sync-history-stat-value">${esc(String(t.updatedLast24h??0))}</div>
         </div>
         <div class="sync-history-stat">

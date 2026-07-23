@@ -7,7 +7,7 @@ const {
   BACKFILL_DAYS,
   DEFAULT_SYNC_DAYS,
 } = require('../lib/meta-lead-ghl-sync');
-const { mergeAuditRows } = require('../lib/fb-lead-sync-history');
+const { mergeAuditRows, isSuccessfulApplyRun } = require('../lib/fb-lead-sync-history');
 const { parseFbLeadSyncPath } = require('../lib/fb-lead-sync-handler');
 
 function assert(condition, message) {
@@ -52,6 +52,10 @@ function main() {
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/history').kind === 'history', 'history path');
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/history/42').kind === 'history-run', 'history run path');
   assert(parseFbLeadSyncPath('/api/fb-lead-sync/history/42').runId === 42, 'history run id');
+
+  const nowIso = new Date().toISOString();
+  assert(isSuccessfulApplyRun({ startedAt: nowIso, status: 'success', dryRun: false, updated: 190 }), 'apply run counts');
+  assert(!isSuccessfulApplyRun({ startedAt: nowIso, status: 'success', dryRun: true, updated: 190 }), 'dry run excluded');
 
   console.log('FB lead sync tests passed.');
 }
