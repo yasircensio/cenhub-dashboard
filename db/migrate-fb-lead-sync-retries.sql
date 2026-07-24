@@ -15,6 +15,18 @@ CREATE TABLE IF NOT EXISTS fb_lead_sync_retries (
   UNIQUE (client_id, contact_id)
 );
 
-CREATE INDEX IF NOT EXISTS fb_lead_sync_retries_pending_next_idx
-  ON fb_lead_sync_retries (next_retry_at)
-  WHERE status = 'pending';
+  CREATE INDEX IF NOT EXISTS fb_lead_sync_retries_pending_next_idx
+      ON fb_lead_sync_retries (next_retry_at)
+      WHERE status = 'pending';
+
+CREATE TABLE IF NOT EXISTS fb_lead_retry_worker_heartbeats (
+  id BIGSERIAL PRIMARY KEY,
+  ran_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  processed INTEGER NOT NULL DEFAULT 0,
+  updated INTEGER NOT NULL DEFAULT 0,
+  failed INTEGER NOT NULL DEFAULT 0,
+  still_pending INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS fb_lead_retry_worker_heartbeats_ran_at_idx
+  ON fb_lead_retry_worker_heartbeats (ran_at DESC);

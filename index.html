@@ -977,15 +977,23 @@
       margin: 6px 0 0;
     }
 
+    .fb-lead-cron-summary-legacy {
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.4;
+      margin: 8px 0 0;
+    }
+
     .fb-lead-cron-summary-totals {
       align-items: stretch;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
-      display: flex;
+      display: grid;
       flex: 0 0 auto;
       gap: 0;
-      min-width: min(100%, 320px);
+      grid-template-columns: repeat(4, minmax(88px, 1fr));
+      min-width: min(100%, 520px);
       padding: 4px;
     }
 
@@ -996,15 +1004,26 @@
       flex-direction: column;
       gap: 2px;
       justify-content: center;
-      min-width: 120px;
-      padding: 14px 18px;
+      min-width: 0;
+      padding: 14px 10px;
+      position: relative;
+    }
+
+    .fb-lead-cron-total:not(:last-child)::after {
+      background: var(--border);
+      bottom: 12px;
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 12px;
+      width: 1px;
     }
 
     .fb-lead-cron-total-value {
       color: var(--text);
       font-family: 'Poppins', sans-serif;
       font-feature-settings: 'tnum' 1;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 600;
       letter-spacing: -0.03em;
       line-height: 1;
@@ -1055,7 +1074,7 @@
     .fb-lead-cron-client-meta {
       display: grid;
       gap: 10px;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       margin: 0;
     }
 
@@ -5145,41 +5164,70 @@
     }
 
     function renderFbLeadCronSummary24h(cronSummary24h) {
-      const summary = cronSummary24h || { totalRuns: 0, totalUpdated: 0, byClient: [] };
-      const clientCount = (summary.byClient || []).length;
+      const summary = cronSummary24h || {
+        totalOpportunitiesCreated: 0,
+        totalWebhookSyncs: 0,
+        totalRetrySyncs: 0,
+        totalWorkerPolls: 0,
+        totalUpdated: 0,
+        legacyCronRuns: 0,
+        byClient: [],
+      };
       const clientCards = (summary.byClient || []).map((row) => `
         <article class="fb-lead-cron-client">
           <h3 class="fb-lead-cron-client-name">${esc(row.accountName || row.clientId)}</h3>
           <dl class="fb-lead-cron-client-meta">
             <div>
-              <dt>Runs</dt>
-              <dd>${esc(String(row.runs || 0))}</dd>
+              <dt>Opps created</dt>
+              <dd>${esc(String(row.opportunitiesCreated || 0))}</dd>
             </div>
             <div>
-              <dt>Last run</dt>
-              <dd>${esc(formatFbLeadCronLastRun(row.lastRunAt))}</dd>
+              <dt>Webhook syncs</dt>
+              <dd>${esc(String(row.webhookSyncs || 0))}</dd>
+            </div>
+            <div>
+              <dt>Retry syncs</dt>
+              <dd>${esc(String(row.retrySyncs || 0))}</dd>
+            </div>
+            <div>
+              <dt>Updated</dt>
+              <dd>${esc(String(row.updated || 0))}</dd>
+            </div>
+            <div>
+              <dt>Last activity</dt>
+              <dd>${esc(formatFbLeadCronLastRun(row.lastActivityAt))}</dd>
             </div>
           </dl>
         </article>
       `).join('');
-      const clientPhrase = clientCount === 1 ? '1 client' : `${clientCount} clients`;
+      const legacyNote = (summary.legacyCronRuns || 0) > 0
+        ? `<p class="fb-lead-cron-summary-legacy">${esc(String(summary.legacyCronRuns))} legacy hourly cron poll(s) still in the 24h window — excluded from totals above.</p>`
+        : '';
       return `
         <section class="fb-lead-cron-summary" id="fb-lead-cron-summary-24h" aria-label="Auto-sync last 24 hours">
           <div class="fb-lead-cron-summary-top">
             <div class="fb-lead-cron-summary-intro">
               <span class="fb-lead-cron-summary-label">Auto-sync (last 24h)</span>
-              <p class="fb-lead-cron-summary-headline">${esc(String(summary.totalRuns || 0))} runs across ${esc(clientPhrase)}</p>
-              <p class="fb-lead-cron-summary-sub">Automated activity from GHL webhooks, retry worker, and daily reconcile — routine zero-update runs are hidden from Run history below.</p>
+              <p class="fb-lead-cron-summary-headline">${esc(String(summary.totalOpportunitiesCreated || 0))} opportunities created · ${esc(String(summary.totalUpdated || 0))} contacts updated</p>
+              <p class="fb-lead-cron-summary-sub">Webhook on new GHL opportunities, retry worker every 5 min, daily reconcile at 01:00 UTC. Retry worker polls: ${esc(String(summary.totalWorkerPolls || 0))}.</p>
+              ${legacyNote}
             </div>
             <div class="fb-lead-cron-summary-totals" aria-label="24 hour totals">
               <div class="fb-lead-cron-total">
-                <span class="fb-lead-cron-total-value">${esc(String(summary.totalRuns || 0))}</span>
-                <span class="fb-lead-cron-total-label">Total runs</span>
+                <span class="fb-lead-cron-total-value">${esc(String(summary.totalOpportunitiesCreated || 0))}</span>
+                <span class="fb-lead-cron-total-label">Opps created</span>
               </div>
-              <div class="fb-lead-cron-total-divider" aria-hidden="true"></div>
               <div class="fb-lead-cron-total">
-                <span class="fb-lead-cron-total-value">${esc(String(summary.totalUpdated || 0))}</span>
-                <span class="fb-lead-cron-total-label">Contacts updated</span>
+                <span class="fb-lead-cron-total-value">${esc(String(summary.totalWebhookSyncs || 0))}</span>
+                <span class="fb-lead-cron-total-label">Webhook syncs</span>
+              </div>
+              <div class="fb-lead-cron-total">
+                <span class="fb-lead-cron-total-value">${esc(String(summary.totalRetrySyncs || 0))}</span>
+                <span class="fb-lead-cron-total-label">Retry syncs</span>
+              </div>
+              <div class="fb-lead-cron-total">
+                <span class="fb-lead-cron-total-value">${esc(String(summary.totalWorkerPolls || 0))}</span>
+                <span class="fb-lead-cron-total-label">Worker polls</span>
               </div>
             </div>
           </div>

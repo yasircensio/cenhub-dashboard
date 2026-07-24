@@ -288,41 +288,61 @@ ${n}`))try{const s=await adminFetch(`/api/sync-history?type=${encodeURIComponent
     `);try{const s=await adminFetch(`/api/sync-history?type=${encodeURIComponent(e)}&limit=150`);n.innerHTML=renderSyncHistoryPage(e,s);const i=document.getElementById("sync-history-refresh");i&&(i.onclick=()=>loadSyncHistoryPage(e));const o=document.getElementById("sync-history-clear-log");o&&(o.onclick=()=>clearSyncHistoryLog(e)),syncHistoryRefreshTimer&&(clearInterval(syncHistoryRefreshTimer),syncHistoryRefreshTimer=null),syncHistoryRefreshTimer=window.setInterval(()=>{loadSyncHistoryPage(e,{silent:!0}).catch(()=>{})},6e4)}catch(s){n.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
       ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(s.message)}</div>`)}
-    `}}const FB_LEAD_AUTOMATED_CRON_SOURCES=new Set(["cron-job.org","github-actions","vercel-cron","http-cron","ghl-webhook","fb-lead-retry","daily-reconcile"]);let fbLeadSyncState={clients:[],preflightByClient:{},historyRuns:[],cronSummary24h:null,showRoutineCronRuns:!1,activeRun:null,previewOkByClient:{},applyingRunId:null,isApplying:!1,applyStartedAt:0,applyWaitTimer:null,applyProgress:null};function isRoutineSuccessfulCronRun(e){if(!e||e.dryRun||!FB_LEAD_AUTOMATED_CRON_SOURCES.has(String(e.source||"").trim()))return!1;const t=String(e.status||"").toLowerCase();return!(t==="interrupted"||t==="running"||t!=="success"&&t!=="ok"||(Number(e.updated)||0)>0||(Number(e.errors)||0)>0)}function getFbLeadHistoryRunsForDisplay(e=fbLeadSyncState.historyRuns){return fbLeadSyncState.showRoutineCronRuns?e||[]:(e||[]).filter(t=>!isRoutineSuccessfulCronRun(t))}function formatFbLeadCronLastRun(e){if(!e)return"\u2014";const t=new Date(e);return Number.isNaN(t.getTime())?"\u2014":t.toLocaleString("en-GB",{timeZone:"UTC",hour:"2-digit",minute:"2-digit",hour12:!1})+" UTC"}function renderFbLeadCronSummary24h(e){const t=e||{totalRuns:0,totalUpdated:0,byClient:[]},n=(t.byClient||[]).length,a=(t.byClient||[]).map(i=>`
+    `}}const FB_LEAD_AUTOMATED_CRON_SOURCES=new Set(["cron-job.org","github-actions","vercel-cron","http-cron","ghl-webhook","fb-lead-retry","daily-reconcile"]);let fbLeadSyncState={clients:[],preflightByClient:{},historyRuns:[],cronSummary24h:null,showRoutineCronRuns:!1,activeRun:null,previewOkByClient:{},applyingRunId:null,isApplying:!1,applyStartedAt:0,applyWaitTimer:null,applyProgress:null};function isRoutineSuccessfulCronRun(e){if(!e||e.dryRun||!FB_LEAD_AUTOMATED_CRON_SOURCES.has(String(e.source||"").trim()))return!1;const t=String(e.status||"").toLowerCase();return!(t==="interrupted"||t==="running"||t!=="success"&&t!=="ok"||(Number(e.updated)||0)>0||(Number(e.errors)||0)>0)}function getFbLeadHistoryRunsForDisplay(e=fbLeadSyncState.historyRuns){return fbLeadSyncState.showRoutineCronRuns?e||[]:(e||[]).filter(t=>!isRoutineSuccessfulCronRun(t))}function formatFbLeadCronLastRun(e){if(!e)return"\u2014";const t=new Date(e);return Number.isNaN(t.getTime())?"\u2014":t.toLocaleString("en-GB",{timeZone:"UTC",hour:"2-digit",minute:"2-digit",hour12:!1})+" UTC"}function renderFbLeadCronSummary24h(e){const t=e||{totalOpportunitiesCreated:0,totalWebhookSyncs:0,totalRetrySyncs:0,totalWorkerPolls:0,totalUpdated:0,legacyCronRuns:0,byClient:[]},n=(t.byClient||[]).map(s=>`
     <article class="fb-lead-cron-client">
-      <h3 class="fb-lead-cron-client-name">${esc(i.accountName||i.clientId)}</h3>
+      <h3 class="fb-lead-cron-client-name">${esc(s.accountName||s.clientId)}</h3>
       <dl class="fb-lead-cron-client-meta">
         <div>
-          <dt>Runs</dt>
-          <dd>${esc(String(i.runs||0))}</dd>
+          <dt>Opps created</dt>
+          <dd>${esc(String(s.opportunitiesCreated||0))}</dd>
         </div>
         <div>
-          <dt>Last run</dt>
-          <dd>${esc(formatFbLeadCronLastRun(i.lastRunAt))}</dd>
+          <dt>Webhook syncs</dt>
+          <dd>${esc(String(s.webhookSyncs||0))}</dd>
+        </div>
+        <div>
+          <dt>Retry syncs</dt>
+          <dd>${esc(String(s.retrySyncs||0))}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>${esc(String(s.updated||0))}</dd>
+        </div>
+        <div>
+          <dt>Last activity</dt>
+          <dd>${esc(formatFbLeadCronLastRun(s.lastActivityAt))}</dd>
         </div>
       </dl>
     </article>
-  `).join(""),s=n===1?"1 client":`${n} clients`;return`
+  `).join(""),a=(t.legacyCronRuns||0)>0?`<p class="fb-lead-cron-summary-legacy">${esc(String(t.legacyCronRuns))} legacy hourly cron poll(s) still in the 24h window \u2014 excluded from totals above.</p>`:"";return`
     <section class="fb-lead-cron-summary" id="fb-lead-cron-summary-24h" aria-label="Auto-sync last 24 hours">
       <div class="fb-lead-cron-summary-top">
         <div class="fb-lead-cron-summary-intro">
           <span class="fb-lead-cron-summary-label">Auto-sync (last 24h)</span>
-          <p class="fb-lead-cron-summary-headline">${esc(String(t.totalRuns||0))} runs across ${esc(s)}</p>
-          <p class="fb-lead-cron-summary-sub">Automated activity from GHL webhooks, retry worker, and daily reconcile \u2014 routine zero-update runs are hidden from Run history below.</p>
+          <p class="fb-lead-cron-summary-headline">${esc(String(t.totalOpportunitiesCreated||0))} opportunities created \xB7 ${esc(String(t.totalUpdated||0))} contacts updated</p>
+          <p class="fb-lead-cron-summary-sub">Webhook on new GHL opportunities, retry worker every 5 min, daily reconcile at 01:00 UTC. Retry worker polls: ${esc(String(t.totalWorkerPolls||0))}.</p>
+          ${a}
         </div>
         <div class="fb-lead-cron-summary-totals" aria-label="24 hour totals">
           <div class="fb-lead-cron-total">
-            <span class="fb-lead-cron-total-value">${esc(String(t.totalRuns||0))}</span>
-            <span class="fb-lead-cron-total-label">Total runs</span>
+            <span class="fb-lead-cron-total-value">${esc(String(t.totalOpportunitiesCreated||0))}</span>
+            <span class="fb-lead-cron-total-label">Opps created</span>
           </div>
-          <div class="fb-lead-cron-total-divider" aria-hidden="true"></div>
           <div class="fb-lead-cron-total">
-            <span class="fb-lead-cron-total-value">${esc(String(t.totalUpdated||0))}</span>
-            <span class="fb-lead-cron-total-label">Contacts updated</span>
+            <span class="fb-lead-cron-total-value">${esc(String(t.totalWebhookSyncs||0))}</span>
+            <span class="fb-lead-cron-total-label">Webhook syncs</span>
+          </div>
+          <div class="fb-lead-cron-total">
+            <span class="fb-lead-cron-total-value">${esc(String(t.totalRetrySyncs||0))}</span>
+            <span class="fb-lead-cron-total-label">Retry syncs</span>
+          </div>
+          <div class="fb-lead-cron-total">
+            <span class="fb-lead-cron-total-value">${esc(String(t.totalWorkerPolls||0))}</span>
+            <span class="fb-lead-cron-total-label">Worker polls</span>
           </div>
         </div>
       </div>
-      ${a?`<div class="fb-lead-cron-client-grid">${a}</div>`:""}
+      ${n?`<div class="fb-lead-cron-client-grid">${n}</div>`:""}
     </section>
   `}let fbLeadSyncRefreshTimer=null;function clientFbLeadFieldReady(e){const t=fbLeadSyncState.preflightByClient[e?.clientId];return!(t?.fbLeadFieldMissing===!0||t?.fbLeadFieldExists===!1)}function getClientFbLeadFieldHint(e){return(fbLeadSyncState.preflightByClient[e?.clientId]||{}).fbLeadFieldHint||'Create a contact custom field named "Fb Lead id" in GHL (Settings \u2192 Custom Fields \u2192 Contact), then click Refresh.'}function renderFbLeadFieldWarnings(e){const t=(e||[]).filter(n=>!clientFbLeadFieldReady(n));return t.length?t.map(n=>`
     <div class="fb-lead-field-warning" id="fb-lead-field-warning-${esc(n.clientId)}">

@@ -968,15 +968,23 @@
       margin: 6px 0 0;
     }
 
+    .fb-lead-cron-summary-legacy {
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.4;
+      margin: 8px 0 0;
+    }
+
     .fb-lead-cron-summary-totals {
       align-items: stretch;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
-      display: flex;
+      display: grid;
       flex: 0 0 auto;
       gap: 0;
-      min-width: min(100%, 320px);
+      grid-template-columns: repeat(4, minmax(88px, 1fr));
+      min-width: min(100%, 520px);
       padding: 4px;
     }
 
@@ -987,15 +995,26 @@
       flex-direction: column;
       gap: 2px;
       justify-content: center;
-      min-width: 120px;
-      padding: 14px 18px;
+      min-width: 0;
+      padding: 14px 10px;
+      position: relative;
+    }
+
+    .fb-lead-cron-total:not(:last-child)::after {
+      background: var(--border);
+      bottom: 12px;
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 12px;
+      width: 1px;
     }
 
     .fb-lead-cron-total-value {
       color: var(--text);
       font-family: 'Poppins', sans-serif;
       font-feature-settings: 'tnum' 1;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 600;
       letter-spacing: -0.03em;
       line-height: 1;
@@ -1046,7 +1065,7 @@
     .fb-lead-cron-client-meta {
       display: grid;
       gap: 10px;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       margin: 0;
     }
 
