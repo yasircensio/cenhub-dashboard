@@ -2,6 +2,7 @@ const { handleSyncHistoryRequest } = require('../lib/sync-history-handler');
 const { handleMetaSyncCronRequest } = require('../lib/meta-sync-cron-handler');
 const { handleGhlSyncCronRequest } = require('../lib/ghl-sync-cron-handler');
 const { handleFbLeadSyncCronRequest } = require('../lib/fb-lead-sync-cron-handler');
+const { handleFbLeadSyncRetryRequest } = require('../lib/fb-lead-sync-retry-handler');
 
 module.exports = async function syncHistoryHandler(request, response) {
   const query = request.query || {};
@@ -11,6 +12,10 @@ module.exports = async function syncHistoryHandler(request, response) {
   }
   if (query.__cron === 'ghl') {
     await handleGhlSyncCronRequest(request, response);
+    return;
+  }
+  if (query.__cron === 'fb-retries') {
+    await handleFbLeadSyncRetryRequest(request, response);
     return;
   }
   if (query.__cron === 'fb') {

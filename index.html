@@ -4879,6 +4879,9 @@
         'github-actions': 'Scheduled (GitHub Actions)',
         'cron-job.org': 'Scheduled (cron-job.org)',
         'http-cron': 'Scheduled (HTTP cron)',
+        'ghl-webhook': 'GHL webhook (OpportunityCreate)',
+        'fb-lead-retry': 'Auto retry (5m worker)',
+        'daily-reconcile': 'Daily reconcile (01:00 UTC)',
         admin: 'Manual (admin)',
         'vercel-cron': 'Scheduled (Vercel cron)',
         manual: 'Manual (admin)',
@@ -5093,6 +5096,9 @@
       'github-actions',
       'vercel-cron',
       'http-cron',
+      'ghl-webhook',
+      'fb-lead-retry',
+      'daily-reconcile',
     ]);
 
     let fbLeadSyncState = {
@@ -5163,7 +5169,7 @@
             <div class="fb-lead-cron-summary-intro">
               <span class="fb-lead-cron-summary-label">Auto-sync (last 24h)</span>
               <p class="fb-lead-cron-summary-headline">${esc(String(summary.totalRuns || 0))} runs across ${esc(clientPhrase)}</p>
-              <p class="fb-lead-cron-summary-sub">Routine cron sync from cron-job.org — successful zero-update runs are hidden from Run history below.</p>
+              <p class="fb-lead-cron-summary-sub">Automated activity from GHL webhooks, retry worker, and daily reconcile — routine zero-update runs are hidden from Run history below.</p>
             </div>
             <div class="fb-lead-cron-summary-totals" aria-label="24 hour totals">
               <div class="fb-lead-cron-total">
@@ -5742,7 +5748,7 @@
           </div>
           <div class="sync-history-summary">
             <div class="sync-history-stat">
-              <div class="sync-history-stat-label">Last hourly run</div>
+              <div class="sync-history-stat-label">Last auto-sync run</div>
               <div class="sync-history-stat-value">${esc(formatSyncHistoryTimestamp(summary.lastRunAt))}</div>
             </div>
             <div class="sync-history-stat">
@@ -5755,7 +5761,7 @@
             </div>
             <div class="sync-history-stat">
               <div class="sync-history-stat-label">Schedule</div>
-              <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary.schedule || 'Every hour (cron-job.org)')}</div>
+              <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary.schedule || 'Webhook + 5m retries · daily reconcile (01:00 UTC)')}</div>
             </div>
           </div>
           ${renderFbLeadCronSummary24h(summary.cronSummary24h)}

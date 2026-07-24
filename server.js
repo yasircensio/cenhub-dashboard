@@ -293,6 +293,22 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/fb-lead-sync-retries' || url === '/api/cron/fb-lead-sync-retries') {
+    try {
+      const localResponse = createLocalResponse(response);
+      const { handleFbLeadSyncRetryRequest } = require('./lib/fb-lead-sync-retry-handler');
+      await handleFbLeadSyncRetryRequest({
+        method: request.method,
+        headers: request.headers,
+        query: Object.fromEntries(requestUrl.searchParams),
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'FB lead sync retry worker failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/fb-lead-sync-cron' || url === '/api/cron/fb-lead-sync') {
     try {
       const localResponse = createLocalResponse(response);

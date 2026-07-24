@@ -129,6 +129,17 @@ function main() {
   assert(filtered.length === 2, 'filter hides routine cron only');
   assert(filterRunsForHistoryDisplay([routineCron], { showRoutineCron: true }).length === 1, 'toggle shows routine cron');
 
+  const webhookRoutine = {
+    source: 'ghl-webhook',
+    dryRun: false,
+    status: 'success',
+    updated: 0,
+    errors: 0,
+    startedAt: nowIso,
+  };
+  assert(isRoutineSuccessfulCronRun(webhookRoutine), 'webhook zero-update run is routine');
+  assert(!isRoutineSuccessfulCronRun({ ...webhookRoutine, updated: 1 }), 'webhook with update is not routine');
+
   console.log('FB lead sync tests passed.');
 }
 
