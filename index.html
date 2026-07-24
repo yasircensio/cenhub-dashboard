@@ -977,13 +977,6 @@
       margin: 6px 0 0;
     }
 
-    .fb-lead-cron-summary-legacy {
-      color: var(--text-soft);
-      font-size: 12px;
-      line-height: 1.4;
-      margin: 8px 0 0;
-    }
-
     .fb-lead-cron-summary-totals {
       align-items: stretch;
       background: var(--panel);
@@ -5110,13 +5103,11 @@
       }
     }
 
-    const FB_LEAD_AUTOMATED_CRON_SOURCES = new Set([
+    const FB_LEAD_ROUTINE_HIDE_SOURCES = new Set([
       'cron-job.org',
       'github-actions',
       'vercel-cron',
       'http-cron',
-      'ghl-webhook',
-      'fb-lead-retry',
       'daily-reconcile',
     ]);
 
@@ -5137,7 +5128,7 @@
 
     function isRoutineSuccessfulCronRun(run) {
       if (!run || run.dryRun) return false;
-      if (!FB_LEAD_AUTOMATED_CRON_SOURCES.has(String(run.source || '').trim())) return false;
+      if (!FB_LEAD_ROUTINE_HIDE_SOURCES.has(String(run.source || '').trim())) return false;
       const status = String(run.status || '').toLowerCase();
       if (status === 'interrupted' || status === 'running') return false;
       if (status !== 'success' && status !== 'ok') return false;
@@ -5200,9 +5191,6 @@
           </dl>
         </article>
       `).join('');
-      const legacyNote = (summary.legacyCronRuns || 0) > 0
-        ? `<p class="fb-lead-cron-summary-legacy">${esc(String(summary.legacyCronRuns))} legacy hourly cron poll(s) still in the 24h window — excluded from totals above.</p>`
-        : '';
       return `
         <section class="fb-lead-cron-summary" id="fb-lead-cron-summary-24h" aria-label="Auto-sync last 24 hours">
           <div class="fb-lead-cron-summary-top">
@@ -5210,7 +5198,6 @@
               <span class="fb-lead-cron-summary-label">Auto-sync (last 24h)</span>
               <p class="fb-lead-cron-summary-headline">${esc(String(summary.totalOpportunitiesCreated || 0))} opportunities created · ${esc(String(summary.totalUpdated || 0))} contacts updated</p>
               <p class="fb-lead-cron-summary-sub">Webhook on new GHL opportunities, retry worker every 5 min, daily reconcile at 01:00 UTC. Retry worker polls: ${esc(String(summary.totalWorkerPolls || 0))}.</p>
-              ${legacyNote}
             </div>
             <div class="fb-lead-cron-summary-totals" aria-label="24 hour totals">
               <div class="fb-lead-cron-total">

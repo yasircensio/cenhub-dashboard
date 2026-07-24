@@ -968,13 +968,6 @@
       margin: 6px 0 0;
     }
 
-    .fb-lead-cron-summary-legacy {
-      color: var(--text-soft);
-      font-size: 12px;
-      line-height: 1.4;
-      margin: 8px 0 0;
-    }
-
     .fb-lead-cron-summary-totals {
       align-items: stretch;
       background: var(--panel);

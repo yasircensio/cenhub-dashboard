@@ -14,6 +14,7 @@
     "migrate:fb-lead-sync": "node scripts/migrate-fb-lead-sync.js",
     "migrate:fb-lead-sync-cache": "node scripts/migrate-fb-lead-sync-cache.js",
     "migrate:fb-lead-sync-retries": "node scripts/migrate-fb-lead-sync-retries.js",
+    "test:fb-lead-sync-e2e": "node scripts/test-fb-lead-sync-e2e.js",
     "create-admin": "node scripts/create-admin.js",
     "sync:all-ghl": "node scripts/run-ghl-sync-all.js",
     "preflight:ghl": "node scripts/preflight-ghl-architecture.js",
