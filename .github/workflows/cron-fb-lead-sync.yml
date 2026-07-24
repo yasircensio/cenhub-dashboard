@@ -1,9 +1,10 @@
 name: FB Lead ID Sync
 
-# Vercel Hobby only allows once-per-day crons, so hourly FB lead sync runs here.
+# Vercel Hobby only allows once-per-day crons, so FB lead sync runs via GitHub Actions.
+# TEMP: every 5 minutes for testing — change back to '0 * * * *' for hourly in production.
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
