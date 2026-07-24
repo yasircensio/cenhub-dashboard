@@ -926,6 +926,183 @@
       padding: 12px 16px;
     }
 
+    .fb-lead-cron-summary {
+      background: linear-gradient(180deg, #fafbfc 0%, var(--panel) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      margin: 4px 0 22px;
+      overflow: hidden;
+      padding: 22px 24px 20px;
+    }
+
+    .fb-lead-cron-summary-top {
+      align-items: flex-end;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px 32px;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .fb-lead-cron-summary-intro {
+      flex: 1 1 220px;
+      min-width: 0;
+    }
+
+    .fb-lead-cron-summary-label {
+      color: var(--text-soft);
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .fb-lead-cron-summary-headline {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin: 0;
+    }
+
+    .fb-lead-cron-summary-sub {
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.45;
+      margin: 6px 0 0;
+    }
+
+    .fb-lead-cron-summary-totals {
+      align-items: stretch;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: flex;
+      flex: 0 0 auto;
+      gap: 0;
+      min-width: min(100%, 320px);
+      padding: 4px;
+    }
+
+    .fb-lead-cron-total {
+      align-items: center;
+      display: flex;
+      flex: 1 1 0;
+      flex-direction: column;
+      gap: 2px;
+      justify-content: center;
+      min-width: 120px;
+      padding: 14px 18px;
+    }
+
+    .fb-lead-cron-total-value {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-feature-settings: 'tnum' 1;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .fb-lead-cron-total-label {
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: center;
+    }
+
+    .fb-lead-cron-total-divider {
+      align-self: stretch;
+      background: var(--border);
+      margin: 12px 0;
+      width: 1px;
+    }
+
+    .fb-lead-cron-client-grid {
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      padding-top: 18px;
+    }
+
+    .fb-lead-cron-client {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 92px;
+      padding: 14px 16px;
+    }
+
+    .fb-lead-cron-client-name {
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin: 0;
+    }
+
+    .fb-lead-cron-client-meta {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+      margin: 0;
+    }
+
+    .fb-lead-cron-client-meta div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .fb-lead-cron-client-meta dt {
+      color: var(--text-soft);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    .fb-lead-cron-client-meta dd {
+      color: var(--text);
+      font-feature-settings: 'tnum' 1;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.25;
+      margin: 0;
+    }
+
+    @media (max-width: 720px) {
+      .fb-lead-cron-summary {
+        padding: 18px 16px 16px;
+      }
+
+      .fb-lead-cron-summary-top {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .fb-lead-cron-summary-totals {
+        min-width: 100%;
+      }
+
+      .fb-lead-cron-total-value {
+        font-size: 24px;
+      }
+    }
+
     .fb-lead-readiness {
       display: flex;
       flex-wrap: wrap;
@@ -4963,18 +5140,45 @@
 
     function renderFbLeadCronSummary24h(cronSummary24h) {
       const summary = cronSummary24h || { totalRuns: 0, totalUpdated: 0, byClient: [] };
-      const headline = `${summary.totalRuns || 0} run${summary.totalRuns === 1 ? '' : 's'} · ${summary.totalUpdated || 0} contact${summary.totalUpdated === 1 ? '' : 's'} updated`;
-      const clientLines = (summary.byClient || []).map((row) =>
-        `${esc(row.accountName || row.clientId)} — ${row.runs || 0} run${row.runs === 1 ? '' : 's'} · last ${esc(formatFbLeadCronLastRun(row.lastRunAt))}`,
-      ).join('<br>');
+      const clientCount = (summary.byClient || []).length;
+      const clientCards = (summary.byClient || []).map((row) => `
+        <article class="fb-lead-cron-client">
+          <h3 class="fb-lead-cron-client-name">${esc(row.accountName || row.clientId)}</h3>
+          <dl class="fb-lead-cron-client-meta">
+            <div>
+              <dt>Runs</dt>
+              <dd>${esc(String(row.runs || 0))}</dd>
+            </div>
+            <div>
+              <dt>Last run</dt>
+              <dd>${esc(formatFbLeadCronLastRun(row.lastRunAt))}</dd>
+            </div>
+          </dl>
+        </article>
+      `).join('');
+      const clientPhrase = clientCount === 1 ? '1 client' : `${clientCount} clients`;
       return `
-        <div class="sync-history-summary fb-lead-cron-summary-24h" id="fb-lead-cron-summary-24h">
-          <div class="sync-history-stat" style="grid-column:1/-1">
-            <div class="sync-history-stat-label">Auto-sync (last 24h)</div>
-            <div class="sync-history-stat-value">${esc(headline)}</div>
-            ${clientLines ? `<div class="fb-lead-cron-summary-clients" style="margin-top:8px;font-size:13px;color:var(--text-soft);line-height:1.5">${clientLines}</div>` : ''}
+        <section class="fb-lead-cron-summary" id="fb-lead-cron-summary-24h" aria-label="Auto-sync last 24 hours">
+          <div class="fb-lead-cron-summary-top">
+            <div class="fb-lead-cron-summary-intro">
+              <span class="fb-lead-cron-summary-label">Auto-sync (last 24h)</span>
+              <p class="fb-lead-cron-summary-headline">${esc(String(summary.totalRuns || 0))} runs across ${esc(clientPhrase)}</p>
+              <p class="fb-lead-cron-summary-sub">Routine cron sync from cron-job.org — successful zero-update runs are hidden from Run history below.</p>
+            </div>
+            <div class="fb-lead-cron-summary-totals" aria-label="24 hour totals">
+              <div class="fb-lead-cron-total">
+                <span class="fb-lead-cron-total-value">${esc(String(summary.totalRuns || 0))}</span>
+                <span class="fb-lead-cron-total-label">Total runs</span>
+              </div>
+              <div class="fb-lead-cron-total-divider" aria-hidden="true"></div>
+              <div class="fb-lead-cron-total">
+                <span class="fb-lead-cron-total-value">${esc(String(summary.totalUpdated || 0))}</span>
+                <span class="fb-lead-cron-total-label">Contacts updated</span>
+              </div>
+            </div>
           </div>
-        </div>
+          ${clientCards ? `<div class="fb-lead-cron-client-grid">${clientCards}</div>` : ''}
+        </section>
       `;
     }
     let fbLeadSyncRefreshTimer = null;
@@ -5900,10 +6104,7 @@
     function updateFbLeadCronSummaryUi() {
       const mount = document.getElementById('fb-lead-cron-summary-24h');
       if (!mount || !fbLeadSyncState.cronSummary24h) return;
-      const wrapper = mount.closest('.sync-history-summary') || mount;
-      if (wrapper) {
-        wrapper.outerHTML = renderFbLeadCronSummary24h(fbLeadSyncState.cronSummary24h);
-      }
+      mount.outerHTML = renderFbLeadCronSummary24h(fbLeadSyncState.cronSummary24h);
     }
 
     async function refreshFbLeadHistoryUi() {
