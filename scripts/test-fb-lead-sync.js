@@ -10,7 +10,7 @@ const {
   BACKFILL_DAYS,
   DEFAULT_SYNC_DAYS,
 } = require('../lib/meta-lead-ghl-sync');
-const { mergeAuditRows, isSuccessfulApplyRun } = require('../lib/fb-lead-sync-history');
+const { mergeAuditRows, isSuccessfulApplyRun, isRoutineSuccessfulCronRun, isPrunableRoutineCronRun, filterRunsForHistoryDisplay } = require('../lib/fb-lead-sync-history');
 const { parseFbLeadSyncPath } = require('../lib/fb-lead-sync-handler');
 
 function assert(condition, message) {
@@ -94,6 +94,40 @@ function main() {
     { status: 'success', dryRun: true, mode: 'backfill', inWindow: 191, updated: 12 },
   );
   assert(previewStats.outstanding === 12, 'outstanding uses preview would-update count');
+
+  const routineCron = {
+    source: 'cron-job.org',
+    dryRun: false,
+    status: 'success',
+    updated: 0,
+    errors: 0,
+    startedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+  };
+  const previewRun = {
+    source: 'admin',
+    dryRun: true,
+    status: 'success',
+    updated: 5,
+    errors: 0,
+    startedAt: nowIso,
+  };
+  const cronWithUpdates = {
+    source: 'cron-job.org',
+    dryRun: false,
+    status: 'success',
+    updated: 3,
+    errors: 0,
+    startedAt: nowIso,
+  };
+  assert(isRoutineSuccessfulCronRun(routineCron), 'routine cron with zero updates');
+  assert(!isRoutineSuccessfulCronRun(previewRun), 'previews are never routine cron');
+  assert(!isRoutineSuccessfulCronRun(cronWithUpdates), 'cron with updates is not routine');
+  assert(!isRoutineSuccessfulCronRun({ ...routineCron, errors: 1 }), 'cron with errors is not routine');
+  assert(isPrunableRoutineCronRun(routineCron, new Date().toISOString()), 'old routine cron is prunable');
+  assert(!isPrunableRoutineCronRun(routineCron, new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString()), 'recent routine cron is not prunable');
+  const filtered = filterRunsForHistoryDisplay([routineCron, previewRun, cronWithUpdates]);
+  assert(filtered.length === 2, 'filter hides routine cron only');
+  assert(filterRunsForHistoryDisplay([routineCron], { showRoutineCron: true }).length === 1, 'toggle shows routine cron');
 
   console.log('FB lead sync tests passed.');
 }

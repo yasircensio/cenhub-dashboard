@@ -53,7 +53,7 @@ See `.env.example` for the full list. Key vars:
 | `GHL_WEBHOOK_DISABLED` | Set `1` to disable webhook processing in production |
 | `GHL_WEBHOOK_INLINE` | Set `0` to disable inline webhook processing (default: inline on) |
 | `GHL_SSO_SHARED_SECRET` | GHL marketplace app SSO validation |
-| `CRON_SECRET` | Vercel daily GHL + Meta sync crons + GitHub Actions FB lead sync |
+| `CRON_SECRET` | Vercel daily GHL + Meta sync crons + FB lead sync cron endpoint (`/api/fb-lead-sync-cron`) |
 | `GHL_FB_LEAD_FIELD_ID` | GHL contact field for Meta lead id (default `EbtgGgyZr0GJ4ghuNXUB`) |
 | `FB_LEAD_SYNC_DAYS` | Hourly sync window in days (default `2`) |
 | `DASHBOARD_ACCESS_KEY_SECRET` | Enables per-client access keys for read APIs (see below) |
@@ -112,25 +112,29 @@ API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipel
 - **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` (staff session).
 - **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }` — syncs all clients inline in the same request.
 - **Scheduled:** Vercel daily cron at **01:00 UTC** (~3:00 Copenhagen in DST) syncs all GHL snapshots via `/api/ghl-sync-cron`. Meta sync runs at **04:00 UTC**. Requires `CRON_SECRET`.
-- **FB Lead IDs:** GitHub Actions runs **every hour** and calls `GET /api/fb-lead-sync-cron` to fetch new Facebook Lead Ads (all forms) and write `Fb Lead id` on matching GHL contacts. **Only clients with auto-sync enabled** on [`/admin/fb-lead-sync`](/admin/fb-lead-sync) are included. See `.github/workflows/cron-fb-lead-sync.yml`.
+- **FB Lead IDs:** [cron-job.org](https://cron-job.org) runs **every hour** and calls `GET /api/fb-lead-sync-cron` with `Authorization: Bearer CRON_SECRET` to fetch new Facebook Lead Ads (all forms) and write `Fb Lead id` on matching GHL contacts. **Only clients with auto-sync enabled** on [`/admin/fb-lead-sync`](/admin/fb-lead-sync) are included. Routine successful cron runs with zero updates are auto-pruned after 24 hours; the admin UI shows a compact 24h summary and hides routine rows in Run history by default.
 
-### GitHub Actions — hourly FB lead sync setup
+### cron-job.org — hourly FB lead sync setup
 
 1. Deploy the app so `/api/fb-lead-sync-cron` is live on production.
-2. In GitHub → **Settings → Secrets and variables → Actions**, add:
-   - `CRON_SECRET` — same value as Vercel `CRON_SECRET`
-   - `APP_BASE_URL` (optional) — defaults to `https://cenhub-dashboard.vercel.app`
-3. Workflow: `.github/workflows/cron-fb-lead-sync.yml` (runs at minute 0 every hour UTC).
-4. Manual test: **Actions → FB Lead ID Sync → Run workflow**, or locally:
+2. Set `CRON_SECRET` in Vercel (same value used in the cron job).
+3. In cron-job.org, create a job:
+   - **URL:** `https://cenhub-dashboard.vercel.app/api/fb-lead-sync-cron`
+   - **Schedule:** every 1 hour
+   - **Request header:** `Authorization: = Bearer <CRON_SECRET>`
+   - **Optional header:** `X-Cron-Source: cron-job.org` (for clearer run history labels)
+4. Manual test:
 
 ```bash
 curl -s -H "Authorization: Bearer $CRON_SECRET" \
   "https://cenhub-dashboard.vercel.app/api/fb-lead-sync-cron"
 ```
 
+**Backup:** `.github/workflows/cron-fb-lead-sync.yml` supports manual **Run workflow** only (GitHub scheduled cron is not used for production).
+
 Each client needs `metaPageId`, GHL token, and Meta page token or `META_SYSTEM_USER_TOKEN` in admin. Enable **hourly FB lead ID sync** per client on `/admin/fb-lead-sync` (or in client setup → Meta section).
 
-**Admin UI:** `/admin/fb-lead-sync` — enable auto-sync per client, preview/backfill (90-day Meta window), and audit run history with contact-level rows.
+**Admin UI:** `/admin/fb-lead-sync` — enable auto-sync per client, preview/backfill (90-day Meta window), 24h auto-sync summary, and audit run history with contact-level rows (previews, applies, and errors; routine cron runs hidden by default).
 
 **Postgres migration:** `npm run migrate:fb-lead-sync` (adds `fb_lead_sync_enabled`, `ghl_fb_lead_field_id`, `fb_lead_sync_runs`).
 - **Webhooks:** GHL opportunity events hit `POST /api/ghl-webhook` and merge inline (~2–3s). Webhook URL: `https://cenhub-dashboard.vercel.app/api/ghl-webhook`. Verify with `GET /api/ghl-webhook` (`"inline": true`) or `npm run preflight:ghl`. Webhook merges defer while a full sync is running (`sync_status=syncing`).

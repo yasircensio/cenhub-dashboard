@@ -4700,6 +4700,8 @@
       const labels = {
         cron: 'Scheduled (cron)',
         'github-actions': 'Scheduled (GitHub Actions)',
+        'cron-job.org': 'Scheduled (cron-job.org)',
+        'http-cron': 'Scheduled (HTTP cron)',
         admin: 'Manual (admin)',
         'vercel-cron': 'Scheduled (Vercel cron)',
         manual: 'Manual (admin)',
@@ -4909,10 +4911,19 @@
       }
     }
 
+    const FB_LEAD_AUTOMATED_CRON_SOURCES = new Set([
+      'cron-job.org',
+      'github-actions',
+      'vercel-cron',
+      'http-cron',
+    ]);
+
     let fbLeadSyncState = {
       clients: [],
       preflightByClient: {},
       historyRuns: [],
+      cronSummary24h: null,
+      showRoutineCronRuns: false,
       activeRun: null,
       previewOkByClient: {},
       applyingRunId: null,
@@ -4921,6 +4932,51 @@
       applyWaitTimer: null,
       applyProgress: null,
     };
+
+    function isRoutineSuccessfulCronRun(run) {
+      if (!run || run.dryRun) return false;
+      if (!FB_LEAD_AUTOMATED_CRON_SOURCES.has(String(run.source || '').trim())) return false;
+      const status = String(run.status || '').toLowerCase();
+      if (status === 'interrupted' || status === 'running') return false;
+      if (status !== 'success' && status !== 'ok') return false;
+      if ((Number(run.updated) || 0) > 0) return false;
+      if ((Number(run.errors) || 0) > 0) return false;
+      return true;
+    }
+
+    function getFbLeadHistoryRunsForDisplay(runs = fbLeadSyncState.historyRuns) {
+      if (fbLeadSyncState.showRoutineCronRuns) return runs || [];
+      return (runs || []).filter((run) => !isRoutineSuccessfulCronRun(run));
+    }
+
+    function formatFbLeadCronLastRun(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '—';
+      return date.toLocaleString('en-GB', {
+        timeZone: 'UTC',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }) + ' UTC';
+    }
+
+    function renderFbLeadCronSummary24h(cronSummary24h) {
+      const summary = cronSummary24h || { totalRuns: 0, totalUpdated: 0, byClient: [] };
+      const headline = `${summary.totalRuns || 0} run${summary.totalRuns === 1 ? '' : 's'} · ${summary.totalUpdated || 0} contact${summary.totalUpdated === 1 ? '' : 's'} updated`;
+      const clientLines = (summary.byClient || []).map((row) =>
+        `${esc(row.accountName || row.clientId)} — ${row.runs || 0} run${row.runs === 1 ? '' : 's'} · last ${esc(formatFbLeadCronLastRun(row.lastRunAt))}`,
+      ).join('<br>');
+      return `
+        <div class="sync-history-summary fb-lead-cron-summary-24h" id="fb-lead-cron-summary-24h">
+          <div class="sync-history-stat" style="grid-column:1/-1">
+            <div class="sync-history-stat-label">Auto-sync (last 24h)</div>
+            <div class="sync-history-stat-value">${esc(headline)}</div>
+            ${clientLines ? `<div class="fb-lead-cron-summary-clients" style="margin-top:8px;font-size:13px;color:var(--text-soft);line-height:1.5">${clientLines}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
     let fbLeadSyncRefreshTimer = null;
 
     function clientFbLeadFieldReady(client) {
@@ -5341,9 +5397,17 @@
     }
 
     function renderFbLeadHistoryRows(runs, locationByClient = {}) {
-      if (!runs.length) {
+      const displayRuns = getFbLeadHistoryRunsForDisplay(runs);
+      if (!displayRuns.length) {
+        const hiddenCount = fbLeadSyncState.showRoutineCronRuns
+          ? 0
+          : (runs || []).filter((run) => isRoutineSuccessfulCronRun(run)).length;
+        if (hiddenCount > 0) {
+          return `<div class="sync-history-empty">${hiddenCount} routine auto-sync run(s) hidden — enable <strong>Show routine auto-sync runs</strong> above to view them.</div>`;
+        }
         return '<div class="sync-history-empty">No FB lead sync runs logged yet.</div>';
       }
+      runs = displayRuns;
       const rows = runs.map((run) => {
         const detail = [
           run.mode,
@@ -5487,9 +5551,10 @@
             </div>
             <div class="sync-history-stat">
               <div class="sync-history-stat-label">Schedule</div>
-              <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary.schedule || '—')}</div>
+              <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary.schedule || 'Every hour (cron-job.org)')}</div>
             </div>
           </div>
+          ${renderFbLeadCronSummary24h(summary.cronSummary24h)}
           <h2 style="font-size:16px;margin:18px 0 10px">Clients</h2>
           <div id="fb-lead-field-warnings-mount">${renderFbLeadFieldWarnings(data.clients || [])}</div>
           ${renderFbLeadClientRowsWrapper(data.clients || [])}
@@ -5497,16 +5562,20 @@
           <div id="fb-lead-apply-progress-mount"></div>
           <div class="section-heading-row">
             <h2>Run history</h2>
-            ${isStaffAdmin() ? `
-              <div class="section-heading-actions">
+            <div class="section-heading-actions">
+              <label class="fb-lead-history-toggle" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-soft);cursor:pointer;margin-right:8px">
+                <input type="checkbox" id="fb-lead-show-routine-cron" ${fbLeadSyncState.showRoutineCronRuns ? 'checked' : ''} />
+                Show routine auto-sync runs
+              </label>
+              ${isStaffAdmin() ? `
                 <button
                   class="admin-btn admin-btn--secondary admin-btn--small"
                   type="button"
                   id="fb-lead-history-clear-all"
                   ${(fbLeadSyncState.historyRuns || []).length ? '' : 'disabled'}
                 >Delete all history</button>
-              </div>
-            ` : ''}
+              ` : ''}
+            </div>
           </div>
           <div id="fb-lead-history-mount">${renderFbLeadHistoryRows(fbLeadSyncState.historyRuns)}</div>
         </div>
@@ -5828,6 +5897,15 @@
       clearBtn.disabled = !hasRuns;
     }
 
+    function updateFbLeadCronSummaryUi() {
+      const mount = document.getElementById('fb-lead-cron-summary-24h');
+      if (!mount || !fbLeadSyncState.cronSummary24h) return;
+      const wrapper = mount.closest('.sync-history-summary') || mount;
+      if (wrapper) {
+        wrapper.outerHTML = renderFbLeadCronSummary24h(fbLeadSyncState.cronSummary24h);
+      }
+    }
+
     async function refreshFbLeadHistoryUi() {
       await loadFbLeadHistory();
       const historyMount = document.getElementById('fb-lead-history-mount');
@@ -5841,8 +5919,20 @@
 
     function bindFbLeadHistoryClearButton() {
       const clearBtn = document.getElementById('fb-lead-history-clear-all');
-      if (!clearBtn) return;
-      clearBtn.onclick = () => clearFbLeadSyncHistory();
+      if (clearBtn) clearBtn.onclick = () => clearFbLeadSyncHistory();
+      const routineToggle = document.getElementById('fb-lead-show-routine-cron');
+      if (routineToggle) {
+        routineToggle.checked = fbLeadSyncState.showRoutineCronRuns;
+        routineToggle.onchange = () => {
+          fbLeadSyncState.showRoutineCronRuns = routineToggle.checked;
+          const historyMount = document.getElementById('fb-lead-history-mount');
+          if (!historyMount) return;
+          const locationByClient = Object.fromEntries(
+            fbLeadSyncState.clients.map((row) => [row.clientId, row.locationId]),
+          );
+          historyMount.innerHTML = renderFbLeadHistoryRows(fbLeadSyncState.historyRuns, locationByClient);
+        };
+      }
       updateFbLeadHistoryClearButton();
     }
 
@@ -6091,7 +6181,9 @@
     }
 
     function viewFbLeadClientHistory(clientId) {
-      const filtered = fbLeadSyncState.historyRuns.filter((run) => run.clientId === clientId);
+      const filtered = getFbLeadHistoryRunsForDisplay(
+        fbLeadSyncState.historyRuns.filter((run) => run.clientId === clientId),
+      );
       const historyMount = document.getElementById('fb-lead-history-mount');
       if (!historyMount) return;
       const locationByClient = Object.fromEntries(
@@ -6141,6 +6233,7 @@
           loadFbLeadHistory(),
         ]);
         fbLeadSyncState.clients = data.clients || [];
+        fbLeadSyncState.cronSummary24h = data.summary?.cronSummary24h || null;
         hydrateFbLeadPreviewState(fbLeadSyncState.clients);
 
         if (!silent) {
@@ -6164,6 +6257,7 @@
           await loadFbLeadPreflightForClients(fbLeadSyncState.clients, { quick: !fullPreflight });
         }
         if (silent) {
+          updateFbLeadCronSummaryUi();
           await refreshFbLeadHistoryUi();
           await refreshFbLeadClientRowsUi();
         } else {
