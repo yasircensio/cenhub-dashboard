@@ -1,9 +1,8 @@
 name: FB Lead ID Sync
 
 on:
-  schedule:
-    # Every hour at minute 0 (UTC)
-    - cron: '0 * * * *'
+  # Primary scheduler: Vercel Cron (vercel.json → /api/fb-lead-sync-cron hourly).
+  # GitHub schedule is disabled — Actions often runs every ~4h, not hourly, on this repo.
   workflow_dispatch:
 
 jobs:

@@ -33,6 +33,8 @@
     { "source": "/api/cron/meta-sync", "destination": "/api/sync-history?__cron=meta" },
     { "source": "/api/ghl-sync-cron", "destination": "/api/sync-history?__cron=ghl" },
     { "source": "/api/cron/ghl-sync", "destination": "/api/sync-history?__cron=ghl" },
+    { "source": "/api/fb-lead-sync-cron", "destination": "/api/sync-history?__cron=fb" },
+    { "source": "/api/cron/fb-lead-sync", "destination": "/api/sync-history?__cron=fb" },
     { "source": "/login", "destination": "/admin.html" },
     { "source": "/team", "destination": "/admin.html" },
     { "source": "/admin", "destination": "/admin.html" },
@@ -89,6 +91,10 @@
     {
       "path": "/api/ghl-sync-cron",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/fb-lead-sync-cron",
+      "schedule": "0 * * * *"
     }
   ]
 }
