@@ -3588,6 +3588,35 @@
 
     td.num, th.num { text-align: right; }
 
+    .dashboard-table-wrap {
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -18px;
+      max-width: calc(100% + 36px);
+      overflow-x: auto;
+      padding: 0 18px;
+      width: calc(100% + 36px);
+    }
+
+    .dashboard-table-wrap table {
+      min-width: 100%;
+      width: max-content;
+    }
+
+    .dashboard-table-wrap th,
+    .dashboard-table-wrap td {
+      white-space: nowrap;
+    }
+
+    .dashboard-table-wrap th:first-child,
+    .dashboard-table-wrap td:first-child {
+      min-width: 120px;
+      white-space: normal;
+    }
+
+    .card:has(.dashboard-table-wrap) {
+      overflow: visible;
+    }
+
     .loading-state, .error-state {
       color: var(--text-muted);
       padding: 80px 24px;

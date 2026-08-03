@@ -96,6 +96,10 @@
     {
       "path": "/api/ghl-sync-cron",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/fb-lead-sync-retries",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

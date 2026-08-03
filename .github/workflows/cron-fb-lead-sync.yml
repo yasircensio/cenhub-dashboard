@@ -1,6 +1,6 @@
 name: FB Lead ID Sync
 
-# Primary scheduler is cron-job.org (hourly). This workflow is manual backup only.
+# Debug/backup only — legacy hourly poll. Returns 410 in production unless FB_LEAD_LEGACY_CRON_DEBUG=1.
 on:
   workflow_dispatch:
 
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Trigger FB lead ID sync on production
+      - name: Trigger legacy FB lead ID sync on production
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
@@ -20,11 +20,11 @@ jobs:
           fi
           BASE_URL="${APP_BASE_URL:-https://cenhub-dashboard.vercel.app}"
           BASE_URL="${BASE_URL%/}"
-          echo "Calling ${BASE_URL}/api/fb-lead-sync-cron"
+          echo "Calling ${BASE_URL}/api/fb-lead-sync-cron (debug only — 410 in prod unless FB_LEAD_LEGACY_CRON_DEBUG=1)"
           curl -sfS --retry 2 --retry-delay 5 --max-time 300 \
             -X GET \
             -H "Authorization: Bearer ${CRON_SECRET}" \
             -H "X-Cron-Source: github-actions" \
             "${BASE_URL}/api/fb-lead-sync-cron" | tee /tmp/fb-lead-sync-response.json
           echo ""
-          echo "FB lead sync cron completed."
+          echo "Legacy FB lead sync cron completed."

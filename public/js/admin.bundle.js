@@ -239,7 +239,7 @@
         <tbody>${a}</tbody>
       </table>
     </div>
-  `}function renderSyncHistoryPage(e,t){const n=e==="meta"?"Meta ad spend sync history":"GHL / Cenhub sync history",a=e==="meta"?"Every Meta metrics sync \u2014 scheduled, manual, and dashboard auto-refresh.":"Every GHL snapshot sync \u2014 scheduled Inngest jobs and manual admin syncs.",o=e==="ghl"?`<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${e==="meta"?"ghl":"meta"}">${esc(e==="meta"?"GHL sync log":"Meta sync log")}</a>`:"";return`
+  `}function renderSyncHistoryPage(e,t){const n=e==="meta"?"Meta ad spend sync history":"GHL / Cenhub sync history",a=e==="meta"?"Every Meta metrics sync \u2014 scheduled, manual, and dashboard auto-refresh. Logs older than 3 days are auto-deleted.":"Every GHL snapshot sync \u2014 scheduled Vercel cron and manual admin syncs. Logs older than 3 days are auto-deleted.",o=e==="ghl"?`<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${e==="meta"?"ghl":"meta"}">${esc(e==="meta"?"GHL sync log":"Meta sync log")}</a>`:"";return`
     ${renderBrandTopbar(renderStaffAdminChrome(e==="meta"?"meta-sync":"ghl-sync"))}
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero">
@@ -473,7 +473,7 @@ ${o} contact(s) will get Fb Lead id written in GHL. This writes live data.`)&&(f
         <span>FB lead sync</span>
       </div>
       <h1>Facebook Lead ID sync</h1>
-      <p>Match Meta Lead Ads to GHL contacts and write the <code>Fb Lead id</code> custom field.</p>
+      <p>Match Meta Lead Ads to GHL contacts and write the <code>Fb Lead id</code> custom field. Run logs older than 3 days are auto-deleted.</p>
     </div>
     <div class="sync-history-page">
       <div class="fb-lead-banner">
@@ -502,7 +502,7 @@ ${o} contact(s) will get Fb Lead id written in GHL. This writes live data.`)&&(f
         </div>
         <div class="sync-history-stat">
           <div class="sync-history-stat-label">Schedule</div>
-          <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(t.schedule||"Webhook + 5m retries \xB7 daily reconcile (01:00 UTC)")}</div>
+          <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(t.schedule||"Webhook + 5m Vercel cron \xB7 daily reconcile (01:00 UTC)")}</div>
         </div>
       </div>
       ${renderFbLeadCronSummary24h(t.cronSummary24h)}
@@ -1154,22 +1154,24 @@ This removes the account, GHL token, and all synced snapshot data. This cannot b
         </div>
       </div>
     `}function renderTable(e,t,n,a,s){const i=n.filter(o=>isVisible("columns",o.key,e));return i.length?`
-    <table>
-      <thead>
-        <tr>
-          <th>${t}</th>
-          ${i.map(o=>`<th class="${o.align||""}">${o.label}</th>`).join("")}
-        </tr>
-      </thead>
-      <tbody>
-        ${a.length?a.map(o=>`
+    <div class="dashboard-table-wrap">
+      <table class="dashboard-table">
+        <thead>
           <tr>
-            <td>${s(o,"label")}</td>
-            ${i.map(d=>`<td class="${d.align||""}">${s(o,d.key)}</td>`).join("")}
+            <th>${t}</th>
+            ${i.map(o=>`<th class="${o.align||""}">${o.label}</th>`).join("")}
           </tr>
-        `).join(""):`<tr><td colspan="${i.length+1}">Ingen data for valgte filtre.</td></tr>`}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          ${a.length?a.map(o=>`
+            <tr>
+              <td>${s(o,"label")}</td>
+              ${i.map(d=>`<td class="${d.align||""}">${s(o,d.key)}</td>`).join("")}
+            </tr>
+          `).join(""):`<tr><td colspan="${i.length+1}">Ingen data for valgte filtre.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
   `:'<div class="empty-section">No columns selected for this table.</div>'}function renderDatePickerTrigger(e,t,n){const a=state[e]||"",s=formatPickerDisplayLabel(a,n);return`
     <div class="date-picker-field">
       <span class="date-picker-label">${t}</span>

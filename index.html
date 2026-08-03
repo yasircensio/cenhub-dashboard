@@ -3597,6 +3597,35 @@
 
     td.num, th.num { text-align: right; }
 
+    .dashboard-table-wrap {
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -18px;
+      max-width: calc(100% + 36px);
+      overflow-x: auto;
+      padding: 0 18px;
+      width: calc(100% + 36px);
+    }
+
+    .dashboard-table-wrap table {
+      min-width: 100%;
+      width: max-content;
+    }
+
+    .dashboard-table-wrap th,
+    .dashboard-table-wrap td {
+      white-space: nowrap;
+    }
+
+    .dashboard-table-wrap th:first-child,
+    .dashboard-table-wrap td:first-child {
+      min-width: 120px;
+      white-space: normal;
+    }
+
+    .card:has(.dashboard-table-wrap) {
+      overflow: visible;
+    }
+
     .loading-state, .error-state {
       color: var(--text-muted);
       padding: 80px 24px;
@@ -4979,8 +5008,8 @@
     function renderSyncHistoryPage(kind, data) {
       const title = kind === 'meta' ? 'Meta ad spend sync history' : 'GHL / Cenhub sync history';
       const subtitle = kind === 'meta'
-        ? 'Every Meta metrics sync — scheduled, manual, and dashboard auto-refresh.'
-        : 'Every GHL snapshot sync — scheduled Inngest jobs and manual admin syncs.';
+        ? 'Every Meta metrics sync — scheduled, manual, and dashboard auto-refresh. Logs older than 3 days are auto-deleted.'
+        : 'Every GHL snapshot sync — scheduled Vercel cron and manual admin syncs. Logs older than 3 days are auto-deleted.';
       const otherKind = kind === 'meta' ? 'ghl' : 'meta';
       const otherLabel = kind === 'meta' ? 'GHL sync log' : 'Meta sync log';
       const otherLogLink = kind === 'ghl'
@@ -5767,7 +5796,7 @@
             <span>FB lead sync</span>
           </div>
           <h1>Facebook Lead ID sync</h1>
-          <p>Match Meta Lead Ads to GHL contacts and write the <code>Fb Lead id</code> custom field.</p>
+          <p>Match Meta Lead Ads to GHL contacts and write the <code>Fb Lead id</code> custom field. Run logs older than 3 days are auto-deleted.</p>
         </div>
         <div class="sync-history-page">
           <div class="fb-lead-banner">
@@ -5796,7 +5825,7 @@
             </div>
             <div class="sync-history-stat">
               <div class="sync-history-stat-label">Schedule</div>
-              <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary.schedule || 'Webhook + 5m retries · daily reconcile (01:00 UTC)')}</div>
+              <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary.schedule || 'Webhook + 5m Vercel cron · daily reconcile (01:00 UTC)')}</div>
             </div>
           </div>
           ${renderFbLeadCronSummary24h(summary.cronSummary24h)}
@@ -9254,22 +9283,24 @@
       }
 
       return `
-        <table>
-          <thead>
-            <tr>
-              <th>${labelColumn}</th>
-              ${visibleHeaders.map((header) => `<th class="${header.align || ''}">${header.label}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.length ? rows.map((row) => `
+        <div class="dashboard-table-wrap">
+          <table class="dashboard-table">
+            <thead>
               <tr>
-                <td>${renderCell(row, 'label')}</td>
-                ${visibleHeaders.map((header) => `<td class="${header.align || ''}">${renderCell(row, header.key)}</td>`).join('')}
+                <th>${labelColumn}</th>
+                ${visibleHeaders.map((header) => `<th class="${header.align || ''}">${header.label}</th>`).join('')}
               </tr>
-            `).join('') : `<tr><td colspan="${visibleHeaders.length + 1}">Ingen data for valgte filtre.</td></tr>`}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${rows.length ? rows.map((row) => `
+                <tr>
+                  <td>${renderCell(row, 'label')}</td>
+                  ${visibleHeaders.map((header) => `<td class="${header.align || ''}">${renderCell(row, header.key)}</td>`).join('')}
+                </tr>
+              `).join('') : `<tr><td colspan="${visibleHeaders.length + 1}">Ingen data for valgte filtre.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
       `;
     }
 

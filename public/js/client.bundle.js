@@ -110,22 +110,24 @@
         </div>
       </div>
     `}function renderTable(e,t,n,a,o){const i=n.filter(r=>isVisible("columns",r.key,e));return i.length?`
-    <table>
-      <thead>
-        <tr>
-          <th>${t}</th>
-          ${i.map(r=>`<th class="${r.align||""}">${r.label}</th>`).join("")}
-        </tr>
-      </thead>
-      <tbody>
-        ${a.length?a.map(r=>`
+    <div class="dashboard-table-wrap">
+      <table class="dashboard-table">
+        <thead>
           <tr>
-            <td>${o(r,"label")}</td>
-            ${i.map(v=>`<td class="${v.align||""}">${o(r,v.key)}</td>`).join("")}
+            <th>${t}</th>
+            ${i.map(r=>`<th class="${r.align||""}">${r.label}</th>`).join("")}
           </tr>
-        `).join(""):`<tr><td colspan="${i.length+1}">Ingen data for valgte filtre.</td></tr>`}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          ${a.length?a.map(r=>`
+            <tr>
+              <td>${o(r,"label")}</td>
+              ${i.map(v=>`<td class="${v.align||""}">${o(r,v.key)}</td>`).join("")}
+            </tr>
+          `).join(""):`<tr><td colspan="${i.length+1}">Ingen data for valgte filtre.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
   `:'<div class="empty-section">No columns selected for this table.</div>'}function renderDatePickerTrigger(e,t,n){const a=state[e]||"",o=formatPickerDisplayLabel(a,n);return`
     <div class="date-picker-field">
       <span class="date-picker-label">${t}</span>

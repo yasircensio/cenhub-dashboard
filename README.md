@@ -111,19 +111,15 @@ API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipel
 
 - **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` (staff session).
 - **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }` — syncs all clients inline in the same request.
-- **Scheduled:** Vercel daily cron at **01:00 UTC** (~3:00 Copenhagen in DST) syncs all GHL snapshots via `/api/ghl-sync-cron`. Meta ad spend sync runs **every 6 hours** (`00:00`, `06:00`, `12:00`, `18:00` UTC) via `/api/meta-sync-cron`. Requires `CRON_SECRET`.
-- **FB Lead IDs:** **Webhook-first** — when GHL fires `OpportunityCreate`, the app tries to match the contact to a recent Meta lead and write `Fb Lead id`. If Meta has not indexed the lead yet, a **retry queue** runs at +5/+15/+30/+60 minutes (cron-job.org every 5 min → `GET /api/fb-lead-sync-retries`). A **daily reconcile** (recent 2-day sweep) runs after the Vercel GHL sync at **01:00 UTC**. **Only clients with auto-sync enabled** on [`/admin/fb-lead-sync`](/admin/fb-lead-sync) are included. Routine zero-update runs are auto-pruned after 24h; the admin UI shows a 24h summary and hides routine rows by default.
+- **Scheduled:** Vercel crons (requires `CRON_SECRET`): GHL snapshot sync **daily at 01:00 UTC** (`/api/ghl-sync-cron`), Meta ad spend **every 6 hours** (`/api/meta-sync-cron`), FB lead retry worker **every 5 minutes** (`/api/fb-lead-sync-retries`).
+- **FB Lead IDs:** **Webhook-first** — when GHL fires `OpportunityCreate`, the app tries to match the contact to a recent Meta lead and write `Fb Lead id`. If Meta has not indexed the lead yet, a **retry queue** runs at +5/+15/+30/+60 minutes (Vercel cron every 5 min → `GET /api/fb-lead-sync-retries`). A **daily reconcile** (recent 2-day sweep) runs after the Vercel GHL sync at **01:00 UTC**. **Only clients with auto-sync enabled** on [`/admin/fb-lead-sync`](/admin/fb-lead-sync) are included. **Sync run logs** (GHL, Meta, FB lead) and **webhook event rows** are kept for **3 days**; completed retry queue rows for **7 days** — older data is auto-deleted on cron. The FB admin UI shows a 24h summary and hides routine rows by default.
 
 ### FB lead sync — webhook + retry worker setup
 
 1. Deploy and run `npm run migrate:fb-lead-sync-retries` on Neon (retry queue table).
 2. Ensure GHL app webhooks include **Opportunity Create** → `POST /api/ghl-webhook` (already used for snapshot merge).
-3. In cron-job.org, create **one** job:
-   - **URL:** `https://cenhub-dashboard.vercel.app/api/fb-lead-sync-retries`
-   - **Schedule:** every 5 minutes
-   - **Header:** `Authorization: Bearer <CRON_SECRET>`
-4. **Disable/remove** any hourly `/api/fb-lead-sync-cron` job (manual/debug only now).
-5. Manual retry worker test:
+3. Vercel cron runs `/api/fb-lead-sync-retries` every 5 minutes automatically after deploy (`vercel.json`). **Disable/remove** any cron-job.org jobs for this URL or for legacy `/api/fb-lead-sync-cron`.
+4. Manual retry worker test:
 
 ```bash
 curl -s -H "Authorization: Bearer $CRON_SECRET" \
@@ -132,7 +128,7 @@ curl -s -H "Authorization: Bearer $CRON_SECRET" \
 
 **Daily safety net:** chained automatically after `/api/ghl-sync-cron` (01:00 UTC). Set `FB_LEAD_SYNC_DAILY_RECONCILE=0` to disable during rollout.
 
-**Backup:** `.github/workflows/cron-fb-lead-sync.yml` — manual **Run workflow** only (calls legacy full cron endpoint).
+**Legacy hourly poll:** `/api/fb-lead-sync-cron` is **debug-only** — blocked in production unless `FB_LEAD_LEGACY_CRON_DEBUG=1`. GitHub workflow `.github/workflows/cron-fb-lead-sync.yml` is manual debug backup only.
 
 Each client needs `metaPageId`, GHL token, and Meta page token or `META_SYSTEM_USER_TOKEN` in admin. Enable **FB lead ID auto-sync** per client on `/admin/fb-lead-sync`.
 
@@ -215,6 +211,7 @@ Set `TEST_CLIENT_ID=other-slug` to point `test:api` at another account.
 2. Set env vars from `.env.example` (at minimum: admin key, encryption key, `DATABASE_URL` for production).
 3. Run `npm run seed:suntech` once against production DB (or migrate account via admin UI).
 4. GHL iframe URL for all clients: `https://your-deployment.vercel.app/`
+5. After deploy, verify **Vercel → Crons** shows 3 jobs (GHL daily, Meta 6h, FB retries 5m) and **disable/delete** any cron-job.org jobs for `/api/fb-lead-sync-retries` or `/api/fb-lead-sync-cron`.
 
 ## Project layout
 
