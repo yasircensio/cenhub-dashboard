@@ -91,7 +91,7 @@
   "crons": [
     {
       "path": "/api/meta-sync-cron",
-      "schedule": "0 4 * * *"
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/ghl-sync-cron",

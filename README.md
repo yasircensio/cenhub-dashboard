@@ -111,7 +111,7 @@ API: `POST /api/clients/:clientId/metrics-model` with `{ dedupeEnabled, winPipel
 
 - **Manual:** Admin hub **Sync now** or `POST /api/clients/:clientId/sync` (staff session).
 - **Bulk:** `POST /api/clients` with `{ "action": "sync-all" }` — syncs all clients inline in the same request.
-- **Scheduled:** Vercel daily cron at **01:00 UTC** (~3:00 Copenhagen in DST) syncs all GHL snapshots via `/api/ghl-sync-cron`. Meta sync runs at **04:00 UTC**. Requires `CRON_SECRET`.
+- **Scheduled:** Vercel daily cron at **01:00 UTC** (~3:00 Copenhagen in DST) syncs all GHL snapshots via `/api/ghl-sync-cron`. Meta ad spend sync runs **every 6 hours** (`00:00`, `06:00`, `12:00`, `18:00` UTC) via `/api/meta-sync-cron`. Requires `CRON_SECRET`.
 - **FB Lead IDs:** **Webhook-first** — when GHL fires `OpportunityCreate`, the app tries to match the contact to a recent Meta lead and write `Fb Lead id`. If Meta has not indexed the lead yet, a **retry queue** runs at +5/+15/+30/+60 minutes (cron-job.org every 5 min → `GET /api/fb-lead-sync-retries`). A **daily reconcile** (recent 2-day sweep) runs after the Vercel GHL sync at **01:00 UTC**. **Only clients with auto-sync enabled** on [`/admin/fb-lead-sync`](/admin/fb-lead-sync) are included. Routine zero-update runs are auto-pruned after 24h; the admin UI shows a 24h summary and hides routine rows by default.
 
 ### FB lead sync — webhook + retry worker setup
