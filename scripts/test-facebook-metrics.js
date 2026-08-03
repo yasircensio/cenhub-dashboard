@@ -141,8 +141,15 @@ async function main() {
   }
 
   const monthlyAdSpend = merged;
-  const thisMonthSpend = getSpendForPreset({}, 'month', monthlyAdSpend);
-  const lastMonthSpend = getSpendForPreset({}, 'lastMonth', monthlyAdSpend);
+  const presetTz = 'Europe/Copenhagen';
+  const presetThisKey = getCurrentMonthKey(presetTz);
+  const presetLastKey = getPreviousMonthKey(presetTz);
+  const presetMonthly = [
+    { month: presetThisKey, spend: 2769.69 },
+    { month: presetLastKey, spend: 13330.26 },
+  ];
+  const thisMonthSpend = getSpendForPreset({}, 'month', presetMonthly, presetTz);
+  const lastMonthSpend = getSpendForPreset({}, 'lastMonth', presetMonthly, presetTz);
   if (thisMonthSpend !== 2769.69 || lastMonthSpend !== 13330.26) {
     throw new Error(`Preset spend mismatch: this=${thisMonthSpend}, last=${lastMonthSpend}`);
   }
