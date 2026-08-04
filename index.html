@@ -3907,32 +3907,181 @@
 
     .meta-report-hub-hero { padding-bottom: 20px; }
     .meta-report-hub-hero p { max-width: 52rem; }
-    .meta-report-summary {
-      display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 18px;
+
+    .meta-hub-layout { display: flex; flex-direction: column; gap: 20px; }
+    .meta-hub-stats {
+      display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr));
     }
-    .meta-report-stat {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    @media (max-width: 900px) {
+      .meta-hub-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
-    .meta-report-stat-label { color: var(--text-soft); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-    .meta-report-stat-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
-    .meta-report-toolbar-row { align-items: center; margin-bottom: 12px; }
-    .meta-reports-table th, .meta-reports-table td { vertical-align: middle; }
-    .meta-report-client-link { font-weight: 600; }
-    .meta-report-code { font-size: 12px; }
-    .meta-report-row-meta { margin-top: 6px; }
+    @media (max-width: 520px) {
+      .meta-hub-stats { grid-template-columns: 1fr; }
+    }
+    .meta-hub-stat {
+      align-items: flex-start; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; box-shadow: var(--shadow-sm); display: flex; gap: 12px;
+      min-height: 88px; padding: 16px 18px; transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .meta-hub-stat:hover { border-color: rgba(255, 106, 0, 0.25); box-shadow: var(--shadow-md); }
+    .meta-hub-stat-icon {
+      align-items: center; border-radius: 10px; color: #fff; display: flex; flex-shrink: 0;
+      height: 40px; justify-content: center; width: 40px;
+    }
+    .meta-hub-stat-icon svg { display: block; }
+    .meta-hub-stat-icon--total { background: linear-gradient(135deg, #ff8a3d, #ff6a00); }
+    .meta-hub-stat-icon--live { background: linear-gradient(135deg, #34c759, #138b53); }
+    .meta-hub-stat-icon--app { background: linear-gradient(135deg, #5b8def, #3b6fd4); }
+    .meta-hub-stat-icon--setup { background: linear-gradient(135deg, #f5b942, #d97706); }
+    .meta-hub-stat-body { min-width: 0; }
+    .meta-hub-stat-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 28px;
+      font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
+    }
+    .meta-hub-stat-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+      margin-top: 4px; text-transform: uppercase;
+    }
+    .meta-hub-stat-hint { color: var(--text-muted); font-size: 11px; margin-top: 3px; }
+
+    .meta-hub-toolbar {
+      align-items: center; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+      padding: 14px 16px;
+    }
+    .meta-hub-toolbar-left, .meta-hub-toolbar-right {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
+    }
+    .meta-hub-search { flex: 1 1 220px; max-width: 320px; min-width: 180px; }
+    .meta-hub-filters {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+      display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px;
+    }
+    .meta-hub-filter {
+      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
+      cursor: pointer; font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .meta-hub-filter:hover { background: rgba(255, 106, 0, 0.08); color: var(--text); }
+    .meta-hub-filter.is-active {
+      background: var(--primary); box-shadow: 0 2px 8px rgba(255, 106, 0, 0.28); color: #fff;
+    }
+    .meta-hub-count {
+      color: var(--text-soft); font-size: 13px; font-weight: 600; white-space: nowrap;
+    }
+
+    .meta-hub-cards {
+      display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+    @media (max-width: 720px) {
+      .meta-hub-cards { grid-template-columns: 1fr; }
+    }
+    .meta-hub-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 14px;
+      padding: 18px 18px 16px; transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .meta-hub-card:hover { border-color: rgba(255, 106, 0, 0.22); box-shadow: var(--shadow-md); }
+    .meta-hub-card.is-live { border-color: rgba(19, 139, 83, 0.28); }
+    .meta-hub-card.is-setup { border-color: rgba(217, 119, 6, 0.28); background: #fffdf8; }
+    .meta-hub-card-head { align-items: flex-start; display: flex; gap: 12px; }
+    .meta-hub-avatar {
+      align-items: center; background: linear-gradient(135deg, #2b2118, #4a3728); border-radius: 12px;
+      color: #fff; display: flex; flex-shrink: 0; font-family: 'Poppins', sans-serif;
+      font-size: 16px; font-weight: 700; height: 44px; justify-content: center; width: 44px;
+    }
+    .meta-hub-card.is-live .meta-hub-avatar { background: linear-gradient(135deg, #138b53, #34c759); }
+    .meta-hub-card.is-setup .meta-hub-avatar { background: linear-gradient(135deg, #d97706, #f5b942); }
+    .meta-hub-card-title { flex: 1; min-width: 0; }
+    .meta-hub-card-name {
+      color: var(--text); display: block; font-family: 'Poppins', sans-serif; font-size: 16px;
+      font-weight: 700; line-height: 1.25; text-decoration: none;
+    }
+    a.meta-hub-card-name:hover { color: var(--primary); }
+    .meta-hub-card-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .meta-hub-card-actions { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+    .meta-hub-card-meta {
+      align-items: center; color: var(--text-soft); display: flex; flex-wrap: wrap; font-size: 12px;
+      gap: 8px;
+    }
+    .meta-hub-card-meta code {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      font-size: 11px; padding: 2px 7px;
+    }
+    .meta-hub-card-meta-dot { color: var(--border); }
+    .meta-hub-card-toggles {
+      border-top: 1px solid var(--border); display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding-top: 14px;
+    }
+    @media (max-width: 420px) {
+      .meta-hub-card-toggles { grid-template-columns: 1fr; }
+    }
+    .meta-hub-switch {
+      align-items: center; cursor: pointer; display: flex; gap: 10px; justify-content: space-between;
+      min-height: 32px; user-select: none;
+    }
+    .meta-hub-switch-label { color: var(--text); font-size: 12px; font-weight: 600; line-height: 1.2; }
+    .meta-hub-switch.is-disabled { cursor: not-allowed; opacity: 0.45; }
+    .meta-hub-switch-track {
+      background: #e8e0d8; border-radius: 999px; flex-shrink: 0; height: 24px; position: relative; width: 42px;
+      transition: background 0.2s ease;
+    }
+    .meta-hub-switch-input {
+      height: 1px; margin: -1px; opacity: 0; overflow: hidden; position: absolute; width: 1px;
+    }
+    .meta-hub-switch-thumb {
+      background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+      height: 18px; left: 3px; position: absolute; top: 3px; transition: transform 0.2s ease; width: 18px;
+    }
+    .meta-hub-switch-input:checked + .meta-hub-switch-thumb { transform: translateX(18px); }
+    .meta-hub-switch-input:checked ~ .meta-hub-switch-thumb,
+    .meta-hub-switch-input:checked + .meta-hub-switch-thumb { transform: translateX(18px); }
+    .meta-hub-switch-track:has(.meta-hub-switch-input:checked) { background: var(--primary); }
+    .meta-hub-switch-track:has(.meta-hub-switch-input:disabled) { opacity: 0.5; }
+
     .meta-report-badge {
       border-radius: 999px; display: inline-block; font-size: 11px; font-weight: 700;
-      padding: 3px 8px; background: #f3ece4; color: var(--text-soft);
+      letter-spacing: 0.02em; padding: 4px 9px;
     }
     .meta-report-badge--on { background: #e8f7ef; color: #138b53; }
+    .meta-report-badge--off { background: #f3ece4; color: var(--text-soft); }
     .meta-report-badge--setup { background: #fff4e5; color: #b45309; }
-    .meta-report-row--setup { background: #fffdf8; }
-    .meta-report-toggle-cell { text-align: center; width: 72px; }
-    .meta-report-toggle {
-      accent-color: var(--primary); cursor: pointer; height: 18px; width: 18px;
+    .meta-report-badge--type { background: #eef3ff; color: #3b6fd4; font-weight: 600; }
+
+    @media (max-width: 520px) {
+      .meta-hub-card-head { flex-wrap: wrap; }
+      .meta-hub-card-actions { justify-content: flex-start; width: 100%; }
     }
+
+      background: var(--panel); border: 1px dashed var(--border); border-radius: 16px;
+      grid-column: 1 / -1; padding: 48px 24px; text-align: center;
+    }
+    .meta-hub-empty h3 { font-size: 18px; margin: 0 0 8px; }
+    .meta-hub-empty p { color: var(--text-soft); font-size: 14px; margin: 0 auto; max-width: 28rem; }
+
+    .meta-hub-banner {
+      background: #fff8f0; border: 1px solid #ffd9b3; border-radius: 14px; color: #833b08;
+      font-size: 13px; line-height: 1.55; padding: 14px 18px;
+    }
+    .meta-hub-banner strong { display: block; font-size: 14px; margin-bottom: 4px; }
+
+    .meta-report-summary { display: contents; }
+    .meta-report-stat { display: none; }
     .meta-report-muted { color: var(--text-soft); }
-    .meta-report-banner-warn { margin-bottom: 16px; }
+    .meta-report-banner-warn { margin-bottom: 0; }
+
+    .meta-reports-page { padding-bottom: 32px; }
+    .meta-report-client-page .meta-report-settings {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      margin-bottom: 16px; padding: 14px 16px;
+    }
+    .meta-report-client-page .meta-report-toolbar {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      margin-bottom: 16px; padding: 14px 16px;
+    }
+    .meta-report-client-page .meta-report-month-panel {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+    }
   </style>
 </head>
 <body>
@@ -4947,6 +5096,7 @@
     const ICON_SYNC = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
     const ICON_CHEVRON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
     const ICON_CHART = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>';
+    const ICON_CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
 
     function clientInitials(name) {
       const words = String(name || '?').trim().split(/\s+/).filter(Boolean);
@@ -6641,6 +6791,7 @@
 
     const metaReportsState = {
       filter: 'all',
+      searchQuery: '',
       dashboardData: null,
       hubMounted: false,
       clientPayload: null,
@@ -6651,92 +6802,204 @@
       publicPageMounted: false,
     };
 
-    function filterMetaReportsClients(clients, filter) {
-      const list = clients || [];
-      if (filter === 'enabled') return list.filter((client) => client.metaReportEnabled);
-      if (filter === 'meta-only') return list.filter((client) => !client.hasGhl);
-      if (filter === 'needs-setup') return list.filter((client) => client.needsSetup);
+    const META_HUB_FILTER_OPTIONS = [
+      { value: 'all', label: 'All' },
+      { value: 'enabled', label: 'Live reports' },
+      { value: 'meta-only', label: 'Meta only' },
+      { value: 'needs-setup', label: 'Needs setup' },
+    ];
+
+    function metaHubClientInitial(name) {
+      const trimmed = String(name || '?').trim();
+      return esc(trimmed.charAt(0).toUpperCase());
+    }
+
+    function filterMetaReportsClients(clients, filter, searchQuery = '') {
+      let list = clients || [];
+      if (filter === 'enabled') list = list.filter((client) => client.metaReportEnabled);
+      if (filter === 'meta-only') list = list.filter((client) => !client.hasGhl);
+      if (filter === 'needs-setup') list = list.filter((client) => client.needsSetup);
+      const query = String(searchQuery || '').trim().toLowerCase();
+      if (query) {
+        list = list.filter((client) => {
+          const haystack = [
+            client.accountName,
+            client.metaAdAccountId,
+            client.clientId,
+            client.metaName,
+          ].filter(Boolean).join(' ').toLowerCase();
+          return haystack.includes(query);
+        });
+      }
       return list;
     }
 
-    function getMetaReportsHubView(dashboardData, filter) {
+    function getMetaReportsHubView(dashboardData, filter, searchQuery = metaReportsState.searchQuery) {
       const allClients = dashboardData?.clients || [];
-      const clients = filterMetaReportsClients(allClients, filter);
+      const clients = filterMetaReportsClients(allClients, filter, searchQuery);
+      const summary = dashboardData?.summary || {};
       return {
         clients,
-        summary: dashboardData?.summary || {},
+        allClients,
+        summary: {
+          ...summary,
+          totalListed: allClients.length,
+        },
         meta: dashboardData?.meta || {},
         filter,
+        searchQuery,
       };
     }
 
-    function renderMetaReportHubRow(client) {
+    function renderMetaHubSwitch({ label, attr, value, checked, disabled = false }) {
+      if (!value) return `<div class="meta-hub-switch is-disabled"><span class="meta-hub-switch-label">${esc(label)}</span><span class="meta-report-muted">—</span></div>`;
+      return `
+        <label class="meta-hub-switch${disabled ? ' is-disabled' : ''}">
+          <span class="meta-hub-switch-label">${esc(label)}</span>
+          <span class="meta-hub-switch-track">
+            <input type="checkbox" class="meta-hub-switch-input" ${attr}="${esc(value)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} aria-label="${esc(label)}" />
+            <span class="meta-hub-switch-thumb"></span>
+          </span>
+        </label>
+      `;
+    }
+
+    function renderMetaReportHubCard(client) {
       const canEdit = Boolean(client.clientId);
       const rowKey = client.clientId || client.metaAdAccountId || '';
+      const cardClass = client.needsSetup
+        ? 'is-setup'
+        : (client.metaReportEnabled ? 'is-live' : '');
       const statusBadge = client.needsSetup
-        ? '<span class="meta-report-badge meta-report-badge--setup">Not in app</span>'
+        ? '<span class="meta-report-badge meta-report-badge--setup">Needs setup</span>'
         : (client.metaReportEnabled
-          ? '<span class="meta-report-badge meta-report-badge--on">Report on</span>'
-          : '<span class="meta-report-badge">Report off</span>');
-      const typeLabel = client.hasGhl ? 'GHL + Meta' : (client.partnerSource === 'partner' ? 'Meta partner' : 'Meta only');
-      const nameCell = canEdit
-        ? `<a href="/admin/meta-reports/${encodeURIComponent(client.clientId)}" class="meta-report-client-link">${esc(client.accountName)}</a>`
-        : `<span class="meta-report-client-link">${esc(client.accountName)}</span>`;
-      const shareCell = client.reportUrl
+          ? '<span class="meta-report-badge meta-report-badge--on">Report live</span>'
+          : '<span class="meta-report-badge meta-report-badge--off">Report off</span>');
+      const typeBadge = client.hasGhl
+        ? '<span class="meta-report-badge meta-report-badge--type">GHL + Meta</span>'
+        : '<span class="meta-report-badge meta-report-badge--type">Meta only</span>';
+      const nameMarkup = canEdit
+        ? `<a href="/admin/meta-reports/${encodeURIComponent(client.clientId)}" class="meta-hub-card-name">${esc(client.accountName)}</a>`
+        : `<span class="meta-hub-card-name">${esc(client.accountName)}</span>`;
+      const shareBtn = client.reportUrl
         ? `<button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`
-        : '<span class="meta-report-muted">—</span>';
-      const setupCell = client.needsSetup
+        : '';
+      const setupAction = client.needsSetup
         ? `<button type="button" class="admin-btn admin-btn--primary admin-btn--small" data-meta-provision="${esc(client.metaAdAccountId)}" data-meta-provision-name="${esc(client.accountName)}">Add client</button>`
-        : (canEdit ? `<a class="admin-btn admin-btn--secondary admin-btn--small" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Edit</a>` : '—');
+        : (canEdit ? `<a class="admin-btn admin-btn--secondary admin-btn--small" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Edit report</a>` : '');
 
       return `
-        <tr class="${client.needsSetup ? 'meta-report-row--setup' : ''}" data-meta-hub-row="${esc(rowKey)}">
-          <td>${nameCell}${statusBadge ? `<div class="meta-report-row-meta">${statusBadge}</div>` : ''}</td>
-          <td><code class="meta-report-code">${esc(client.metaAdAccountId || '—')}</code></td>
-          <td>${esc(typeLabel)}</td>
-          <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-report-enabled="${esc(client.clientId)}" ${client.metaReportEnabled ? 'checked' : ''} aria-label="Enable report for ${esc(client.accountName)}" />` : '—'}</td>
-          <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-bottomline="${esc(client.clientId)}" ${client.metaReportShowBottomline ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Bottomline for ${esc(client.accountName)}" />` : '—'}</td>
-          <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-fee="${esc(client.clientId)}" ${client.metaReportFeeEnabled ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Censio fee for ${esc(client.accountName)}" />` : '—'}</td>
-          <td>${shareCell}</td>
-          <td>${setupCell}</td>
-        </tr>
+        <article class="meta-hub-card ${cardClass}" data-meta-hub-row="${esc(rowKey)}">
+          <div class="meta-hub-card-head">
+            <div class="meta-hub-avatar" aria-hidden="true">${metaHubClientInitial(client.accountName)}</div>
+            <div class="meta-hub-card-title">
+              ${nameMarkup}
+              <div class="meta-hub-card-badges">${statusBadge}${typeBadge}</div>
+            </div>
+            <div class="meta-hub-card-actions">${shareBtn}${setupAction}</div>
+          </div>
+          <div class="meta-hub-card-meta">
+            <code>act_${esc(client.metaAdAccountId || '—')}</code>
+            ${client.partnerSource === 'partner' ? '<span class="meta-hub-card-meta-dot">·</span><span>Partner account</span>' : ''}
+            ${client.partnerSource === 'app-only' ? '<span class="meta-hub-card-meta-dot">·</span><span>In app only</span>' : ''}
+          </div>
+          <div class="meta-hub-card-toggles">
+            ${renderMetaHubSwitch({
+              label: 'Report',
+              attr: 'data-meta-report-enabled',
+              value: canEdit ? client.clientId : null,
+              checked: client.metaReportEnabled,
+            })}
+            ${renderMetaHubSwitch({
+              label: 'Bottomline',
+              attr: 'data-meta-bottomline',
+              value: canEdit ? client.clientId : null,
+              checked: client.metaReportShowBottomline,
+              disabled: !client.metaReportEnabled,
+            })}
+            ${renderMetaHubSwitch({
+              label: 'Censio fee',
+              attr: 'data-meta-fee',
+              value: canEdit ? client.clientId : null,
+              checked: client.metaReportFeeEnabled,
+              disabled: !client.metaReportEnabled,
+            })}
+          </div>
+        </article>
       `;
     }
 
     function renderMetaReportsSummaryHtml(summary) {
+      const total = summary.totalListed ?? summary.inAppCount ?? 0;
+      const fromMeta = summary.partnerAccountCount ?? 0;
       return `
-        <div class="meta-report-stat">
-          <div class="meta-report-stat-label">Meta ad accounts</div>
-          <div class="meta-report-stat-value">${esc(String(summary.partnerAccountCount ?? 0))}</div>
+        <div class="meta-hub-stat">
+          <div class="meta-hub-stat-icon meta-hub-stat-icon--total" aria-hidden="true">${ICON_CHART}</div>
+          <div class="meta-hub-stat-body">
+            <div class="meta-hub-stat-value">${esc(String(total))}</div>
+            <div class="meta-hub-stat-label">Clients listed</div>
+            ${fromMeta > 0 ? `<div class="meta-hub-stat-hint">${esc(String(fromMeta))} from Meta BM</div>` : ''}
+          </div>
         </div>
-        <div class="meta-report-stat">
-          <div class="meta-report-stat-label">In app</div>
-          <div class="meta-report-stat-value">${esc(String(summary.inAppCount ?? 0))}</div>
+        <div class="meta-hub-stat">
+          <div class="meta-hub-stat-icon meta-hub-stat-icon--live" aria-hidden="true">${ICON_CHECK}</div>
+          <div class="meta-hub-stat-body">
+            <div class="meta-hub-stat-value">${esc(String(summary.enabledCount ?? 0))}</div>
+            <div class="meta-hub-stat-label">Reports live</div>
+          </div>
         </div>
-        <div class="meta-report-stat">
-          <div class="meta-report-stat-label">Reports enabled</div>
-          <div class="meta-report-stat-value">${esc(String(summary.enabledCount ?? 0))}</div>
+        <div class="meta-hub-stat">
+          <div class="meta-hub-stat-icon meta-hub-stat-icon--app" aria-hidden="true">${ICON_PLUS}</div>
+          <div class="meta-hub-stat-body">
+            <div class="meta-hub-stat-value">${esc(String(summary.inAppCount ?? 0))}</div>
+            <div class="meta-hub-stat-label">Configured in app</div>
+          </div>
         </div>
-        <div class="meta-report-stat">
-          <div class="meta-report-stat-label">Need setup</div>
-          <div class="meta-report-stat-value">${esc(String(summary.needsSetupCount ?? 0))}</div>
+        <div class="meta-hub-stat">
+          <div class="meta-hub-stat-icon meta-hub-stat-icon--setup" aria-hidden="true">${ICON_SYNC}</div>
+          <div class="meta-hub-stat-body">
+            <div class="meta-hub-stat-value">${esc(String(summary.needsSetupCount ?? 0))}</div>
+            <div class="meta-hub-stat-label">Need setup</div>
+          </div>
         </div>
       `;
     }
 
-    function renderMetaReportsTableRows(clients, filter = 'all') {
+    function renderMetaReportsClientCards(clients, filter = 'all', searchQuery = '') {
       if (!clients.length) {
-        const message = filter === 'all'
-          ? 'No Meta ad accounts found. Check META_SYSTEM_USER_TOKEN and META_BUSINESS_ID.'
-          : 'No ad accounts match this filter.';
-        return `<tr><td colspan="8">${message}</td></tr>`;
+        const message = searchQuery
+          ? `No clients match “${searchQuery}”.`
+          : (filter === 'all'
+            ? 'No Meta ad accounts found. Check META_SYSTEM_USER_TOKEN and META_BUSINESS_ID, or add clients manually.'
+            : 'No clients match this filter.');
+        return `
+          <div class="meta-hub-empty">
+            <h3>No clients to show</h3>
+            <p>${esc(message)}</p>
+          </div>
+        `;
       }
-      return clients.map((client) => renderMetaReportHubRow(client)).join('');
+      return clients.map((client) => renderMetaReportHubCard(client)).join('');
     }
 
     function renderMetaReportsBannerHtml(metaInfo) {
       if (!metaInfo?.partnerFetchError) return '';
-      return `<div class="fb-lead-banner meta-report-banner-warn">${esc(metaInfo.partnerFetchError)} Showing only clients already configured in the app.</div>`;
+      return `
+        <div class="meta-hub-banner">
+          <strong>Meta Business Manager listing unavailable</strong>
+          ${esc(metaInfo.partnerFetchError)} Showing only clients already configured in the app.
+        </div>
+      `;
+    }
+
+    function renderMetaHubFiltersHtml(activeFilter) {
+      return META_HUB_FILTER_OPTIONS.map((option) => `
+        <button
+          type="button"
+          class="meta-hub-filter${activeFilter === option.value ? ' is-active' : ''}"
+          data-meta-filter="${esc(option.value)}"
+        >${esc(option.label)}</button>
+      `).join('');
     }
 
     function recomputeMetaReportsSummaryCounts() {
@@ -6747,6 +7010,7 @@
         inAppCount: all.filter((client) => client.inApp).length,
         enabledCount: all.filter((client) => client.metaReportEnabled).length,
         needsSetupCount: all.filter((client) => client.needsSetup).length,
+        totalListed: all.length,
       };
     }
 
@@ -6763,12 +7027,18 @@
     function updateMetaReportsHubDom(viewData) {
       const summaryEl = document.getElementById('meta-reports-summary');
       const bannerEl = document.getElementById('meta-reports-banner');
-      const tbody = document.getElementById('meta-reports-table-body');
-      if (summaryEl) summaryEl.innerHTML = renderMetaReportsSummaryHtml(viewData.summary);
+      const cardsEl = document.getElementById('meta-reports-cards');
+      const countEl = document.getElementById('meta-reports-count');
+      const summaryWithTotal = {
+        ...viewData.summary,
+        totalListed: viewData.allClients?.length ?? viewData.summary.totalListed ?? 0,
+      };
+      if (summaryEl) summaryEl.innerHTML = renderMetaReportsSummaryHtml(summaryWithTotal);
       if (bannerEl) bannerEl.innerHTML = renderMetaReportsBannerHtml(viewData.meta);
-      if (tbody) {
-        tbody.innerHTML = renderMetaReportsTableRows(viewData.clients, viewData.filter);
-        bindMetaReportsHubRowEvents(tbody);
+      if (countEl) countEl.textContent = `${viewData.clients.length} shown`;
+      if (cardsEl) {
+        cardsEl.innerHTML = renderMetaReportsClientCards(viewData.clients, viewData.filter, viewData.searchQuery);
+        bindMetaReportsHubRowEvents(cardsEl);
       }
     }
 
@@ -7010,7 +7280,10 @@
 
     function renderMetaReportsHubPage(viewData) {
       const clients = viewData.clients || [];
-      const summary = viewData.summary || {};
+      const summary = {
+        ...viewData.summary,
+        totalListed: viewData.allClients?.length ?? viewData.summary?.totalListed ?? clients.length,
+      };
       const metaInfo = viewData.meta || {};
 
       return `
@@ -7023,43 +7296,33 @@
             <span>Meta reports</span>
           </div>
           <h1>Meta client reports</h1>
-          <p>All partner ad accounts from Meta Business Manager. Enable reporting and copy share links for each client.</p>
+          <p>Monthly Meta ads reports for partner clients. Toggle reporting, copy share links, and edit monthly inputs.</p>
         </div>
         <div class="sync-history-page meta-reports-page">
-          <div id="meta-reports-banner">${renderMetaReportsBannerHtml(metaInfo)}</div>
-          <div class="meta-report-summary" id="meta-reports-summary">
-            ${renderMetaReportsSummaryHtml(summary)}
-          </div>
-          <div class="sync-history-toolbar meta-report-toolbar-row">
-            <div class="sync-history-toolbar-actions">
-              <a class="admin-btn admin-btn--secondary" href="/admin">← Back to clients</a>
+          <div class="meta-hub-layout">
+            <div id="meta-reports-banner">${renderMetaReportsBannerHtml(metaInfo)}</div>
+            <div class="meta-hub-stats" id="meta-reports-summary">
+              ${renderMetaReportsSummaryHtml(summary)}
             </div>
-            <div class="sync-history-toolbar-actions">
-              <select id="meta-reports-filter" class="admin-select">
-                <option value="all"${metaReportsState.filter === 'all' ? ' selected' : ''}>All ad accounts</option>
-                <option value="enabled"${metaReportsState.filter === 'enabled' ? ' selected' : ''}>Reporting enabled</option>
-                <option value="meta-only"${metaReportsState.filter === 'meta-only' ? ' selected' : ''}>Meta-only (no GHL)</option>
-                <option value="needs-setup"${metaReportsState.filter === 'needs-setup' ? ' selected' : ''}>Needs setup</option>
-              </select>
-              <button class="admin-btn admin-btn--secondary" type="button" id="meta-reports-refresh">${ICON_SYNC} Refresh</button>
+            <div class="meta-hub-toolbar">
+              <div class="meta-hub-toolbar-left">
+                <a class="admin-btn admin-btn--secondary" href="/admin">← Back</a>
+                <div class="hub-search meta-hub-search">
+                  ${ICON_SEARCH}
+                  <input type="search" id="meta-reports-search" placeholder="Search clients or ad account…" value="${esc(metaReportsState.searchQuery)}" autocomplete="off" />
+                </div>
+              </div>
+              <div class="meta-hub-toolbar-right">
+                <div class="meta-hub-filters" id="meta-reports-filters" role="tablist" aria-label="Filter clients">
+                  ${renderMetaHubFiltersHtml(metaReportsState.filter)}
+                </div>
+                <span class="meta-hub-count" id="meta-reports-count">${clients.length} shown</span>
+                <button class="admin-btn admin-btn--secondary" type="button" id="meta-reports-refresh">${ICON_SYNC} Refresh</button>
+              </div>
             </div>
-          </div>
-          <div class="dashboard-table-wrap">
-            <table class="sync-history-table meta-reports-table">
-              <thead>
-                <tr>
-                  <th>Client</th>
-                  <th>Ad account</th>
-                  <th>Type</th>
-                  <th>Report</th>
-                  <th>Bottomline</th>
-                  <th>Fee</th>
-                  <th>Share link</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="meta-reports-table-body">${renderMetaReportsTableRows(clients, viewData.filter)}</tbody>
-            </table>
+            <div class="meta-hub-cards" id="meta-reports-cards">
+              ${renderMetaReportsClientCards(clients, viewData.filter, viewData.searchQuery)}
+            </div>
           </div>
         </div>
         `)}
@@ -7089,7 +7352,7 @@
           <h1>${esc(payload.accountName)}</h1>
           <p>Edit monthly Meta report inputs. Leads and ad metrics refresh from Meta; won leads and profit are manual.</p>
         </div>
-        <div class="sync-history-page meta-reports-page">
+        <div class="sync-history-page meta-reports-page meta-report-client-page">
           <div class="meta-report-toolbar">
             <label>Year
               <select id="meta-report-year" class="admin-select">
@@ -7183,7 +7446,7 @@
       try {
         const data = await adminFetch('/api/meta-reports?filter=all');
         metaReportsState.dashboardData = data;
-        updateMetaReportsHubDom(getMetaReportsHubView(data, metaReportsState.filter));
+        updateMetaReportsHubDom(getMetaReportsHubView(data, metaReportsState.filter, metaReportsState.searchQuery));
         if (!silent) showToast('Meta reports refreshed', 'success');
       } catch (error) {
         showToast(error.message || 'Refresh failed', 'error');
@@ -7193,15 +7456,40 @@
     }
 
     function bindMetaReportsHubChromeEvents() {
-      const filter = document.getElementById('meta-reports-filter');
-      if (filter) {
-        filter.onchange = () => {
-          metaReportsState.filter = filter.value;
+      document.querySelectorAll('[data-meta-filter]').forEach((button) => {
+        button.onclick = () => {
+          metaReportsState.filter = button.getAttribute('data-meta-filter') || 'all';
+          document.querySelectorAll('[data-meta-filter]').forEach((pill) => {
+            pill.classList.toggle('is-active', pill.getAttribute('data-meta-filter') === metaReportsState.filter);
+          });
           if (metaReportsState.dashboardData) {
-            updateMetaReportsHubDom(getMetaReportsHubView(metaReportsState.dashboardData, metaReportsState.filter));
+            updateMetaReportsHubDom(getMetaReportsHubView(
+              metaReportsState.dashboardData,
+              metaReportsState.filter,
+              metaReportsState.searchQuery,
+            ));
           }
         };
+      });
+
+      const searchInput = document.getElementById('meta-reports-search');
+      if (searchInput) {
+        let searchTimer = null;
+        searchInput.oninput = () => {
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => {
+            metaReportsState.searchQuery = searchInput.value || '';
+            if (metaReportsState.dashboardData) {
+              updateMetaReportsHubDom(getMetaReportsHubView(
+                metaReportsState.dashboardData,
+                metaReportsState.filter,
+                metaReportsState.searchQuery,
+              ));
+            }
+          }, 180);
+        };
       }
+
       const refreshBtn = document.getElementById('meta-reports-refresh');
       if (refreshBtn) refreshBtn.onclick = () => refreshMetaReportsHubData({ silent: false });
     }
@@ -7221,7 +7509,11 @@
               reportUrl: settings.reportUrl,
             });
             showToast(input.checked ? 'Report enabled' : 'Report disabled', 'success');
-            updateMetaReportsHubDom(getMetaReportsHubView(metaReportsState.dashboardData, metaReportsState.filter));
+            updateMetaReportsHubDom(getMetaReportsHubView(
+              metaReportsState.dashboardData,
+              metaReportsState.filter,
+              metaReportsState.searchQuery,
+            ));
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             input.checked = !input.checked;
@@ -7291,7 +7583,7 @@
 
     function bindMetaReportsHubEvents() {
       bindMetaReportsHubChromeEvents();
-      bindMetaReportsHubRowEvents(document.getElementById('meta-reports-table-body') || document);
+      bindMetaReportsHubRowEvents(document.getElementById('meta-reports-cards') || document);
     }
 
     function collectMetaReportLineItems() {
@@ -7522,7 +7814,7 @@
       try {
         const data = await adminFetch('/api/meta-reports?filter=all');
         metaReportsState.dashboardData = data;
-        const viewData = getMetaReportsHubView(data, metaReportsState.filter);
+        const viewData = getMetaReportsHubView(data, metaReportsState.filter, metaReportsState.searchQuery);
         if (!metaReportsState.hubMounted) {
           dashboard.innerHTML = renderMetaReportsHubPage(viewData);
           metaReportsState.hubMounted = true;
@@ -8119,7 +8411,6 @@
       };
     }
 
-    const ICON_CHECK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
     const ICON_LAYER = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>';
     const ICON_MERGE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="15" r="2.4"/><path d="M6 8.4V15.6"/><path d="M8.2 6.4C14 6.4 14 12.6 15.8 13.4"/></svg>';
     const ICON_TARGET = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>';
