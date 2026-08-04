@@ -40,6 +40,8 @@
     { "source": "/api/cron/fb-lead-sync-retries", "destination": "/api/sync-history?__cron=fb-retries" },
     { "source": "/api/fb-lead-sync-cron", "destination": "/api/sync-history?__cron=fb" },
     { "source": "/api/cron/fb-lead-sync", "destination": "/api/sync-history?__cron=fb" },
+    { "source": "/", "destination": "/home.html" },
+    { "source": "/index.html", "destination": "/home.html" },
     { "source": "/login", "destination": "/admin.html" },
     { "source": "/team", "destination": "/admin.html" },
     { "source": "/admin", "destination": "/admin.html" },

@@ -366,7 +366,9 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (url === '/' || url === '/index.html') {
-    serveDashboardHtml(response, 'client');
+    const homePath = path.join(ROOT, 'public', 'home.html');
+    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    response.end(fs.readFileSync(homePath, 'utf8'));
     return;
   }
 
@@ -450,6 +452,7 @@ const server = http.createServer(async (request, response) => {
 server.listen(PORT, () => {
   console.log('');
   console.log('Censio dashboard running locally');
+  console.log(`  Homepage:         http://localhost:${PORT}/`);
   console.log(`  Client dashboard: http://localhost:${PORT}/suntech-nordic`);
   console.log(`  Staff login:      http://localhost:${PORT}/login`);
   console.log(`  Admin hub:        http://localhost:${PORT}/admin`);

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Censio Analytics — marketing intelligence by Censio." />
+  <title>Censio Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7f5f2;
+      --bg-deep: #f0ebe4;
+      --text: #1a1208;
+      --text-soft: #6b5348;
+      --primary: #ff6a00;
+      --primary-dark: #dc640a;
+      --bar-gradient: linear-gradient(
+        90deg,
+        #0f0a08 0%,
+        #1a100c 22%,
+        #261812 48%,
+        #352018 72%,
+        #452818 100%
+      );
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .home-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    .home-topbar {
+      background: var(--bar-gradient);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.14);
+      padding: 18px 24px;
+    }
+
+    .home-topbar-inner {
+      margin: 0 auto;
+      max-width: 1280px;
+    }
+
+    .home-logo {
+      display: block;
+      height: 36px;
+      width: auto;
+    }
+
+    .home-main {
+      align-items: center;
+      display: flex;
+      flex: 1;
+      justify-content: center;
+      overflow: hidden;
+      padding: 48px 24px 64px;
+      position: relative;
+    }
+
+    .home-main::before {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 106, 0, 0.08) 0%, transparent 42%),
+        radial-gradient(circle at 80% 70%, rgba(220, 100, 10, 0.06) 0%, transparent 38%);
+      content: '';
+      inset: 0;
+      pointer-events: none;
+      position: absolute;
+    }
+
+    .home-hero {
+      position: relative;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .home-accent {
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      border-radius: 999px;
+      height: 3px;
+      margin: 0 auto 28px;
+      opacity: 0.85;
+      width: 72px;
+    }
+
+    .home-title {
+      background: linear-gradient(135deg, var(--text) 0%, #4d3528 55%, var(--primary-dark) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+
+    @media (max-width: 480px) {
+      .home-topbar {
+        padding: 14px 16px;
+      }
+
+      .home-logo {
+        height: 30px;
+      }
+
+      .home-main {
+        padding: 40px 20px 56px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="home-page">
+    <header class="home-topbar">
+      <div class="home-topbar-inner">
+        <img class="home-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
+      </div>
+    </header>
+    <main class="home-main">
+      <div class="home-hero">
+        <div class="home-accent" aria-hidden="true"></div>
+        <h1 class="home-title">Censio Analytics</h1>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

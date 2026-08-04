@@ -8,9 +8,11 @@ Production: https://cenhub-dashboard.vercel.app/
 
 | URL | Who | Purpose |
 |-----|-----|---------|
-| `/` | Client (GHL iframe) | Dashboard — tenant from GHL SSO (`location_id`) |
+| `/` | Public | Censio Analytics landing page |
+| `/{client_id}` | Client (GHL iframe) | Dashboard — tenant from path or GHL SSO |
 | `/admin` | Censio admin | Client hub — card grid, add client, sync all |
-| `/{client_id}` | Censio admin | Setup wizard — credentials, pipeline slots, preview |
+| `/admin/{client_id}` | Censio admin | Setup wizard — credentials, pipeline slots, preview |
+| `/{client_id}?key=…` | Client | Dashboard with access key (when enforced) |
 | `/?client=slug` | Dev / preview only | Local testing with admin key — not for GHL menu links |
 
 Health check: `GET /api/health` returns DB + KV status (200 ok / 503 degraded).
