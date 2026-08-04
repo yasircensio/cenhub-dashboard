@@ -3903,6 +3903,7 @@
     }
     .meta-report-public-hero { text-align: center; }
     .meta-reports-page--public .meta-report-month-panel { max-width: 760px; margin: 0 auto; }
+    .meta-report-month-panel.is-loading { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
 
     .meta-report-hub-hero { padding-bottom: 20px; }
     .meta-report-hub-hero p { max-width: 52rem; }
@@ -6640,12 +6641,237 @@
 
     const metaReportsState = {
       filter: 'all',
-      clients: [],
+      dashboardData: null,
+      hubMounted: false,
       clientPayload: null,
+      clientPageMounted: false,
       activeMonthKey: null,
       selectedYear: new Date().getFullYear(),
       publicPayload: null,
+      publicPageMounted: false,
     };
+
+    function filterMetaReportsClients(clients, filter) {
+      const list = clients || [];
+      if (filter === 'enabled') return list.filter((client) => client.metaReportEnabled);
+      if (filter === 'meta-only') return list.filter((client) => !client.hasGhl);
+      if (filter === 'needs-setup') return list.filter((client) => client.needsSetup);
+      return list;
+    }
+
+    function getMetaReportsHubView(dashboardData, filter) {
+      const allClients = dashboardData?.clients || [];
+      const clients = filterMetaReportsClients(allClients, filter);
+      return {
+        clients,
+        summary: dashboardData?.summary || {},
+        meta: dashboardData?.meta || {},
+        filter,
+      };
+    }
+
+    function renderMetaReportHubRow(client) {
+      const canEdit = Boolean(client.clientId);
+      const rowKey = client.clientId || client.metaAdAccountId || '';
+      const statusBadge = client.needsSetup
+        ? '<span class="meta-report-badge meta-report-badge--setup">Not in app</span>'
+        : (client.metaReportEnabled
+          ? '<span class="meta-report-badge meta-report-badge--on">Report on</span>'
+          : '<span class="meta-report-badge">Report off</span>');
+      const typeLabel = client.hasGhl ? 'GHL + Meta' : (client.partnerSource === 'partner' ? 'Meta partner' : 'Meta only');
+      const nameCell = canEdit
+        ? `<a href="/admin/meta-reports/${encodeURIComponent(client.clientId)}" class="meta-report-client-link">${esc(client.accountName)}</a>`
+        : `<span class="meta-report-client-link">${esc(client.accountName)}</span>`;
+      const shareCell = client.reportUrl
+        ? `<button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`
+        : '<span class="meta-report-muted">—</span>';
+      const setupCell = client.needsSetup
+        ? `<button type="button" class="admin-btn admin-btn--primary admin-btn--small" data-meta-provision="${esc(client.metaAdAccountId)}" data-meta-provision-name="${esc(client.accountName)}">Add client</button>`
+        : (canEdit ? `<a class="admin-btn admin-btn--secondary admin-btn--small" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Edit</a>` : '—');
+
+      return `
+        <tr class="${client.needsSetup ? 'meta-report-row--setup' : ''}" data-meta-hub-row="${esc(rowKey)}">
+          <td>${nameCell}${statusBadge ? `<div class="meta-report-row-meta">${statusBadge}</div>` : ''}</td>
+          <td><code class="meta-report-code">${esc(client.metaAdAccountId || '—')}</code></td>
+          <td>${esc(typeLabel)}</td>
+          <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-report-enabled="${esc(client.clientId)}" ${client.metaReportEnabled ? 'checked' : ''} aria-label="Enable report for ${esc(client.accountName)}" />` : '—'}</td>
+          <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-bottomline="${esc(client.clientId)}" ${client.metaReportShowBottomline ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Bottomline for ${esc(client.accountName)}" />` : '—'}</td>
+          <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-fee="${esc(client.clientId)}" ${client.metaReportFeeEnabled ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Censio fee for ${esc(client.accountName)}" />` : '—'}</td>
+          <td>${shareCell}</td>
+          <td>${setupCell}</td>
+        </tr>
+      `;
+    }
+
+    function renderMetaReportsSummaryHtml(summary) {
+      return `
+        <div class="meta-report-stat">
+          <div class="meta-report-stat-label">Meta ad accounts</div>
+          <div class="meta-report-stat-value">${esc(String(summary.partnerAccountCount ?? 0))}</div>
+        </div>
+        <div class="meta-report-stat">
+          <div class="meta-report-stat-label">In app</div>
+          <div class="meta-report-stat-value">${esc(String(summary.inAppCount ?? 0))}</div>
+        </div>
+        <div class="meta-report-stat">
+          <div class="meta-report-stat-label">Reports enabled</div>
+          <div class="meta-report-stat-value">${esc(String(summary.enabledCount ?? 0))}</div>
+        </div>
+        <div class="meta-report-stat">
+          <div class="meta-report-stat-label">Need setup</div>
+          <div class="meta-report-stat-value">${esc(String(summary.needsSetupCount ?? 0))}</div>
+        </div>
+      `;
+    }
+
+    function renderMetaReportsTableRows(clients, filter = 'all') {
+      if (!clients.length) {
+        const message = filter === 'all'
+          ? 'No Meta ad accounts found. Check META_SYSTEM_USER_TOKEN and META_BUSINESS_ID.'
+          : 'No ad accounts match this filter.';
+        return `<tr><td colspan="8">${message}</td></tr>`;
+      }
+      return clients.map((client) => renderMetaReportHubRow(client)).join('');
+    }
+
+    function renderMetaReportsBannerHtml(metaInfo) {
+      if (!metaInfo?.partnerFetchError) return '';
+      return `<div class="fb-lead-banner meta-report-banner-warn">${esc(metaInfo.partnerFetchError)} Showing only clients already configured in the app.</div>`;
+    }
+
+    function recomputeMetaReportsSummaryCounts() {
+      const all = metaReportsState.dashboardData?.clients || [];
+      const summary = metaReportsState.dashboardData?.summary || {};
+      metaReportsState.dashboardData.summary = {
+        ...summary,
+        inAppCount: all.filter((client) => client.inApp).length,
+        enabledCount: all.filter((client) => client.metaReportEnabled).length,
+        needsSetupCount: all.filter((client) => client.needsSetup).length,
+      };
+    }
+
+    function mergeHubClient(clientId, patch) {
+      const all = metaReportsState.dashboardData?.clients;
+      if (!all) return null;
+      const index = all.findIndex((client) => client.clientId === clientId);
+      if (index < 0) return null;
+      all[index] = { ...all[index], ...patch };
+      recomputeMetaReportsSummaryCounts();
+      return all[index];
+    }
+
+    function updateMetaReportsHubDom(viewData) {
+      const summaryEl = document.getElementById('meta-reports-summary');
+      const bannerEl = document.getElementById('meta-reports-banner');
+      const tbody = document.getElementById('meta-reports-table-body');
+      if (summaryEl) summaryEl.innerHTML = renderMetaReportsSummaryHtml(viewData.summary);
+      if (bannerEl) bannerEl.innerHTML = renderMetaReportsBannerHtml(viewData.meta);
+      if (tbody) {
+        tbody.innerHTML = renderMetaReportsTableRows(viewData.clients, viewData.filter);
+        bindMetaReportsHubRowEvents(tbody);
+      }
+    }
+
+    function renderMetaReportsClientTabs(payload) {
+      const monthKeys = payload.monthKeys || [];
+      const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
+      return monthKeys.map((key) => `
+        <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
+      `).join('');
+    }
+
+    function refreshMetaReportMonthPanel(monthPayload) {
+      const payload = metaReportsState.clientPayload;
+      if (!payload || !metaReportsState.activeMonthKey) return;
+      payload.months = payload.months || {};
+      payload.months[metaReportsState.activeMonthKey] = monthPayload;
+      const panel = document.getElementById('meta-report-month-panel');
+      if (!panel) return;
+      panel.innerHTML = renderMetaReportMonthBody(monthPayload, { editable: true });
+      bindMetaReportsClientEditEvents(payload.clientId, payload);
+    }
+
+    function updateMetaReportsClientContent(payload) {
+      metaReportsState.clientPayload = payload;
+      const monthKeys = payload.monthKeys || [];
+      if (!metaReportsState.activeMonthKey) {
+        metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
+      } else if (!monthKeys.includes(metaReportsState.activeMonthKey)) {
+        metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
+      }
+
+      const yearSelect = document.getElementById('meta-report-year');
+      if (yearSelect) {
+        const years = [payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index);
+        yearSelect.innerHTML = years.map((year) => `
+          <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
+        `).join('');
+      }
+
+      const copyBtn = document.getElementById('meta-report-copy-link');
+      if (payload.reportUrl) {
+        if (copyBtn) {
+          copyBtn.setAttribute('data-copy-report-url', payload.reportUrl);
+          copyBtn.hidden = false;
+        }
+      } else if (copyBtn) {
+        copyBtn.hidden = true;
+      }
+
+      const settings = payload.settings || {};
+      const bottomlineToggle = document.getElementById('meta-report-setting-bottomline');
+      const feeToggle = document.getElementById('meta-report-setting-fee');
+      const feePercent = document.getElementById('meta-report-setting-fee-percent');
+      if (bottomlineToggle) bottomlineToggle.checked = Boolean(settings.metaReportShowBottomline);
+      if (feeToggle) feeToggle.checked = Boolean(settings.metaReportFeeEnabled);
+      if (feePercent) feePercent.value = settings.metaReportFeePercent ?? 20;
+
+      const tabsEl = document.querySelector('.meta-report-tabs');
+      if (tabsEl) {
+        tabsEl.innerHTML = renderMetaReportsClientTabs(payload);
+        bindMetaReportsClientTabEvents(payload);
+      }
+
+      const panel = document.getElementById('meta-report-month-panel');
+      if (panel) {
+        panel.innerHTML = renderMetaReportMonthBody(
+          payload.months?.[metaReportsState.activeMonthKey],
+          { editable: true },
+        );
+        bindMetaReportsClientEditEvents(payload.clientId, payload);
+      }
+    }
+
+    function updatePublicMetaReportContent(payload) {
+      metaReportsState.publicPayload = payload;
+      const monthKeys = payload.monthKeys || [];
+      if (!metaReportsState.activeMonthKey) {
+        metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
+      } else if (!monthKeys.includes(metaReportsState.activeMonthKey)) {
+        metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
+      }
+
+      const yearSelect = document.getElementById('meta-report-year');
+      if (yearSelect) {
+        const years = [payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index);
+        yearSelect.innerHTML = years.map((year) => `
+          <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
+        `).join('');
+      }
+
+      const tabsEl = document.querySelector('.meta-report-tabs');
+      if (tabsEl) {
+        tabsEl.innerHTML = monthKeys.map((key) => `
+          <button type="button" class="meta-report-tab${key === metaReportsState.activeMonthKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
+        `).join('');
+        bindPublicMetaReportTabEvents(payload);
+      }
+
+      const panel = document.getElementById('meta-report-month-panel');
+      if (panel) {
+        panel.innerHTML = renderMetaReportMonthBody(payload.months?.[metaReportsState.activeMonthKey], { editable: false });
+      }
+    }
 
     const META_MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -6782,45 +7008,10 @@
       return html;
     }
 
-    function renderMetaReportsHubPage(data) {
-      const clients = data.clients || [];
-      const summary = data.summary || {};
-      const metaInfo = data.meta || {};
-      const rows = clients.map((client) => {
-        const canEdit = Boolean(client.clientId);
-        const statusBadge = client.needsSetup
-          ? '<span class="meta-report-badge meta-report-badge--setup">Not in app</span>'
-          : (client.metaReportEnabled
-            ? '<span class="meta-report-badge meta-report-badge--on">Report on</span>'
-            : '<span class="meta-report-badge">Report off</span>');
-        const typeLabel = client.hasGhl ? 'GHL + Meta' : (client.partnerSource === 'partner' ? 'Meta partner' : 'Meta only');
-        const nameCell = canEdit
-          ? `<a href="/admin/meta-reports/${encodeURIComponent(client.clientId)}" class="meta-report-client-link">${esc(client.accountName)}</a>`
-          : `<span class="meta-report-client-link">${esc(client.accountName)}</span>`;
-        const shareCell = client.reportUrl
-          ? `<button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`
-          : '<span class="meta-report-muted">—</span>';
-        const setupCell = client.needsSetup
-          ? `<button type="button" class="admin-btn admin-btn--primary admin-btn--small" data-meta-provision="${esc(client.metaAdAccountId)}" data-meta-provision-name="${esc(client.accountName)}">Add client</button>`
-          : (canEdit ? `<a class="admin-btn admin-btn--secondary admin-btn--small" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Edit</a>` : '—');
-
-        return `
-          <tr class="${client.needsSetup ? 'meta-report-row--setup' : ''}">
-            <td>${nameCell}${statusBadge ? `<div class="meta-report-row-meta">${statusBadge}</div>` : ''}</td>
-            <td><code class="meta-report-code">${esc(client.metaAdAccountId || '—')}</code></td>
-            <td>${esc(typeLabel)}</td>
-            <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-report-enabled="${esc(client.clientId)}" ${client.metaReportEnabled ? 'checked' : ''} aria-label="Enable report for ${esc(client.accountName)}" />` : '—'}</td>
-            <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-bottomline="${esc(client.clientId)}" ${client.metaReportShowBottomline ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Bottomline for ${esc(client.accountName)}" />` : '—'}</td>
-            <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-fee="${esc(client.clientId)}" ${client.metaReportFeeEnabled ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Censio fee for ${esc(client.accountName)}" />` : '—'}</td>
-            <td>${shareCell}</td>
-            <td>${setupCell}</td>
-          </tr>
-        `;
-      }).join('');
-
-      const fetchWarning = metaInfo.partnerFetchError
-        ? `<div class="fb-lead-banner meta-report-banner-warn">${esc(metaInfo.partnerFetchError)} Showing only clients already configured in the app.</div>`
-        : '';
+    function renderMetaReportsHubPage(viewData) {
+      const clients = viewData.clients || [];
+      const summary = viewData.summary || {};
+      const metaInfo = viewData.meta || {};
 
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
@@ -6835,24 +7026,9 @@
           <p>All partner ad accounts from Meta Business Manager. Enable reporting and copy share links for each client.</p>
         </div>
         <div class="sync-history-page meta-reports-page">
-          ${fetchWarning}
-          <div class="meta-report-summary">
-            <div class="meta-report-stat">
-              <div class="meta-report-stat-label">Meta ad accounts</div>
-              <div class="meta-report-stat-value">${esc(String(summary.partnerAccountCount ?? clients.length))}</div>
-            </div>
-            <div class="meta-report-stat">
-              <div class="meta-report-stat-label">In app</div>
-              <div class="meta-report-stat-value">${esc(String(summary.inAppCount ?? 0))}</div>
-            </div>
-            <div class="meta-report-stat">
-              <div class="meta-report-stat-label">Reports enabled</div>
-              <div class="meta-report-stat-value">${esc(String(summary.enabledCount ?? 0))}</div>
-            </div>
-            <div class="meta-report-stat">
-              <div class="meta-report-stat-label">Need setup</div>
-              <div class="meta-report-stat-value">${esc(String(summary.needsSetupCount ?? 0))}</div>
-            </div>
+          <div id="meta-reports-banner">${renderMetaReportsBannerHtml(metaInfo)}</div>
+          <div class="meta-report-summary" id="meta-reports-summary">
+            ${renderMetaReportsSummaryHtml(summary)}
           </div>
           <div class="sync-history-toolbar meta-report-toolbar-row">
             <div class="sync-history-toolbar-actions">
@@ -6882,7 +7058,7 @@
                   <th></th>
                 </tr>
               </thead>
-              <tbody>${rows || '<tr><td colspan="8">No Meta ad accounts found. Check META_SYSTEM_USER_TOKEN and META_BUSINESS_ID.</td></tr>'}</tbody>
+              <tbody id="meta-reports-table-body">${renderMetaReportsTableRows(clients, viewData.filter)}</tbody>
             </table>
           </div>
         </div>
@@ -6995,66 +7171,103 @@
     }
 
     async function patchMetaReportSettings(clientId, patch) {
-      await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`, {
+      return adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`, {
         method: 'PATCH',
         body: JSON.stringify(patch),
       });
     }
 
-    function bindMetaReportsHubEvents() {
+    async function refreshMetaReportsHubData({ silent = true } = {}) {
+      const refreshBtn = document.getElementById('meta-reports-refresh');
+      if (refreshBtn) refreshBtn.disabled = true;
+      try {
+        const data = await adminFetch('/api/meta-reports?filter=all');
+        metaReportsState.dashboardData = data;
+        updateMetaReportsHubDom(getMetaReportsHubView(data, metaReportsState.filter));
+        if (!silent) showToast('Meta reports refreshed', 'success');
+      } catch (error) {
+        showToast(error.message || 'Refresh failed', 'error');
+      } finally {
+        if (refreshBtn) refreshBtn.disabled = false;
+      }
+    }
+
+    function bindMetaReportsHubChromeEvents() {
       const filter = document.getElementById('meta-reports-filter');
       if (filter) {
         filter.onchange = () => {
           metaReportsState.filter = filter.value;
-          loadMetaReportsHubPage();
+          if (metaReportsState.dashboardData) {
+            updateMetaReportsHubDom(getMetaReportsHubView(metaReportsState.dashboardData, metaReportsState.filter));
+          }
         };
       }
       const refreshBtn = document.getElementById('meta-reports-refresh');
-      if (refreshBtn) refreshBtn.onclick = () => loadMetaReportsHubPage();
+      if (refreshBtn) refreshBtn.onclick = () => refreshMetaReportsHubData({ silent: false });
+    }
 
-      document.querySelectorAll('[data-meta-report-enabled]').forEach((input) => {
+    function bindMetaReportsHubRowEvents(root = document) {
+      root.querySelectorAll('[data-meta-report-enabled]').forEach((input) => {
         input.onchange = async () => {
           const clientId = input.getAttribute('data-meta-report-enabled');
+          input.disabled = true;
           try {
-            await patchMetaReportSettings(clientId, { metaReportEnabled: input.checked });
+            const result = await patchMetaReportSettings(clientId, { metaReportEnabled: input.checked });
+            const settings = result.settings || {};
+            mergeHubClient(clientId, {
+              metaReportEnabled: settings.metaReportEnabled,
+              metaReportShowBottomline: settings.metaReportShowBottomline,
+              metaReportFeeEnabled: settings.metaReportFeeEnabled,
+              reportUrl: settings.reportUrl,
+            });
             showToast(input.checked ? 'Report enabled' : 'Report disabled', 'success');
-            await loadMetaReportsHubPage();
+            updateMetaReportsHubDom(getMetaReportsHubView(metaReportsState.dashboardData, metaReportsState.filter));
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             input.checked = !input.checked;
+          } finally {
+            input.disabled = false;
           }
         };
       });
 
-      document.querySelectorAll('[data-meta-bottomline]').forEach((input) => {
+      root.querySelectorAll('[data-meta-bottomline]').forEach((input) => {
         input.onchange = async () => {
           const clientId = input.getAttribute('data-meta-bottomline');
+          input.disabled = true;
           try {
-            await patchMetaReportSettings(clientId, { metaReportShowBottomline: input.checked });
+            const result = await patchMetaReportSettings(clientId, { metaReportShowBottomline: input.checked });
+            mergeHubClient(clientId, { metaReportShowBottomline: result.settings?.metaReportShowBottomline });
             showToast('Bottomline setting saved', 'success');
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             input.checked = !input.checked;
+          } finally {
+            input.disabled = false;
           }
         };
       });
 
-      document.querySelectorAll('[data-meta-fee]').forEach((input) => {
+      root.querySelectorAll('[data-meta-fee]').forEach((input) => {
         input.onchange = async () => {
           const clientId = input.getAttribute('data-meta-fee');
+          input.disabled = true;
           try {
-            await patchMetaReportSettings(clientId, { metaReportFeeEnabled: input.checked });
+            const result = await patchMetaReportSettings(clientId, { metaReportFeeEnabled: input.checked });
+            mergeHubClient(clientId, { metaReportFeeEnabled: result.settings?.metaReportFeeEnabled });
             showToast('Fee setting saved', 'success');
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             input.checked = !input.checked;
+          } finally {
+            input.disabled = false;
           }
         };
       });
 
-      bindMetaReportCopyButtons();
+      bindMetaReportCopyButtons(root);
 
-      document.querySelectorAll('[data-meta-provision]').forEach((button) => {
+      root.querySelectorAll('[data-meta-provision]').forEach((button) => {
         button.onclick = async () => {
           button.disabled = true;
           try {
@@ -7066,14 +7279,19 @@
                 metaReportEnabled: true,
               }),
             });
-            showToast('Client added — enable report and copy link', 'success');
-            await loadMetaReportsHubPage();
+            showToast('Client added', 'success');
+            await refreshMetaReportsHubData({ silent: true });
           } catch (error) {
             showToast(error.message || 'Failed to add client', 'error');
             button.disabled = false;
           }
         };
       });
+    }
+
+    function bindMetaReportsHubEvents() {
+      bindMetaReportsHubChromeEvents();
+      bindMetaReportsHubRowEvents(document.getElementById('meta-reports-table-body') || document);
     }
 
     function collectMetaReportLineItems() {
@@ -7084,7 +7302,7 @@
       })).filter((item) => item.label.trim());
     }
 
-    function bindMetaReportsClientEvents(payload) {
+    function bindMetaReportsClientTabEvents(payload) {
       const clientId = payload.clientId;
       document.querySelectorAll('[data-meta-month-tab]').forEach((button) => {
         button.onclick = () => {
@@ -7102,29 +7320,48 @@
           });
         };
       });
+    }
+
+    function bindMetaReportsClientChromeEvents(payload) {
+      const clientId = payload.clientId;
 
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
-        yearSelect.onchange = () => {
+        yearSelect.onchange = async () => {
           metaReportsState.selectedYear = Number(yearSelect.value);
           metaReportsState.activeMonthKey = null;
-          loadMetaReportsClientPage();
+          yearSelect.disabled = true;
+          try {
+            await loadMetaReportsClientPage({ silent: true });
+          } finally {
+            yearSelect.disabled = false;
+          }
         };
       }
 
       bindMetaReportCopyButtons();
-      bindMetaReportsClientEditEvents(clientId, payload);
 
       const bottomlineToggle = document.getElementById('meta-report-setting-bottomline');
       const feeToggle = document.getElementById('meta-report-setting-fee');
       const feePercent = document.getElementById('meta-report-setting-fee-percent');
       const saveSettings = async () => {
-        await patchMetaReportSettings(clientId, {
-          metaReportShowBottomline: bottomlineToggle?.checked,
-          metaReportFeeEnabled: feeToggle?.checked,
-          metaReportFeePercent: Number(feePercent?.value) || 20,
-        });
-        await loadMetaReportsClientPage();
+        try {
+          const result = await patchMetaReportSettings(clientId, {
+            metaReportShowBottomline: bottomlineToggle?.checked,
+            metaReportFeeEnabled: feeToggle?.checked,
+            metaReportFeePercent: Number(feePercent?.value) || 20,
+          });
+          const settings = result.settings || {};
+          const refreshed = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`);
+          metaReportsState.clientPayload = refreshed;
+          if (bottomlineToggle) bottomlineToggle.checked = Boolean(refreshed.settings?.metaReportShowBottomline);
+          if (feeToggle) feeToggle.checked = Boolean(refreshed.settings?.metaReportFeeEnabled);
+          if (feePercent) feePercent.value = refreshed.settings?.metaReportFeePercent ?? 20;
+          refreshMetaReportMonthPanel(refreshed.months?.[metaReportsState.activeMonthKey]);
+          showToast('Settings saved', 'success');
+        } catch (error) {
+          showToast(error.message || 'Update failed', 'error');
+        }
       };
       if (bottomlineToggle) bottomlineToggle.onchange = saveSettings;
       if (feeToggle) feeToggle.onchange = saveSettings;
@@ -7134,11 +7371,31 @@
       if (rotateBtn) {
         rotateBtn.onclick = async () => {
           if (!window.confirm('Rotate the client share link? The old link will stop working.')) return;
-          await patchMetaReportSettings(clientId, { rotateAccessToken: true });
-          showToast('Share link rotated', 'success');
-          await loadMetaReportsClientPage();
+          rotateBtn.disabled = true;
+          try {
+            const result = await patchMetaReportSettings(clientId, { rotateAccessToken: true });
+            const reportUrl = result.settings?.reportUrl;
+            const currentPayload = metaReportsState.clientPayload;
+            if (currentPayload) currentPayload.reportUrl = reportUrl;
+            const copyBtn = document.getElementById('meta-report-copy-link');
+            if (copyBtn && reportUrl) {
+              copyBtn.setAttribute('data-copy-report-url', reportUrl);
+              copyBtn.hidden = false;
+            }
+            showToast('Share link rotated', 'success');
+          } catch (error) {
+            showToast(error.message || 'Rotate failed', 'error');
+          } finally {
+            rotateBtn.disabled = false;
+          }
         };
       }
+    }
+
+    function bindMetaReportsClientEvents(payload) {
+      bindMetaReportsClientChromeEvents(payload);
+      bindMetaReportsClientTabEvents(payload);
+      bindMetaReportsClientEditEvents(payload.clientId, payload);
     }
 
     function bindMetaReportsClientEditEvents(clientId, payload) {
@@ -7168,11 +7425,11 @@
           refreshBtn.disabled = true;
           try {
             const monthKey = metaReportsState.activeMonthKey;
-            await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
+            const result = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
               method: 'POST',
             });
+            refreshMetaReportMonthPanel(result.monthPayload);
             showToast('Meta data refreshed', 'success');
-            await loadMetaReportsClientPage();
           } catch (error) {
             showToast(error.message || 'Meta refresh failed', 'error');
           } finally {
@@ -7195,12 +7452,12 @@
               avgProfitPerWon: Number(document.getElementById('meta-report-avg-profit')?.value),
               lineItems: collectMetaReportLineItems(),
             };
-            await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`, {
+            const result = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`, {
               method: 'PUT',
               body: JSON.stringify(body),
             });
+            refreshMetaReportMonthPanel(result.monthPayload);
             showToast('Month saved', 'success');
-            await loadMetaReportsClientPage();
           } catch (error) {
             showToast(error.message || 'Save failed', 'error');
           } finally {
@@ -7210,7 +7467,7 @@
       }
     }
 
-    function bindPublicMetaReportEvents(payload) {
+    function bindPublicMetaReportTabEvents(payload) {
       document.querySelectorAll('[data-meta-month-tab]').forEach((button) => {
         button.onclick = () => {
           metaReportsState.activeMonthKey = button.getAttribute('data-meta-month-tab');
@@ -7223,12 +7480,21 @@
           });
         };
       });
+    }
+
+    function bindPublicMetaReportEvents(payload) {
+      bindPublicMetaReportTabEvents(payload);
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
-        yearSelect.onchange = () => {
+        yearSelect.onchange = async () => {
           metaReportsState.selectedYear = Number(yearSelect.value);
           metaReportsState.activeMonthKey = null;
-          loadPublicMetaReportPage();
+          yearSelect.disabled = true;
+          try {
+            await loadPublicMetaReportPage({ silent: true });
+          } finally {
+            yearSelect.disabled = false;
+          }
         };
       }
     }
@@ -7245,26 +7511,38 @@
         return;
       }
       currentStaffUser = user;
-      dashboard.innerHTML = `
-        ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
-        ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading Meta reports...</p></div>')}
-      `;
-      try {
-        const data = await adminFetch(`/api/meta-reports?filter=${encodeURIComponent(metaReportsState.filter)}`);
-        metaReportsState.clients = data.clients || [];
-        metaReportsState.summary = data.summary || {};
-        metaReportsState.metaInfo = data.meta || {};
-        dashboard.innerHTML = renderMetaReportsHubPage(data);
-        bindMetaReportsHubEvents();
-      } catch (error) {
+
+      if (!metaReportsState.hubMounted) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
-          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading Meta reports...</p></div>')}
         `;
+      }
+
+      try {
+        const data = await adminFetch('/api/meta-reports?filter=all');
+        metaReportsState.dashboardData = data;
+        const viewData = getMetaReportsHubView(data, metaReportsState.filter);
+        if (!metaReportsState.hubMounted) {
+          dashboard.innerHTML = renderMetaReportsHubPage(viewData);
+          metaReportsState.hubMounted = true;
+          bindMetaReportsHubEvents();
+        } else {
+          updateMetaReportsHubDom(viewData);
+        }
+      } catch (error) {
+        if (!metaReportsState.hubMounted) {
+          dashboard.innerHTML = `
+            ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
+            ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+          `;
+        } else {
+          showToast(error.message || 'Load failed', 'error');
+        }
       }
     }
 
-    async function loadMetaReportsClientPage() {
+    async function loadMetaReportsClientPage({ silent = false } = {}) {
       const dashboard = document.getElementById('dashboard');
       if (!dashboard) return;
       const user = await fetchStaffMe();
@@ -7274,30 +7552,56 @@
       }
       currentStaffUser = user;
       const clientId = CLIENT_SLUG;
-      dashboard.innerHTML = `
-        ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
-        ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading report editor...</p></div>')}
-      `;
+
+      if (!metaReportsState.clientPageMounted) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
+          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading report editor...</p></div>')}
+        `;
+      } else if (!silent) {
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.add('is-loading');
+      }
+
       try {
         const payload = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`);
-        metaReportsState.clientPayload = payload;
         if (!metaReportsState.activeMonthKey) {
           metaReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
-        dashboard.innerHTML = renderMetaReportsClientPage(payload);
-        bindMetaReportsClientEvents(payload);
+        if (!metaReportsState.clientPageMounted) {
+          metaReportsState.clientPayload = payload;
+          dashboard.innerHTML = renderMetaReportsClientPage(payload);
+          metaReportsState.clientPageMounted = true;
+          bindMetaReportsClientEvents(payload);
+        } else {
+          updateMetaReportsClientContent(payload);
+        }
       } catch (error) {
-        dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
-          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
-        `;
+        if (!metaReportsState.clientPageMounted) {
+          dashboard.innerHTML = `
+            ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
+            ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+          `;
+        } else {
+          showToast(error.message || 'Load failed', 'error');
+        }
+      } finally {
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.remove('is-loading');
       }
     }
 
-    async function loadPublicMetaReportPage() {
+    async function loadPublicMetaReportPage({ silent = false } = {}) {
       const dashboard = document.getElementById('dashboard');
       if (!dashboard || !REPORT_TOKEN) return;
-      dashboard.innerHTML = wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading report...</p></div>');
+
+      if (!metaReportsState.publicPageMounted) {
+        dashboard.innerHTML = wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading report...</p></div>');
+      } else if (!silent) {
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.add('is-loading');
+      }
+
       try {
         const payload = await fetch(`/api/meta-reports/public/${encodeURIComponent(REPORT_TOKEN)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`)
           .then(async (response) => {
@@ -7305,14 +7609,26 @@
             if (!response.ok) throw new Error(data.error || 'Report not found');
             return data;
           });
-        metaReportsState.publicPayload = payload;
         if (!metaReportsState.activeMonthKey) {
           metaReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
-        dashboard.innerHTML = renderPublicMetaReportPage(payload);
-        bindPublicMetaReportEvents(payload);
+        if (!metaReportsState.publicPageMounted) {
+          metaReportsState.publicPayload = payload;
+          dashboard.innerHTML = renderPublicMetaReportPage(payload);
+          metaReportsState.publicPageMounted = true;
+          bindPublicMetaReportEvents(payload);
+        } else {
+          updatePublicMetaReportContent(payload);
+        }
       } catch (error) {
-        dashboard.innerHTML = wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message || 'Report not found')}</div>`);
+        if (!metaReportsState.publicPageMounted) {
+          dashboard.innerHTML = wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message || 'Report not found')}</div>`);
+        } else {
+          showToast(error.message || 'Load failed', 'error');
+        }
+      } finally {
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.remove('is-loading');
       }
     }
 

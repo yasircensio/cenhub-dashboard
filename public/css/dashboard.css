@@ -3894,6 +3894,7 @@
     }
     .meta-report-public-hero { text-align: center; }
     .meta-reports-page--public .meta-report-month-panel { max-width: 760px; margin: 0 auto; }
+    .meta-report-month-panel.is-loading { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
 
     .meta-report-hub-hero { padding-bottom: 20px; }
     .meta-report-hub-hero p { max-width: 52rem; }
