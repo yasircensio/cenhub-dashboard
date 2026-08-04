@@ -12,6 +12,9 @@ Production: https://cenhub-dashboard.vercel.app/
 | `/{client_id}` | Client (GHL iframe) | Dashboard — tenant from path or GHL SSO |
 | `/admin` | Censio admin | Client hub — card grid, add client, sync all |
 | `/admin/{client_id}` | Censio admin | Setup wizard — credentials, pipeline slots, preview |
+| `/admin/meta-reports` | Censio staff | Meta monthly reports — client checklist, enable share links |
+| `/admin/meta-reports/{client_id}` | Censio staff | Edit monthly report inputs (won leads, profit, custom rows) |
+| `/report/{token}` | Client (share link) | View-only Meta monthly report — no login |
 | `/{client_id}?key=…` | Client | Dashboard with access key (when enforced) |
 | `/?client=slug` | Dev / preview only | Local testing with admin key — not for GHL menu links |
 
@@ -135,6 +138,26 @@ curl -s -H "Authorization: Bearer $CRON_SECRET" \
 Each client needs `metaPageId`, GHL token, and Meta page token or `META_SYSTEM_USER_TOKEN` in admin. Enable **FB lead ID auto-sync** per client on `/admin/fb-lead-sync`.
 
 **Admin UI:** `/admin/fb-lead-sync` — enable auto-sync, preview/backfill (90-day Meta window), 24h auto-activity summary, audit run history.
+
+## Meta client reports
+
+Separate from the GHL dashboard: monthly Meta performance reports for partner-access ad accounts (~15 clients). Meta ad metrics and leads are fetched automatically; staff enter won leads, average lead value, and profit manually.
+
+- **Staff checklist:** `/admin/meta-reports` — enable reporting per client, bottomline, Censio fee %, copy share link
+- **Staff editor:** `/admin/meta-reports/{client_id}` — month tabs (Jan through current month), partial-month date range, custom fee rows
+- **Client view:** `/report/{token}` — read-only share link (unguessable token; rotate from staff editor)
+- **API:** `GET /api/meta-reports` (staff), `GET /api/meta-reports/public/{token}?year=2026` (public)
+- **Cron:** existing Meta sync cron also refreshes the **current month** snapshot for enabled report clients
+
+**Postgres migration:** `npm run migrate:meta-reports`
+
+**Ops checklist after deploy:**
+
+1. Run `npm run migrate:meta-reports` on production Postgres
+2. Ensure each partner client has **Meta Ad Account ID** in admin
+3. Enable reporting on `/admin/meta-reports`
+4. Set default won leads / values once per client
+5. Copy share link to client
 
 **Postgres migrations:** `npm run migrate:fb-lead-sync` and `npm run migrate:fb-lead-sync-retries`.
 - **Webhooks:** GHL opportunity events hit `POST /api/ghl-webhook` and merge inline (~2–3s). Webhook URL: `https://cenhub-dashboard.vercel.app/api/ghl-webhook`. Verify with `GET /api/ghl-webhook` (`"inline": true`) or `npm run preflight:ghl`. Webhook merges defer while a full sync is running (`sync_status=syncing`).

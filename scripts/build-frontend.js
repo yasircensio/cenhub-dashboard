@@ -109,6 +109,14 @@ async function bootAdminApp() {
     await loadFbLeadSyncPage();
     return;
   }
+  if (IS_ADMIN_META_REPORTS) {
+    await loadMetaReportsHubPage();
+    return;
+  }
+  if (IS_ADMIN_META_REPORTS_CLIENT) {
+    await loadMetaReportsClientPage();
+    return;
+  }
   if (IS_TEAM_PAGE) {
     loadTeamPage();
     return;
@@ -153,6 +161,10 @@ document.addEventListener('visibilitychange', function () {
 
   const clientInit = `
 async function bootClientApp() {
+  if (IS_REPORT_VIEW) {
+    await loadPublicMetaReportPage();
+    return;
+  }
   try {
     tenantParams = await resolveTenantParams();
   } catch (error) {

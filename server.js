@@ -67,13 +67,15 @@ function createLocalResponse(serverResponse) {
   return adapter;
 }
 
-function serveDashboardHtml(response, mode, clientSlug = null) {
+function serveDashboardHtml(response, mode, clientSlug = null, extraAttrs = {}) {
   const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team'
-    || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'fb-lead-sync';
+    || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'fb-lead-sync'
+    || mode === 'meta-reports' || mode === 'meta-reports-client';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
   let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
   const bodyAttrs = [`data-dashboard-mode="${mode}"`];
   if (clientSlug) bodyAttrs.push(`data-client-slug="${clientSlug}"`);
+  if (extraAttrs.reportToken) bodyAttrs.push(`data-report-token="${extraAttrs.reportToken}"`);
 
   html = html.replace('<body>', `<body ${bodyAttrs.join(' ')}>`);
 
@@ -346,6 +348,27 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/meta-reports' || url.startsWith('/api/meta-reports/')) {
+    try {
+      const localResponse = createLocalResponse(response);
+      let rawBody = '';
+      if (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH') {
+        rawBody = await readRequestBody(request);
+      }
+      await require('./lib/meta-reports-handler').handleMetaReportsRequest({
+        method: request.method,
+        headers: request.headers,
+        url,
+        query: Object.fromEntries(requestUrl.searchParams),
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Meta reports API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/facebook-metrics') {
     try {
       const query = Object.fromEntries(requestUrl.searchParams);
@@ -399,6 +422,23 @@ const server = http.createServer(async (request, response) => {
 
   if (url === '/admin/fb-lead-sync') {
     serveDashboardHtml(response, 'fb-lead-sync');
+    return;
+  }
+
+  if (url === '/admin/meta-reports') {
+    serveDashboardHtml(response, 'meta-reports');
+    return;
+  }
+
+  const metaReportsClientMatch = url.match(/^\/admin\/meta-reports\/([^/]+)\/?$/);
+  if (metaReportsClientMatch) {
+    serveDashboardHtml(response, 'meta-reports-client', normalizeClientId(metaReportsClientMatch[1]));
+    return;
+  }
+
+  const reportTokenMatch = url.match(/^\/report\/([^/]+)\/?$/);
+  if (reportTokenMatch) {
+    serveDashboardHtml(response, 'report', null, { reportToken: reportTokenMatch[1] });
     return;
   }
 

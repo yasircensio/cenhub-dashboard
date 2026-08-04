@@ -15,6 +15,11 @@
         document.body.dataset.dashboardMode = 'sync-history-' + parts[2];
       } else if (parts[0] === 'admin' && parts[1] === 'fb-lead-sync') {
         document.body.dataset.dashboardMode = 'fb-lead-sync';
+      } else if (parts[0] === 'admin' && parts[1] === 'meta-reports' && parts[2]) {
+        document.body.dataset.dashboardMode = 'meta-reports-client';
+        document.body.dataset.clientSlug = parts[2];
+      } else if (parts[0] === 'admin' && parts[1] === 'meta-reports') {
+        document.body.dataset.dashboardMode = 'meta-reports';
       } else if (parts[0] === 'login') {
         document.body.dataset.dashboardMode = 'login';
       } else if (parts[0] === 'team') {

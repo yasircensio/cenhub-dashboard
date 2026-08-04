@@ -1,0 +1,79 @@
+const assert = require('assert');
+const {
+  computeMetaReportMetrics,
+  isLeadActionType,
+  parseAmount,
+} = require('../lib/meta-report-calculator');
+const { parseLeadCountFromActions } = require('../lib/meta-insights');
+
+function approx(actual, expected, tolerance = 0.02) {
+  assert.ok(Math.abs(actual - expected) <= tolerance, `Expected ${expected}, got ${actual}`);
+}
+
+function testSheetExample() {
+  const result = computeMetaReportMetrics({
+    spend: 3716.04,
+    cpm: 68.6,
+    impressions: 54158,
+    reach: 23675,
+    clicks: 1811,
+    leads: 49,
+    wonLeads: 5,
+    avgLeadValue: 120000,
+    avgProfitPerWon: 60000,
+    showBottomline: true,
+    feeEnabled: true,
+    feePercent: 20,
+    lineItems: [
+      { label: 'Hjemmeside', amount: 15000 },
+      { label: 'Onboarding', amount: 3500 },
+    ],
+  });
+
+  approx(result.meta.conversionRatePercent, 3.34, 0.01);
+  approx(result.topline.totalLeadValue, 600000);
+  approx(result.topline.cac, 743.208);
+  approx(result.topline.roasKr, 596283.96);
+  approx(result.topline.roasX, 161.46, 0.02);
+  approx(result.bottomline.totalProfit, 300000);
+  approx(result.bottomline.poasKr, 296283.96);
+  approx(result.bottomline.poasX, 79.73, 0.01);
+  approx(result.bottomline.censioFee, 59256.792);
+  approx(result.bottomline.poiKr, 218527.168);
+  approx(result.bottomline.poiX, 58.806, 0.01);
+  approx(result.customLineItemsTotal, 18500);
+}
+
+function testEmptyMonth() {
+  const result = computeMetaReportMetrics({
+    spend: 0,
+    impressions: 0,
+    clicks: 0,
+    leads: 0,
+    wonLeads: 0,
+    avgLeadValue: 0,
+  });
+  assert.strictEqual(result.meta.emptyMonth, true);
+}
+
+function testLeadActionParsing() {
+  assert.strictEqual(isLeadActionType('lead'), true);
+  assert.strictEqual(isLeadActionType('onsite_conversion.lead_grouped'), true);
+  assert.strictEqual(isLeadActionType('link_click'), false);
+
+  const total = parseLeadCountFromActions([
+    { action_type: 'link_click', value: '100' },
+    { action_type: 'lead', value: '30' },
+    { action_type: 'onsite_conversion.lead_grouped', value: '19' },
+  ]);
+  assert.strictEqual(total, 49);
+}
+
+function main() {
+  testSheetExample();
+  testEmptyMonth();
+  testLeadActionParsing();
+  console.log('Meta report calculator tests passed.');
+}
+
+main();
