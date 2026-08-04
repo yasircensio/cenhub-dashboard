@@ -3900,40 +3900,6 @@
     .meta-report-hub-hero p { max-width: 52rem; }
 
     .meta-hub-layout { display: flex; flex-direction: column; gap: 20px; }
-    .meta-hub-stats {
-      display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-    @media (max-width: 900px) {
-      .meta-hub-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 520px) {
-      .meta-hub-stats { grid-template-columns: 1fr; }
-    }
-    .meta-hub-stat {
-      align-items: flex-start; background: var(--panel); border: 1px solid var(--border);
-      border-radius: 14px; box-shadow: var(--shadow-sm); display: flex; gap: 12px;
-      min-height: 88px; padding: 16px 18px; transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .meta-hub-stat:hover { border-color: rgba(255, 106, 0, 0.25); box-shadow: var(--shadow-md); }
-    .meta-hub-stat-icon {
-      align-items: center; border-radius: 10px; color: #fff; display: flex; flex-shrink: 0;
-      height: 40px; justify-content: center; width: 40px;
-    }
-    .meta-hub-stat-icon svg { display: block; }
-    .meta-hub-stat-icon--total { background: linear-gradient(135deg, #ff8a3d, #ff6a00); }
-    .meta-hub-stat-icon--live { background: linear-gradient(135deg, #34c759, #138b53); }
-    .meta-hub-stat-icon--app { background: linear-gradient(135deg, #5b8def, #3b6fd4); }
-    .meta-hub-stat-icon--setup { background: linear-gradient(135deg, #f5b942, #d97706); }
-    .meta-hub-stat-body { min-width: 0; }
-    .meta-hub-stat-value {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 28px;
-      font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
-    }
-    .meta-hub-stat-label {
-      color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
-      margin-top: 4px; text-transform: uppercase;
-    }
-    .meta-hub-stat-hint { color: var(--text-muted); font-size: 11px; margin-top: 3px; }
 
     .meta-hub-toolbar {
       align-items: center; background: var(--panel); border: 1px solid var(--border);
@@ -4039,7 +4005,11 @@
     .meta-report-badge--setup { background: #fff4e5; color: #b45309; }
     .meta-report-badge--type { background: #eef3ff; color: #3b6fd4; font-weight: 600; }
 
-    .meta-hub-empty {
+    @media (max-width: 520px) {
+      .meta-hub-card-head { flex-wrap: wrap; }
+      .meta-hub-card-actions { justify-content: flex-start; width: 100%; }
+    }
+
       background: var(--panel); border: 1px dashed var(--border); border-radius: 16px;
       grid-column: 1 / -1; padding: 48px 24px; text-align: center;
     }
@@ -4052,8 +4022,6 @@
     }
     .meta-hub-banner strong { display: block; font-size: 14px; margin-bottom: 4px; }
 
-    .meta-report-summary { display: contents; }
-    .meta-report-stat { display: none; }
     .meta-report-muted { color: var(--text-soft); }
     .meta-report-banner-warn { margin-bottom: 0; }
 

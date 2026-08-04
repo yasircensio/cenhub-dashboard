@@ -3909,40 +3909,6 @@
     .meta-report-hub-hero p { max-width: 52rem; }
 
     .meta-hub-layout { display: flex; flex-direction: column; gap: 20px; }
-    .meta-hub-stats {
-      display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-    @media (max-width: 900px) {
-      .meta-hub-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 520px) {
-      .meta-hub-stats { grid-template-columns: 1fr; }
-    }
-    .meta-hub-stat {
-      align-items: flex-start; background: var(--panel); border: 1px solid var(--border);
-      border-radius: 14px; box-shadow: var(--shadow-sm); display: flex; gap: 12px;
-      min-height: 88px; padding: 16px 18px; transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .meta-hub-stat:hover { border-color: rgba(255, 106, 0, 0.25); box-shadow: var(--shadow-md); }
-    .meta-hub-stat-icon {
-      align-items: center; border-radius: 10px; color: #fff; display: flex; flex-shrink: 0;
-      height: 40px; justify-content: center; width: 40px;
-    }
-    .meta-hub-stat-icon svg { display: block; }
-    .meta-hub-stat-icon--total { background: linear-gradient(135deg, #ff8a3d, #ff6a00); }
-    .meta-hub-stat-icon--live { background: linear-gradient(135deg, #34c759, #138b53); }
-    .meta-hub-stat-icon--app { background: linear-gradient(135deg, #5b8def, #3b6fd4); }
-    .meta-hub-stat-icon--setup { background: linear-gradient(135deg, #f5b942, #d97706); }
-    .meta-hub-stat-body { min-width: 0; }
-    .meta-hub-stat-value {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 28px;
-      font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
-    }
-    .meta-hub-stat-label {
-      color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
-      margin-top: 4px; text-transform: uppercase;
-    }
-    .meta-hub-stat-hint { color: var(--text-muted); font-size: 11px; margin-top: 3px; }
 
     .meta-hub-toolbar {
       align-items: center; background: var(--panel); border: 1px solid var(--border);
@@ -4065,8 +4031,6 @@
     }
     .meta-hub-banner strong { display: block; font-size: 14px; margin-bottom: 4px; }
 
-    .meta-report-summary { display: contents; }
-    .meta-report-stat { display: none; }
     .meta-report-muted { color: var(--text-soft); }
     .meta-report-banner-warn { margin-bottom: 0; }
 
@@ -6929,42 +6893,6 @@
       `;
     }
 
-    function renderMetaReportsSummaryHtml(summary) {
-      const total = summary.totalListed ?? summary.inAppCount ?? 0;
-      const fromMeta = summary.partnerAccountCount ?? 0;
-      return `
-        <div class="meta-hub-stat">
-          <div class="meta-hub-stat-icon meta-hub-stat-icon--total" aria-hidden="true">${ICON_CHART}</div>
-          <div class="meta-hub-stat-body">
-            <div class="meta-hub-stat-value">${esc(String(total))}</div>
-            <div class="meta-hub-stat-label">Clients listed</div>
-            ${fromMeta > 0 ? `<div class="meta-hub-stat-hint">${esc(String(fromMeta))} from Meta BM</div>` : ''}
-          </div>
-        </div>
-        <div class="meta-hub-stat">
-          <div class="meta-hub-stat-icon meta-hub-stat-icon--live" aria-hidden="true">${ICON_CHECK}</div>
-          <div class="meta-hub-stat-body">
-            <div class="meta-hub-stat-value">${esc(String(summary.enabledCount ?? 0))}</div>
-            <div class="meta-hub-stat-label">Reports live</div>
-          </div>
-        </div>
-        <div class="meta-hub-stat">
-          <div class="meta-hub-stat-icon meta-hub-stat-icon--app" aria-hidden="true">${ICON_PLUS}</div>
-          <div class="meta-hub-stat-body">
-            <div class="meta-hub-stat-value">${esc(String(summary.inAppCount ?? 0))}</div>
-            <div class="meta-hub-stat-label">Configured in app</div>
-          </div>
-        </div>
-        <div class="meta-hub-stat">
-          <div class="meta-hub-stat-icon meta-hub-stat-icon--setup" aria-hidden="true">${ICON_SYNC}</div>
-          <div class="meta-hub-stat-body">
-            <div class="meta-hub-stat-value">${esc(String(summary.needsSetupCount ?? 0))}</div>
-            <div class="meta-hub-stat-label">Need setup</div>
-          </div>
-        </div>
-      `;
-    }
-
     function renderMetaReportsClientCards(clients, filter = 'all', searchQuery = '') {
       if (!clients.length) {
         const message = searchQuery
@@ -7025,15 +6953,9 @@
     }
 
     function updateMetaReportsHubDom(viewData) {
-      const summaryEl = document.getElementById('meta-reports-summary');
       const bannerEl = document.getElementById('meta-reports-banner');
       const cardsEl = document.getElementById('meta-reports-cards');
       const countEl = document.getElementById('meta-reports-count');
-      const summaryWithTotal = {
-        ...viewData.summary,
-        totalListed: viewData.allClients?.length ?? viewData.summary.totalListed ?? 0,
-      };
-      if (summaryEl) summaryEl.innerHTML = renderMetaReportsSummaryHtml(summaryWithTotal);
       if (bannerEl) bannerEl.innerHTML = renderMetaReportsBannerHtml(viewData.meta);
       if (countEl) countEl.textContent = `${viewData.clients.length} shown`;
       if (cardsEl) {
@@ -7280,10 +7202,6 @@
 
     function renderMetaReportsHubPage(viewData) {
       const clients = viewData.clients || [];
-      const summary = {
-        ...viewData.summary,
-        totalListed: viewData.allClients?.length ?? viewData.summary?.totalListed ?? clients.length,
-      };
       const metaInfo = viewData.meta || {};
 
       return `
@@ -7301,12 +7219,8 @@
         <div class="sync-history-page meta-reports-page">
           <div class="meta-hub-layout">
             <div id="meta-reports-banner">${renderMetaReportsBannerHtml(metaInfo)}</div>
-            <div class="meta-hub-stats" id="meta-reports-summary">
-              ${renderMetaReportsSummaryHtml(summary)}
-            </div>
             <div class="meta-hub-toolbar">
               <div class="meta-hub-toolbar-left">
-                <a class="admin-btn admin-btn--secondary" href="/admin">← Back</a>
                 <div class="hub-search meta-hub-search">
                   ${ICON_SEARCH}
                   <input type="search" id="meta-reports-search" placeholder="Search clients or ad account…" value="${esc(metaReportsState.searchQuery)}" autocomplete="off" />
