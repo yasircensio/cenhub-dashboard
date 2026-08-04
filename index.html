@@ -3903,6 +3903,35 @@
     }
     .meta-report-public-hero { text-align: center; }
     .meta-reports-page--public .meta-report-month-panel { max-width: 760px; margin: 0 auto; }
+
+    .meta-report-hub-hero { padding-bottom: 20px; }
+    .meta-report-hub-hero p { max-width: 52rem; }
+    .meta-report-summary {
+      display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 18px;
+    }
+    .meta-report-stat {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    }
+    .meta-report-stat-label { color: var(--text-soft); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .meta-report-stat-value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .meta-report-toolbar-row { align-items: center; margin-bottom: 12px; }
+    .meta-reports-table th, .meta-reports-table td { vertical-align: middle; }
+    .meta-report-client-link { font-weight: 600; }
+    .meta-report-code { font-size: 12px; }
+    .meta-report-row-meta { margin-top: 6px; }
+    .meta-report-badge {
+      border-radius: 999px; display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 3px 8px; background: #f3ece4; color: var(--text-soft);
+    }
+    .meta-report-badge--on { background: #e8f7ef; color: #138b53; }
+    .meta-report-badge--setup { background: #fff4e5; color: #b45309; }
+    .meta-report-row--setup { background: #fffdf8; }
+    .meta-report-toggle-cell { text-align: center; width: 72px; }
+    .meta-report-toggle {
+      accent-color: var(--primary); cursor: pointer; height: 18px; width: 18px;
+    }
+    .meta-report-muted { color: var(--text-soft); }
+    .meta-report-banner-warn { margin-bottom: 16px; }
   </style>
 </head>
 <body>
@@ -6753,41 +6782,88 @@
       return html;
     }
 
-    function renderMetaReportsHubPage(clients) {
-      const rows = clients.map((client) => `
-        <tr>
-          <td><a href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">${esc(client.accountName)}</a></td>
-          <td><code>${esc(client.metaAdAccountId || '—')}</code></td>
-          <td>${client.hasGhl ? 'GHL + Meta' : 'Meta only'}</td>
-          <td><label class="fb-lead-toggle"><input type="checkbox" data-meta-report-enabled="${esc(client.clientId)}" ${client.metaReportEnabled ? 'checked' : ''} /> Enabled</label></td>
-          <td><label class="fb-lead-toggle"><input type="checkbox" data-meta-bottomline="${esc(client.clientId)}" ${client.metaReportShowBottomline ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} /> Bottomline</label></td>
-          <td><label class="fb-lead-toggle"><input type="checkbox" data-meta-fee="${esc(client.clientId)}" ${client.metaReportFeeEnabled ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} /> Fee</label></td>
-          <td>${client.reportUrl ? `<button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>` : '—'}</td>
-        </tr>
-      `).join('');
+    function renderMetaReportsHubPage(data) {
+      const clients = data.clients || [];
+      const summary = data.summary || {};
+      const metaInfo = data.meta || {};
+      const rows = clients.map((client) => {
+        const canEdit = Boolean(client.clientId);
+        const statusBadge = client.needsSetup
+          ? '<span class="meta-report-badge meta-report-badge--setup">Not in app</span>'
+          : (client.metaReportEnabled
+            ? '<span class="meta-report-badge meta-report-badge--on">Report on</span>'
+            : '<span class="meta-report-badge">Report off</span>');
+        const typeLabel = client.hasGhl ? 'GHL + Meta' : (client.partnerSource === 'partner' ? 'Meta partner' : 'Meta only');
+        const nameCell = canEdit
+          ? `<a href="/admin/meta-reports/${encodeURIComponent(client.clientId)}" class="meta-report-client-link">${esc(client.accountName)}</a>`
+          : `<span class="meta-report-client-link">${esc(client.accountName)}</span>`;
+        const shareCell = client.reportUrl
+          ? `<button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`
+          : '<span class="meta-report-muted">—</span>';
+        const setupCell = client.needsSetup
+          ? `<button type="button" class="admin-btn admin-btn--primary admin-btn--small" data-meta-provision="${esc(client.metaAdAccountId)}" data-meta-provision-name="${esc(client.accountName)}">Add client</button>`
+          : (canEdit ? `<a class="admin-btn admin-btn--secondary admin-btn--small" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Edit</a>` : '—');
+
+        return `
+          <tr class="${client.needsSetup ? 'meta-report-row--setup' : ''}">
+            <td>${nameCell}${statusBadge ? `<div class="meta-report-row-meta">${statusBadge}</div>` : ''}</td>
+            <td><code class="meta-report-code">${esc(client.metaAdAccountId || '—')}</code></td>
+            <td>${esc(typeLabel)}</td>
+            <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-report-enabled="${esc(client.clientId)}" ${client.metaReportEnabled ? 'checked' : ''} aria-label="Enable report for ${esc(client.accountName)}" />` : '—'}</td>
+            <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-bottomline="${esc(client.clientId)}" ${client.metaReportShowBottomline ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Bottomline for ${esc(client.accountName)}" />` : '—'}</td>
+            <td class="meta-report-toggle-cell">${canEdit ? `<input type="checkbox" class="meta-report-toggle" data-meta-fee="${esc(client.clientId)}" ${client.metaReportFeeEnabled ? 'checked' : ''} ${client.metaReportEnabled ? '' : 'disabled'} aria-label="Censio fee for ${esc(client.accountName)}" />` : '—'}</td>
+            <td>${shareCell}</td>
+            <td>${setupCell}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const fetchWarning = metaInfo.partnerFetchError
+        ? `<div class="fb-lead-banner meta-report-banner-warn">${esc(metaInfo.partnerFetchError)} Showing only clients already configured in the app.</div>`
+        : '';
 
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
         ${wrapDashboardShell(`
-        <div class="page-hero admin-hub-hero">
+        <div class="page-hero admin-hub-hero meta-report-hub-hero">
           <div class="admin-breadcrumb">
             <a href="/admin">Clients</a>
             <span aria-hidden="true"> / </span>
             <span>Meta reports</span>
           </div>
           <h1>Meta client reports</h1>
-          <p>Monthly Meta performance reports for partner-access ad accounts. Clients view via share link; staff edit won leads and profit inputs here.</p>
+          <p>All partner ad accounts from Meta Business Manager. Enable reporting and copy share links for each client.</p>
         </div>
         <div class="sync-history-page meta-reports-page">
-          <div class="sync-history-toolbar">
+          ${fetchWarning}
+          <div class="meta-report-summary">
+            <div class="meta-report-stat">
+              <div class="meta-report-stat-label">Meta ad accounts</div>
+              <div class="meta-report-stat-value">${esc(String(summary.partnerAccountCount ?? clients.length))}</div>
+            </div>
+            <div class="meta-report-stat">
+              <div class="meta-report-stat-label">In app</div>
+              <div class="meta-report-stat-value">${esc(String(summary.inAppCount ?? 0))}</div>
+            </div>
+            <div class="meta-report-stat">
+              <div class="meta-report-stat-label">Reports enabled</div>
+              <div class="meta-report-stat-value">${esc(String(summary.enabledCount ?? 0))}</div>
+            </div>
+            <div class="meta-report-stat">
+              <div class="meta-report-stat-label">Need setup</div>
+              <div class="meta-report-stat-value">${esc(String(summary.needsSetupCount ?? 0))}</div>
+            </div>
+          </div>
+          <div class="sync-history-toolbar meta-report-toolbar-row">
             <div class="sync-history-toolbar-actions">
               <a class="admin-btn admin-btn--secondary" href="/admin">← Back to clients</a>
             </div>
             <div class="sync-history-toolbar-actions">
               <select id="meta-reports-filter" class="admin-select">
-                <option value="all"${metaReportsState.filter === 'all' ? ' selected' : ''}>All Meta clients</option>
+                <option value="all"${metaReportsState.filter === 'all' ? ' selected' : ''}>All ad accounts</option>
                 <option value="enabled"${metaReportsState.filter === 'enabled' ? ' selected' : ''}>Reporting enabled</option>
                 <option value="meta-only"${metaReportsState.filter === 'meta-only' ? ' selected' : ''}>Meta-only (no GHL)</option>
+                <option value="needs-setup"${metaReportsState.filter === 'needs-setup' ? ' selected' : ''}>Needs setup</option>
               </select>
               <button class="admin-btn admin-btn--secondary" type="button" id="meta-reports-refresh">${ICON_SYNC} Refresh</button>
             </div>
@@ -6801,11 +6877,12 @@
                   <th>Type</th>
                   <th>Report</th>
                   <th>Bottomline</th>
-                  <th>Censio fee</th>
+                  <th>Fee</th>
                   <th>Share link</th>
+                  <th></th>
                 </tr>
               </thead>
-              <tbody>${rows || '<tr><td colspan="7">No Meta-configured clients yet.</td></tr>'}</tbody>
+              <tbody>${rows || '<tr><td colspan="8">No Meta ad accounts found. Check META_SYSTEM_USER_TOKEN and META_BUSINESS_ID.</td></tr>'}</tbody>
             </table>
           </div>
         </div>
@@ -6976,6 +7053,27 @@
       });
 
       bindMetaReportCopyButtons();
+
+      document.querySelectorAll('[data-meta-provision]').forEach((button) => {
+        button.onclick = async () => {
+          button.disabled = true;
+          try {
+            await adminFetch('/api/meta-reports/provision', {
+              method: 'POST',
+              body: JSON.stringify({
+                accountName: button.getAttribute('data-meta-provision-name'),
+                metaAdAccountId: button.getAttribute('data-meta-provision'),
+                metaReportEnabled: true,
+              }),
+            });
+            showToast('Client added — enable report and copy link', 'success');
+            await loadMetaReportsHubPage();
+          } catch (error) {
+            showToast(error.message || 'Failed to add client', 'error');
+            button.disabled = false;
+          }
+        };
+      });
     }
 
     function collectMetaReportLineItems() {
@@ -7154,7 +7252,9 @@
       try {
         const data = await adminFetch(`/api/meta-reports?filter=${encodeURIComponent(metaReportsState.filter)}`);
         metaReportsState.clients = data.clients || [];
-        dashboard.innerHTML = renderMetaReportsHubPage(metaReportsState.clients);
+        metaReportsState.summary = data.summary || {};
+        metaReportsState.metaInfo = data.meta || {};
+        dashboard.innerHTML = renderMetaReportsHubPage(data);
         bindMetaReportsHubEvents();
       } catch (error) {
         dashboard.innerHTML = `
