@@ -567,6 +567,7 @@ const marketingMetricsApi = {
   resolveMonthlyFromPayload,
   calendarMonthKey,
   monthKeyFromDate,
+  monthBoundsIso,
   getCurrentMonthKey,
   getPreviousMonthKey,
   getSpendForPreset,
