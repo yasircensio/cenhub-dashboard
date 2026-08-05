@@ -3879,18 +3879,66 @@
       color: var(--text-soft); cursor: pointer; font-size: 13px; font-weight: 600; padding: 8px 14px;
     }
     .meta-report-tab.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
-    .meta-report-section { margin-bottom: 20px; }
-    .meta-report-section-title { font-size: 15px; font-weight: 700; margin: 0 0 10px; }
-    .meta-report-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .meta-report-table th, .meta-report-table td {
-      border-bottom: 1px solid var(--border); padding: 10px 12px; text-align: left; vertical-align: top;
+
+    .meta-kpi-section { margin-bottom: 26px; }
+    .meta-kpi-section-head { align-items: center; display: flex; gap: 9px; margin-bottom: 12px; }
+    .meta-kpi-dot { border-radius: 50%; flex-shrink: 0; height: 9px; width: 9px; }
+    .meta-kpi-dot--meta { background: #3b82f6; }
+    .meta-kpi-dot--topline { background: var(--primary); }
+    .meta-kpi-dot--bottomline { background: #16a34a; }
+    .meta-kpi-dot--other { background: #9333ea; }
+    .meta-kpi-section-title { font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700; margin: 0; }
+    .meta-kpi-section-badge {
+      background: #f3ece4; border-radius: 999px; color: var(--text-soft); font-size: 11px;
+      font-weight: 600; padding: 3px 9px;
     }
-    .meta-report-table th { color: var(--text-soft); font-weight: 600; width: 52%; }
+    .meta-kpi-grid {
+      display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .meta-kpi-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      border-top: 3px solid transparent; padding: 14px 14px 12px; transition: box-shadow 0.15s ease;
+    }
+    .meta-kpi-card:hover { box-shadow: var(--shadow-sm); }
+    .meta-kpi-card--meta { border-top-color: #3b82f6; }
+    .meta-kpi-card--topline { border-top-color: var(--primary); }
+    .meta-kpi-card--bottomline { border-top-color: #16a34a; }
+    .meta-kpi-card--other { border-top-color: #9333ea; }
+    .meta-kpi-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 19px; font-weight: 700; line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+    .meta-kpi-card--headline .meta-kpi-value { font-size: 24px; }
+    .meta-kpi-unit { color: var(--text-soft); font-size: 12px; font-weight: 600; margin-left: 3px; }
+    .meta-kpi-label {
+      color: var(--text-soft); font-size: 11.5px; font-weight: 600; letter-spacing: 0.01em;
+      margin-top: 5px; text-transform: uppercase;
+    }
+    .meta-kpi-remove-row { align-items: center; display: flex; gap: 4px; justify-content: space-between; }
+    .meta-kpi-remove-row .meta-report-unit { margin: 0; }
+
     .meta-report-unit { color: var(--text-soft); font-size: 12px; }
     .meta-report-empty { color: var(--text-soft); font-size: 16px; padding: 48px 16px; text-align: center; }
     .meta-report-toolbar, .meta-report-settings, .meta-report-edit-actions {
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
     }
+    .meta-report-settings { justify-content: space-between; }
+    .meta-report-settings-group { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+    .meta-report-save-indicator {
+      align-items: center; color: var(--text-soft); display: none; font-size: 12.5px; font-weight: 600; gap: 7px;
+    }
+    .meta-report-save-indicator.is-visible { display: flex; }
+    .meta-report-save-indicator-spinner {
+      animation: metaSpin 0.7s linear infinite; border: 2px solid var(--border); border-radius: 50%;
+      border-top-color: var(--primary); height: 13px; width: 13px;
+    }
+    @keyframes metaSpin { to { transform: rotate(360deg); } }
+    .meta-report-hidden-badge {
+      background: #f3ece4; border-radius: 999px; color: var(--text-soft); font-size: 11px;
+      font-weight: 600; padding: 3px 9px;
+    }
+    .meta-report-backfill-wrap { align-items: center; display: flex; gap: 8px; }
+    .meta-report-backfill-progress { color: var(--text-soft); font-size: 12.5px; font-weight: 600; }
     .meta-report-edit-grid {
       display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 16px;
     }
@@ -3898,11 +3946,15 @@
       display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
     }
     .meta-report-edit-grid input, .meta-report-line-item-row input { font: inherit; padding: 8px 10px; }
+    .meta-report-line-items-head {
+      align-items: center; display: flex; justify-content: space-between; margin-bottom: 10px;
+    }
+    .meta-report-line-items-head h4 { margin: 0; }
     .meta-report-line-item-row {
       align-items: center; display: grid; gap: 8px; grid-template-columns: 1fr 140px auto; margin-bottom: 8px;
     }
     .meta-report-public-hero { text-align: center; }
-    .meta-reports-page--public .meta-report-month-panel { max-width: 760px; margin: 0 auto; }
+    .meta-reports-page--public .meta-report-month-panel { max-width: 900px; margin: 0 auto; }
     .meta-report-month-panel.is-loading { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
 
     .meta-report-hub-hero { padding-bottom: 20px; }
@@ -6968,8 +7020,37 @@
       payload.months[metaReportsState.activeMonthKey] = monthPayload;
       const panel = document.getElementById('meta-report-month-panel');
       if (!panel) return;
-      panel.innerHTML = renderMetaReportMonthBody(monthPayload, { editable: true });
+      panel.innerHTML = renderMetaReportMonthBody(monthPayload, {
+        editable: true,
+        showOtherToClient: payload.settings?.metaReportShowOther !== false,
+      });
       bindMetaReportsClientEditEvents(payload.clientId, payload);
+      refreshMetaReportBackfillControl(payload);
+    }
+
+    function refreshMetaReportBackfillControl(payload) {
+      const toolbar = document.querySelector('.meta-report-client-page .meta-report-toolbar');
+      const wrap = document.querySelector('.meta-report-backfill-wrap');
+      const missing = metaReportMonthsNeedingBackfill(payload);
+      if (!missing.length) {
+        if (wrap) wrap.remove();
+        return;
+      }
+      const label = `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`;
+      const btn = document.getElementById('meta-report-backfill');
+      if (btn) {
+        btn.innerHTML = label;
+        btn.disabled = false;
+      } else if (toolbar) {
+        const div = document.createElement('div');
+        div.className = 'meta-report-backfill-wrap';
+        div.innerHTML = `
+          <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-backfill">${label}</button>
+          <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
+        `;
+        toolbar.appendChild(div);
+        bindMetaReportBackfillButton(payload.clientId);
+      }
     }
 
     function updateMetaReportsClientContent(payload) {
@@ -7017,10 +7098,11 @@
       if (panel) {
         panel.innerHTML = renderMetaReportMonthBody(
           payload.months?.[metaReportsState.activeMonthKey],
-          { editable: true },
+          { editable: true, showOtherToClient: settings.metaReportShowOther !== false },
         );
         bindMetaReportsClientEditEvents(payload.clientId, payload);
       }
+      refreshMetaReportBackfillControl(payload);
     }
 
     function updatePublicMetaReportContent(payload) {
@@ -7050,7 +7132,10 @@
 
       const panel = document.getElementById('meta-report-month-panel');
       if (panel) {
-        panel.innerHTML = renderMetaReportMonthBody(payload.months?.[metaReportsState.activeMonthKey], { editable: false });
+        panel.innerHTML = renderMetaReportMonthBody(payload.months?.[metaReportsState.activeMonthKey], {
+          editable: false,
+          showOtherToClient: payload.settings?.metaReportShowOther !== false,
+        });
       }
     }
 
@@ -7076,31 +7161,36 @@
       return META_MONTH_LABELS[month - 1] || monthKey;
     }
 
-    function renderMetaReportMetricTable(title, rows) {
-      const body = rows.map(([label, value, unit]) => `
-        <tr>
-          <th scope="row">${esc(label)}</th>
-          <td>${esc(String(value ?? '—'))}${unit ? ` <span class="meta-report-unit">${esc(unit)}</span>` : ''}</td>
-        </tr>
+    function metaReportMonthsNeedingBackfill(payload) {
+      const monthKeys = payload?.monthKeys || [];
+      return monthKeys.filter((key) => !payload.months?.[key]?.metaFetchedAt);
+    }
+
+    function renderMetaReportMetricTable(title, rows, accent = 'meta', badge = '') {
+      const cards = rows.map(([label, value, unit], index) => `
+        <div class="meta-kpi-card meta-kpi-card--${accent}${index === 0 ? ' meta-kpi-card--headline' : ''}">
+          <div class="meta-kpi-value">${esc(String(value ?? '—'))}${unit ? `<span class="meta-kpi-unit">${esc(unit)}</span>` : ''}</div>
+          <div class="meta-kpi-label">${esc(label)}</div>
+        </div>
       `).join('');
       return `
-        <section class="meta-report-section">
-          <h3 class="meta-report-section-title">${esc(title)}</h3>
-          <div class="dashboard-table-wrap">
-            <table class="meta-report-table">
-              <tbody>${body}</tbody>
-            </table>
+        <section class="meta-kpi-section">
+          <div class="meta-kpi-section-head">
+            <span class="meta-kpi-dot meta-kpi-dot--${accent}" aria-hidden="true"></span>
+            <h3 class="meta-kpi-section-title">${esc(title)}</h3>
+            ${badge ? `<span class="meta-kpi-section-badge">${esc(badge)}</span>` : ''}
           </div>
+          <div class="meta-kpi-grid">${cards}</div>
         </section>
       `;
     }
 
-    function renderMetaReportMonthBody(monthPayload, { editable = false } = {}) {
+    function renderMetaReportMonthBody(monthPayload, { editable = false, showOtherToClient = true } = {}) {
       if (!monthPayload) {
         return '<div class="meta-report-empty">No data for this month yet.</div>';
       }
       if (monthPayload.meta?.emptyMonth) {
-        return '<div class="meta-report-empty">No ad spend this month</div>';
+        return `<div class="meta-report-empty">No ad spend recorded for this month yet.${editable ? ' Click "Refresh from Meta" below, or use "Backfill from Meta" above to pull historical months.' : ''}</div>`;
       }
 
       const metaRows = [
@@ -7121,8 +7211,8 @@
         ['Return on Ads Spend % (ROAS)', metaFmtX(monthPayload.topline?.roasX), ''],
       ];
 
-      let html = renderMetaReportMetricTable('Meta ads', metaRows);
-      html += renderMetaReportMetricTable('Topline KPI\'er', toplineRows);
+      let html = renderMetaReportMetricTable('Meta ads', metaRows, 'meta');
+      html += renderMetaReportMetricTable('Topline KPI\'er', toplineRows, 'topline');
 
       if (monthPayload.bottomline) {
         const bottomRows = [
@@ -7137,21 +7227,27 @@
           ['Profit on Ads Spend % (POAS)', metaFmtX(monthPayload.bottomline.poasX), ''],
         ];
         if (monthPayload.bottomline.censioFee > 0) {
-          bottomRows.push(['Censio performance fee', metaFmtKr(monthPayload.bottomline.censioFee), '']);
+          bottomRows.push([`Censio performance fee (${metaFmtNum(monthPayload.bottomline.feePercent, 0)}%)`, metaFmtKr(monthPayload.bottomline.censioFee), '']);
           bottomRows.push(['Profit on Investment (POI)', metaFmtKr(monthPayload.bottomline.poiKr), '']);
           bottomRows.push(['Profit on Investment % (POI)', metaFmtX(monthPayload.bottomline.poiX), '']);
         }
-        html += renderMetaReportMetricTable('Bottomline KPI\'er', bottomRows);
+        html += renderMetaReportMetricTable('Bottomline KPI\'er', bottomRows, 'bottomline');
       }
 
-      if (monthPayload.customLineItems?.length) {
+      const hasCustomItems = Boolean(monthPayload.customLineItems?.length);
+      if (hasCustomItems && (editable || showOtherToClient)) {
         const customRows = monthPayload.customLineItems.map((row) => [
           row.label,
           metaFmtKr(row.amount),
           '',
         ]);
         customRows.push(['Total', metaFmtKr(monthPayload.customLineItemsTotal), '']);
-        html += renderMetaReportMetricTable('Additional items', customRows);
+        html += renderMetaReportMetricTable(
+          'Other',
+          customRows,
+          'other',
+          editable && !showOtherToClient ? 'Hidden from client' : '',
+        );
       }
 
       if (editable) {
@@ -7163,10 +7259,13 @@
               <label>Period end<input type="date" id="meta-report-period-end" value="${esc(monthPayload.periodEnd || '')}" /></label>
               <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
               <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
-              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.bottomline?.avgProfitPerWon ?? '')}" /></label>
+              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
             </div>
             <div class="meta-report-line-items-editor">
-              <h4>Custom rows</h4>
+              <div class="meta-report-line-items-head">
+                <h4>Other items</h4>
+                <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} /> Show "Other" section to client</label>
+              </div>
               <div id="meta-report-line-items-list">
                 ${(monthPayload.customLineItems || []).map((row, index) => `
                   <div class="meta-report-line-item-row" data-index="${index}">
@@ -7264,15 +7363,28 @@
             </label>
             ${payload.reportUrl ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-copy-link" data-copy-report-url="${esc(payload.reportUrl)}">Copy client link</button>` : ''}
             <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token">Rotate link</button>
+            ${(() => {
+              const missing = metaReportMonthsNeedingBackfill(payload);
+              if (!missing.length) return '';
+              return `
+                <div class="meta-report-backfill-wrap">
+                  <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-backfill">${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta</button>
+                  <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
+                </div>
+              `;
+            })()}
           </div>
           <div class="meta-report-settings">
-            <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-bottomline" ${settings.metaReportShowBottomline ? 'checked' : ''} /> Show bottomline</label>
-            <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-fee" ${settings.metaReportFeeEnabled ? 'checked' : ''} /> Censio performance fee</label>
-            <label>Fee % <input type="number" step="any" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" style="width:72px;margin-left:6px" /></label>
+            <div class="meta-report-settings-group">
+              <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-bottomline" ${settings.metaReportShowBottomline ? 'checked' : ''} /> Show bottomline</label>
+              <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-fee" ${settings.metaReportFeeEnabled ? 'checked' : ''} /> Censio performance fee</label>
+              <label>Fee % <input type="number" step="any" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" style="width:72px;margin-left:6px" /></label>
+            </div>
+            <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
-            ${renderMetaReportMonthBody(monthPayload, { editable: true })}
+            ${renderMetaReportMonthBody(monthPayload, { editable: true, showOtherToClient: settings.metaReportShowOther !== false })}
           </div>
         </div>
         `)}
@@ -7312,7 +7424,7 @@
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
-            ${renderMetaReportMonthBody(monthPayload, { editable: false })}
+            ${renderMetaReportMonthBody(monthPayload, { editable: false, showOtherToClient: payload.settings?.metaReportShowOther !== false })}
           </div>
         </div>
         `)}
@@ -7504,7 +7616,7 @@
           if (panel) {
             panel.innerHTML = renderMetaReportMonthBody(
               payload.months?.[metaReportsState.activeMonthKey],
-              { editable: true },
+              { editable: true, showOtherToClient: payload.settings?.metaReportShowOther !== false },
             );
             bindMetaReportsClientEditEvents(clientId, payload);
           }
@@ -7513,6 +7625,86 @@
           });
         };
       });
+    }
+
+    function setMetaReportSavingState(isSaving) {
+      const panel = document.getElementById('meta-report-month-panel');
+      const indicator = document.getElementById('meta-report-save-indicator');
+      if (panel) panel.classList.toggle('is-loading', isSaving);
+      if (indicator) indicator.classList.toggle('is-visible', isSaving);
+    }
+
+    async function saveMetaReportClientSettings(clientId, patch, revert) {
+      setMetaReportSavingState(true);
+      try {
+        const result = await patchMetaReportSettings(clientId, {
+          ...patch,
+          monthKey: metaReportsState.activeMonthKey,
+        });
+        const settings = result.settings || {};
+        const payload = metaReportsState.clientPayload;
+        if (payload) {
+          payload.settings = settings;
+          if (result.monthPayload && metaReportsState.activeMonthKey) {
+            payload.months = payload.months || {};
+            payload.months[metaReportsState.activeMonthKey] = result.monthPayload;
+          }
+        }
+
+        const bottomlineToggle = document.getElementById('meta-report-setting-bottomline');
+        const feeToggle = document.getElementById('meta-report-setting-fee');
+        const feePercent = document.getElementById('meta-report-setting-fee-percent');
+        if (bottomlineToggle) bottomlineToggle.checked = Boolean(settings.metaReportShowBottomline);
+        if (feeToggle) feeToggle.checked = Boolean(settings.metaReportFeeEnabled);
+        if (feePercent) feePercent.value = settings.metaReportFeePercent ?? 20;
+
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel && result.monthPayload) {
+          panel.innerHTML = renderMetaReportMonthBody(result.monthPayload, {
+            editable: true,
+            showOtherToClient: settings.metaReportShowOther !== false,
+          });
+          bindMetaReportsClientEditEvents(clientId, payload);
+        }
+        showToast('Settings saved', 'success');
+      } catch (error) {
+        showToast(error.message || 'Update failed', 'error');
+        if (revert) revert();
+      } finally {
+        setMetaReportSavingState(false);
+      }
+    }
+
+    function bindMetaReportBackfillButton(clientId) {
+      const backfillBtn = document.getElementById('meta-report-backfill');
+      if (!backfillBtn) return;
+      backfillBtn.onclick = async () => {
+        const payload = metaReportsState.clientPayload;
+        const missing = metaReportMonthsNeedingBackfill(payload);
+        if (!missing.length) return;
+        backfillBtn.disabled = true;
+        const progressEl = document.getElementById('meta-report-backfill-progress');
+        let done = 0;
+        let failed = 0;
+        for (const monthKey of missing) {
+          done += 1;
+          if (progressEl) progressEl.textContent = `Fetching ${metaMonthLabel(monthKey)} ${monthKey.slice(0, 4)}… (${done}/${missing.length})`;
+          try {
+            await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
+              method: 'POST',
+            });
+          } catch (error) {
+            failed += 1;
+          }
+        }
+        if (progressEl) progressEl.textContent = '';
+        if (failed) {
+          showToast(`Backfilled ${done - failed}/${missing.length} months. ${failed} failed (check Meta token access).`, 'error');
+        } else {
+          showToast(`Backfilled ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`, 'success');
+        }
+        await loadMetaReportsClientPage({ silent: true });
+      };
     }
 
     function bindMetaReportsClientChromeEvents(payload) {
@@ -7533,32 +7725,44 @@
       }
 
       bindMetaReportCopyButtons();
+      bindMetaReportBackfillButton(clientId);
 
       const bottomlineToggle = document.getElementById('meta-report-setting-bottomline');
       const feeToggle = document.getElementById('meta-report-setting-fee');
       const feePercent = document.getElementById('meta-report-setting-fee-percent');
-      const saveSettings = async () => {
-        try {
-          const result = await patchMetaReportSettings(clientId, {
-            metaReportShowBottomline: bottomlineToggle?.checked,
-            metaReportFeeEnabled: feeToggle?.checked,
-            metaReportFeePercent: Number(feePercent?.value) || 20,
-          });
-          const settings = result.settings || {};
-          const refreshed = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`);
-          metaReportsState.clientPayload = refreshed;
-          if (bottomlineToggle) bottomlineToggle.checked = Boolean(refreshed.settings?.metaReportShowBottomline);
-          if (feeToggle) feeToggle.checked = Boolean(refreshed.settings?.metaReportFeeEnabled);
-          if (feePercent) feePercent.value = refreshed.settings?.metaReportFeePercent ?? 20;
-          refreshMetaReportMonthPanel(refreshed.months?.[metaReportsState.activeMonthKey]);
-          showToast('Settings saved', 'success');
-        } catch (error) {
-          showToast(error.message || 'Update failed', 'error');
-        }
-      };
-      if (bottomlineToggle) bottomlineToggle.onchange = saveSettings;
-      if (feeToggle) feeToggle.onchange = saveSettings;
-      if (feePercent) feePercent.onchange = saveSettings;
+      if (bottomlineToggle) {
+        bottomlineToggle.onchange = () => {
+          const next = bottomlineToggle.checked;
+          saveMetaReportClientSettings(
+            clientId,
+            { metaReportShowBottomline: next },
+            () => { bottomlineToggle.checked = !next; },
+          );
+        };
+      }
+      if (feeToggle) {
+        feeToggle.onchange = () => {
+          const next = feeToggle.checked;
+          saveMetaReportClientSettings(
+            clientId,
+            { metaReportFeeEnabled: next },
+            () => { feeToggle.checked = !next; },
+          );
+        };
+      }
+      if (feePercent) {
+        feePercent.dataset.prevValue = feePercent.value;
+        feePercent.onchange = () => {
+          const prevValue = feePercent.dataset.prevValue;
+          const nextValue = Number(feePercent.value) || 20;
+          feePercent.dataset.prevValue = String(nextValue);
+          saveMetaReportClientSettings(
+            clientId,
+            { metaReportFeePercent: nextValue },
+            () => { feePercent.value = prevValue; feePercent.dataset.prevValue = prevValue; },
+          );
+        };
+      }
 
       const rotateBtn = document.getElementById('meta-report-rotate-token');
       if (rotateBtn) {
@@ -7592,6 +7796,18 @@
     }
 
     function bindMetaReportsClientEditEvents(clientId, payload) {
+      const otherToggle = document.getElementById('meta-report-setting-other');
+      if (otherToggle) {
+        otherToggle.onchange = () => {
+          const next = otherToggle.checked;
+          saveMetaReportClientSettings(
+            clientId,
+            { metaReportShowOther: next },
+            () => { otherToggle.checked = !next; },
+          );
+        };
+      }
+
       const addLineBtn = document.getElementById('meta-report-add-line');
       if (addLineBtn) {
         addLineBtn.onclick = () => {
@@ -7666,7 +7882,10 @@
           metaReportsState.activeMonthKey = button.getAttribute('data-meta-month-tab');
           const panel = document.getElementById('meta-report-month-panel');
           if (panel) {
-            panel.innerHTML = renderMetaReportMonthBody(payload.months?.[metaReportsState.activeMonthKey], { editable: false });
+            panel.innerHTML = renderMetaReportMonthBody(payload.months?.[metaReportsState.activeMonthKey], {
+              editable: false,
+              showOtherToClient: payload.settings?.metaReportShowOther !== false,
+            });
           }
           document.querySelectorAll('[data-meta-month-tab]').forEach((tab) => {
             tab.classList.toggle('is-active', tab.getAttribute('data-meta-month-tab') === metaReportsState.activeMonthKey);

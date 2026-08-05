@@ -7,6 +7,7 @@ ALTER TABLE accounts ADD COLUMN IF NOT EXISTS meta_report_access_token TEXT;
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS meta_report_default_won_leads NUMERIC;
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS meta_report_default_avg_lead_value NUMERIC;
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS meta_report_default_avg_profit_per_won NUMERIC;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS meta_report_show_other BOOLEAN NOT NULL DEFAULT TRUE;
 
 CREATE UNIQUE INDEX IF NOT EXISTS accounts_meta_report_access_token_idx
   ON accounts (meta_report_access_token)
