@@ -4021,7 +4021,7 @@
     .meta-report-fee-field input { padding: 8px 10px; width: 68px; }
 
     .meta-report-edit-panel {
-      border-top: 1px solid var(--border); margin-top: 22px; padding-top: 20px;
+      border-bottom: 1px solid var(--border); margin-bottom: 22px; padding-bottom: 20px;
     }
     .meta-report-edit-panel h3 {
       color: var(--text-muted); font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
@@ -7332,7 +7332,47 @@
         return `<div class="meta-report-empty">No ad spend recorded for this month yet.${editable ? ' Click "Refresh from Meta" below, or use "Backfill from Meta" above to pull historical months.' : ''}</div>`;
       }
 
-      let html = renderMetaReportHighlightStrip(monthPayload);
+      let editPanelHtml = '';
+      if (editable) {
+        editPanelHtml = `
+          <div class="meta-report-edit-panel" id="meta-report-edit-panel">
+            <h3>Edit month inputs</h3>
+            <div class="meta-report-edit-grid">
+              <label>Period start<input type="date" id="meta-report-period-start" value="${esc(monthPayload.periodStart || '')}" /></label>
+              <label>Period end<input type="date" id="meta-report-period-end" value="${esc(monthPayload.periodEnd || '')}" /></label>
+              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
+              <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
+              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
+            </div>
+            <div class="meta-report-line-items-editor">
+              <div class="meta-report-line-items-head">
+                <h4>Other items</h4>
+                <label class="meta-report-switch">
+                  <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} />
+                  <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
+                  <span class="meta-report-switch-label">Show "Other" section to client</span>
+                </label>
+              </div>
+              <div id="meta-report-line-items-list">
+                ${(monthPayload.customLineItems || []).map((row, index) => `
+                  <div class="meta-report-line-item-row" data-index="${index}">
+                    <input type="text" class="meta-line-label" value="${esc(row.label)}" placeholder="Label" />
+                    <input type="number" step="any" class="meta-line-amount" value="${esc(row.amount)}" placeholder="Amount" />
+                    <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-line-remove">Remove</button>
+                  </div>
+                `).join('')}
+              </div>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-report-add-row" id="meta-report-add-line">+ Add row</button>
+            </div>
+            <div class="meta-report-edit-actions">
+              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
+              <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month">Save month</button>
+            </div>
+          </div>
+        `;
+      }
+
+      let html = editPanelHtml + renderMetaReportHighlightStrip(monthPayload);
 
       const metaRows = [
         ['Total spend', metaFmtKr(monthPayload.meta?.spend), ''],
@@ -7388,45 +7428,6 @@
           badge: editable && !showOtherToClient ? 'Hidden from client' : '',
           highlightLastN: 1,
         });
-      }
-
-      if (editable) {
-        html += `
-          <div class="meta-report-edit-panel" id="meta-report-edit-panel">
-            <h3>Edit month inputs</h3>
-            <div class="meta-report-edit-grid">
-              <label>Period start<input type="date" id="meta-report-period-start" value="${esc(monthPayload.periodStart || '')}" /></label>
-              <label>Period end<input type="date" id="meta-report-period-end" value="${esc(monthPayload.periodEnd || '')}" /></label>
-              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
-              <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
-              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
-            </div>
-            <div class="meta-report-line-items-editor">
-              <div class="meta-report-line-items-head">
-                <h4>Other items</h4>
-                <label class="meta-report-switch">
-                  <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} />
-                  <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
-                  <span class="meta-report-switch-label">Show "Other" section to client</span>
-                </label>
-              </div>
-              <div id="meta-report-line-items-list">
-                ${(monthPayload.customLineItems || []).map((row, index) => `
-                  <div class="meta-report-line-item-row" data-index="${index}">
-                    <input type="text" class="meta-line-label" value="${esc(row.label)}" placeholder="Label" />
-                    <input type="number" step="any" class="meta-line-amount" value="${esc(row.amount)}" placeholder="Amount" />
-                    <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-line-remove">Remove</button>
-                  </div>
-                `).join('')}
-              </div>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-report-add-row" id="meta-report-add-line">+ Add row</button>
-            </div>
-            <div class="meta-report-edit-actions">
-              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
-              <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month">Save month</button>
-            </div>
-          </div>
-        `;
       }
 
       return html;
