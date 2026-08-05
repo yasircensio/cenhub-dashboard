@@ -7167,6 +7167,58 @@
       `).join('');
     }
 
+    function getMetaReportCalendarYear(payload) {
+      const fromPayload = Number(payload?.currentYear);
+      if (Number.isFinite(fromPayload) && fromPayload >= 2000) return fromPayload;
+      return new Date().getFullYear();
+    }
+
+    function getMetaReportYearOptions(payload) {
+      // Always anchor to calendar this/last year — never to the selected report year.
+      const currentYear = getMetaReportCalendarYear(payload);
+      const previousYear = currentYear - 1;
+      const availability = new Map();
+      if (Array.isArray(payload?.years)) {
+        payload.years.forEach((entry) => {
+          const year = Number(entry?.year);
+          if (Number.isFinite(year)) availability.set(year, entry.available !== false);
+        });
+      }
+      const previousAvailable = availability.has(previousYear)
+        ? availability.get(previousYear)
+        : payload?.previousYearHasData === true;
+      return [
+        { year: currentYear, available: true },
+        { year: previousYear, available: Boolean(previousAvailable) },
+      ];
+    }
+
+    function renderMetaReportYearSelectOptions(payload, { disableUnavailable = false } = {}) {
+      const selectedYear = Number(metaReportsState.selectedYear) || Number(payload?.year);
+      return getMetaReportYearOptions(payload).map(({ year, available }) => {
+        const disabled = disableUnavailable && !available;
+        return `<option value="${year}"${Number(selectedYear) === year ? ' selected' : ''}${disabled ? ' disabled' : ''}>${year}${!available ? ' (no data)' : ''}</option>`;
+      }).join('');
+    }
+
+    function syncMetaReportSelectedYear(payload, { disableUnavailable = false } = {}) {
+      const options = getMetaReportYearOptions(payload);
+      const selected = Number(metaReportsState.selectedYear);
+      const selectedOption = options.find((entry) => entry.year === selected);
+      if (selectedOption && (!disableUnavailable || selectedOption.available)) {
+        metaReportsState.selectedYear = selectedOption.year;
+        return;
+      }
+      const payloadYear = Number(payload?.year);
+      const payloadOption = options.find((entry) => entry.year === payloadYear);
+      if (payloadOption && (!disableUnavailable || payloadOption.available)) {
+        metaReportsState.selectedYear = payloadOption.year;
+        return;
+      }
+      const fallback = options.find((entry) => entry.available) || options[0];
+      if (fallback) metaReportsState.selectedYear = fallback.year;
+    }
+
     function refreshMetaReportMonthPanel(monthPayload) {
       const payload = metaReportsState.clientPayload;
       if (!payload || !metaReportsState.activeMonthKey) return;
@@ -7216,12 +7268,10 @@
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
       }
 
+      syncMetaReportSelectedYear(payload, { disableUnavailable: true });
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
-        const years = [payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index);
-        yearSelect.innerHTML = years.map((year) => `
-          <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
-        `).join('');
+        yearSelect.innerHTML = renderMetaReportYearSelectOptions(payload, { disableUnavailable: true });
       }
 
       const copyBtn = document.getElementById('meta-report-copy-link');
@@ -7263,12 +7313,10 @@
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
       }
 
+      syncMetaReportSelectedYear(payload, { disableUnavailable: true });
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
-        const years = [payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index);
-        yearSelect.innerHTML = years.map((year) => `
-          <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
-        `).join('');
+        yearSelect.innerHTML = renderMetaReportYearSelectOptions(payload, { disableUnavailable: true });
       }
 
       const tabsEl = document.querySelector('.meta-report-tabs');
@@ -7582,9 +7630,7 @@
             <div class="meta-report-toolbar-left">
               <label class="meta-report-year-field">Year
                 <select id="meta-report-year" class="admin-select">
-                  ${[payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index).map((year) => `
-                    <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
-                  `).join('')}
+                  ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
                 </select>
               </label>
               ${(() => {
@@ -7659,9 +7705,7 @@
           <div class="meta-report-toolbar">
             <label class="meta-report-year-field">Year
               <select id="meta-report-year" class="admin-select">
-                ${[payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index).map((year) => `
-                  <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
-                `).join('')}
+                ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
               </select>
             </label>
           </div>
@@ -7990,6 +8034,11 @@
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
         yearSelect.onchange = async () => {
+          const option = yearSelect.selectedOptions?.[0];
+          if (option?.disabled) {
+            yearSelect.value = String(metaReportsState.selectedYear);
+            return;
+          }
           metaReportsState.selectedYear = Number(yearSelect.value);
           metaReportsState.activeMonthKey = null;
           yearSelect.disabled = true;
@@ -8203,6 +8252,11 @@
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
         yearSelect.onchange = async () => {
+          const option = yearSelect.selectedOptions?.[0];
+          if (option?.disabled) {
+            yearSelect.value = String(metaReportsState.selectedYear);
+            return;
+          }
           metaReportsState.selectedYear = Number(yearSelect.value);
           metaReportsState.activeMonthKey = null;
           yearSelect.disabled = true;
@@ -8281,6 +8335,10 @@
 
       try {
         const payload = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`);
+        syncMetaReportSelectedYear(payload, { disableUnavailable: true });
+        if (Number(metaReportsState.selectedYear) !== Number(payload.year)) {
+          return loadMetaReportsClientPage({ silent: true });
+        }
         if (!metaReportsState.activeMonthKey) {
           metaReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
@@ -8325,6 +8383,11 @@
             if (!response.ok) throw new Error(data.error || 'Report not found');
             return data;
           });
+        syncMetaReportSelectedYear(payload, { disableUnavailable: true });
+        if (Number(metaReportsState.selectedYear) !== Number(payload.year)) {
+          // Previous year has no data — reload the available year instead.
+          return loadPublicMetaReportPage({ silent: true });
+        }
         if (!metaReportsState.activeMonthKey) {
           metaReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
