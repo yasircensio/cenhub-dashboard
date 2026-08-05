@@ -117,6 +117,10 @@ async function bootAdminApp() {
     await loadMetaReportsHubPage();
     return;
   }
+  if (IS_ADMIN_META_REPORTS_CUSTOM) {
+    await loadMetaReportsCustomValuesPage();
+    return;
+  }
   if (IS_ADMIN_META_REPORTS_CLIENT) {
     await loadMetaReportsClientPage();
     return;

@@ -90,10 +90,21 @@ function main() {
     'renderStaffUsersTable',
     'adminFetch',
     'requireStaffAuth',
+    'loadMetaReportsHubPage',
+    'loadMetaReportsCustomValuesPage',
+    'loadMetaReportsClientPage',
+  ];
+
+  const adminBootRoutes = [
+    'IS_ADMIN_META_REPORTS_CUSTOM',
+    'loadMetaReportsCustomValuesPage',
+    'IS_ADMIN_META_REPORTS',
+    'loadMetaReportsHubPage',
   ];
 
   assertIncludes('client.bundle.js', client, clientRequired);
   assertIncludes('admin.bundle.js', admin, adminRequired);
+  assertIncludes('admin.bundle.js boot routes', admin, adminBootRoutes);
 
   const iconRefs = collectIconRefs(dashboard);
   assertIncludes('client.bundle.js (icons)', client, [...iconRefs]);
