@@ -652,8 +652,8 @@ Resume the interrupted ${b}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
     >${esc(t.label)}</button>
   `).join("")}function recomputeMetaReportsSummaryCounts(){const e=metaReportsState.dashboardData?.clients||[],t=metaReportsState.dashboardData?.summary||{};metaReportsState.dashboardData.summary={...t,inAppCount:e.filter(n=>n.inApp).length,enabledCount:e.filter(n=>n.metaReportEnabled).length,needsSetupCount:e.filter(n=>n.needsSetup).length,totalListed:e.length}}function mergeHubClient(e,t){const n=metaReportsState.dashboardData?.clients;if(!n)return null;const a=n.findIndex(s=>s.clientId===e);return a<0?null:(n[a]={...n[a],...t},recomputeMetaReportsSummaryCounts(),n[a])}function updateMetaReportsHubDom(e){const t=document.getElementById("meta-reports-banner"),n=document.getElementById("meta-reports-cards"),a=document.getElementById("meta-reports-count");t&&(t.innerHTML=renderMetaReportsBannerHtml(e.meta)),a&&(a.textContent=`${e.clients.length} client${e.clients.length===1?"":"s"}`),n&&(n.innerHTML=renderMetaReportsClientCards(e.clients,e.filter,e.searchQuery),bindMetaReportsHubRowEvents(n))}function renderMetaReportsClientTabs(e){const t=e.monthKeys||[],n=metaReportsState.activeMonthKey||t[t.length-1]||"";return t.map(a=>`
     <button type="button" class="meta-report-tab${a===n?" is-active":""}" data-meta-month-tab="${esc(a)}">${esc(metaMonthLabel(a))}</button>
-  `).join("")}function refreshMetaReportMonthPanel(e){const t=metaReportsState.clientPayload;if(!t||!metaReportsState.activeMonthKey)return;t.months=t.months||{},t.months[metaReportsState.activeMonthKey]=e;const n=document.getElementById("meta-report-month-panel");n&&(n.innerHTML=renderMetaReportMonthBody(e,{editable:!0,showOtherToClient:t.settings?.metaReportShowOther!==!1}),bindMetaReportsClientEditEvents(t.clientId,t),refreshMetaReportBackfillControl(t))}function refreshMetaReportBackfillControl(e){const t=document.querySelector(".meta-report-client-page .meta-report-toolbar"),n=document.querySelector(".meta-report-backfill-wrap"),a=metaReportMonthsNeedingBackfill(e);if(!a.length){n&&n.remove();return}const s=`${ICON_SYNC} Backfill ${a.length} month${a.length===1?"":"s"} from Meta`,i=document.getElementById("meta-report-backfill");if(i)i.innerHTML=s,i.disabled=!1;else if(t){const o=document.createElement("div");o.className="meta-report-backfill-wrap",o.innerHTML=`
-      <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-backfill">${s}</button>
+  `).join("")}function refreshMetaReportMonthPanel(e){const t=metaReportsState.clientPayload;if(!t||!metaReportsState.activeMonthKey)return;t.months=t.months||{},t.months[metaReportsState.activeMonthKey]=e;const n=document.getElementById("meta-report-month-panel");n&&(n.innerHTML=renderMetaReportMonthBody(e,{editable:!0,showOtherToClient:t.settings?.metaReportShowOther!==!1}),bindMetaReportsClientEditEvents(t.clientId,t),refreshMetaReportBackfillControl(t))}function refreshMetaReportBackfillControl(e){const t=document.querySelector(".meta-report-client-page .meta-report-toolbar-left"),n=document.querySelector(".meta-report-backfill-wrap"),a=metaReportMonthsNeedingBackfill(e);if(!a.length){n&&n.remove();return}const s=`${ICON_SYNC} Backfill ${a.length} month${a.length===1?"":"s"} from Meta`,i=document.getElementById("meta-report-backfill");if(i)i.innerHTML=s,i.disabled=!1;else if(t){const o=document.createElement("div");o.className="meta-report-backfill-wrap",o.innerHTML=`
+      <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${s}</button>
       <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
     `,t.appendChild(o),bindMetaReportBackfillButton(e.clientId)}}function updateMetaReportsClientContent(e){metaReportsState.clientPayload=e;const t=e.monthKeys||[];metaReportsState.activeMonthKey&&t.includes(metaReportsState.activeMonthKey)||(metaReportsState.activeMonthKey=t[t.length-1]||null);const n=document.getElementById("meta-report-year");if(n){const u=[e.year,e.year-1].filter((y,g,S)=>S.indexOf(y)===g);n.innerHTML=u.map(y=>`
       <option value="${y}"${Number(metaReportsState.selectedYear)===Number(y)?" selected":""}>${y}</option>
@@ -701,7 +701,11 @@ Resume the interrupted ${b}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
         <div class="meta-report-line-items-editor">
           <div class="meta-report-line-items-head">
             <h4>Other items</h4>
-            <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-other" ${n?"checked":""} /> Show "Other" section to client</label>
+            <label class="meta-report-switch">
+              <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-other" ${n?"checked":""} />
+              <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
+              <span class="meta-report-switch-label">Show "Other" section to client</span>
+            </label>
           </div>
           <div id="meta-report-line-items-list">
             ${(e.customLineItems||[]).map((r,l)=>`
@@ -712,10 +716,10 @@ Resume the interrupted ${b}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
               </div>
             `).join("")}
           </div>
-          <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-add-line">Add row</button>
+          <button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-report-add-row" id="meta-report-add-line">+ Add row</button>
         </div>
         <div class="meta-report-edit-actions">
-          <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-refresh-meta">Refresh from Meta</button>
+          <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
           <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month">Save month</button>
         </div>
       </div>
@@ -771,27 +775,41 @@ Resume the interrupted ${b}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
     </div>
     <div class="sync-history-page meta-reports-page meta-report-client-page">
       <div class="meta-report-toolbar">
-        <label>Year
-          <select id="meta-report-year" class="admin-select">
-            ${[e.year,e.year-1].filter((o,r,l)=>l.indexOf(o)===r).map(o=>`
-              <option value="${o}"${Number(metaReportsState.selectedYear)===Number(o)?" selected":""}>${o}</option>
-            `).join("")}
-          </select>
-        </label>
-        ${e.reportUrl?`<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-copy-link" data-copy-report-url="${esc(e.reportUrl)}">Copy client link</button>`:""}
-        <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token">Rotate link</button>
-        ${(()=>{const o=metaReportMonthsNeedingBackfill(e);return o.length?`
-            <div class="meta-report-backfill-wrap">
-              <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-backfill">${ICON_SYNC} Backfill ${o.length} month${o.length===1?"":"s"} from Meta</button>
-              <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
-            </div>
-          `:""})()}
+        <div class="meta-report-toolbar-left">
+          <label class="meta-report-year-field">Year
+            <select id="meta-report-year" class="admin-select">
+              ${[e.year,e.year-1].filter((o,r,l)=>l.indexOf(o)===r).map(o=>`
+                <option value="${o}"${Number(metaReportsState.selectedYear)===Number(o)?" selected":""}>${o}</option>
+              `).join("")}
+            </select>
+          </label>
+          ${(()=>{const o=metaReportMonthsNeedingBackfill(e);return o.length?`
+              <div class="meta-report-backfill-wrap">
+                <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${ICON_SYNC} Backfill ${o.length} month${o.length===1?"":"s"} from Meta</button>
+                <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
+              </div>
+            `:""})()}
+        </div>
+        <div class="meta-report-toolbar-actions">
+          ${e.reportUrl?`<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-copy-link" data-copy-report-url="${esc(e.reportUrl)}">Copy client link</button>`:""}
+          <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token">Rotate link</button>
+        </div>
       </div>
       <div class="meta-report-settings">
         <div class="meta-report-settings-group">
-          <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-bottomline" ${s.metaReportShowBottomline?"checked":""} /> Show bottomline</label>
-          <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-fee" ${s.metaReportFeeEnabled?"checked":""} /> Censio performance fee</label>
-          <label>Fee % <input type="number" step="any" id="meta-report-setting-fee-percent" value="${esc(s.metaReportFeePercent??20)}" style="width:72px;margin-left:6px" /></label>
+          <label class="meta-report-switch">
+            <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-bottomline" ${s.metaReportShowBottomline?"checked":""} />
+            <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
+            <span class="meta-report-switch-label">Show bottomline</span>
+          </label>
+          <label class="meta-report-switch">
+            <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-fee" ${s.metaReportFeeEnabled?"checked":""} />
+            <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
+            <span class="meta-report-switch-label">Censio performance fee</span>
+          </label>
+          <label class="meta-report-fee-field">Fee %
+            <input type="number" step="any" id="meta-report-setting-fee-percent" value="${esc(s.metaReportFeePercent??20)}" />
+          </label>
         </div>
         <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving\u2026</span>
       </div>
@@ -818,7 +836,7 @@ Resume the interrupted ${b}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
     </div>
     <div class="meta-reports-page meta-reports-page--public">
       <div class="meta-report-toolbar">
-        <label>Year
+        <label class="meta-report-year-field">Year
           <select id="meta-report-year" class="admin-select">
             ${[e.year,e.year-1].filter((i,o,r)=>r.indexOf(i)===o).map(i=>`
               <option value="${i}"${Number(metaReportsState.selectedYear)===Number(i)?" selected":""}>${i}</option>

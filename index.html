@@ -2471,6 +2471,24 @@
       color: #b71c1c;
     }
 
+    .admin-btn--ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--text-muted);
+    }
+
+    .admin-btn--ghost:hover {
+      background: var(--surface-hover);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .admin-btn--small {
+      border-radius: 8px;
+      font-size: 12px;
+      padding: 7px 11px;
+    }
+
     .admin-btn:disabled {
       cursor: wait;
       opacity: 0.65;
@@ -3275,7 +3293,7 @@
 
     .filter-group.full-width { grid-column: 1 / -1; }
 
-    select, input[type="date"], input[type="number"] {
+    select, input[type="date"], input[type="number"], input[type="text"] {
       background-color: var(--panel);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -3303,7 +3321,7 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ff6a00' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     }
 
-    select:focus, input[type="date"]:focus, input[type="number"]:focus {
+    select:focus, input[type="date"]:focus, input[type="number"]:focus, input[type="text"]:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.15);
       outline: none;
@@ -3955,8 +3973,15 @@
     .meta-report-toolbar, .meta-report-settings, .meta-report-edit-actions {
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
     }
-    .meta-report-settings { justify-content: space-between; }
-    .meta-report-settings-group { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+    .meta-report-toolbar, .meta-report-settings { justify-content: space-between; }
+    .meta-report-toolbar-left, .meta-report-toolbar-actions, .meta-report-settings-group {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
+    }
+    .meta-report-year-field {
+      align-items: center; color: var(--text-muted); display: flex; font-size: 12.5px;
+      font-weight: 600; gap: 8px; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .meta-report-year-field select { font-size: 13px; min-width: 92px; text-transform: none; width: auto; }
     .meta-report-save-indicator {
       align-items: center; color: var(--text-soft); display: none; font-size: 12.5px; font-weight: 600; gap: 7px;
     }
@@ -3972,19 +3997,59 @@
     }
     .meta-report-backfill-wrap { align-items: center; display: flex; gap: 8px; }
     .meta-report-backfill-progress { color: var(--text-soft); font-size: 12.5px; font-weight: 600; }
+
+    .meta-report-switch {
+      align-items: center; cursor: pointer; display: inline-flex; gap: 9px; user-select: none;
+    }
+    .meta-report-switch.is-disabled { cursor: not-allowed; opacity: 0.5; }
+    .meta-report-switch-track {
+      background: #e8e0d8; border-radius: 999px; flex-shrink: 0; height: 20px; position: relative;
+      transition: background 0.2s ease; width: 36px;
+    }
+    .meta-report-switch-input { height: 1px; margin: -1px; opacity: 0; overflow: hidden; position: absolute; width: 1px; }
+    .meta-report-switch-thumb {
+      background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+      height: 14px; left: 3px; position: absolute; top: 3px; transition: transform 0.2s ease; width: 14px;
+    }
+    .meta-report-switch-input:checked + .meta-report-switch-thumb { transform: translateX(16px); }
+    .meta-report-switch-track:has(.meta-report-switch-input:checked) { background: var(--primary); }
+    .meta-report-switch-label { color: var(--text); font-size: 13px; font-weight: 600; }
+
+    .meta-report-fee-field {
+      align-items: center; color: var(--text); display: flex; font-size: 13px; font-weight: 600; gap: 8px;
+    }
+    .meta-report-fee-field input { padding: 8px 10px; width: 68px; }
+
+    .meta-report-edit-panel {
+      border-top: 1px solid var(--border); margin-top: 22px; padding-top: 20px;
+    }
+    .meta-report-edit-panel h3 {
+      color: var(--text-muted); font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
+      margin: 0 0 14px; text-transform: uppercase;
+    }
     .meta-report-edit-grid {
-      display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 16px;
+      display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 18px;
     }
     .meta-report-edit-grid label, .meta-report-line-items-editor label {
       display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
     }
     .meta-report-edit-grid input, .meta-report-line-item-row input { font: inherit; padding: 8px 10px; }
+    .meta-report-line-items-editor {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      margin-bottom: 18px; padding: 14px;
+    }
     .meta-report-line-items-head {
-      align-items: center; display: flex; justify-content: space-between; margin-bottom: 10px;
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 12px;
     }
     .meta-report-line-items-head h4 { margin: 0; }
     .meta-report-line-item-row {
       align-items: center; display: grid; gap: 8px; grid-template-columns: 1fr 140px auto; margin-bottom: 8px;
+    }
+    .meta-report-add-row {
+      margin-top: 4px;
+    }
+    .meta-report-edit-actions {
+      border-top: 1px solid var(--border); justify-content: flex-end; margin-bottom: 0; padding-top: 18px;
     }
     .meta-report-public-hero { text-align: center; }
     .meta-reports-page--public .meta-report-month-panel { max-width: 900px; margin: 0 auto; }
@@ -4105,6 +4170,12 @@
 
     @media (max-width: 600px) {
       .meta-hub-card-actions { grid-template-columns: 1fr; }
+      .meta-report-toolbar { align-items: stretch; flex-direction: column; }
+      .meta-report-toolbar-left, .meta-report-toolbar-actions { width: 100%; }
+      .meta-report-toolbar-actions .admin-btn, .meta-report-toolbar-actions .meta-report-backfill-wrap { flex: 1 1 auto; }
+      .meta-report-settings { align-items: stretch; flex-direction: column; }
+      .meta-report-edit-actions { flex-direction: column-reverse; }
+      .meta-report-edit-actions .admin-btn { justify-content: center; width: 100%; }
     }
 
     .meta-reports-page { padding-bottom: 32px; }
@@ -7062,7 +7133,7 @@
     }
 
     function refreshMetaReportBackfillControl(payload) {
-      const toolbar = document.querySelector('.meta-report-client-page .meta-report-toolbar');
+      const toolbarLeft = document.querySelector('.meta-report-client-page .meta-report-toolbar-left');
       const wrap = document.querySelector('.meta-report-backfill-wrap');
       const missing = metaReportMonthsNeedingBackfill(payload);
       if (!missing.length) {
@@ -7074,14 +7145,14 @@
       if (btn) {
         btn.innerHTML = label;
         btn.disabled = false;
-      } else if (toolbar) {
+      } else if (toolbarLeft) {
         const div = document.createElement('div');
         div.className = 'meta-report-backfill-wrap';
         div.innerHTML = `
-          <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-backfill">${label}</button>
+          <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${label}</button>
           <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
         `;
-        toolbar.appendChild(div);
+        toolbarLeft.appendChild(div);
         bindMetaReportBackfillButton(payload.clientId);
       }
     }
@@ -7333,7 +7404,11 @@
             <div class="meta-report-line-items-editor">
               <div class="meta-report-line-items-head">
                 <h4>Other items</h4>
-                <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} /> Show "Other" section to client</label>
+                <label class="meta-report-switch">
+                  <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} />
+                  <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
+                  <span class="meta-report-switch-label">Show "Other" section to client</span>
+                </label>
               </div>
               <div id="meta-report-line-items-list">
                 ${(monthPayload.customLineItems || []).map((row, index) => `
@@ -7344,10 +7419,10 @@
                   </div>
                 `).join('')}
               </div>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-add-line">Add row</button>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-report-add-row" id="meta-report-add-line">+ Add row</button>
             </div>
             <div class="meta-report-edit-actions">
-              <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-refresh-meta">Refresh from Meta</button>
+              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
               <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month">Save month</button>
             </div>
           </div>
@@ -7423,31 +7498,45 @@
         </div>
         <div class="sync-history-page meta-reports-page meta-report-client-page">
           <div class="meta-report-toolbar">
-            <label>Year
-              <select id="meta-report-year" class="admin-select">
-                ${[payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index).map((year) => `
-                  <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
-                `).join('')}
-              </select>
-            </label>
-            ${payload.reportUrl ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-copy-link" data-copy-report-url="${esc(payload.reportUrl)}">Copy client link</button>` : ''}
-            <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token">Rotate link</button>
-            ${(() => {
-              const missing = metaReportMonthsNeedingBackfill(payload);
-              if (!missing.length) return '';
-              return `
-                <div class="meta-report-backfill-wrap">
-                  <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-backfill">${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta</button>
-                  <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
-                </div>
-              `;
-            })()}
+            <div class="meta-report-toolbar-left">
+              <label class="meta-report-year-field">Year
+                <select id="meta-report-year" class="admin-select">
+                  ${[payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index).map((year) => `
+                    <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
+                  `).join('')}
+                </select>
+              </label>
+              ${(() => {
+                const missing = metaReportMonthsNeedingBackfill(payload);
+                if (!missing.length) return '';
+                return `
+                  <div class="meta-report-backfill-wrap">
+                    <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta</button>
+                    <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
+                  </div>
+                `;
+              })()}
+            </div>
+            <div class="meta-report-toolbar-actions">
+              ${payload.reportUrl ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-copy-link" data-copy-report-url="${esc(payload.reportUrl)}">Copy client link</button>` : ''}
+              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token">Rotate link</button>
+            </div>
           </div>
           <div class="meta-report-settings">
             <div class="meta-report-settings-group">
-              <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-bottomline" ${settings.metaReportShowBottomline ? 'checked' : ''} /> Show bottomline</label>
-              <label class="fb-lead-toggle"><input type="checkbox" id="meta-report-setting-fee" ${settings.metaReportFeeEnabled ? 'checked' : ''} /> Censio performance fee</label>
-              <label>Fee % <input type="number" step="any" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" style="width:72px;margin-left:6px" /></label>
+              <label class="meta-report-switch">
+                <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-bottomline" ${settings.metaReportShowBottomline ? 'checked' : ''} />
+                <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
+                <span class="meta-report-switch-label">Show bottomline</span>
+              </label>
+              <label class="meta-report-switch">
+                <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-fee" ${settings.metaReportFeeEnabled ? 'checked' : ''} />
+                <span class="meta-report-switch-track"><span class="meta-report-switch-thumb"></span></span>
+                <span class="meta-report-switch-label">Censio performance fee</span>
+              </label>
+              <label class="meta-report-fee-field">Fee %
+                <input type="number" step="any" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" />
+              </label>
             </div>
             <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
           </div>
@@ -7483,7 +7572,7 @@
         </div>
         <div class="meta-reports-page meta-reports-page--public">
           <div class="meta-report-toolbar">
-            <label>Year
+            <label class="meta-report-year-field">Year
               <select id="meta-report-year" class="admin-select">
                 ${[payload.year, payload.year - 1].filter((value, index, arr) => arr.indexOf(value) === index).map((year) => `
                   <option value="${year}"${Number(metaReportsState.selectedYear) === Number(year) ? ' selected' : ''}>${year}</option>
