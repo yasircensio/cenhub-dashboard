@@ -26,9 +26,14 @@
       ${`
     <nav class="staff-nav" aria-label="Admin navigation">
       <a href="/admin" class="staff-nav-link${e==="clients"?" is-active":""}">Clients</a>
-      <a href="/admin/sync-history/ghl" class="staff-nav-link${e==="ghl-sync"?" is-active":""}">GHL sync</a>
-      <a href="/admin/sync-history/meta" class="staff-nav-link${e==="meta-sync"?" is-active":""}">Meta sync</a>
-      <a href="/admin/fb-lead-sync" class="staff-nav-link${e==="fb-lead-sync"?" is-active":""}">FB lead sync</a>
+      <div class="staff-nav-dropdown" id="staff-nav-sync">
+        <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${e==="ghl-sync"||e==="meta-sync"||e==="fb-lead-sync"?" is-active":""}" aria-expanded="false" aria-haspopup="true">Sync</button>
+        <div class="staff-nav-dropdown-menu" role="menu">
+          <a href="/admin/sync-history/ghl" class="staff-nav-dropdown-item${e==="ghl-sync"?" is-active":""}" role="menuitem">GHL sync</a>
+          <a href="/admin/sync-history/meta" class="staff-nav-dropdown-item${e==="meta-sync"?" is-active":""}" role="menuitem">Meta sync</a>
+          <a href="/admin/fb-lead-sync" class="staff-nav-dropdown-item${e==="fb-lead-sync"?" is-active":""}" role="menuitem">FB lead sync</a>
+        </div>
+      </div>
       <div class="staff-nav-dropdown" id="staff-nav-meta-reports">
         <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${e==="meta-reports"||e==="meta-reports-custom"?" is-active":""}" aria-expanded="false" aria-haspopup="true">Meta reports</button>
         <div class="staff-nav-dropdown-menu" role="menu">
