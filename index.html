@@ -7576,8 +7576,10 @@
     }
 
     function metaFmtX(value) {
-      const amount = Number(value) || 0;
-      return amount > 0 ? `${amount.toFixed(2)}x` : '—';
+      const amount = Number(value);
+      if (!Number.isFinite(amount)) return '—';
+      if (amount === 0) return '0.00x';
+      return `${amount.toFixed(2)}x`;
     }
 
     function metaMonthLabel(monthKey) {
@@ -7605,7 +7607,7 @@
         { label: 'Return on ad spend', value: metaFmtX(roasX), tone: metaReportTone(roasX) },
       ];
       if (monthPayload.bottomline) {
-        const useFee = monthPayload.bottomline.censioFee > 0;
+        const useFee = Number(monthPayload.bottomline.feePercent) > 0;
         const profitValue = useFee ? monthPayload.bottomline.poiKr : monthPayload.bottomline.poasKr;
         items.push({
           label: useFee ? 'Profit on investment' : 'Profit on ad spend',

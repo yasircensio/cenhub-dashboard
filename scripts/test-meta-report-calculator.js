@@ -11,6 +11,7 @@ function approx(actual, expected, tolerance = 0.02) {
 }
 
 function testSheetExample() {
+  // ML Tagdækning sheet "9 - 30 Januar"
   const result = computeMetaReportMetrics({
     spend: 3716.04,
     cpm: 68.6,
@@ -34,14 +35,32 @@ function testSheetExample() {
   approx(result.topline.totalLeadValue, 600000);
   approx(result.topline.cac, 743.208);
   approx(result.topline.roasKr, 596283.96);
-  approx(result.topline.roasX, 161.46, 0.02);
+  approx(result.topline.roasX, 160.462, 0.02);
   approx(result.bottomline.totalProfit, 300000);
   approx(result.bottomline.poasKr, 296283.96);
-  approx(result.bottomline.poasX, 79.73, 0.01);
+  approx(result.bottomline.poasX, 79.731, 0.01);
   approx(result.bottomline.censioFee, 59256.792);
+  // POI = POAS - fee - (15000 + 3500) = 218527.168
   approx(result.bottomline.poiKr, 218527.168);
+  // POI % = POI / spend = 58.806x
   approx(result.bottomline.poiX, 58.806, 0.01);
   approx(result.customLineItemsTotal, 18500);
+}
+
+function testFeeNotNegativeOnLoss() {
+  const result = computeMetaReportMetrics({
+    spend: 1326.8,
+    leads: 0,
+    wonLeads: 0,
+    avgLeadValue: 0,
+    avgProfitPerWon: 0,
+    showBottomline: true,
+    feeEnabled: true,
+    feePercent: 20,
+  });
+  assert.strictEqual(result.bottomline.censioFee, 0);
+  approx(result.bottomline.poiKr, -1326.8);
+  approx(result.bottomline.poiX, -1, 0.01);
 }
 
 function testEmptyMonth() {
@@ -71,6 +90,7 @@ function testLeadActionParsing() {
 
 function main() {
   testSheetExample();
+  testFeeNotNegativeOnLoss();
   testEmptyMonth();
   testLeadActionParsing();
   console.log('Meta report calculator tests passed.');
