@@ -3898,21 +3898,23 @@
     }
     .meta-report-tab.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-    .meta-report-metrics-card {
+    .meta-report-preview-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); margin: 0; max-width: none; overflow: hidden; padding: 22px 24px 16px;
+      box-shadow: var(--shadow-sm); margin: 0; overflow: hidden; padding: 22px 24px;
     }
-    .meta-report-metrics-card-label {
+    .meta-report-preview-card-label,
+    .meta-report-tables-card-label {
       align-items: center; color: var(--text); display: flex; font-size: 14px; font-weight: 400;
       gap: 8px; letter-spacing: 0; margin: 0 0 18px; text-transform: none;
     }
-    .meta-report-metrics-card-label::before {
+    .meta-report-preview-card-label::before,
+    .meta-report-tables-card-label::before {
       background: #3b82f6; border-radius: 3px; content: ''; display: inline-block; height: 14px; width: 4px;
     }
+    .meta-report-tables-card-label::before { background: var(--primary); }
 
     .meta-report-highlight-strip {
-      border-bottom: 1px solid var(--border); display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 22px; padding-bottom: 22px;
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0;
     }
     .meta-report-highlight-item {
       border-right: 1px solid var(--border); padding: 0 14px; text-align: center;
@@ -3933,16 +3935,14 @@
       .meta-report-highlight-label { font-size: 11px; }
     }
 
-    .meta-report-groups-grid {
-      display: grid; gap: 20px; grid-template-columns: 1fr;
+    .meta-report-tables-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 560px; overflow: hidden; padding: 22px 24px 8px;
     }
-    .meta-report-groups-grid.is-cols-2 {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .meta-report-groups-stack {
+      display: flex; flex-direction: column; gap: 20px;
     }
     .meta-report-group { margin: 0; min-width: 0; }
-    @media (max-width: 800px) {
-      .meta-report-groups-grid.is-cols-2 { grid-template-columns: 1fr; }
-    }
     .meta-report-group-head { align-items: center; display: flex; gap: 10px; margin-bottom: 12px; }
     .meta-report-group-bar { border-radius: 3px; flex-shrink: 0; height: 15px; width: 4px; }
     .meta-report-group-bar--meta { background: #3b82f6; }
@@ -3981,7 +3981,8 @@
     .meta-report-group-table tr.is-highlight.accent-bottomline { background: rgba(22, 163, 74, 0.08); }
     .meta-report-group-table tr.is-highlight.accent-other { background: rgba(147, 51, 234, 0.08); }
     @media (max-width: 480px) {
-      .meta-report-metrics-card { padding: 20px 16px 12px; }
+      .meta-report-preview-card,
+      .meta-report-tables-card { padding: 20px 16px 12px; }
       .meta-report-group-table th, .meta-report-group-table td { padding: 9px 12px; }
       .meta-report-group-table th { font-size: 12.5px; }
       .meta-report-group-table td { font-size: 13px; }
@@ -4037,15 +4038,12 @@
     .meta-report-switch-track:has(.meta-report-switch-input:checked) { background: var(--primary); }
     .meta-report-switch-label { color: var(--text); font-size: 13px; font-weight: 600; }
 
-    .meta-report-fee-field, .meta-report-layout-field {
+    .meta-report-fee-field {
       align-items: center; color: var(--text); display: flex; font-size: 13px; font-weight: 600; gap: 8px;
     }
     .meta-report-fee-field input { padding: 8px 10px; width: 72px; }
     .meta-report-fee-field.is-disabled { opacity: 0.45; }
     .meta-report-fee-field.is-disabled input { cursor: not-allowed; }
-    .meta-report-layout-field select {
-      font-size: 13px; min-width: 140px; text-transform: none; width: auto;
-    }
 
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
@@ -4085,7 +4083,9 @@
       justify-content: flex-end; margin: 18px -24px 0; padding: 14px 24px;
     }
     .meta-report-public-hero { text-align: center; }
-    .meta-reports-page--public .meta-report-month-panel { max-width: 900px; margin: 0 auto; }
+    .meta-reports-page--public .meta-report-month-panel {
+      display: flex; flex-direction: column; gap: 32px; margin: 0 auto; max-width: none;
+    }
     .meta-report-month-panel.is-loading { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
 
     .meta-report-hub-hero { padding-bottom: 20px; }
@@ -4224,8 +4224,11 @@
       background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
       gap: 32px; padding: 0;
     }
-    .meta-report-client-page .meta-report-metrics-card {
+    .meta-report-client-page .meta-report-preview-card {
       margin: 0; max-width: none;
+    }
+    .meta-report-client-page .meta-report-tables-card {
+      margin: 0 auto; max-width: 560px;
     }
   </style>
 </head>
@@ -7356,19 +7359,14 @@
       `;
     }
 
-    function normalizeMetaReportTableColumns(value) {
-      return Number(value) === 2 ? 2 : 1;
-    }
-
     function getMetaReportMonthBodyOptions(settings = {}, { editable = false } = {}) {
       return {
         editable,
         showOtherToClient: settings.metaReportShowOther !== false,
-        tableColumns: normalizeMetaReportTableColumns(settings.metaReportTableColumns),
       };
     }
 
-    function renderMetaReportMonthBody(monthPayload, { editable = false, showOtherToClient = true, tableColumns = 1 } = {}) {
+    function renderMetaReportMonthBody(monthPayload, { editable = false, showOtherToClient = true } = {}) {
       if (!monthPayload) {
         return '<div class="meta-report-empty">No data for this month yet.</div>';
       }
@@ -7475,13 +7473,21 @@
         });
       }
 
-      const cols = normalizeMetaReportTableColumns(tableColumns);
-      const cardHtml = `
-        ${renderMetaReportHighlightStrip(monthPayload)}
-        <div class="meta-report-groups-grid is-cols-${cols}">${groupsHtml}</div>
+      const previewLabel = editable ? 'Report preview' : 'Report';
+      const previewHtml = `
+        <div class="meta-report-preview-card">
+          <div class="meta-report-preview-card-label">${previewLabel}</div>
+          ${renderMetaReportHighlightStrip(monthPayload)}
+        </div>
       `;
+      const tablesHtml = groupsHtml ? `
+        <div class="meta-report-tables-card">
+          <div class="meta-report-tables-card-label">Details</div>
+          <div class="meta-report-groups-stack">${groupsHtml}</div>
+        </div>
+      ` : '';
 
-      return `${editPanelHtml}<div class="meta-report-metrics-card"><div class="meta-report-metrics-card-label">${editable ? 'Report preview' : 'Report'}</div>${cardHtml}</div>`;
+      return `${editPanelHtml}${previewHtml}${tablesHtml}`;
     }
 
     function renderMetaReportsHubPage(viewData) {
@@ -7592,12 +7598,6 @@
               </label>
               <label class="meta-report-fee-field${settings.metaReportFeeEnabled ? '' : ' is-disabled'}" id="meta-report-fee-field">Fee %
                 <input type="number" step="any" min="0" max="100" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" ${settings.metaReportFeeEnabled ? '' : 'disabled'} />
-              </label>
-              <label class="meta-report-layout-field">Table layout
-                <select id="meta-report-setting-table-columns" class="admin-select">
-                  <option value="1"${normalizeMetaReportTableColumns(settings.metaReportTableColumns) === 1 ? ' selected' : ''}>1 column</option>
-                  <option value="2"${normalizeMetaReportTableColumns(settings.metaReportTableColumns) === 2 ? ' selected' : ''}>2 columns</option>
-                </select>
               </label>
             </div>
             <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
@@ -7865,14 +7865,12 @@
       const bottomlineToggle = document.getElementById('meta-report-setting-bottomline');
       const feeToggle = document.getElementById('meta-report-setting-fee');
       const feePercent = document.getElementById('meta-report-setting-fee-percent');
-      const tableColumns = document.getElementById('meta-report-setting-table-columns');
       if (bottomlineToggle) bottomlineToggle.checked = Boolean(settings.metaReportShowBottomline);
       if (feeToggle) feeToggle.checked = Boolean(settings.metaReportFeeEnabled);
       if (feePercent) {
         feePercent.value = settings.metaReportFeePercent ?? 20;
         feePercent.dataset.prevValue = String(feePercent.value);
       }
-      if (tableColumns) tableColumns.value = String(normalizeMetaReportTableColumns(settings.metaReportTableColumns));
       syncMetaReportFeeFieldState(Boolean(settings.metaReportFeeEnabled));
     }
 
@@ -7888,11 +7886,6 @@
       }
       if (Object.prototype.hasOwnProperty.call(patch, 'metaReportShowOther')) {
         return settings.metaReportShowOther !== false ? '"Other" shown to client' : '"Other" hidden from client';
-      }
-      if (Object.prototype.hasOwnProperty.call(patch, 'metaReportTableColumns')) {
-        return normalizeMetaReportTableColumns(settings.metaReportTableColumns) === 2
-          ? 'Tables set to 2 columns'
-          : 'Tables set to 1 column';
       }
       return 'Settings saved';
     }
@@ -8049,23 +8042,6 @@
             event.preventDefault();
             feePercent.blur();
           }
-        };
-      }
-
-      const tableColumnsSelect = document.getElementById('meta-report-setting-table-columns');
-      if (tableColumnsSelect) {
-        tableColumnsSelect.onchange = () => {
-          const prevValue = normalizeMetaReportTableColumns(
-            metaReportsState.clientPayload?.settings?.metaReportTableColumns,
-          );
-          const nextValue = normalizeMetaReportTableColumns(tableColumnsSelect.value);
-          tableColumnsSelect.value = String(nextValue);
-          if (nextValue === prevValue) return;
-          saveMetaReportClientSettings(
-            clientId,
-            { metaReportTableColumns: nextValue },
-            () => { tableColumnsSelect.value = String(prevValue); },
-          );
         };
       }
 
