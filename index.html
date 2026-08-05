@@ -3900,7 +3900,14 @@
 
     .meta-report-metrics-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 720px; overflow: hidden; padding: 26px 28px 8px;
+      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 720px; overflow: hidden; padding: 22px 28px 8px;
+    }
+    .meta-report-metrics-card-label {
+      align-items: center; color: var(--text-muted); display: flex; font-size: 12px; font-weight: 700;
+      gap: 8px; letter-spacing: 0.08em; margin: 0 0 18px; text-transform: uppercase;
+    }
+    .meta-report-metrics-card-label::before {
+      background: #3b82f6; border-radius: 3px; content: ''; display: inline-block; height: 15px; width: 4px;
     }
 
     .meta-report-highlight-strip {
@@ -3971,7 +3978,7 @@
 
     .meta-report-unit { color: var(--text-soft); font-size: 12px; }
     .meta-report-empty { color: var(--text-soft); font-size: 16px; padding: 48px 16px; text-align: center; }
-    .meta-report-toolbar, .meta-report-settings, .meta-report-edit-actions {
+    .meta-report-toolbar, .meta-report-settings {
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
     }
     .meta-report-toolbar, .meta-report-settings { justify-content: space-between; }
@@ -4027,8 +4034,8 @@
     .meta-report-fee-field.is-disabled input { cursor: not-allowed; }
 
     .meta-report-edit-panel {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 18px;
-      box-shadow: var(--shadow-sm); margin-bottom: 24px; padding: 22px 24px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: var(--shadow-sm); margin-bottom: 0; padding: 22px 24px 0;
     }
     .meta-report-edit-panel h3 {
       align-items: center; color: var(--text-muted); display: flex; font-size: 12px; font-weight: 700;
@@ -4045,8 +4052,8 @@
     }
     .meta-report-edit-grid input, .meta-report-line-item-row input { font: inherit; min-width: 0; padding: 8px 10px; }
     .meta-report-line-items-editor {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-      margin-bottom: 18px; padding: 14px;
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      margin-bottom: 0; padding: 14px;
     }
     .meta-report-line-items-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 12px;
@@ -4059,7 +4066,9 @@
       margin-top: 4px;
     }
     .meta-report-edit-actions {
-      border-top: 1px solid var(--border); justify-content: flex-end; margin-bottom: 0; padding-top: 18px;
+      align-items: center; background: var(--panel-soft); border-radius: 0 0 18px 18px;
+      border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: flex-end; margin: 18px -24px 0; padding: 14px 24px;
     }
     .meta-report-public-hero { text-align: center; }
     .meta-reports-page--public .meta-report-month-panel { max-width: 900px; margin: 0 auto; }
@@ -4198,7 +4207,11 @@
       margin-bottom: 16px; padding: 14px 16px;
     }
     .meta-report-client-page .meta-report-month-panel {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+      background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
+      gap: 32px; padding: 0;
+    }
+    .meta-report-client-page .meta-report-metrics-card {
+      margin: 0; max-width: none;
     }
   </style>
 </head>
@@ -7443,7 +7456,7 @@
         });
       }
 
-      return `${editPanelHtml}<div class="meta-report-metrics-card">${cardHtml}</div>`;
+      return `${editPanelHtml}<div class="meta-report-metrics-card"><div class="meta-report-metrics-card-label">${editable ? 'Report preview' : 'Report'}</div>${cardHtml}</div>`;
     }
 
     function renderMetaReportsHubPage(viewData) {
