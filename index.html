@@ -4845,7 +4845,7 @@
         <nav class="staff-nav" aria-label="Admin navigation">
           <a href="/admin" class="staff-nav-link${activeTab === 'clients' ? ' is-active' : ''}">Cenhub clients</a>
           <div class="staff-nav-dropdown" data-staff-nav-dropdown="sync">
-            <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${syncActive ? ' is-active' : ''}" aria-expanded="false" aria-haspopup="true">Sync</button>
+            <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${syncActive ? ' is-active' : ''}" aria-expanded="false" aria-haspopup="true" onclick="toggleStaffNavDropdown(this, event)">Sync</button>
             <div class="staff-nav-dropdown-menu" role="menu">
               <a href="/admin/sync-history/ghl" class="staff-nav-dropdown-item${activeTab === 'ghl-sync' ? ' is-active' : ''}" role="menuitem">GHL sync</a>
               <a href="/admin/sync-history/meta" class="staff-nav-dropdown-item${activeTab === 'meta-sync' ? ' is-active' : ''}" role="menuitem">Meta sync</a>
@@ -4853,7 +4853,7 @@
             </div>
           </div>
           <div class="staff-nav-dropdown" data-staff-nav-dropdown="meta-reports">
-            <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${metaReportsActive ? ' is-active' : ''}" aria-expanded="false" aria-haspopup="true">Meta reports</button>
+            <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${metaReportsActive ? ' is-active' : ''}" aria-expanded="false" aria-haspopup="true" onclick="toggleStaffNavDropdown(this, event)">Meta reports</button>
             <div class="staff-nav-dropdown-menu" role="menu">
               <a href="/admin/meta-reports" class="staff-nav-dropdown-item${activeTab === 'meta-reports' ? ' is-active' : ''}" role="menuitem">All clients</a>
               <a href="/admin/meta-reports/custom-values" class="staff-nav-dropdown-item${activeTab === 'meta-reports-custom' ? ' is-active' : ''}" role="menuitem">Custom values</a>
@@ -4950,7 +4950,8 @@
       });
     }
 
-    function toggleStaffNavDropdown(trigger) {
+    function toggleStaffNavDropdown(trigger, event) {
+      event?.stopPropagation();
       const dropdown = trigger?.closest('.staff-nav-dropdown');
       if (!dropdown) return;
       const willOpen = !dropdown.classList.contains('is-open');
@@ -12768,16 +12769,6 @@
     }
 
     initDashboardApp();
-
-    document.addEventListener('mousedown', (event) => {
-      const navDropdownTrigger = event.target.closest('.staff-nav-dropdown-trigger');
-      if (navDropdownTrigger) {
-        event.preventDefault();
-        event.stopPropagation();
-        toggleStaffNavDropdown(navDropdownTrigger);
-        return;
-      }
-    });
 
     document.addEventListener('click', (event) => {
       const toggle = event.target.closest('#staff-nav-toggle');
