@@ -15,6 +15,7 @@
     "migrate:fb-lead-sync-cache": "node scripts/migrate-fb-lead-sync-cache.js",
     "migrate:fb-lead-sync-retries": "node scripts/migrate-fb-lead-sync-retries.js",
     "migrate:meta-reports": "node scripts/migrate-meta-reports.js",
+    "migrate:meta-report-table-columns": "node scripts/migrate-meta-report-table-columns.js",
     "test:fb-lead-sync-e2e": "node scripts/test-fb-lead-sync-e2e.js",
     "create-admin": "node scripts/create-admin.js",
     "sync:all-ghl": "node scripts/run-ghl-sync-all.js",

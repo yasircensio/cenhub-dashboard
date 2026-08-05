@@ -49,7 +49,7 @@
     { "source": "/admin/fb-lead-sync", "destination": "/admin.html" },
     { "source": "/admin/meta-reports", "destination": "/admin.html" },
     { "source": "/admin/meta-reports/:client_id", "destination": "/admin.html" },
-    { "source": "/report/:token", "destination": "/client.html" },
+    { "source": "/report/:token", "destination": "/admin.html" },
     { "source": "/admin/:client_id", "destination": "/admin.html" },
     { "source": "/:client_id", "destination": "/client.html" }
   ],

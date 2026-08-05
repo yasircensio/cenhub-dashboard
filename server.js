@@ -70,7 +70,7 @@ function createLocalResponse(serverResponse) {
 function serveDashboardHtml(response, mode, clientSlug = null, extraAttrs = {}) {
   const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team'
     || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'fb-lead-sync'
-    || mode === 'meta-reports' || mode === 'meta-reports-client';
+    || mode === 'meta-reports' || mode === 'meta-reports-client' || mode === 'report';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
   let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
   const bodyAttrs = [`data-dashboard-mode="${mode}"`];

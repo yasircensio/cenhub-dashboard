@@ -89,6 +89,10 @@ async function main() {
 
   const adminInit = `
 async function bootAdminApp() {
+  if (IS_REPORT_VIEW) {
+    await loadPublicMetaReportPage();
+    return;
+  }
   if (IS_LOGIN_PAGE) {
     renderLoginPage();
     return;
