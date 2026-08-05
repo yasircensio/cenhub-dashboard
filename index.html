@@ -2975,6 +2975,56 @@
       color: #fff;
     }
 
+    .staff-nav-dropdown {
+      position: relative;
+    }
+    .staff-nav-dropdown-trigger {
+      align-items: center;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      gap: 5px;
+    }
+    .staff-nav-dropdown-trigger::after {
+      border-left: 3.5px solid transparent;
+      border-right: 3.5px solid transparent;
+      border-top: 4.5px solid currentColor;
+      content: '';
+      margin-top: 1px;
+      opacity: 0.75;
+    }
+    .staff-nav-dropdown-menu {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      display: none;
+      min-width: 180px;
+      padding: 6px;
+      position: absolute;
+      left: 0;
+      top: calc(100% + 8px);
+      z-index: 45;
+    }
+    .staff-nav-dropdown.is-open .staff-nav-dropdown-menu { display: block; }
+    .staff-nav-dropdown-item {
+      border-radius: 8px;
+      color: var(--text);
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 12px;
+      text-decoration: none;
+    }
+    .staff-nav-dropdown-item:hover { background: var(--panel-soft); }
+    .staff-nav-dropdown-item.is-active {
+      background: rgba(255, 106, 0, 0.1);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
     .staff-user-menu {
       position: relative;
     }
@@ -3803,6 +3853,22 @@
         padding: 10px 14px;
       }
 
+      .brand-topbar--collapsible .staff-nav-dropdown {
+        width: 100%;
+      }
+
+      .brand-topbar--collapsible .staff-nav-dropdown-trigger {
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .brand-topbar--collapsible .staff-nav-dropdown-menu {
+        left: 0;
+        position: static;
+        margin-top: 4px;
+        width: 100%;
+      }
+
       .brand-topbar--collapsible .staff-user-menu {
         width: 100%;
       }
@@ -4240,6 +4306,90 @@
     .meta-report-client-page .meta-report-tables-card {
       margin: 0 auto; max-width: 560px;
     }
+
+    .meta-cv-layout {
+      display: grid; gap: 20px; grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+    }
+    .meta-cv-list, .meta-cv-editor {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: var(--shadow-sm); min-width: 0;
+    }
+    .meta-cv-list { padding: 18px; }
+    .meta-cv-editor { align-self: start; padding: 20px; position: sticky; top: 16px; }
+    .meta-cv-toolbar {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .meta-cv-summary {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+    }
+    .meta-cv-summary-pill {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text-soft); font-size: 12px; font-weight: 600; padding: 5px 10px;
+    }
+    .meta-cv-summary-pill.is-complete { background: rgba(22, 163, 74, 0.1); border-color: rgba(22, 163, 74, 0.22); color: #15803d; }
+    .meta-cv-summary-pill.is-partial { background: rgba(217, 119, 6, 0.1); border-color: rgba(217, 119, 6, 0.22); color: #b45309; }
+    .meta-cv-summary-pill.is-empty { background: rgba(100, 116, 139, 0.08); border-color: rgba(100, 116, 139, 0.18); color: #475569; }
+    .meta-cv-search { max-width: 280px; width: 100%; }
+    .meta-cv-client {
+      border: 1px solid var(--border); border-radius: 14px; margin-bottom: 10px; padding: 14px 14px 12px;
+    }
+    .meta-cv-client.is-selected { border-color: rgba(255, 106, 0, 0.45); box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.08); }
+    .meta-cv-client-head {
+      align-items: flex-start; display: flex; gap: 12px; justify-content: space-between; margin-bottom: 10px;
+    }
+    .meta-cv-client-head h3 { font-size: 15px; font-weight: 700; margin: 0 0 4px; }
+    .meta-cv-client-meta { color: var(--text-muted); font-size: 12px; }
+    .meta-cv-client-stats { color: var(--text-soft); font-size: 12px; font-weight: 600; text-align: right; white-space: nowrap; }
+    .meta-cv-month-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .meta-cv-month-pill {
+      background: #f1f5f9; border: 1px solid transparent; border-radius: 999px; color: #64748b;
+      cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+      min-width: 42px; padding: 5px 8px; text-transform: uppercase;
+    }
+    .meta-cv-month-pill.is-complete {
+      background: rgba(22, 163, 74, 0.14); border-color: rgba(22, 163, 74, 0.18); color: #15803d;
+    }
+    .meta-cv-month-pill.is-partial {
+      background: rgba(217, 119, 6, 0.14); border-color: rgba(217, 119, 6, 0.18); color: #b45309;
+    }
+    .meta-cv-month-pill.is-empty {
+      background: #fff; border: 1px dashed #cbd5e1; color: #94a3b8;
+    }
+    .meta-cv-month-pill.is-active {
+      box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.35); color: var(--text);
+    }
+    .meta-cv-editor h3 { margin: 0 0 6px; }
+    .meta-cv-editor-sub { color: var(--text-soft); font-size: 13px; margin: 0 0 16px; }
+    .meta-cv-editor-empty {
+      color: var(--text-soft); font-size: 14px; padding: 28px 8px; text-align: center;
+    }
+    .meta-cv-editor-grid {
+      display: grid; gap: 12px; grid-template-columns: 1fr; margin-bottom: 14px;
+    }
+    .meta-cv-editor-grid label {
+      display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
+    }
+    .meta-cv-editor-grid input, .meta-cv-editor-grid select { font: inherit; padding: 8px 10px; }
+    .meta-cv-editor-actions {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
+      margin-top: 16px;
+    }
+    .meta-cv-legend {
+      align-items: center; color: var(--text-muted); display: flex; flex-wrap: wrap; font-size: 12px; gap: 12px;
+      margin-top: 8px;
+    }
+    .meta-cv-legend span { align-items: center; display: inline-flex; gap: 6px; }
+    .meta-cv-legend i {
+      border-radius: 999px; display: inline-block; height: 10px; width: 10px;
+    }
+    .meta-cv-legend i.is-complete { background: #16a34a; }
+    .meta-cv-legend i.is-partial { background: #d97706; }
+    .meta-cv-legend i.is-empty { background: #fff; border: 1px dashed #cbd5e1; }
+    @media (max-width: 980px) {
+      .meta-cv-layout { grid-template-columns: 1fr; }
+      .meta-cv-editor { position: static; }
+    }
   </style>
 </head>
 <body>
@@ -4286,6 +4436,11 @@
           delete document.body.dataset.clientSlug;
           return;
         }
+        if (parts[1] === 'meta-reports' && parts[2] === 'custom-values') {
+          document.body.dataset.dashboardMode = 'meta-reports-custom';
+          delete document.body.dataset.clientSlug;
+          return;
+        }
         if (parts[1] === 'meta-reports' && parts[2]) {
           document.body.dataset.dashboardMode = 'meta-reports-client';
           document.body.dataset.clientSlug = parts[2];
@@ -4323,17 +4478,18 @@
     const IS_ADMIN_FB_LEAD_SYNC = DASHBOARD_MODE === 'fb-lead-sync';
     const IS_ADMIN_META_REPORTS = DASHBOARD_MODE === 'meta-reports';
     const IS_ADMIN_META_REPORTS_CLIENT = DASHBOARD_MODE === 'meta-reports-client';
+    const IS_ADMIN_META_REPORTS_CUSTOM = DASHBOARD_MODE === 'meta-reports-custom';
     const IS_REPORT_VIEW = DASHBOARD_MODE === 'report';
     const REPORT_TOKEN = document.body.dataset.reportToken || '';
     const IS_ADMIN_SYNC_HISTORY = IS_ADMIN_SYNC_HISTORY_GHL || IS_ADMIN_SYNC_HISTORY_META;
     const IS_CLIENT_VIEW = DASHBOARD_MODE === 'client';
     const IS_PREVIEW = IS_CLIENT_VIEW && Boolean(new URLSearchParams(window.location.search).get('client'));
     const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN_FB_LEAD_SYNC
-      || IS_ADMIN_META_REPORTS || IS_ADMIN_META_REPORTS_CLIENT
+      || IS_ADMIN_META_REPORTS || IS_ADMIN_META_REPORTS_CLIENT || IS_ADMIN_META_REPORTS_CUSTOM
       || new URLSearchParams(window.location.search).get('view') === 'admin';
 
     const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN_FB_LEAD_SYNC
-      || IS_ADMIN_META_REPORTS || IS_ADMIN_META_REPORTS_CLIENT || IS_ADMIN;
+      || IS_ADMIN_META_REPORTS || IS_ADMIN_META_REPORTS_CLIENT || IS_ADMIN_META_REPORTS_CUSTOM || IS_ADMIN;
     const LOADING_MSG = ADMIN_UI ? 'Loading dashboard data...' : 'Henter dashboard data...';
     const RETRY_MSG = ADMIN_UI ? 'Try again' : 'Prøv igen';
 
@@ -4345,8 +4501,10 @@
     function resolveClientSlug() {
       if (document.body.dataset.clientSlug) return document.body.dataset.clientSlug;
       const parts = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
-      if (parts[0] === 'admin' && parts[1] === 'meta-reports' && parts[2]) return parts[2];
-      if (parts[0] === 'admin' && parts[1]) return parts[1];
+      if (parts[0] === 'admin' && parts[1] === 'meta-reports' && parts[2] && parts[2] !== 'custom-values') {
+        return parts[2];
+      }
+      if (parts[0] === 'admin' && parts[1] && parts[1] !== 'meta-reports') return parts[1];
       if (parts[0] && parts[0] !== 'admin' && parts[0] !== 'index.html' && parts[0] !== 'report') return parts[0];
       return new URLSearchParams(window.location.search).get('client') || 'suntech-nordic';
     }
@@ -4649,13 +4807,20 @@
 
     function renderStaffAdminChrome(activeTab) {
       if (!currentStaffUser) return '';
+      const metaReportsActive = activeTab === 'meta-reports' || activeTab === 'meta-reports-custom';
       const nav = `
         <nav class="staff-nav" aria-label="Admin navigation">
           <a href="/admin" class="staff-nav-link${activeTab === 'clients' ? ' is-active' : ''}">Clients</a>
           <a href="/admin/sync-history/ghl" class="staff-nav-link${activeTab === 'ghl-sync' ? ' is-active' : ''}">GHL sync</a>
           <a href="/admin/sync-history/meta" class="staff-nav-link${activeTab === 'meta-sync' ? ' is-active' : ''}">Meta sync</a>
           <a href="/admin/fb-lead-sync" class="staff-nav-link${activeTab === 'fb-lead-sync' ? ' is-active' : ''}">FB lead sync</a>
-          <a href="/admin/meta-reports" class="staff-nav-link${activeTab === 'meta-reports' ? ' is-active' : ''}">Meta reports</a>
+          <div class="staff-nav-dropdown" id="staff-nav-meta-reports">
+            <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${metaReportsActive ? ' is-active' : ''}" aria-expanded="false" aria-haspopup="true">Meta reports</button>
+            <div class="staff-nav-dropdown-menu" role="menu">
+              <a href="/admin/meta-reports" class="staff-nav-dropdown-item${activeTab === 'meta-reports' ? ' is-active' : ''}" role="menuitem">All clients</a>
+              <a href="/admin/meta-reports/custom-values" class="staff-nav-dropdown-item${activeTab === 'meta-reports-custom' ? ' is-active' : ''}" role="menuitem">Custom values</a>
+            </div>
+          </div>
           ${isStaffAdmin() ? `<a href="/team" class="staff-nav-link${activeTab === 'team' ? ' is-active' : ''}">Team</a>` : ''}
         </nav>
       `;
@@ -4665,6 +4830,23 @@
           ${renderStaffUserMenu()}
         </div>
       `;
+    }
+
+    function closeStaffNavDropdowns() {
+      document.querySelectorAll('.staff-nav-dropdown.is-open').forEach((el) => {
+        el.classList.remove('is-open');
+        el.querySelector('.staff-nav-dropdown-trigger')?.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    function toggleStaffNavDropdown(trigger) {
+      const dropdown = trigger?.closest('.staff-nav-dropdown');
+      if (!dropdown) return;
+      const willOpen = !dropdown.classList.contains('is-open');
+      closeStaffNavDropdowns();
+      closeStaffUserMenu();
+      dropdown.classList.toggle('is-open', willOpen);
+      trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
     }
 
     function toggleStaffUserMenu(event) {
@@ -6958,6 +7140,16 @@
       selectedYear: new Date().getFullYear(),
       publicPayload: null,
       publicPageMounted: false,
+      customValues: {
+        mounted: false,
+        overview: null,
+        searchQuery: '',
+        selectedClientId: null,
+        selectedMonthKey: null,
+        editorPayload: null,
+        loadingEditor: false,
+        saving: false,
+      },
     };
 
     const META_HUB_FILTER_OPTIONS = [
@@ -7590,6 +7782,7 @@
                 <div class="meta-hub-filters" id="meta-reports-filters" role="tablist" aria-label="Filter clients">
                   ${renderMetaHubFiltersHtml(metaReportsState.filter)}
                 </div>
+                <a class="admin-btn admin-btn--secondary" href="/admin/meta-reports/custom-values">Custom values</a>
                 <button class="admin-btn admin-btn--secondary" type="button" id="meta-reports-refresh">${ICON_SYNC} Refresh</button>
               </div>
             </div>
@@ -8408,6 +8601,415 @@
       } finally {
         const panel = document.getElementById('meta-report-month-panel');
         if (panel) panel.classList.remove('is-loading');
+      }
+    }
+
+    function metaCvShortMonth(monthKey) {
+      const month = Number(String(monthKey || '').slice(5, 7));
+      return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month - 1] || monthKey;
+    }
+
+    function metaCvFormatUpdatedAt(value) {
+      if (!value) return 'Not updated yet';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 'Not updated yet';
+      return date.toLocaleString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    function getMetaCvFilteredClients(overview = metaReportsState.customValues.overview) {
+      const clients = overview?.clients || [];
+      const query = String(metaReportsState.customValues.searchQuery || '').trim().toLowerCase();
+      if (!query) return clients;
+      return clients.filter((client) => (
+        [client.accountName, client.clientId, client.metaAdAccountId]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(query)
+      ));
+    }
+
+    function renderMetaCvMonthPills(client, monthKeys = []) {
+      const selectedClientId = metaReportsState.customValues.selectedClientId;
+      const selectedMonthKey = metaReportsState.customValues.selectedMonthKey;
+      return monthKeys.map((monthKey) => {
+        const status = client.months?.[monthKey]?.status || 'empty';
+        const isActive = selectedClientId === client.clientId && selectedMonthKey === monthKey;
+        return `
+          <button
+            type="button"
+            class="meta-cv-month-pill is-${esc(status)}${isActive ? ' is-active' : ''}"
+            data-meta-cv-client="${esc(client.clientId)}"
+            data-meta-cv-month="${esc(monthKey)}"
+            title="${esc(metaCvShortMonth(monthKey))} · ${esc(status)}"
+          >${esc(metaCvShortMonth(monthKey))}</button>
+        `;
+      }).join('');
+    }
+
+    function renderMetaCvClientRows(overview) {
+      const clients = getMetaCvFilteredClients(overview);
+      const monthKeys = overview.monthKeys || [];
+      if (!clients.length) {
+        return '<div class="meta-report-empty" style="padding:32px 12px">No matching clients.</div>';
+      }
+      return clients.map((client) => {
+        const selected = metaReportsState.customValues.selectedClientId === client.clientId;
+        return `
+          <article class="meta-cv-client${selected ? ' is-selected' : ''}" data-meta-cv-client-card="${esc(client.clientId)}">
+            <div class="meta-cv-client-head">
+              <div>
+                <h3>${esc(client.accountName)}</h3>
+                <div class="meta-cv-client-meta">
+                  ${client.metaReportEnabled ? 'Live report' : 'Report off'}
+                  · Last update ${esc(metaCvFormatUpdatedAt(client.lastUpdatedAt))}
+                </div>
+              </div>
+              <div class="meta-cv-client-stats">
+                ${client.completeCount}/${monthKeys.length} done
+                ${client.emptyCount ? `<br>${client.emptyCount} remaining` : ''}
+              </div>
+            </div>
+            <div class="meta-cv-month-pills">${renderMetaCvMonthPills(client, monthKeys)}</div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderMetaCvEditor(overview) {
+      const state = metaReportsState.customValues;
+      const client = (overview.clients || []).find((row) => row.clientId === state.selectedClientId);
+      const monthKey = state.selectedMonthKey;
+      if (!client || !monthKey) {
+        return `
+          <div class="meta-cv-editor-empty">
+            Select a client month pill to edit won leads, average lead value, and average profit.
+          </div>
+        `;
+      }
+
+      const monthStatus = client.months?.[monthKey] || {};
+      const monthPayload = state.editorPayload?.months?.[monthKey] || null;
+      const showProfit = client.metaReportShowBottomline;
+      const wonValue = monthPayload?.topline?.wonLeads ?? monthStatus.wonLeads ?? '';
+      const avgLeadValue = monthPayload?.topline?.avgLeadValue ?? monthStatus.avgLeadValue ?? '';
+      const avgProfit = monthPayload?.inputs?.avgProfitPerWon ?? monthStatus.avgProfitPerWon ?? '';
+      const lineItems = monthPayload?.customLineItems || [];
+
+      return `
+        <h3>${esc(client.accountName)}</h3>
+        <p class="meta-cv-editor-sub">
+          ${esc(metaMonthLabel(monthKey))}
+          · ${esc(monthStatus.status || 'empty')}
+          · Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}
+        </p>
+        ${state.loadingEditor ? '<div class="note" style="margin-bottom:12px">Loading month details…</div>' : ''}
+        <div class="meta-cv-editor-grid">
+          <label>Client
+            <select id="meta-cv-client-select" class="admin-select">
+              ${(overview.clients || []).map((row) => `
+                <option value="${esc(row.clientId)}"${row.clientId === client.clientId ? ' selected' : ''}>${esc(row.accountName)}</option>
+              `).join('')}
+            </select>
+          </label>
+          <label>Month
+            <select id="meta-cv-month-select" class="admin-select">
+              ${(overview.monthKeys || []).map((key) => `
+                <option value="${esc(key)}"${key === monthKey ? ' selected' : ''}>${esc(metaMonthLabel(key))}</option>
+              `).join('')}
+            </select>
+          </label>
+          <label>Won leads
+            <input type="number" step="any" id="meta-cv-won-leads" value="${esc(wonValue)}" />
+          </label>
+          <label>Avg lead value
+            <input type="number" step="any" id="meta-cv-avg-lead-value" value="${esc(avgLeadValue)}" />
+          </label>
+          <label>Avg profit per won${showProfit ? '' : ' (optional)'}
+            <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(avgProfit)}" />
+          </label>
+        </div>
+        <div class="meta-report-line-items-editor">
+          <div class="meta-report-line-items-head">
+            <h4>Other items</h4>
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line">Add row</button>
+          </div>
+          <div id="meta-cv-line-items-list">
+            ${lineItems.length ? lineItems.map((row, index) => `
+              <div class="meta-report-line-item-row" data-index="${index}">
+                <input type="text" class="meta-cv-line-label" placeholder="Label" value="${esc(row.label || '')}" />
+                <input type="number" step="any" class="meta-cv-line-amount" placeholder="Amount" value="${esc(row.amount ?? '')}" />
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-cv-line-remove">Remove</button>
+              </div>
+            `).join('') : '<div class="note">No other items yet.</div>'}
+          </div>
+        </div>
+        <div class="meta-cv-editor-actions">
+          <a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Open full editor</a>
+          <button type="button" class="admin-btn admin-btn--primary" id="meta-cv-save"${state.saving || state.loadingEditor ? ' disabled' : ''}>
+            ${state.saving ? 'Saving…' : 'Save values'}
+          </button>
+        </div>
+      `;
+    }
+
+    function renderMetaReportsCustomValuesPage(overview) {
+      const summary = overview.summary || {};
+      const yearOptions = (overview.years || []).map((entry) => `
+        <option value="${esc(entry.year)}"${Number(overview.year) === Number(entry.year) ? ' selected' : ''}>${esc(entry.year)}</option>
+      `).join('');
+
+      return `
+        ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-custom'))}
+        ${wrapDashboardShell(`
+        <div class="page-hero admin-hub-hero meta-report-hub-hero">
+          <div class="admin-breadcrumb">
+            <a href="/admin">Clients</a>
+            <span aria-hidden="true"> / </span>
+            <a href="/admin/meta-reports">Meta reports</a>
+            <span aria-hidden="true"> / </span>
+            <span>Custom values</span>
+          </div>
+          <h1>Custom values</h1>
+          <p>Update won leads, average values, and other inputs across clients for each month — without opening every report.</p>
+        </div>
+        <div class="sync-history-page meta-reports-page">
+          <div class="meta-cv-toolbar">
+            <label class="meta-report-year-field">Year
+              <select id="meta-cv-year" class="admin-select">${yearOptions}</select>
+            </label>
+            <div class="meta-cv-search">
+              <input id="meta-cv-search" type="search" placeholder="Search clients..." value="${esc(metaReportsState.customValues.searchQuery)}" autocomplete="off" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font:inherit" />
+            </div>
+          </div>
+          <div class="meta-cv-summary">
+            <span class="meta-cv-summary-pill is-complete">${summary.completeMonths || 0} complete</span>
+            <span class="meta-cv-summary-pill is-partial">${summary.partialMonths || 0} partial</span>
+            <span class="meta-cv-summary-pill is-empty">${summary.emptyMonths || 0} remaining</span>
+            <span class="meta-cv-summary-pill">${summary.clientCount || 0} clients · ${summary.monthCount || 0} months</span>
+          </div>
+          <div class="meta-cv-legend">
+            <span><i class="is-complete"></i> Complete</span>
+            <span><i class="is-partial"></i> Partial</span>
+            <span><i class="is-empty"></i> Remaining</span>
+          </div>
+          <div class="meta-cv-layout" style="margin-top:16px">
+            <div class="meta-cv-list" id="meta-cv-client-list">
+              ${renderMetaCvClientRows(overview)}
+            </div>
+            <aside class="meta-cv-editor" id="meta-cv-editor">
+              ${renderMetaCvEditor(overview)}
+            </aside>
+          </div>
+        </div>
+        `)}
+      `;
+    }
+
+    function refreshMetaCvListAndEditor() {
+      const overview = metaReportsState.customValues.overview;
+      if (!overview) return;
+      const list = document.getElementById('meta-cv-client-list');
+      if (list) list.innerHTML = renderMetaCvClientRows(overview);
+      const editor = document.getElementById('meta-cv-editor');
+      if (editor) editor.innerHTML = renderMetaCvEditor(overview);
+      bindMetaCvEditorEvents();
+      bindMetaCvListEvents();
+    }
+
+    function collectMetaCvLineItems() {
+      return Array.from(document.querySelectorAll('#meta-cv-line-items-list .meta-report-line-item-row'))
+        .map((row, index) => ({
+          label: String(row.querySelector('.meta-cv-line-label')?.value || '').trim(),
+          amount: Number(row.querySelector('.meta-cv-line-amount')?.value) || 0,
+          sortOrder: index,
+        }))
+        .filter((row) => row.label);
+    }
+
+    async function selectMetaCvMonth(clientId, monthKey, { reloadEditor = true } = {}) {
+      metaReportsState.customValues.selectedClientId = clientId;
+      metaReportsState.customValues.selectedMonthKey = monthKey;
+      refreshMetaCvListAndEditor();
+      if (!reloadEditor) return;
+      metaReportsState.customValues.loadingEditor = true;
+      refreshMetaCvListAndEditor();
+      try {
+        const year = String(monthKey).slice(0, 4);
+        const payload = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(year)}`);
+        if (
+          metaReportsState.customValues.selectedClientId === clientId
+          && metaReportsState.customValues.selectedMonthKey === monthKey
+        ) {
+          metaReportsState.customValues.editorPayload = payload;
+        }
+      } catch (error) {
+        showToast(error.message || 'Failed to load month', 'error');
+      } finally {
+        metaReportsState.customValues.loadingEditor = false;
+        refreshMetaCvListAndEditor();
+      }
+    }
+
+    function bindMetaCvListEvents() {
+      document.querySelectorAll('[data-meta-cv-month]').forEach((button) => {
+        button.onclick = () => {
+          selectMetaCvMonth(
+            button.getAttribute('data-meta-cv-client'),
+            button.getAttribute('data-meta-cv-month'),
+          );
+        };
+      });
+    }
+
+    function bindMetaCvEditorEvents() {
+      const clientSelect = document.getElementById('meta-cv-client-select');
+      const monthSelect = document.getElementById('meta-cv-month-select');
+      if (clientSelect) {
+        clientSelect.onchange = () => {
+          const monthKey = metaReportsState.customValues.selectedMonthKey
+            || metaReportsState.customValues.overview?.monthKeys?.slice(-1)[0];
+          if (monthKey) selectMetaCvMonth(clientSelect.value, monthKey);
+        };
+      }
+      if (monthSelect) {
+        monthSelect.onchange = () => {
+          const clientId = metaReportsState.customValues.selectedClientId;
+          if (clientId) selectMetaCvMonth(clientId, monthSelect.value);
+        };
+      }
+
+      const addLine = document.getElementById('meta-cv-add-line');
+      if (addLine) {
+        addLine.onclick = () => {
+          const list = document.getElementById('meta-cv-line-items-list');
+          if (!list) return;
+          if (list.querySelector('.note')) list.innerHTML = '';
+          const row = document.createElement('div');
+          row.className = 'meta-report-line-item-row';
+          row.innerHTML = `
+            <input type="text" class="meta-cv-line-label" placeholder="Label" value="" />
+            <input type="number" step="any" class="meta-cv-line-amount" placeholder="Amount" value="" />
+            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-cv-line-remove">Remove</button>
+          `;
+          list.appendChild(row);
+          row.querySelector('.meta-cv-line-remove')?.addEventListener('click', () => row.remove());
+        };
+      }
+      document.querySelectorAll('.meta-cv-line-remove').forEach((button) => {
+        button.onclick = () => button.closest('.meta-report-line-item-row')?.remove();
+      });
+
+      const saveBtn = document.getElementById('meta-cv-save');
+      if (saveBtn) {
+        saveBtn.onclick = async () => {
+          const clientId = metaReportsState.customValues.selectedClientId;
+          const monthKey = metaReportsState.customValues.selectedMonthKey;
+          if (!clientId || !monthKey) return;
+          metaReportsState.customValues.saving = true;
+          refreshMetaCvListAndEditor();
+          try {
+            const body = {
+              wonLeads: document.getElementById('meta-cv-won-leads')?.value === ''
+                ? null
+                : Number(document.getElementById('meta-cv-won-leads')?.value),
+              avgLeadValue: document.getElementById('meta-cv-avg-lead-value')?.value === ''
+                ? null
+                : Number(document.getElementById('meta-cv-avg-lead-value')?.value),
+              avgProfitPerWon: document.getElementById('meta-cv-avg-profit')?.value === ''
+                ? null
+                : Number(document.getElementById('meta-cv-avg-profit')?.value),
+              lineItems: collectMetaCvLineItems(),
+            };
+            await adminFetch(
+              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`,
+              { method: 'PUT', body: JSON.stringify(body) },
+            );
+            showToast('Custom values saved', 'success');
+            await loadMetaReportsCustomValuesPage({ silent: true, keepSelection: true });
+            await selectMetaCvMonth(clientId, monthKey);
+          } catch (error) {
+            showToast(error.message || 'Save failed', 'error');
+            metaReportsState.customValues.saving = false;
+            refreshMetaCvListAndEditor();
+          }
+        };
+      }
+    }
+
+    function bindMetaReportsCustomValuesEvents(overview) {
+      const yearSelect = document.getElementById('meta-cv-year');
+      if (yearSelect) {
+        yearSelect.onchange = async () => {
+          metaReportsState.selectedYear = Number(yearSelect.value);
+          metaReportsState.customValues.selectedClientId = null;
+          metaReportsState.customValues.selectedMonthKey = null;
+          metaReportsState.customValues.editorPayload = null;
+          await loadMetaReportsCustomValuesPage({ silent: true });
+        };
+      }
+      const search = document.getElementById('meta-cv-search');
+      if (search) {
+        search.oninput = () => {
+          metaReportsState.customValues.searchQuery = search.value;
+          const list = document.getElementById('meta-cv-client-list');
+          if (list) list.innerHTML = renderMetaCvClientRows(overview);
+          bindMetaCvListEvents();
+        };
+      }
+      bindMetaCvListEvents();
+      bindMetaCvEditorEvents();
+    }
+
+    async function loadMetaReportsCustomValuesPage({ silent = false, keepSelection = false } = {}) {
+      const dashboard = document.getElementById('dashboard');
+      if (!dashboard) return;
+      const user = await fetchStaffMe();
+      if (!user) {
+        window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
+      currentStaffUser = user;
+
+      if (!metaReportsState.customValues.mounted && !silent) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-custom'))}
+          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading custom values...</p></div>')}
+        `;
+      }
+
+      try {
+        const overview = await adminFetch(`/api/meta-reports/custom-values?year=${encodeURIComponent(metaReportsState.selectedYear)}`);
+        metaReportsState.selectedYear = Number(overview.year) || metaReportsState.selectedYear;
+        metaReportsState.customValues.overview = overview;
+        if (!keepSelection) {
+          // keep existing selection if still valid
+          const stillValid = (overview.clients || []).some((row) => row.clientId === metaReportsState.customValues.selectedClientId);
+          if (!stillValid) {
+            metaReportsState.customValues.selectedClientId = null;
+            metaReportsState.customValues.selectedMonthKey = null;
+            metaReportsState.customValues.editorPayload = null;
+          }
+        }
+        dashboard.innerHTML = renderMetaReportsCustomValuesPage(overview);
+        metaReportsState.customValues.mounted = true;
+        metaReportsState.customValues.saving = false;
+        bindMetaReportsCustomValuesEvents(overview);
+      } catch (error) {
+        if (!metaReportsState.customValues.mounted) {
+          dashboard.innerHTML = `
+            ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-custom'))}
+            ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+          `;
+        } else {
+          showToast(error.message || 'Load failed', 'error');
+        }
       }
     }
 
@@ -12007,6 +12609,11 @@
         return;
       }
 
+      if (IS_ADMIN_META_REPORTS_CUSTOM) {
+        loadMetaReportsCustomValuesPage();
+        return;
+      }
+
       if (IS_ADMIN_META_REPORTS_CLIENT) {
         loadMetaReportsClientPage();
         return;
@@ -12051,10 +12658,21 @@
         toggleStaffTopbarNav(toggle);
         return;
       }
-      if (event.target.closest('.staff-nav-link')) {
+      const navDropdownTrigger = event.target.closest('.staff-nav-dropdown-trigger');
+      if (navDropdownTrigger) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleStaffNavDropdown(navDropdownTrigger);
+        return;
+      }
+      if (event.target.closest('.staff-nav-link') || event.target.closest('.staff-nav-dropdown-item')) {
         closeStaffTopbarNav();
+        closeStaffNavDropdowns();
       } else if (!event.target.closest('.brand-topbar-right')) {
         closeStaffTopbarNav();
+      }
+      if (!event.target.closest('.staff-nav-dropdown')) {
+        closeStaffNavDropdowns();
       }
       closeCardMenus();
       closeStaffUserMenu();

@@ -6,6 +6,9 @@ const {
 function main() {
   assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports'), { kind: 'dashboard' });
   assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/provision'), { kind: 'provision' });
+  assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/custom-values'), {
+    kind: 'custom-values',
+  });
   assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/public/abc123'), {
     kind: 'public',
     token: 'abc123',
