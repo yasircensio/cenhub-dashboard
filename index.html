@@ -3880,7 +3880,29 @@
     }
     .meta-report-tab.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-    .meta-report-group { margin-bottom: 22px; }
+    .meta-report-highlight-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      margin: 0 auto 24px; max-width: 640px; overflow: hidden;
+    }
+    .meta-report-highlight-item {
+      border-right: 1px solid var(--border); padding: 16px 10px; text-align: center;
+    }
+    .meta-report-highlight-item:last-child { border-right: 0; }
+    .meta-report-highlight-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 19px; font-weight: 800;
+      line-height: 1.2; overflow-wrap: anywhere;
+    }
+    .meta-report-highlight-label {
+      color: var(--text-soft); font-size: 10.5px; font-weight: 700; letter-spacing: 0.02em;
+      margin-top: 5px; text-transform: uppercase;
+    }
+    @media (max-width: 480px) {
+      .meta-report-highlight-strip { grid-template-columns: repeat(2, 1fr); }
+      .meta-report-highlight-item:nth-child(2) { border-right: 0; }
+    }
+
+    .meta-report-group { margin: 0 auto 20px; max-width: 640px; }
     .meta-report-group-head { align-items: center; display: flex; gap: 10px; margin-bottom: 10px; }
     .meta-report-group-bar { border-radius: 3px; flex-shrink: 0; height: 15px; width: 4px; }
     .meta-report-group-bar--meta { background: #3b82f6; }
@@ -3901,18 +3923,19 @@
     .meta-report-group-table-wrap--topline { border-left: 4px solid var(--primary); }
     .meta-report-group-table-wrap--bottomline { border-left: 4px solid #16a34a; }
     .meta-report-group-table-wrap--other { border-left: 4px solid #9333ea; }
-    .meta-report-group-table { border-collapse: collapse; width: 100%; }
+    .meta-report-group-table { border-collapse: collapse; table-layout: fixed; width: 100%; }
     .meta-report-group-table tr { border-bottom: 1px solid var(--border); }
     .meta-report-group-table tr:last-child { border-bottom: 0; }
     .meta-report-group-table tbody tr:nth-child(even) { background: rgba(20, 16, 12, 0.02); }
     .meta-report-group-table tbody tr:hover { background: rgba(255, 106, 0, 0.05); }
-    .meta-report-group-table th, .meta-report-group-table td { padding: 11px 18px; vertical-align: middle; }
+    .meta-report-group-table th, .meta-report-group-table td { padding: 10px 16px; vertical-align: middle; }
     .meta-report-group-table th {
-      color: var(--text-soft); font-size: 13.5px; font-weight: 600; text-align: left; width: 58%;
+      color: var(--text-soft); font-size: 13px; font-weight: 600; text-align: left; width: 56%;
     }
     .meta-report-group-table td {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14.5px; font-weight: 700;
-      font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
+      font-variant-numeric: tabular-nums; overflow: hidden; text-align: right;
+      text-overflow: ellipsis; white-space: nowrap;
     }
     .meta-report-row-unit { color: var(--text-soft); font-size: 12px; font-weight: 600; margin-left: 4px; }
     .meta-report-group-table tr.is-highlight th,
@@ -3922,9 +3945,9 @@
     .meta-report-group-table tr.is-highlight.accent-bottomline { background: rgba(22, 163, 74, 0.09); }
     .meta-report-group-table tr.is-highlight.accent-other { background: rgba(147, 51, 234, 0.09); }
     @media (max-width: 480px) {
-      .meta-report-group-table th, .meta-report-group-table td { padding: 10px 12px; }
+      .meta-report-group-table th, .meta-report-group-table td { padding: 9px 12px; }
       .meta-report-group-table th { font-size: 12.5px; }
-      .meta-report-group-table td { font-size: 13.5px; }
+      .meta-report-group-table td { font-size: 13px; }
     }
 
     .meta-report-unit { color: var(--text-soft); font-size: 12px; }
@@ -7176,6 +7199,34 @@
       return monthKeys.filter((key) => !payload.months?.[key]?.metaFetchedAt);
     }
 
+    function renderMetaReportHighlightStrip(monthPayload) {
+      if (!monthPayload || monthPayload.meta?.emptyMonth) return '';
+      const items = [
+        ['Ad spend', metaFmtKr(monthPayload.meta?.spend)],
+        ['Leads', metaFmtNum(monthPayload.topline?.leads)],
+        ['Return on ad spend', metaFmtX(monthPayload.topline?.roasX)],
+      ];
+      if (monthPayload.bottomline) {
+        const useFee = monthPayload.bottomline.censioFee > 0;
+        items.push([
+          useFee ? 'Profit on investment' : 'Profit on ad spend',
+          metaFmtKr(useFee ? monthPayload.bottomline.poiKr : monthPayload.bottomline.poasKr),
+        ]);
+      } else {
+        items.push(['Won leads', metaFmtNum(monthPayload.topline?.wonLeads)]);
+      }
+      return `
+        <div class="meta-report-highlight-strip">
+          ${items.map(([label, value]) => `
+            <div class="meta-report-highlight-item">
+              <div class="meta-report-highlight-value">${esc(value)}</div>
+              <div class="meta-report-highlight-label">${esc(label)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
     function renderMetaReportMetricTable(title, rows, accent = 'meta', { badge = '', highlightLastN = 0 } = {}) {
       const rowsHtml = rows.map(([label, value, unit], index) => {
         const isHighlight = highlightLastN > 0 && index >= rows.length - highlightLastN;
@@ -7210,6 +7261,8 @@
         return `<div class="meta-report-empty">No ad spend recorded for this month yet.${editable ? ' Click "Refresh from Meta" below, or use "Backfill from Meta" above to pull historical months.' : ''}</div>`;
       }
 
+      let html = renderMetaReportHighlightStrip(monthPayload);
+
       const metaRows = [
         ['Total spend', metaFmtKr(monthPayload.meta?.spend), ''],
         ['Cost Pr Mile (CPM)', metaFmtKr(monthPayload.meta?.cpm), ''],
@@ -7229,7 +7282,7 @@
         ['Return on Ads Spend % (ROAS)', metaFmtX(monthPayload.topline?.roasX), ''],
       ];
 
-      let html = renderMetaReportMetricTable('Meta ads', metaRows, 'meta');
+      html += renderMetaReportMetricTable('Meta ads', metaRows, 'meta');
       html += renderMetaReportMetricTable('Topline KPI\'er', toplineRows, 'topline', { highlightLastN: 2 });
 
       if (monthPayload.bottomline) {
