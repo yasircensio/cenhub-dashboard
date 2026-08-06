@@ -2,6 +2,7 @@ const assert = require('assert');
 const {
   classifyCustomInputStatus,
   customInputsUpdatedAt,
+  effectiveFeeEnabledForMonth,
 } = require('../lib/meta-report-store');
 
 function main() {
@@ -30,6 +31,27 @@ function main() {
     customInputsUpdatedAt({ updated_at: '2026-08-05T05:19:00.000Z' }, 'partial'),
     '2026-08-05T05:19:00.000Z',
   );
+
+  const feeOnSettings = { metaReportFeeEnabled: true, metaReportShowBottomline: true };
+  assert.strictEqual(effectiveFeeEnabledForMonth(feeOnSettings, null), false);
+  assert.strictEqual(effectiveFeeEnabledForMonth(feeOnSettings, {}), false);
+  assert.strictEqual(effectiveFeeEnabledForMonth(feeOnSettings, {
+    wonLeads: 2,
+    avgLeadValue: 1000,
+    avgProfitPerWon: 400,
+    lineItems: [],
+  }), true);
+  assert.strictEqual(effectiveFeeEnabledForMonth(
+    { metaReportFeeEnabled: false, metaReportShowBottomline: true },
+    { wonLeads: 2, avgLeadValue: 1000, avgProfitPerWon: 400, lineItems: [] },
+  ), false);
+  assert.strictEqual(effectiveFeeEnabledForMonth(feeOnSettings, {
+    wonLeads: null,
+    avgLeadValue: null,
+    avgProfitPerWon: null,
+    lineItems: [],
+  }), false);
+
   console.log('Meta report custom values status tests passed.');
 }
 

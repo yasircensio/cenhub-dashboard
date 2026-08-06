@@ -7624,7 +7624,8 @@
       }
 
       const settings = payload.settings || {};
-      syncMetaReportSettingsControls(settings);
+      const monthPayload = payload.months?.[metaReportsState.activeMonthKey] || null;
+      syncMetaReportSettingsControls(settings, monthPayload);
 
       const tabsEl = document.querySelector('.meta-report-tabs');
       if (tabsEl) {
@@ -7949,6 +7950,7 @@
       const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
       const monthPayload = payload.months?.[activeKey] || null;
       const settings = payload.settings || {};
+      const effectiveFee = metaReportEffectiveFeeEnabled(settings, monthPayload);
       const tabs = monthKeys.map((key) => `
         <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
       `).join('');
@@ -8002,13 +8004,13 @@
               </label>
               <label class="meta-report-switch">
                 <span class="meta-report-switch-track">
-                  <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-fee" ${settings.metaReportFeeEnabled ? 'checked' : ''} />
+                  <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-fee" ${effectiveFee ? 'checked' : ''} ${monthStatusIsEmpty(monthPayload, settings) ? 'disabled' : ''} />
                   <span class="meta-report-switch-thumb"></span>
                 </span>
                 <span class="meta-report-switch-label">Censio performance fee</span>
               </label>
-              <label class="meta-report-fee-field${settings.metaReportFeeEnabled ? '' : ' is-disabled'}" id="meta-report-fee-field">Fee %
-                <input type="number" step="any" min="0" max="100" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" ${settings.metaReportFeeEnabled ? '' : 'disabled'} />
+              <label class="meta-report-fee-field${effectiveFee ? '' : ' is-disabled'}" id="meta-report-fee-field">Fee %
+                <input type="number" step="any" min="0" max="100" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" ${effectiveFee ? '' : 'disabled'} />
               </label>
             </div>
             <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
@@ -8252,6 +8254,10 @@
           document.querySelectorAll('[data-meta-month-tab]').forEach((tab) => {
             tab.classList.toggle('is-active', tab.getAttribute('data-meta-month-tab') === metaReportsState.activeMonthKey);
           });
+          syncMetaReportSettingsControls(
+            payload.settings || {},
+            payload.months?.[metaReportsState.activeMonthKey] || null,
+          );
         };
       });
     }
@@ -8270,17 +8276,22 @@
       if (feePercent) feePercent.disabled = !enabled;
     }
 
-    function syncMetaReportSettingsControls(settings = {}) {
+    function syncMetaReportSettingsControls(settings = {}, monthPayload = null) {
       const bottomlineToggle = document.getElementById('meta-report-setting-bottomline');
       const feeToggle = document.getElementById('meta-report-setting-fee');
       const feePercent = document.getElementById('meta-report-setting-fee-percent');
+      const effectiveFee = metaReportEffectiveFeeEnabled(settings, monthPayload);
+      const feeLocked = monthStatusIsEmpty(monthPayload, settings);
       if (bottomlineToggle) bottomlineToggle.checked = Boolean(settings.metaReportShowBottomline);
-      if (feeToggle) feeToggle.checked = Boolean(settings.metaReportFeeEnabled);
+      if (feeToggle) {
+        feeToggle.checked = effectiveFee;
+        feeToggle.disabled = feeLocked;
+      }
       if (feePercent) {
         feePercent.value = settings.metaReportFeePercent ?? 20;
         feePercent.dataset.prevValue = String(feePercent.value);
       }
-      syncMetaReportFeeFieldState(Boolean(settings.metaReportFeeEnabled));
+      syncMetaReportFeeFieldState(effectiveFee);
     }
 
     function describeMetaReportSettingsChange(patch, settings) {
@@ -8316,12 +8327,12 @@
           }
         }
 
-        syncMetaReportSettingsControls(settings);
-
-        const panel = document.getElementById('meta-report-month-panel');
         const monthPayload = result.monthPayload
           || payload?.months?.[metaReportsState.activeMonthKey]
           || null;
+        syncMetaReportSettingsControls(settings, monthPayload);
+
+        const panel = document.getElementById('meta-report-month-panel');
         if (panel && monthPayload) {
           panel.innerHTML = renderMetaReportMonthBody(
             monthPayload,
@@ -8410,7 +8421,7 @@
           );
         };
       }
-      if (feeToggle) {
+      if (feeToggle && !feeToggle.disabled) {
         feeToggle.onchange = () => {
           const next = feeToggle.checked;
           syncMetaReportFeeFieldState(next);
@@ -8831,6 +8842,32 @@
       }).join('');
     }
 
+    function monthStatusIsEmpty(monthContext, settings = {}) {
+      if (!monthContext) return true;
+      const status = monthContext.status
+        ?? classifyMetaCvMonthStatus({
+          wonLeads: monthContext.inputs?.wonLeads ?? monthContext.topline?.wonLeads ?? monthContext.wonLeads,
+          avgLeadValue: monthContext.inputs?.avgLeadValue ?? monthContext.topline?.avgLeadValue ?? monthContext.avgLeadValue,
+          avgProfitPerWon: monthContext.inputs?.avgProfitPerWon ?? monthContext.avgProfitPerWon,
+          lineItemCount: monthContext.customLineItems?.length ?? monthContext.lineItemCount ?? 0,
+        }, Boolean(settings.metaReportShowBottomline));
+      return status === 'empty';
+    }
+
+    function metaReportEffectiveFeeEnabled(clientOrSettings, monthContext = null) {
+      if (!monthContext) return Boolean(clientOrSettings?.metaReportFeeEnabled);
+      const requireProfit = Boolean(clientOrSettings?.metaReportShowBottomline);
+      const status = monthContext.status
+        ?? classifyMetaCvMonthStatus({
+          wonLeads: monthContext.inputs?.wonLeads ?? monthContext.topline?.wonLeads ?? monthContext.wonLeads,
+          avgLeadValue: monthContext.inputs?.avgLeadValue ?? monthContext.topline?.avgLeadValue ?? monthContext.avgLeadValue,
+          avgProfitPerWon: monthContext.inputs?.avgProfitPerWon ?? monthContext.avgProfitPerWon,
+          lineItemCount: monthContext.customLineItems?.length ?? monthContext.lineItemCount ?? 0,
+        }, requireProfit);
+      if (status === 'empty') return false;
+      return Boolean(clientOrSettings?.metaReportFeeEnabled);
+    }
+
     function renderMetaReportSaveIndicator(id, visible = false) {
       return `
         <span class="meta-report-save-indicator${visible ? ' is-visible' : ''}" id="${esc(id)}" aria-live="polite">
@@ -8839,11 +8876,11 @@
       `;
     }
 
-    function renderMetaReportSwitch(id, checked, labelText) {
+    function renderMetaReportSwitch(id, checked, labelText, disabled = false) {
       return `
         <div class="meta-report-switch">
           <label class="meta-report-switch-track" for="${esc(id)}" aria-label="${esc(labelText)}">
-            <input type="checkbox" class="meta-report-switch-input" id="${esc(id)}"${checked ? ' checked' : ''} />
+            <input type="checkbox" class="meta-report-switch-input" id="${esc(id)}"${checked ? ' checked' : ''}${disabled ? ' disabled' : ''} />
             <span class="meta-report-switch-thumb" aria-hidden="true"></span>
           </label>
           <span class="meta-report-switch-label">${esc(labelText)}</span>
@@ -8882,6 +8919,8 @@
       const displayAvgLead = draft?.avgLeadValue ?? avgLeadValue;
       const displayAvgProfit = draft?.avgProfitPerWon ?? avgProfit;
       const displayLineItems = draft?.lineItems ?? lineItems;
+      const effectiveFee = metaReportEffectiveFeeEnabled(client, monthStatus);
+      const feeLocked = monthStatusIsEmpty(monthStatus, client);
 
       return `
         <h3>${esc(client.accountName)}</h3>
@@ -8897,9 +8936,9 @@
           </div>
           <div class="meta-report-settings-group">
             ${renderMetaReportSwitch('meta-cv-setting-bottomline', client.metaReportShowBottomline, 'Show bottomline')}
-            ${renderMetaReportSwitch('meta-cv-setting-fee', client.metaReportFeeEnabled, 'Censio performance fee')}
-            <label class="meta-report-fee-field${client.metaReportFeeEnabled ? '' : ' is-disabled'}" id="meta-cv-fee-field">Fee %
-              <input type="number" step="any" min="0" max="100" id="meta-cv-setting-fee-percent" value="${esc(client.metaReportFeePercent ?? 20)}" ${client.metaReportFeeEnabled ? '' : 'disabled'} />
+            ${renderMetaReportSwitch('meta-cv-setting-fee', effectiveFee, 'Censio performance fee', feeLocked)}
+            <label class="meta-report-fee-field${effectiveFee ? '' : ' is-disabled'}" id="meta-cv-fee-field">Fee %
+              <input type="number" step="any" min="0" max="100" id="meta-cv-setting-fee-percent" value="${esc(client.metaReportFeePercent ?? 20)}" ${effectiveFee ? '' : 'disabled'} />
             </label>
           </div>
         </div>
@@ -9194,7 +9233,7 @@
           );
         };
       }
-      if (feeToggle) {
+      if (feeToggle && !feeToggle.disabled) {
         feeToggle.onchange = () => {
           const next = feeToggle.checked;
           syncMetaReportFeeFieldState(next, 'meta-cv');
