@@ -4159,6 +4159,25 @@
     .meta-report-fee-field input { padding: 8px 10px; width: 72px; }
     .meta-report-fee-field.is-disabled { opacity: 0.45; }
     .meta-report-fee-field.is-disabled input { cursor: not-allowed; }
+    .meta-report-bottomline-fee-settings {
+      display: flex; flex-direction: column; gap: 12px; width: 100%;
+    }
+    .meta-report-fee-nested {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      display: flex; flex-direction: column; gap: 10px; margin-left: 4px; padding: 12px 14px;
+    }
+    .meta-report-fee-nested.is-hidden { display: none; }
+    .meta-report-fee-nested-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase;
+    }
+    .meta-report-fee-mode-options {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .meta-report-fee-mode-option {
+      align-items: center; color: var(--text); cursor: pointer; display: flex;
+      font-size: 13px; font-weight: 600; gap: 8px;
+    }
+    .meta-report-fee-mode-option input { accent-color: var(--primary); }
 
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;

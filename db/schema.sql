@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS accounts (
   meta_report_show_bottomline BOOLEAN NOT NULL DEFAULT FALSE,
   meta_report_fee_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   meta_report_fee_percent NUMERIC NOT NULL DEFAULT 20,
+  meta_report_fee_mode TEXT,
+  meta_report_marketing_fee_amount NUMERIC NOT NULL DEFAULT 0,
   meta_report_show_other BOOLEAN NOT NULL DEFAULT TRUE,
   meta_report_table_columns INTEGER NOT NULL DEFAULT 1,
   meta_report_access_token TEXT,

@@ -88,9 +88,28 @@ function testLeadActionParsing() {
   assert.strictEqual(total, 49);
 }
 
+function testMarketingFeeMode() {
+  const result = computeMetaReportMetrics({
+    spend: 3716.04,
+    leads: 49,
+    wonLeads: 5,
+    avgLeadValue: 120000,
+    avgProfitPerWon: 60000,
+    showBottomline: true,
+    feeMode: 'marketing',
+    marketingFeeAmount: 25000,
+    lineItems: [{ label: 'Other cost', amount: 5000 }],
+  });
+  approx(result.bottomline.poasKr, 296283.96);
+  assert.strictEqual(result.bottomline.feeMode, 'marketing');
+  approx(result.bottomline.censioFee, 25000);
+  approx(result.bottomline.poiKr, 266283.96);
+}
+
 function main() {
   testSheetExample();
   testFeeNotNegativeOnLoss();
+  testMarketingFeeMode();
   testEmptyMonth();
   testLeadActionParsing();
   console.log('Meta report calculator tests passed.');
