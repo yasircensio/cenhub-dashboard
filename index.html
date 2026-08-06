@@ -4434,6 +4434,10 @@
     .meta-cv-line-items-toggle-row {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; width: 100%;
     }
+    .meta-report-line-items-editor.is-settings-saving { opacity: 0.72; }
+    .meta-report-line-items-editor.is-settings-saving .meta-report-switch-track {
+      pointer-events: none;
+    }
     .meta-cv-client-settings .meta-report-settings-group {
       flex-wrap: wrap; gap: 12px 16px;
     }
@@ -7296,6 +7300,7 @@
         loadingEditor: false,
         saving: false,
         settingsSaving: false,
+        settingsSavingScope: null,
       },
     };
 
@@ -7800,15 +7805,18 @@
               <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
             </div>
             <div class="meta-report-line-items-editor">
-              <div class="meta-report-line-items-head">
+              <div class="meta-report-line-items-head meta-cv-line-items-head">
                 <h4>Other items</h4>
-                <label class="meta-report-switch">
-                  <span class="meta-report-switch-track">
-                    <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} />
-                    <span class="meta-report-switch-thumb"></span>
-                  </span>
-                  <span class="meta-report-switch-label">Show "Other" section to client</span>
-                </label>
+                <div class="meta-cv-line-items-toggle-row">
+                  <label class="meta-report-switch">
+                    <span class="meta-report-switch-track">
+                      <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} />
+                      <span class="meta-report-switch-thumb"></span>
+                    </span>
+                    <span class="meta-report-switch-label">Show "Other" section to client</span>
+                  </label>
+                  ${renderMetaReportSaveIndicator('meta-report-other-save-indicator')}
+                </div>
               </div>
               <div id="meta-report-line-items-list">
                 ${(monthPayload.customLineItems || []).map((row, index) => `
@@ -7819,7 +7827,7 @@
                   </div>
                 `).join('')}
               </div>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-report-add-row" id="meta-report-add-line">+ Add row</button>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-report-add-row" id="meta-report-add-line"${showOtherToClient ? '' : ' disabled'}>+ Add row</button>
             </div>
             <div class="meta-report-edit-actions">
               <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
@@ -8262,11 +8270,26 @@
       });
     }
 
-    function setMetaReportSavingState(isSaving) {
+    function setMetaReportSavingState(isSaving, scope = 'report') {
       const panel = document.getElementById('meta-report-month-panel');
-      const indicator = document.getElementById('meta-report-save-indicator');
-      if (panel) panel.classList.toggle('is-loading', isSaving);
-      if (indicator) indicator.classList.toggle('is-visible', isSaving);
+      const topIndicator = document.getElementById('meta-report-save-indicator');
+      const otherIndicator = document.getElementById('meta-report-other-save-indicator');
+      const showReport = isSaving && scope === 'report';
+      const showOther = isSaving && scope === 'other';
+      if (panel) panel.classList.toggle('is-loading', showReport);
+      if (topIndicator) topIndicator.classList.toggle('is-visible', showReport);
+      if (otherIndicator) otherIndicator.classList.toggle('is-visible', showOther);
+      document.querySelector('#meta-report-edit-panel .meta-report-line-items-editor')
+        ?.classList.toggle('is-settings-saving', showOther);
+      syncMetaReportOtherEditorState(
+        document.getElementById('meta-report-setting-other')?.checked ?? false,
+        { saving: showOther },
+      );
+    }
+
+    function syncMetaReportOtherEditorState(showOther, { saving = false } = {}) {
+      const addLine = document.getElementById('meta-report-add-line');
+      if (addLine) addLine.disabled = !showOther || saving;
     }
 
     function syncMetaReportFeeFieldState(enabled, prefix = 'meta-report') {
@@ -8311,7 +8334,8 @@
     }
 
     async function saveMetaReportClientSettings(clientId, patch, revert) {
-      setMetaReportSavingState(true);
+      const scope = Object.prototype.hasOwnProperty.call(patch, 'metaReportShowOther') ? 'other' : 'report';
+      setMetaReportSavingState(true, scope);
       try {
         const result = await patchMetaReportSettings(clientId, {
           ...patch,
@@ -8503,13 +8527,18 @@
 
     function bindMetaReportsClientEditEvents(clientId, payload) {
       const otherToggle = document.getElementById('meta-report-setting-other');
+      syncMetaReportOtherEditorState(Boolean(otherToggle?.checked));
       if (otherToggle) {
         otherToggle.onchange = () => {
           const next = otherToggle.checked;
+          syncMetaReportOtherEditorState(next);
           saveMetaReportClientSettings(
             clientId,
             { metaReportShowOther: next },
-            () => { otherToggle.checked = !next; },
+            () => {
+              otherToggle.checked = !next;
+              syncMetaReportOtherEditorState(!next);
+            },
           );
         };
       }
@@ -8517,6 +8546,7 @@
       const addLineBtn = document.getElementById('meta-report-add-line');
       if (addLineBtn) {
         addLineBtn.onclick = () => {
+          if (addLineBtn.disabled) return;
           const list = document.getElementById('meta-report-line-items-list');
           if (!list) return;
           const row = document.createElement('div');
@@ -8922,6 +8952,9 @@
       const effectiveFee = metaReportEffectiveFeeEnabled(client, monthStatus);
       const feeLocked = monthStatusIsEmpty(monthStatus, client);
 
+      const showOtherSaving = state.settingsSaving && state.settingsSavingScope === 'other';
+      const reportSettingsSaving = state.settingsSaving && state.settingsSavingScope === 'report';
+
       return `
         <h3>${esc(client.accountName)}</h3>
         <p class="meta-cv-editor-sub">
@@ -8929,10 +8962,10 @@
           · ${esc(monthStatus.status || 'empty')}
           · ${monthStatus.updatedAt ? `Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}` : 'Not updated yet'}
         </p>
-        <div class="meta-report-settings meta-cv-client-settings${state.settingsSaving ? ' is-saving' : ''}">
+        <div class="meta-report-settings meta-cv-client-settings${reportSettingsSaving ? ' is-saving' : ''}">
           <div class="meta-cv-settings-head">
             <span class="meta-cv-settings-title">Report settings</span>
-            ${renderMetaReportSaveIndicator('meta-cv-settings-status', state.settingsSaving)}
+            ${renderMetaReportSaveIndicator('meta-cv-settings-status', reportSettingsSaving)}
           </div>
           <div class="meta-report-settings-group">
             ${renderMetaReportSwitch('meta-cv-setting-bottomline', client.metaReportShowBottomline, 'Show bottomline')}
@@ -8968,14 +9001,15 @@
             <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(displayAvgProfit)}" />
           </label>
         </div>
-        <div class="meta-report-line-items-editor${state.settingsSaving ? ' is-settings-saving' : ''}">
+        <div class="meta-report-line-items-editor meta-cv-line-items-editor${showOtherSaving ? ' is-settings-saving' : ''}">
           <div class="meta-report-line-items-head meta-cv-line-items-head">
             <div class="meta-cv-line-items-head-row">
               <h4>Other items</h4>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line"${state.settingsSaving ? ' disabled' : ''}>Add row</button>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line"${!showOtherToClient || state.settingsSaving ? ' disabled' : ''}>Add row</button>
             </div>
             <div class="meta-cv-line-items-toggle-row">
               ${renderMetaReportSwitch('meta-cv-setting-other', showOtherToClient, 'Show "Other" section to client')}
+              ${renderMetaReportSaveIndicator('meta-cv-other-settings-status', showOtherSaving)}
             </div>
           </div>
           <div id="meta-cv-line-items-list">
@@ -9076,23 +9110,32 @@
       }
     }
 
-    function setMetaCvSettingsSaving(isPending) {
+    function setMetaCvSettingsSaving(isPending, scope = 'report') {
       metaReportsState.customValues.settingsSaving = isPending;
-      const indicator = document.getElementById('meta-cv-settings-status');
-      if (indicator) indicator.classList.toggle('is-visible', isPending);
-      document.querySelector('.meta-cv-client-settings')?.classList.toggle('is-saving', isPending);
-      document.querySelector('.meta-cv-line-items-editor')?.classList.toggle('is-settings-saving', isPending);
-      ['meta-cv-setting-bottomline', 'meta-cv-setting-fee', 'meta-cv-setting-other', 'meta-cv-setting-fee-percent']
-        .forEach((id) => {
-          const el = document.getElementById(id);
-          if (el) el.disabled = isPending;
-        });
-      const addLine = document.getElementById('meta-cv-add-line');
-      if (addLine) addLine.disabled = isPending;
+      metaReportsState.customValues.settingsSavingScope = isPending ? scope : null;
+      const showReport = isPending && scope === 'report';
+      const showOther = isPending && scope === 'other';
+      document.getElementById('meta-cv-settings-status')?.classList.toggle('is-visible', showReport);
+      document.getElementById('meta-cv-other-settings-status')?.classList.toggle('is-visible', showOther);
+      document.querySelector('.meta-cv-client-settings')?.classList.toggle('is-saving', showReport);
+      document.querySelector('.meta-cv-line-items-editor')?.classList.toggle('is-settings-saving', showOther);
+      const reportToggleIds = ['meta-cv-setting-bottomline', 'meta-cv-setting-fee', 'meta-cv-setting-fee-percent'];
+      reportToggleIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = showReport;
+      });
+      const otherToggle = document.getElementById('meta-cv-setting-other');
+      if (otherToggle) otherToggle.disabled = showOther;
+      syncMetaCvOtherEditorState(otherToggle?.checked ?? false, { saving: isPending });
       const saveBtn = document.getElementById('meta-cv-save');
       if (saveBtn) {
         saveBtn.disabled = isPending || metaReportsState.customValues.saving || metaReportsState.customValues.loadingEditor;
       }
+    }
+
+    function syncMetaCvOtherEditorState(showOther, { saving = false } = {}) {
+      const addLine = document.getElementById('meta-cv-add-line');
+      if (addLine) addLine.disabled = !showOther || saving;
     }
 
     function classifyMetaCvMonthStatus(month, requireProfit = false) {
@@ -9181,7 +9224,8 @@
     }
 
     async function saveMetaCvClientSettings(clientId, patch, revert) {
-      setMetaCvSettingsSaving(true);
+      const scope = Object.prototype.hasOwnProperty.call(patch, 'metaReportShowOther') ? 'other' : 'report';
+      setMetaCvSettingsSaving(true, scope);
       try {
         const monthKey = metaReportsState.customValues.selectedMonthKey;
         const result = await patchMetaReportSettings(clientId, {
@@ -9206,7 +9250,7 @@
           };
         }
         metaReportsState.customValues.draftInputs = collectMetaCvSaveBody();
-        metaReportsState.customValues.settingsSaving = false;
+        setMetaCvSettingsSaving(false);
         refreshMetaCvListAndEditor();
         showToast(describeMetaReportSettingsChange(patch, result.settings || {}), 'success');
       } catch (error) {
@@ -9222,6 +9266,7 @@
       const feePercent = document.getElementById('meta-cv-setting-fee-percent');
       const otherToggle = document.getElementById('meta-cv-setting-other');
       syncMetaReportFeeFieldState(Boolean(feeToggle?.checked), 'meta-cv');
+      syncMetaCvOtherEditorState(Boolean(otherToggle?.checked));
 
       if (bottomlineToggle) {
         bottomlineToggle.onchange = () => {
@@ -9283,10 +9328,14 @@
       if (otherToggle) {
         otherToggle.onchange = () => {
           const next = otherToggle.checked;
+          syncMetaCvOtherEditorState(next);
           saveMetaCvClientSettings(
             clientId,
             { metaReportShowOther: next },
-            () => { otherToggle.checked = !next; },
+            () => {
+              otherToggle.checked = !next;
+              syncMetaCvOtherEditorState(!next);
+            },
           );
         };
       }
@@ -9350,6 +9399,7 @@
       const addLine = document.getElementById('meta-cv-add-line');
       if (addLine) {
         addLine.onclick = () => {
+          if (addLine.disabled) return;
           const list = document.getElementById('meta-cv-line-items-list');
           if (!list) return;
           if (list.querySelector('.note')) list.innerHTML = '';

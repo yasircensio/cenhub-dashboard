@@ -4425,6 +4425,10 @@
     .meta-cv-line-items-toggle-row {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; width: 100%;
     }
+    .meta-report-line-items-editor.is-settings-saving { opacity: 0.72; }
+    .meta-report-line-items-editor.is-settings-saving .meta-report-switch-track {
+      pointer-events: none;
+    }
     .meta-cv-client-settings .meta-report-settings-group {
       flex-wrap: wrap; gap: 12px 16px;
     }
