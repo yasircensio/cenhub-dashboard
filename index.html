@@ -4127,12 +4127,12 @@
     .meta-report-backfill-progress { color: var(--text-soft); font-size: 12.5px; font-weight: 600; }
 
     .meta-report-switch {
-      align-items: center; cursor: pointer; display: inline-flex; gap: 9px; position: relative; user-select: none;
+      align-items: center; display: inline-flex; gap: 9px; user-select: none;
     }
     .meta-report-switch.is-disabled { cursor: not-allowed; opacity: 0.5; }
     .meta-report-switch-track {
-      background: #e8e0d8; border-radius: 999px; flex-shrink: 0; height: 22px; position: relative;
-      transition: background 0.2s ease; width: 40px;
+      background: #e8e0d8; border-radius: 999px; cursor: pointer; display: inline-block; flex-shrink: 0;
+      height: 22px; position: relative; transition: background 0.2s ease; width: 40px;
     }
     .meta-report-switch-input {
       cursor: pointer; height: 100%; left: 0; margin: 0; opacity: 0; position: absolute; top: 0; width: 100%; z-index: 2;
@@ -4144,7 +4144,7 @@
     }
     .meta-report-switch-input:checked + .meta-report-switch-thumb { transform: translateX(18px); }
     .meta-report-switch-track:has(.meta-report-switch-input:checked) { background: var(--primary); }
-    .meta-report-switch-label { color: var(--text); font-size: 13px; font-weight: 600; }
+    .meta-report-switch-label { color: var(--text); cursor: default; font-size: 13px; font-weight: 600; }
 
     .meta-report-fee-field {
       align-items: center; color: var(--text); display: flex; font-size: 13px; font-weight: 600; gap: 8px;
@@ -4418,6 +4418,15 @@
     .meta-cv-legend i.is-complete { background: #16a34a; }
     .meta-cv-legend i.is-partial { background: #d97706; }
     .meta-cv-legend i.is-empty { background: #fff; border: 1px dashed #cbd5e1; }
+    .meta-cv-line-items-head {
+      align-items: stretch; flex-direction: column; gap: 10px;
+    }
+    .meta-cv-line-items-head-row {
+      align-items: center; display: flex; justify-content: space-between; width: 100%;
+    }
+    .meta-cv-client-settings .meta-report-settings-group {
+      flex-wrap: wrap; gap: 12px 16px;
+    }
     @media (max-width: 980px) {
       .meta-cv-layout { grid-template-columns: 1fr; }
       .meta-cv-editor { position: static; }
@@ -7264,6 +7273,7 @@
         selectedClientId: null,
         selectedMonthKey: null,
         editorPayload: null,
+        draftInputs: null,
         loadingEditor: false,
         saving: false,
       },
@@ -8801,6 +8811,18 @@
       }).join('');
     }
 
+    function renderMetaReportSwitch(id, checked, labelText) {
+      return `
+        <div class="meta-report-switch">
+          <label class="meta-report-switch-track" for="${esc(id)}" aria-label="${esc(labelText)}">
+            <input type="checkbox" class="meta-report-switch-input" id="${esc(id)}"${checked ? ' checked' : ''} />
+            <span class="meta-report-switch-thumb" aria-hidden="true"></span>
+          </label>
+          <span class="meta-report-switch-label">${esc(labelText)}</span>
+        </div>
+      `;
+    }
+
     function renderMetaCvEditor(overview) {
       const state = metaReportsState.customValues;
       const client = (overview.clients || []).find((row) => row.clientId === state.selectedClientId);
@@ -8827,6 +8849,11 @@
         : (monthPayload?.inputs?.avgProfitPerWon ?? '');
       const lineItems = monthPayload?.customLineItems || [];
       const showOtherToClient = client.metaReportShowOther !== false;
+      const draft = metaReportsState.customValues.draftInputs;
+      const displayWon = draft?.wonLeads ?? wonValue;
+      const displayAvgLead = draft?.avgLeadValue ?? avgLeadValue;
+      const displayAvgProfit = draft?.avgProfitPerWon ?? avgProfit;
+      const displayLineItems = draft?.lineItems ?? lineItems;
 
       return `
         <h3>${esc(client.accountName)}</h3>
@@ -8837,20 +8864,8 @@
         </p>
         <div class="meta-report-settings meta-cv-client-settings">
           <div class="meta-report-settings-group">
-            <label class="meta-report-switch">
-              <span class="meta-report-switch-track">
-                <input type="checkbox" class="meta-report-switch-input" id="meta-cv-setting-bottomline" ${client.metaReportShowBottomline ? 'checked' : ''} />
-                <span class="meta-report-switch-thumb"></span>
-              </span>
-              <span class="meta-report-switch-label">Show bottomline</span>
-            </label>
-            <label class="meta-report-switch">
-              <span class="meta-report-switch-track">
-                <input type="checkbox" class="meta-report-switch-input" id="meta-cv-setting-fee" ${client.metaReportFeeEnabled ? 'checked' : ''} />
-                <span class="meta-report-switch-thumb"></span>
-              </span>
-              <span class="meta-report-switch-label">Censio performance fee</span>
-            </label>
+            ${renderMetaReportSwitch('meta-cv-setting-bottomline', client.metaReportShowBottomline, 'Show bottomline')}
+            ${renderMetaReportSwitch('meta-cv-setting-fee', client.metaReportFeeEnabled, 'Censio performance fee')}
             <label class="meta-report-fee-field${client.metaReportFeeEnabled ? '' : ' is-disabled'}" id="meta-cv-fee-field">Fee %
               <input type="number" step="any" min="0" max="100" id="meta-cv-setting-fee-percent" value="${esc(client.metaReportFeePercent ?? 20)}" ${client.metaReportFeeEnabled ? '' : 'disabled'} />
             </label>
@@ -8873,29 +8888,25 @@
             </select>
           </label>
           <label>Won leads
-            <input type="number" step="any" id="meta-cv-won-leads" value="${esc(wonValue)}" />
+            <input type="number" step="any" id="meta-cv-won-leads" value="${esc(displayWon)}" />
           </label>
           <label>Avg lead value
-            <input type="number" step="any" id="meta-cv-avg-lead-value" value="${esc(avgLeadValue)}" />
+            <input type="number" step="any" id="meta-cv-avg-lead-value" value="${esc(displayAvgLead)}" />
           </label>
           <label>Avg profit per won${showProfit ? '' : ' (optional)'}
-            <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(avgProfit)}" />
+            <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(displayAvgProfit)}" />
           </label>
         </div>
         <div class="meta-report-line-items-editor">
-          <div class="meta-report-line-items-head">
-            <h4>Other items</h4>
-            <label class="meta-report-switch">
-              <span class="meta-report-switch-track">
-                <input type="checkbox" class="meta-report-switch-input" id="meta-cv-setting-other" ${showOtherToClient ? 'checked' : ''} />
-                <span class="meta-report-switch-thumb"></span>
-              </span>
-              <span class="meta-report-switch-label">Show "Other" section to client</span>
-            </label>
-            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line">Add row</button>
+          <div class="meta-report-line-items-head meta-cv-line-items-head">
+            <div class="meta-cv-line-items-head-row">
+              <h4>Other items</h4>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line">Add row</button>
+            </div>
+            ${renderMetaReportSwitch('meta-cv-setting-other', showOtherToClient, 'Show "Other" section to client')}
           </div>
           <div id="meta-cv-line-items-list">
-            ${lineItems.length ? lineItems.map((row, index) => `
+            ${displayLineItems.length ? displayLineItems.map((row, index) => `
               <div class="meta-report-line-item-row" data-index="${index}">
                 <input type="text" class="meta-cv-line-label" placeholder="Label" value="${esc(row.label || '')}" />
                 <input type="number" step="any" class="meta-cv-line-amount" placeholder="Amount" value="${esc(row.amount ?? '')}" />
@@ -8973,8 +8984,76 @@
       if (list) list.innerHTML = renderMetaCvClientRows(overview);
       const editor = document.getElementById('meta-cv-editor');
       if (editor) editor.innerHTML = renderMetaCvEditor(overview);
+      metaReportsState.customValues.draftInputs = null;
       bindMetaCvEditorEvents();
       bindMetaCvListEvents();
+    }
+
+    function setMetaCvSavePending(isPending) {
+      metaReportsState.customValues.saving = isPending;
+      const saveBtn = document.getElementById('meta-cv-save');
+      if (saveBtn) {
+        saveBtn.disabled = isPending || metaReportsState.customValues.loadingEditor;
+        saveBtn.textContent = isPending ? 'Saving…' : 'Save values';
+      }
+    }
+
+    function classifyMetaCvMonthStatus(month, requireProfit = false) {
+      if (!month) return 'empty';
+      const hasWon = month.wonLeads != null;
+      const hasAvgLead = month.avgLeadValue != null;
+      const hasProfit = month.avgProfitPerWon != null;
+      const lineItemCount = Number(month.lineItemCount) || 0;
+      if (hasWon && hasAvgLead && (!requireProfit || hasProfit)) return 'complete';
+      if (hasWon || hasAvgLead || hasProfit || lineItemCount > 0) return 'partial';
+      return 'empty';
+    }
+
+    function applyMetaCvSaveResult(clientId, monthKey, body, result) {
+      const overview = metaReportsState.customValues.overview;
+      const client = overview?.clients?.find((row) => row.clientId === clientId);
+      const month = client?.months?.[monthKey];
+      const savedMonth = result?.month || {};
+      if (month) {
+        month.wonLeads = savedMonth.wonLeads ?? body.wonLeads;
+        month.avgLeadValue = savedMonth.avgLeadValue ?? body.avgLeadValue;
+        month.avgProfitPerWon = savedMonth.avgProfitPerWon ?? body.avgProfitPerWon;
+        month.lineItemCount = savedMonth.lineItems?.length ?? body.lineItems?.length ?? 0;
+        month.updatedAt = savedMonth.updatedAt || new Date().toISOString();
+        month.status = classifyMetaCvMonthStatus(month, Boolean(client.metaReportShowBottomline));
+      }
+      if (result?.monthPayload) {
+        metaReportsState.customValues.editorPayload = {
+          ...(metaReportsState.customValues.editorPayload || {}),
+          months: {
+            ...(metaReportsState.customValues.editorPayload?.months || {}),
+            [monthKey]: result.monthPayload,
+          },
+        };
+      }
+    }
+
+    async function refreshMetaCvOverviewSilently() {
+      const overview = await adminFetch(
+        `/api/meta-reports/custom-values?year=${encodeURIComponent(metaReportsState.selectedYear)}`,
+      );
+      metaReportsState.selectedYear = Number(overview.year) || metaReportsState.selectedYear;
+      metaReportsState.customValues.overview = overview;
+      const list = document.getElementById('meta-cv-client-list');
+      if (list) {
+        list.innerHTML = renderMetaCvClientRows(overview);
+        bindMetaCvListEvents();
+      }
+      const summaryHost = document.querySelector('.meta-cv-summary');
+      if (summaryHost && overview.summary) {
+        const summary = overview.summary;
+        summaryHost.innerHTML = `
+          <span class="meta-cv-summary-pill is-complete">${summary.completeMonths || 0} complete</span>
+          <span class="meta-cv-summary-pill is-partial">${summary.partialMonths || 0} partial</span>
+          <span class="meta-cv-summary-pill is-empty">${summary.emptyMonths || 0} remaining</span>
+          <span class="meta-cv-summary-pill">${summary.clientCount || 0} clients · ${summary.monthCount || 0} months</span>
+        `;
+      }
     }
 
     function collectMetaCvLineItems() {
@@ -9017,9 +9096,16 @@
           client.metaReportFeePercent = result.settings.metaReportFeePercent ?? 20;
           client.metaReportShowOther = result.settings.metaReportShowOther !== false;
         }
-        if (result.monthPayload && monthKey && metaReportsState.customValues.editorPayload?.months) {
-          metaReportsState.customValues.editorPayload.months[monthKey] = result.monthPayload;
+        if (result.monthPayload && monthKey) {
+          metaReportsState.customValues.editorPayload = {
+            ...(metaReportsState.customValues.editorPayload || {}),
+            months: {
+              ...(metaReportsState.customValues.editorPayload?.months || {}),
+              [monthKey]: result.monthPayload,
+            },
+          };
         }
+        metaReportsState.customValues.draftInputs = collectMetaCvSaveBody();
         refreshMetaCvListAndEditor();
         showToast(describeMetaReportSettingsChange(patch, result.settings || {}), 'success');
       } catch (error) {
@@ -9188,26 +9274,26 @@
           if (!clientId || !monthKey) return;
           const body = collectMetaCvSaveBody();
           // #region agent log
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'pre-fix',hypothesisId:'A',location:'index.html:meta-cv-save',message:'save body captured before re-render',data:{clientId,monthKey,body},timestamp:Date.now()})}).catch(()=>{});
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-flash',hypothesisId:'F',location:'index.html:meta-cv-save',message:'save body captured',data:{clientId,monthKey,body},timestamp:Date.now()})}).catch(()=>{});
           // #endregion
-          metaReportsState.customValues.saving = true;
-          refreshMetaCvListAndEditor();
-          // #region agent log
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'pre-fix',hypothesisId:'A',location:'index.html:meta-cv-save',message:'dom values after re-render',data:{domBody:collectMetaCvSaveBody()},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
+          setMetaCvSavePending(true);
           try {
-            await adminFetch(
+            const result = await adminFetch(
               `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`,
               { method: 'PUT', body: JSON.stringify(body) },
             );
+            applyMetaCvSaveResult(clientId, monthKey, body, result);
+            metaReportsState.customValues.draftInputs = body;
+            setMetaCvSavePending(false);
+            refreshMetaCvListAndEditor();
+            // #region agent log
+            fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-flash',hypothesisId:'F',location:'index.html:meta-cv-save',message:'save applied without full editor wipe',data:{wonLeads:body.wonLeads,domWon:document.getElementById('meta-cv-won-leads')?.value},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
             showToast('Custom values saved', 'success');
-            metaReportsState.customValues.editorPayload = null;
-            await loadMetaReportsCustomValuesPage({ silent: true, keepSelection: true });
-            await selectMetaCvMonth(clientId, monthKey);
+            await refreshMetaCvOverviewSilently();
           } catch (error) {
             showToast(error.message || 'Save failed', 'error');
-            metaReportsState.customValues.saving = false;
-            refreshMetaCvListAndEditor();
+            setMetaCvSavePending(false);
           }
         };
       }
