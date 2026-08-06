@@ -4251,21 +4251,6 @@
     .meta-report-fee-mode-card-input-suffix {
       color: var(--text-soft); flex-shrink: 0; font-size: 12px; font-weight: 700;
     }
-    .meta-report-fee-actions {
-      align-items: center; background: #fff8f3; border: 1px solid var(--primary);
-      border-radius: 10px; display: none; gap: 10px; justify-content: space-between;
-      margin-top: 12px; padding: 10px 14px;
-    }
-    .meta-report-fee-actions.is-visible { display: flex; }
-    .meta-report-fee-actions-hint {
-      color: var(--text); font-size: 12.5px; font-weight: 700;
-    }
-    .meta-report-fee-actions-buttons { display: flex; flex-shrink: 0; gap: 8px; }
-    @media (max-width: 480px) {
-      .meta-report-fee-actions { align-items: stretch; flex-direction: column; }
-      .meta-report-fee-actions-buttons { justify-content: flex-end; }
-    }
-
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
       box-shadow: var(--shadow-sm); margin-bottom: 0; padding: 22px 24px 0;
@@ -9064,15 +9049,8 @@
             </div>
             ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline', false, { hideLabel: true })}
           </div>
-          <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-applied-mode="${esc(feeMode)}" data-applied-fee-percent="${esc(feePercent)}" data-applied-marketing-fee="${esc(marketingFee)}">
+          <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested">
             <div class="meta-report-fee-mode-grid${compact ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
-            </div>
-            <div class="meta-report-fee-actions" id="${prefix}-fee-actions">
-              <span class="meta-report-fee-actions-hint">Unsaved fee changes</span>
-              <div class="meta-report-fee-actions-buttons">
-                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="${prefix}-fee-cancel">Cancel</button>
-                <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee</button>
-              </div>
             </div>
           </div>
         </div>
@@ -9093,39 +9071,6 @@
       if (marketingInput) marketingInput.disabled = mode !== 'marketing';
     }
 
-    function updateMetaReportFeeDirtyState(prefix) {
-      const nested = document.getElementById(`${prefix}-fee-nested`);
-      const actions = document.getElementById(`${prefix}-fee-actions`);
-      if (!nested || !actions) return;
-      const checkedRadio = nested.querySelector(`input[name="${prefix}-fee-mode"]:checked`);
-      const mode = checkedRadio ? checkedRadio.value : '';
-      let dirty = mode !== (nested.dataset.appliedMode || '');
-      if (!dirty && mode === 'performance') {
-        const feePercentInput = document.getElementById(`${prefix}-setting-fee-percent`);
-        dirty = String(feePercentInput?.value ?? '') !== String(nested.dataset.appliedFeePercent ?? '');
-      }
-      if (!dirty && mode === 'marketing') {
-        const marketingInput = document.getElementById(`${prefix}-setting-marketing-fee`);
-        dirty = String(marketingInput?.value ?? '') !== String(nested.dataset.appliedMarketingFee ?? '');
-      }
-      actions.classList.toggle('is-visible', dirty);
-    }
-
-    function resetMetaReportFeeUiToApplied(prefix) {
-      const nested = document.getElementById(`${prefix}-fee-nested`);
-      if (!nested) return;
-      const appliedMode = nested.dataset.appliedMode || '';
-      nested.querySelectorAll(`input[name="${prefix}-fee-mode"]`).forEach((radio) => {
-        radio.checked = radio.value === appliedMode;
-      });
-      const feePercentInput = document.getElementById(`${prefix}-setting-fee-percent`);
-      const marketingInput = document.getElementById(`${prefix}-setting-marketing-fee`);
-      if (feePercentInput) feePercentInput.value = nested.dataset.appliedFeePercent ?? '20';
-      if (marketingInput) marketingInput.value = nested.dataset.appliedMarketingFee ?? '0';
-      updateMetaReportFeeModeUi(prefix, appliedMode);
-      document.getElementById(`${prefix}-fee-actions`)?.classList.remove('is-visible');
-    }
-
     function syncMetaReportBottomlineFeeDom(settings = {}, prefix = 'meta-report') {
       const showBottomline = Boolean(settings.metaReportShowBottomline);
       const feeMode = resolveMetaReportFeeMode(settings) || '';
@@ -9133,22 +9078,21 @@
       const marketingFee = settings.metaReportMarketingFeeAmount ?? 0;
       const bottomlineToggle = document.getElementById(`${prefix}-setting-bottomline`);
       if (bottomlineToggle) bottomlineToggle.checked = showBottomline;
-      const nested = document.getElementById(`${prefix}-fee-nested`);
-      nested?.classList.toggle('is-hidden', !showBottomline);
-      if (nested) {
-        nested.dataset.appliedMode = feeMode;
-        nested.dataset.appliedFeePercent = String(feePercent);
-        nested.dataset.appliedMarketingFee = String(marketingFee);
-      }
+      document.getElementById(`${prefix}-fee-nested`)?.classList.toggle('is-hidden', !showBottomline);
       document.querySelectorAll(`input[name="${prefix}-fee-mode"]`).forEach((radio) => {
         radio.checked = radio.value === feeMode;
       });
       const feePercentInput = document.getElementById(`${prefix}-setting-fee-percent`);
       const marketingInput = document.getElementById(`${prefix}-setting-marketing-fee`);
-      if (feePercentInput) feePercentInput.value = feePercent;
-      if (marketingInput) marketingInput.value = marketingFee;
+      if (feePercentInput) {
+        feePercentInput.value = feePercent;
+        feePercentInput.dataset.prevValue = String(feePercent);
+      }
+      if (marketingInput) {
+        marketingInput.value = marketingFee;
+        marketingInput.dataset.prevValue = String(marketingFee);
+      }
       updateMetaReportFeeModeUi(prefix, feeMode);
-      document.getElementById(`${prefix}-fee-actions`)?.classList.remove('is-visible');
     }
 
     function bindMetaReportBottomlineFeeEvents(clientId, prefix, saveSettingsFn) {
@@ -9164,71 +9108,72 @@
         };
       }
 
-      document.querySelectorAll(`input[name="${prefix}-fee-mode"]`).forEach((radio) => {
+      const feeModeRadios = document.querySelectorAll(`input[name="${prefix}-fee-mode"]`);
+      let currentFeeMode = Array.from(feeModeRadios).find((el) => el.checked)?.value || '';
+      feeModeRadios.forEach((radio) => {
         radio.onchange = () => {
           if (!radio.checked) return;
-          updateMetaReportFeeModeUi(prefix, radio.value || '');
-          updateMetaReportFeeDirtyState(prefix);
+          const nextMode = radio.value || '';
+          const previousMode = currentFeeMode;
+          currentFeeMode = nextMode;
+          updateMetaReportFeeModeUi(prefix, nextMode);
+          saveSettings(
+            { metaReportFeeMode: nextMode || null },
+            () => {
+              currentFeeMode = previousMode;
+              updateMetaReportFeeModeUi(prefix, previousMode);
+            },
+          );
         };
       });
 
       const feePercentInput = document.getElementById(`${prefix}-setting-fee-percent`);
       if (feePercentInput) {
-        feePercentInput.oninput = () => updateMetaReportFeeDirtyState(prefix);
+        feePercentInput.dataset.prevValue = feePercentInput.value;
+        const commitFeePercent = () => {
+          if (feePercentInput.disabled) return;
+          const prevValue = feePercentInput.dataset.prevValue;
+          let nextValue = Number(feePercentInput.value);
+          if (!Number.isFinite(nextValue)) nextValue = 20;
+          nextValue = Math.min(100, Math.max(0, nextValue));
+          feePercentInput.value = String(nextValue);
+          if (String(nextValue) === String(prevValue)) return;
+          feePercentInput.dataset.prevValue = String(nextValue);
+          saveSettings(
+            { metaReportFeePercent: nextValue },
+            () => { feePercentInput.value = prevValue; feePercentInput.dataset.prevValue = prevValue; },
+          );
+        };
+        feePercentInput.onchange = commitFeePercent;
         feePercentInput.onkeydown = (event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
-            document.getElementById(`${prefix}-fee-save`)?.click();
+            feePercentInput.blur();
           }
         };
       }
       const marketingInput = document.getElementById(`${prefix}-setting-marketing-fee`);
       if (marketingInput) {
-        marketingInput.oninput = () => updateMetaReportFeeDirtyState(prefix);
+        marketingInput.dataset.prevValue = marketingInput.value;
+        const commitMarketingFee = () => {
+          if (marketingInput.disabled) return;
+          const prevValue = marketingInput.dataset.prevValue;
+          let nextValue = Number(marketingInput.value);
+          if (!Number.isFinite(nextValue)) nextValue = 0;
+          nextValue = Math.max(0, nextValue);
+          marketingInput.value = String(nextValue);
+          if (String(nextValue) === String(prevValue)) return;
+          marketingInput.dataset.prevValue = String(nextValue);
+          saveSettings(
+            { metaReportMarketingFeeAmount: nextValue },
+            () => { marketingInput.value = prevValue; marketingInput.dataset.prevValue = prevValue; },
+          );
+        };
+        marketingInput.onchange = commitMarketingFee;
         marketingInput.onkeydown = (event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
-            document.getElementById(`${prefix}-fee-save`)?.click();
-          }
-        };
-      }
-
-      const cancelBtn = document.getElementById(`${prefix}-fee-cancel`);
-      if (cancelBtn) {
-        cancelBtn.onclick = () => resetMetaReportFeeUiToApplied(prefix);
-      }
-
-      const saveBtn = document.getElementById(`${prefix}-fee-save`);
-      if (saveBtn) {
-        saveBtn.onclick = async () => {
-          if (saveBtn.disabled) return;
-          const nested = document.getElementById(`${prefix}-fee-nested`);
-          const checkedRadio = nested?.querySelector(`input[name="${prefix}-fee-mode"]:checked`);
-          const mode = checkedRadio ? (checkedRadio.value || null) : null;
-          const patch = { metaReportFeeMode: mode };
-          if (mode === 'performance' && feePercentInput) {
-            let value = Number(feePercentInput.value);
-            if (!Number.isFinite(value)) value = 20;
-            value = Math.min(100, Math.max(0, value));
-            feePercentInput.value = String(value);
-            patch.metaReportFeePercent = value;
-          } else if (mode === 'marketing' && marketingInput) {
-            let value = Number(marketingInput.value);
-            if (!Number.isFinite(value)) value = 0;
-            value = Math.max(0, value);
-            marketingInput.value = String(value);
-            patch.metaReportMarketingFeeAmount = value;
-          }
-          const originalLabel = saveBtn.textContent;
-          saveBtn.disabled = true;
-          if (cancelBtn) cancelBtn.disabled = true;
-          saveBtn.textContent = 'Saving…';
-          try {
-            await saveSettings(patch, () => resetMetaReportFeeUiToApplied(prefix));
-          } finally {
-            saveBtn.disabled = false;
-            if (cancelBtn) cancelBtn.disabled = false;
-            saveBtn.textContent = originalLabel;
+            marketingInput.blur();
           }
         };
       }
