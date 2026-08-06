@@ -4065,7 +4065,6 @@
     .meta-report-group-bar--meta { background: #3b82f6; }
     .meta-report-group-bar--topline { background: var(--primary); }
     .meta-report-group-bar--bottomline { background: #16a34a; }
-    .meta-report-group-bar--other { background: #9333ea; }
     .meta-report-group-title {
       font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700; margin: 0;
     }
@@ -4282,24 +4281,10 @@
     .meta-report-edit-grid {
       display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 18px;
     }
-    .meta-report-edit-grid label, .meta-report-line-items-editor label {
+    .meta-report-edit-grid label {
       display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
     }
-    .meta-report-edit-grid input, .meta-report-line-item-row input { font: inherit; min-width: 0; padding: 8px 10px; }
-    .meta-report-line-items-editor {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
-      margin-bottom: 0; padding: 14px;
-    }
-    .meta-report-line-items-head {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 12px;
-    }
-    .meta-report-line-items-head h4 { margin: 0; }
-    .meta-report-line-item-row {
-      align-items: center; display: grid; gap: 8px; grid-template-columns: 1fr 140px auto; margin-bottom: 8px;
-    }
-    .meta-report-add-row {
-      margin-top: 4px;
-    }
+    .meta-report-edit-grid input { font: inherit; min-width: 0; padding: 8px 10px; }
     .meta-report-edit-actions {
       align-items: center; background: var(--panel-soft); border-radius: 0 0 18px 18px;
       border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px;
@@ -4534,10 +4519,6 @@
       display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
     }
     .meta-cv-editor-grid input, .meta-cv-editor-grid select { font: inherit; padding: 8px 10px; }
-    .meta-cv-line-items-editor.is-settings-saving { opacity: 0.72; }
-    .meta-cv-line-items-editor.is-settings-saving .meta-report-switch-track {
-      pointer-events: none;
-    }
     .meta-cv-editor-actions {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
       margin-top: 16px;
@@ -4556,19 +4537,6 @@
     .meta-cv-legend i.is-complete { background: #16a34a; }
     .meta-cv-legend i.is-partial { background: #d97706; }
     .meta-cv-legend i.is-empty { background: #fff; border: 1px dashed #cbd5e1; }
-    .meta-cv-line-items-head {
-      align-items: stretch; flex-direction: column; gap: 10px;
-    }
-    .meta-cv-line-items-head-row {
-      align-items: center; display: flex; justify-content: space-between; width: 100%;
-    }
-    .meta-cv-line-items-toggle-row {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; width: 100%;
-    }
-    .meta-report-line-items-editor.is-settings-saving { opacity: 0.72; }
-    .meta-report-line-items-editor.is-settings-saving .meta-report-switch-track {
-      pointer-events: none;
-    }
     .meta-cv-client-settings {
       margin-bottom: 16px; width: 100%;
     }
@@ -7943,13 +7911,10 @@
     }
 
     function getMetaReportMonthBodyOptions(settings = {}, { editable = false } = {}) {
-      return {
-        editable,
-        showOtherToClient: settings.metaReportShowOther !== false,
-      };
+      return { editable };
     }
 
-    function renderMetaReportMonthBody(monthPayload, { editable = false, showOtherToClient = true } = {}) {
+    function renderMetaReportMonthBody(monthPayload, { editable = false } = {}) {
       if (!monthPayload) {
         return '<div class="meta-report-empty">No data for this month yet.</div>';
       }
@@ -7968,31 +7933,6 @@
               <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
               <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
               <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
-            </div>
-            <div class="meta-report-line-items-editor">
-              <div class="meta-report-line-items-head meta-cv-line-items-head">
-                <h4>Other items</h4>
-                <div class="meta-cv-line-items-toggle-row">
-                  <label class="meta-report-switch">
-                    <span class="meta-report-switch-track">
-                      <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-other" ${showOtherToClient ? 'checked' : ''} />
-                      <span class="meta-report-switch-thumb"></span>
-                    </span>
-                    <span class="meta-report-switch-label">Show "Other" section to client</span>
-                  </label>
-                  ${renderMetaReportSaveIndicator('meta-report-other-save-indicator')}
-                </div>
-              </div>
-              <div id="meta-report-line-items-list">
-                ${(monthPayload.customLineItems || []).map((row, index) => `
-                  <div class="meta-report-line-item-row" data-index="${index}">
-                    <input type="text" class="meta-line-label" value="${esc(row.label)}" placeholder="Label" />
-                    <input type="number" step="any" class="meta-line-amount" value="${esc(row.amount)}" placeholder="Amount" />
-                    <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-line-remove">Remove</button>
-                  </div>
-                `).join('')}
-              </div>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-report-add-row" id="meta-report-add-line"${showOtherToClient ? '' : ' disabled'}>+ Add row</button>
             </div>
             <div class="meta-report-edit-actions">
               <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
@@ -8047,20 +7987,6 @@
           bottomRows.push(['Profit on Investment % (POI)', metaFmtX(monthPayload.bottomline.poiX), '']);
         }
         groupsHtml += renderMetaReportMetricTable('Bottomline KPI\'er', bottomRows, 'bottomline', { highlightLastN: 2 });
-      }
-
-      const hasCustomItems = Boolean(monthPayload.customLineItems?.length);
-      if (hasCustomItems && (editable || showOtherToClient)) {
-        const customRows = monthPayload.customLineItems.map((row) => [
-          row.label,
-          metaFmtKr(row.amount),
-          '',
-        ]);
-        customRows.push(['Total', metaFmtKr(monthPayload.customLineItemsTotal), '']);
-        groupsHtml += renderMetaReportMetricTable('Other', customRows, 'other', {
-          badge: editable && !showOtherToClient ? 'Hidden from client' : '',
-          highlightLastN: 1,
-        });
       }
 
       const previewLabel = editable ? 'Report preview' : 'Report';
@@ -8403,14 +8329,6 @@
       bindMetaReportsHubRowEvents(document.getElementById('meta-reports-cards') || document);
     }
 
-    function collectMetaReportLineItems() {
-      return Array.from(document.querySelectorAll('.meta-report-line-item-row')).map((row, index) => ({
-        label: row.querySelector('.meta-line-label')?.value || '',
-        amount: Number(row.querySelector('.meta-line-amount')?.value) || 0,
-        sortOrder: index,
-      })).filter((item) => item.label.trim());
-    }
-
     function bindMetaReportsClientTabEvents(payload) {
       const clientId = payload.clientId;
       document.querySelectorAll('[data-meta-month-tab]').forEach((button) => {
@@ -8435,26 +8353,11 @@
       });
     }
 
-    function setMetaReportSavingState(isSaving, scope = 'report') {
+    function setMetaReportSavingState(isSaving) {
       const panel = document.getElementById('meta-report-month-panel');
       const topIndicator = document.getElementById('meta-report-save-indicator');
-      const otherIndicator = document.getElementById('meta-report-other-save-indicator');
-      const showReport = isSaving && scope === 'report';
-      const showOther = isSaving && scope === 'other';
-      if (panel) panel.classList.toggle('is-loading', showReport);
-      if (topIndicator) topIndicator.classList.toggle('is-visible', showReport);
-      if (otherIndicator) otherIndicator.classList.toggle('is-visible', showOther);
-      document.querySelector('#meta-report-edit-panel .meta-report-line-items-editor')
-        ?.classList.toggle('is-settings-saving', showOther);
-      syncMetaReportOtherEditorState(
-        document.getElementById('meta-report-setting-other')?.checked ?? false,
-        { saving: showOther },
-      );
-    }
-
-    function syncMetaReportOtherEditorState(showOther, { saving = false } = {}) {
-      const addLine = document.getElementById('meta-report-add-line');
-      if (addLine) addLine.disabled = !showOther || saving;
+      if (panel) panel.classList.toggle('is-loading', isSaving);
+      if (topIndicator) topIndicator.classList.toggle('is-visible', isSaving);
     }
 
     function syncMetaReportFeeFieldState(enabled, prefix = 'meta-report') {
@@ -8487,15 +8390,11 @@
       if (Object.prototype.hasOwnProperty.call(patch, 'metaReportShowBottomline')) {
         return settings.metaReportShowBottomline ? 'Bottomline shown on report' : 'Bottomline hidden from report';
       }
-      if (Object.prototype.hasOwnProperty.call(patch, 'metaReportShowOther')) {
-        return settings.metaReportShowOther !== false ? '"Other" shown to client' : '"Other" hidden from client';
-      }
       return 'Settings saved';
     }
 
     async function saveMetaReportClientSettings(clientId, patch, revert) {
-      const scope = Object.prototype.hasOwnProperty.call(patch, 'metaReportShowOther') ? 'other' : 'report';
-      setMetaReportSavingState(true, scope);
+      setMetaReportSavingState(true);
       try {
         const result = await patchMetaReportSettings(clientId, {
           ...patch,
@@ -8516,7 +8415,7 @@
           || null;
         syncMetaReportSettingsControls(settings, monthPayload);
 
-        if (scope === 'report' && monthPayload) {
+        if (monthPayload) {
           const panel = document.getElementById('meta-report-month-panel');
           if (panel) {
             panel.innerHTML = renderMetaReportMonthBody(
@@ -8625,44 +8524,6 @@
     }
 
     function bindMetaReportsClientEditEvents(clientId, payload) {
-      const otherToggle = document.getElementById('meta-report-setting-other');
-      syncMetaReportOtherEditorState(Boolean(otherToggle?.checked));
-      if (otherToggle) {
-        otherToggle.onchange = () => {
-          const next = otherToggle.checked;
-          syncMetaReportOtherEditorState(next);
-          saveMetaReportClientSettings(
-            clientId,
-            { metaReportShowOther: next },
-            () => {
-              otherToggle.checked = !next;
-              syncMetaReportOtherEditorState(!next);
-            },
-          );
-        };
-      }
-
-      const addLineBtn = document.getElementById('meta-report-add-line');
-      if (addLineBtn) {
-        addLineBtn.onclick = () => {
-          if (addLineBtn.disabled) return;
-          const list = document.getElementById('meta-report-line-items-list');
-          if (!list) return;
-          const row = document.createElement('div');
-          row.className = 'meta-report-line-item-row';
-          row.innerHTML = `
-            <input type="text" class="meta-line-label" placeholder="Label" />
-            <input type="number" step="any" class="meta-line-amount" placeholder="Amount" />
-            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-line-remove">Remove</button>
-          `;
-          list.appendChild(row);
-          row.querySelector('.meta-line-remove')?.addEventListener('click', () => row.remove());
-        };
-      }
-      document.querySelectorAll('.meta-line-remove').forEach((button) => {
-        button.onclick = () => button.closest('.meta-report-line-item-row')?.remove();
-      });
-
       const refreshBtn = document.getElementById('meta-report-refresh-meta');
       if (refreshBtn) {
         refreshBtn.onclick = async () => {
@@ -8694,7 +8555,6 @@
               wonLeads: Number(document.getElementById('meta-report-won-leads')?.value),
               avgLeadValue: Number(document.getElementById('meta-report-avg-lead-value')?.value),
               avgProfitPerWon: Number(document.getElementById('meta-report-avg-profit')?.value),
-              lineItems: collectMetaReportLineItems(),
             };
             const result = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`, {
               method: 'PUT',
@@ -8978,7 +8838,6 @@
           wonLeads: monthContext.inputs?.wonLeads ?? monthContext.topline?.wonLeads ?? monthContext.wonLeads,
           avgLeadValue: monthContext.inputs?.avgLeadValue ?? monthContext.topline?.avgLeadValue ?? monthContext.avgLeadValue,
           avgProfitPerWon: monthContext.inputs?.avgProfitPerWon ?? monthContext.avgProfitPerWon,
-          lineItemCount: monthContext.customLineItems?.length ?? monthContext.lineItemCount ?? 0,
         }, Boolean(settings.metaReportShowBottomline));
       return status === 'empty';
     }
@@ -8991,7 +8850,6 @@
           wonLeads: monthContext.inputs?.wonLeads ?? monthContext.topline?.wonLeads ?? monthContext.wonLeads,
           avgLeadValue: monthContext.inputs?.avgLeadValue ?? monthContext.topline?.avgLeadValue ?? monthContext.avgLeadValue,
           avgProfitPerWon: monthContext.inputs?.avgProfitPerWon ?? monthContext.avgProfitPerWon,
-          lineItemCount: monthContext.customLineItems?.length ?? monthContext.lineItemCount ?? 0,
         }, requireProfit);
       if (status === 'empty') return false;
       return Boolean(clientOrSettings?.metaReportFeeEnabled);
@@ -9260,16 +9118,12 @@
       const avgProfit = monthStatus.avgProfitPerWon != null
         ? monthStatus.avgProfitPerWon
         : (monthPayload?.inputs?.avgProfitPerWon ?? '');
-      const lineItems = monthPayload?.customLineItems || [];
-      const showOtherToClient = client.metaReportShowOther !== false;
       const draft = metaReportsState.customValues.draftInputs;
       const displayWon = draft?.wonLeads ?? wonValue;
       const displayAvgLead = draft?.avgLeadValue ?? avgLeadValue;
       const displayAvgProfit = draft?.avgProfitPerWon ?? avgProfit;
-      const displayLineItems = draft?.lineItems ?? lineItems;
       const feeEnabled = Boolean(client.metaReportFeeEnabled);
 
-      const showOtherSaving = state.settingsSaving && state.settingsSavingScope === 'other';
       const reportSettingsSaving = state.settingsSaving && state.settingsSavingScope === 'report';
 
       return `
@@ -9306,27 +9160,6 @@
           <label>Avg profit per won${showProfit ? '' : ' (optional)'}
             <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(displayAvgProfit)}" />
           </label>
-        </div>
-        <div class="meta-report-line-items-editor meta-cv-line-items-editor${showOtherSaving ? ' is-settings-saving' : ''}">
-          <div class="meta-report-line-items-head meta-cv-line-items-head">
-            <div class="meta-cv-line-items-head-row">
-              <h4>Other items</h4>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line"${!showOtherToClient || state.settingsSaving ? ' disabled' : ''}>Add row</button>
-            </div>
-            <div class="meta-cv-line-items-toggle-row">
-              ${renderMetaReportSwitch('meta-cv-setting-other', showOtherToClient, 'Show "Other" section to client')}
-              ${renderMetaReportSaveIndicator('meta-cv-other-settings-status', showOtherSaving)}
-            </div>
-          </div>
-          <div id="meta-cv-line-items-list">
-            ${displayLineItems.length ? displayLineItems.map((row, index) => `
-              <div class="meta-report-line-item-row" data-index="${index}">
-                <input type="text" class="meta-cv-line-label" placeholder="Label" value="${esc(row.label || '')}" />
-                <input type="number" step="any" class="meta-cv-line-amount" placeholder="Amount" value="${esc(row.amount ?? '')}" />
-                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-cv-line-remove">Remove</button>
-              </div>
-            `).join('') : '<div class="note">No other items yet.</div>'}
-          </div>
         </div>
         <div class="meta-cv-editor-actions">
           <div class="meta-cv-editor-actions-left">
@@ -9420,11 +9253,8 @@
       metaReportsState.customValues.settingsSaving = isPending;
       metaReportsState.customValues.settingsSavingScope = isPending ? scope : null;
       const showReport = isPending && scope === 'report';
-      const showOther = isPending && scope === 'other';
       document.getElementById('meta-cv-settings-status')?.classList.toggle('is-visible', showReport);
-      document.getElementById('meta-cv-other-settings-status')?.classList.toggle('is-visible', showOther);
       document.querySelector('.meta-cv-client-settings')?.classList.toggle('is-saving', showReport);
-      document.querySelector('.meta-cv-line-items-editor')?.classList.toggle('is-settings-saving', showOther);
       const reportToggleIds = ['meta-cv-setting-bottomline'];
       reportToggleIds.forEach((id) => {
         const el = document.getElementById(id);
@@ -9437,18 +9267,10 @@
         const el = document.getElementById(id);
         if (el) el.disabled = showReport || el.disabled;
       });
-      const otherToggle = document.getElementById('meta-cv-setting-other');
-      if (otherToggle) otherToggle.disabled = showOther;
-      syncMetaCvOtherEditorState(otherToggle?.checked ?? false, { saving: isPending });
       const saveBtn = document.getElementById('meta-cv-save');
       if (saveBtn) {
         saveBtn.disabled = isPending || metaReportsState.customValues.saving || metaReportsState.customValues.loadingEditor;
       }
-    }
-
-    function syncMetaCvOtherEditorState(showOther, { saving = false } = {}) {
-      const addLine = document.getElementById('meta-cv-add-line');
-      if (addLine) addLine.disabled = !showOther || saving;
     }
 
     function classifyMetaCvMonthStatus(month, requireProfit = false) {
@@ -9456,9 +9278,8 @@
       const hasWon = month.wonLeads != null;
       const hasAvgLead = month.avgLeadValue != null;
       const hasProfit = month.avgProfitPerWon != null;
-      const lineItemCount = Number(month.lineItemCount) || 0;
       if (hasWon && hasAvgLead && (!requireProfit || hasProfit)) return 'complete';
-      if (hasWon || hasAvgLead || hasProfit || lineItemCount > 0) return 'partial';
+      if (hasWon || hasAvgLead || hasProfit) return 'partial';
       return 'empty';
     }
 
@@ -9471,7 +9292,6 @@
         month.wonLeads = savedMonth.wonLeads ?? body.wonLeads;
         month.avgLeadValue = savedMonth.avgLeadValue ?? body.avgLeadValue;
         month.avgProfitPerWon = savedMonth.avgProfitPerWon ?? body.avgProfitPerWon;
-        month.lineItemCount = savedMonth.lineItems?.length ?? body.lineItems?.length ?? 0;
         month.status = classifyMetaCvMonthStatus(month, Boolean(client.metaReportShowBottomline));
         month.updatedAt = month.status === 'empty'
           ? null
@@ -9511,16 +9331,6 @@
       }
     }
 
-    function collectMetaCvLineItems() {
-      return Array.from(document.querySelectorAll('#meta-cv-line-items-list .meta-report-line-item-row'))
-        .map((row, index) => ({
-          label: String(row.querySelector('.meta-cv-line-label')?.value || '').trim(),
-          amount: Number(row.querySelector('.meta-cv-line-amount')?.value) || 0,
-          sortOrder: index,
-        }))
-        .filter((row) => row.label);
-    }
-
     function collectMetaCvSaveBody() {
       return {
         wonLeads: document.getElementById('meta-cv-won-leads')?.value === ''
@@ -9532,20 +9342,15 @@
         avgProfitPerWon: document.getElementById('meta-cv-avg-profit')?.value === ''
           ? null
           : Number(document.getElementById('meta-cv-avg-profit')?.value),
-        lineItems: collectMetaCvLineItems(),
       };
     }
 
     function syncMetaCvClientSettingsDom(settings = {}) {
       syncMetaReportBottomlineFeeDom(settings, 'meta-cv');
-      const otherToggle = document.getElementById('meta-cv-setting-other');
-      if (otherToggle) otherToggle.checked = settings.metaReportShowOther !== false;
-      syncMetaCvOtherEditorState(settings.metaReportShowOther !== false);
     }
 
     async function saveMetaCvClientSettings(clientId, patch, revert) {
-      const scope = Object.prototype.hasOwnProperty.call(patch, 'metaReportShowOther') ? 'other' : 'report';
-      setMetaCvSettingsSaving(true, scope);
+      setMetaCvSettingsSaving(true, 'report');
       try {
         const monthKey = metaReportsState.customValues.selectedMonthKey;
         const result = await patchMetaReportSettings(clientId, {
@@ -9560,7 +9365,6 @@
           client.metaReportFeeMode = result.settings.metaReportFeeMode || null;
           client.metaReportFeePercent = result.settings.metaReportFeePercent ?? 20;
           client.metaReportMarketingFeeAmount = result.settings.metaReportMarketingFeeAmount ?? 0;
-          client.metaReportShowOther = result.settings.metaReportShowOther !== false;
         }
         if (result.monthPayload && monthKey) {
           metaReportsState.customValues.editorPayload = {
@@ -9582,28 +9386,11 @@
     }
 
     function bindMetaCvSettingsEvents(clientId) {
-      const otherToggle = document.getElementById('meta-cv-setting-other');
-      syncMetaCvOtherEditorState(Boolean(otherToggle?.checked));
       bindMetaReportBottomlineFeeEvents(
         clientId,
         'meta-cv',
         (patch, revert) => saveMetaCvClientSettings(clientId, patch, revert),
       );
-
-      if (otherToggle) {
-        otherToggle.onchange = () => {
-          const next = otherToggle.checked;
-          syncMetaCvOtherEditorState(next);
-          saveMetaCvClientSettings(
-            clientId,
-            { metaReportShowOther: next },
-            () => {
-              otherToggle.checked = !next;
-              syncMetaCvOtherEditorState(!next);
-            },
-          );
-        };
-      }
     }
 
     async function selectMetaCvMonth(clientId, monthKey, { reloadEditor = true } = {}) {
@@ -9667,28 +9454,6 @@
           if (clientId) selectMetaCvMonth(clientId, monthSelect.value);
         };
       }
-
-      const addLine = document.getElementById('meta-cv-add-line');
-      if (addLine) {
-        addLine.onclick = () => {
-          if (addLine.disabled) return;
-          const list = document.getElementById('meta-cv-line-items-list');
-          if (!list) return;
-          if (list.querySelector('.note')) list.innerHTML = '';
-          const row = document.createElement('div');
-          row.className = 'meta-report-line-item-row';
-          row.innerHTML = `
-            <input type="text" class="meta-cv-line-label" placeholder="Label" value="" />
-            <input type="number" step="any" class="meta-cv-line-amount" placeholder="Amount" value="" />
-            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small meta-cv-line-remove">Remove</button>
-          `;
-          list.appendChild(row);
-          row.querySelector('.meta-cv-line-remove')?.addEventListener('click', () => row.remove());
-        };
-      }
-      document.querySelectorAll('.meta-cv-line-remove').forEach((button) => {
-        button.onclick = () => button.closest('.meta-report-line-item-row')?.remove();
-      });
 
       const saveBtn = document.getElementById('meta-cv-save');
       if (saveBtn) {

@@ -25,10 +25,6 @@ function testSheetExample() {
     showBottomline: true,
     feeEnabled: true,
     feePercent: 20,
-    lineItems: [
-      { label: 'Hjemmeside', amount: 15000 },
-      { label: 'Onboarding', amount: 3500 },
-    ],
   });
 
   approx(result.meta.conversionRatePercent, 3.34, 0.01);
@@ -40,11 +36,10 @@ function testSheetExample() {
   approx(result.bottomline.poasKr, 296283.96);
   approx(result.bottomline.poasX, 79.731, 0.01);
   approx(result.bottomline.censioFee, 59256.792);
-  // POI = POAS - fee - (15000 + 3500) = 218527.168
-  approx(result.bottomline.poiKr, 218527.168);
-  // POI % = POI / spend = 58.806x
-  approx(result.bottomline.poiX, 58.806, 0.01);
-  approx(result.customLineItemsTotal, 18500);
+  // POI = POAS - fee = 237027.168
+  approx(result.bottomline.poiKr, 237027.168);
+  // POI % = POI / spend = 63.785x
+  approx(result.bottomline.poiX, 63.785, 0.01);
 }
 
 function testFeeNotNegativeOnLoss() {
@@ -98,12 +93,11 @@ function testMarketingFeeMode() {
     showBottomline: true,
     feeMode: 'marketing',
     marketingFeeAmount: 25000,
-    lineItems: [{ label: 'Other cost', amount: 5000 }],
   });
   approx(result.bottomline.poasKr, 296283.96);
   assert.strictEqual(result.bottomline.feeMode, 'marketing');
   approx(result.bottomline.censioFee, 25000);
-  approx(result.bottomline.poiKr, 266283.96);
+  approx(result.bottomline.poiKr, 271283.96);
 }
 
 function main() {

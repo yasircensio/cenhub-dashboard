@@ -4056,7 +4056,6 @@
     .meta-report-group-bar--meta { background: #3b82f6; }
     .meta-report-group-bar--topline { background: var(--primary); }
     .meta-report-group-bar--bottomline { background: #16a34a; }
-    .meta-report-group-bar--other { background: #9333ea; }
     .meta-report-group-title {
       font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700; margin: 0;
     }
@@ -4273,24 +4272,10 @@
     .meta-report-edit-grid {
       display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 18px;
     }
-    .meta-report-edit-grid label, .meta-report-line-items-editor label {
+    .meta-report-edit-grid label {
       display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
     }
-    .meta-report-edit-grid input, .meta-report-line-item-row input { font: inherit; min-width: 0; padding: 8px 10px; }
-    .meta-report-line-items-editor {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
-      margin-bottom: 0; padding: 14px;
-    }
-    .meta-report-line-items-head {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; margin-bottom: 12px;
-    }
-    .meta-report-line-items-head h4 { margin: 0; }
-    .meta-report-line-item-row {
-      align-items: center; display: grid; gap: 8px; grid-template-columns: 1fr 140px auto; margin-bottom: 8px;
-    }
-    .meta-report-add-row {
-      margin-top: 4px;
-    }
+    .meta-report-edit-grid input { font: inherit; min-width: 0; padding: 8px 10px; }
     .meta-report-edit-actions {
       align-items: center; background: var(--panel-soft); border-radius: 0 0 18px 18px;
       border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 12px;
@@ -4525,10 +4510,6 @@
       display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
     }
     .meta-cv-editor-grid input, .meta-cv-editor-grid select { font: inherit; padding: 8px 10px; }
-    .meta-cv-line-items-editor.is-settings-saving { opacity: 0.72; }
-    .meta-cv-line-items-editor.is-settings-saving .meta-report-switch-track {
-      pointer-events: none;
-    }
     .meta-cv-editor-actions {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
       margin-top: 16px;
@@ -4547,19 +4528,6 @@
     .meta-cv-legend i.is-complete { background: #16a34a; }
     .meta-cv-legend i.is-partial { background: #d97706; }
     .meta-cv-legend i.is-empty { background: #fff; border: 1px dashed #cbd5e1; }
-    .meta-cv-line-items-head {
-      align-items: stretch; flex-direction: column; gap: 10px;
-    }
-    .meta-cv-line-items-head-row {
-      align-items: center; display: flex; justify-content: space-between; width: 100%;
-    }
-    .meta-cv-line-items-toggle-row {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; width: 100%;
-    }
-    .meta-report-line-items-editor.is-settings-saving { opacity: 0.72; }
-    .meta-report-line-items-editor.is-settings-saving .meta-report-switch-track {
-      pointer-events: none;
-    }
     .meta-cv-client-settings {
       margin-bottom: 16px; width: 100%;
     }
