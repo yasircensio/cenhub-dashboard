@@ -4446,9 +4446,6 @@
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.06em; text-transform: uppercase;
     }
-    .meta-cv-line-items-toggle-row {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; width: 100%;
-    }
     @media (max-width: 980px) {
       .meta-cv-layout { grid-template-columns: 1fr; }
       .meta-cv-editor { position: static; }
@@ -9032,6 +9029,8 @@
     function setMetaCvSavePending(isPending) {
       metaReportsState.customValues.saving = isPending;
       const saveBtn = document.getElementById('meta-cv-save');
+      const indicator = document.getElementById('meta-cv-save-indicator');
+      if (indicator) indicator.classList.toggle('is-visible', isPending);
       if (saveBtn) {
         saveBtn.disabled = isPending || metaReportsState.customValues.loadingEditor || metaReportsState.customValues.settingsSaving;
         saveBtn.textContent = isPending ? 'Saving…' : 'Save values';
@@ -9040,10 +9039,8 @@
 
     function setMetaCvSettingsSaving(isPending) {
       metaReportsState.customValues.settingsSaving = isPending;
-      const status = document.getElementById('meta-cv-settings-status');
-      if (status) status.textContent = isPending ? 'Saving settings…' : '';
-      const otherStatus = document.getElementById('meta-cv-other-settings-status');
-      if (otherStatus) otherStatus.textContent = isPending ? 'Saving…' : '';
+      const indicator = document.getElementById('meta-cv-settings-status');
+      if (indicator) indicator.classList.toggle('is-visible', isPending);
       document.querySelector('.meta-cv-client-settings')?.classList.toggle('is-saving', isPending);
       document.querySelector('.meta-cv-line-items-editor')?.classList.toggle('is-settings-saving', isPending);
       ['meta-cv-setting-bottomline', 'meta-cv-setting-fee', 'meta-cv-setting-other', 'meta-cv-setting-fee-percent']
