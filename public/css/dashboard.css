@@ -4561,17 +4561,9 @@
       pointer-events: none;
     }
     .meta-cv-client-settings {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
-      box-shadow: var(--shadow-sm); margin-bottom: 14px; padding: 16px 18px; width: 100%;
-    }
-    .meta-cv-client-settings .meta-report-settings-group {
-      align-items: stretch; flex-direction: column; gap: 12px; width: 100%;
+      margin-bottom: 16px; width: 100%;
     }
     .meta-cv-client-settings.is-saving { opacity: 0.72; pointer-events: none; }
-    .meta-cv-settings-head {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px;
-      justify-content: space-between; margin-bottom: 10px; width: 100%;
-    }
     .meta-cv-editor-skeleton {
       display: flex; flex-direction: column; gap: 16px; margin-top: 4px;
     }
@@ -4609,10 +4601,6 @@
     }
     .meta-cv-skeleton-btn { height: 38px; width: 128px; }
     .meta-cv-skeleton-btn--primary { width: 108px; }
-    .meta-cv-settings-title {
-      color: var(--text-muted); font-size: 12px; font-weight: 700;
-      letter-spacing: 0.06em; text-transform: uppercase;
-    }
     @media (max-width: 980px) {
       .meta-cv-layout { grid-template-columns: 1fr; }
       .meta-cv-editor { position: static; }
