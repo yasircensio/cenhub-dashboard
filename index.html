@@ -4456,14 +4456,14 @@
     }
 
     .meta-cv-layout {
-      display: grid; gap: 20px; grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+      display: grid; gap: 16px; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.9fr);
     }
     .meta-cv-list, .meta-cv-editor {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
       box-shadow: var(--shadow-sm); min-width: 0;
     }
-    .meta-cv-list { padding: 18px; }
-    .meta-cv-editor { align-self: start; padding: 20px; position: sticky; top: 16px; }
+    .meta-cv-list { padding: 14px; }
+    .meta-cv-editor { align-self: start; padding: 14px 16px; position: sticky; top: 16px; }
     .meta-cv-toolbar {
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
       margin-bottom: 16px;
@@ -4507,21 +4507,21 @@
     .meta-cv-month-pill.is-active {
       box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.35); color: var(--text);
     }
-    .meta-cv-editor h3 { margin: 0 0 6px; }
-    .meta-cv-editor-sub { color: var(--text-soft); font-size: 13px; margin: 0 0 16px; }
+    .meta-cv-editor h3 { font-size: 15px; margin: 0 0 4px; }
+    .meta-cv-editor-sub { color: var(--text-soft); font-size: 12px; margin: 0 0 12px; }
     .meta-cv-editor-empty {
       color: var(--text-soft); font-size: 14px; padding: 28px 8px; text-align: center;
     }
     .meta-cv-editor-grid {
-      display: grid; gap: 12px; grid-template-columns: 1fr; margin-bottom: 14px;
+      display: grid; gap: 10px; grid-template-columns: 1fr; margin-bottom: 12px;
     }
     .meta-cv-editor-grid label {
-      display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
+      display: flex; flex-direction: column; font-size: 12px; font-weight: 600; gap: 4px;
     }
-    .meta-cv-editor-grid input, .meta-cv-editor-grid select { font: inherit; padding: 8px 10px; }
+    .meta-cv-editor-grid input, .meta-cv-editor-grid select { font: inherit; padding: 7px 9px; }
     .meta-cv-editor-actions {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
-      margin-top: 16px;
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between;
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
     }
     .meta-cv-editor-actions-left {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
@@ -4537,10 +4537,76 @@
     .meta-cv-legend i.is-complete { background: #16a34a; }
     .meta-cv-legend i.is-partial { background: #d97706; }
     .meta-cv-legend i.is-empty { background: #fff; border: 1px dashed #cbd5e1; }
+    .meta-cv-client-settings.meta-report-settings-group {
+      align-items: stretch; flex-direction: column; gap: 6px;
+    }
     .meta-cv-client-settings {
-      margin-bottom: 16px; width: 100%;
+      margin-bottom: 0; margin-top: 12px; width: 100%;
     }
     .meta-cv-client-settings.is-saving { opacity: 0.72; pointer-events: none; }
+    .meta-cv-client-settings > .meta-report-save-indicator.is-visible {
+      justify-content: flex-end; margin-bottom: 2px;
+    }
+    .meta-report-bottomline-fee-settings--cv { gap: 0; }
+    .meta-cv-bottomline-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 10px;
+      display: flex; flex-direction: column; overflow: hidden; width: 100%;
+    }
+    .meta-cv-bottomline-head {
+      align-items: center; display: flex; gap: 10px; justify-content: space-between;
+      padding: 10px 12px; width: 100%;
+    }
+    .meta-cv-bottomline-head-text {
+      display: flex; flex-direction: column; gap: 1px; min-width: 0;
+    }
+    .meta-cv-bottomline-title {
+      color: var(--text); font-size: 12.5px; font-weight: 700;
+    }
+    .meta-cv-bottomline-hint {
+      color: var(--text-soft); font-size: 11px; font-weight: 500; line-height: 1.35;
+    }
+    .meta-cv-bottomline-body {
+      background: transparent; border: 0; border-radius: 0; border-top: 1px solid var(--border);
+      padding: 10px 12px 12px;
+    }
+    .meta-report-fee-mode-pills {
+      display: flex; flex-wrap: wrap; gap: 6px; width: 100%;
+    }
+    .meta-report-fee-mode-pill {
+      align-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+      cursor: pointer; display: inline-flex; font-size: 11.5px; font-weight: 600; padding: 0;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+    .meta-report-fee-mode-pill input {
+      height: 1px; opacity: 0; position: absolute; width: 1px;
+    }
+    .meta-report-fee-mode-pill span {
+      color: var(--text-soft); display: inline-block; padding: 6px 11px;
+    }
+    .meta-report-fee-mode-pill:hover { border-color: var(--border-strong); }
+    .meta-report-fee-mode-pill:has(input:checked) {
+      background: #fff8f3; border-color: var(--primary); box-shadow: 0 0 0 1px rgba(196, 106, 47, 0.1);
+    }
+    .meta-report-fee-mode-pill:has(input:checked) span { color: var(--primary); }
+    .meta-cv-fee-footer {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between;
+      margin-top: 10px; width: 100%;
+    }
+    .meta-cv-fee-value-inline {
+      align-items: center; display: flex; flex: 1; min-height: 34px; min-width: 0;
+    }
+    .meta-cv-fee-inline-field {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; width: 100%;
+    }
+    .meta-cv-fee-inline-label {
+      color: var(--text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .meta-cv-fee-inline-input { max-width: 120px; }
+    .meta-cv-fee-inline-hint {
+      color: var(--text-soft); font-size: 11.5px; font-weight: 500;
+    }
+    .meta-cv-fee-footer .admin-btn--small { flex-shrink: 0; padding: 7px 12px; }
     .meta-cv-editor-skeleton {
       display: flex; flex-direction: column; gap: 16px; margin-top: 4px;
     }
@@ -8865,7 +8931,30 @@
       { value: 'marketing', icon: 'Dkr', title: 'Marketing fee', desc: 'Fixed Dkr amount' },
     ];
 
-    function metaReportFeeValueBlockHtml(prefix, mode, feePercent, marketingFee) {
+    function metaReportFeeValueBlockHtml(prefix, mode, feePercent, marketingFee, { inline = false } = {}) {
+      if (inline && mode === 'performance') {
+        return `
+          <label class="meta-cv-fee-inline-field">
+            <span class="meta-cv-fee-inline-label">Performance fee</span>
+            <span class="meta-report-fee-value-input-wrap meta-cv-fee-inline-input">
+              <input type="number" step="any" min="0" max="100" id="${prefix}-setting-fee-percent" value="${esc(feePercent)}" />
+              <span class="meta-report-fee-value-input-suffix">%</span>
+            </span>
+          </label>`;
+      }
+      if (inline && mode === 'marketing') {
+        return `
+          <label class="meta-cv-fee-inline-field">
+            <span class="meta-cv-fee-inline-label">Marketing fee</span>
+            <span class="meta-report-fee-value-input-wrap meta-cv-fee-inline-input">
+              <input type="number" step="any" min="0" id="${prefix}-setting-marketing-fee" value="${esc(marketingFee)}" />
+              <span class="meta-report-fee-value-input-suffix">Dkr</span>
+            </span>
+          </label>`;
+      }
+      if (inline) {
+        return '<span class="meta-cv-fee-inline-hint">No fee amount — save to apply.</span>';
+      }
       if (mode === 'performance') {
         return `
           <label class="meta-report-fee-value-field">
@@ -8889,11 +8978,45 @@
       return '<p class="meta-report-fee-value-empty">No amount needed — just save your selection.</p>';
     }
 
-    function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false } = {}) {
+    function metaReportUsesInlineFeeValue(prefix) {
+      return prefix === 'meta-cv';
+    }
+
+    function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false, variant = 'default' } = {}) {
       const showBottomline = Boolean(settings.metaReportShowBottomline);
       const feeMode = resolveMetaReportFeeMode(settings) || '';
       const feePercent = settings.metaReportFeePercent ?? 20;
       const marketingFee = settings.metaReportMarketingFeeAmount ?? 0;
+      const inlineFeeValue = metaReportUsesInlineFeeValue(prefix);
+
+      if (variant === 'cv') {
+        const pills = META_REPORT_FEE_MODE_META.map(({ value, title }) => `
+            <label class="meta-report-fee-mode-pill">
+              <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${feeMode === value ? ' checked' : ''} />
+              <span>${esc(title)}</span>
+            </label>`).join('');
+        return `
+        <div class="meta-report-bottomline-fee-settings meta-report-bottomline-fee-settings--cv">
+          <div class="meta-cv-bottomline-panel">
+            <div class="meta-cv-bottomline-head">
+              <div class="meta-cv-bottomline-head-text">
+                <span class="meta-cv-bottomline-title">Bottomline & Censio fee</span>
+                <span class="meta-cv-bottomline-hint">Profit breakdown and fee on client report</span>
+              </div>
+              ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline on report', false, { hideLabel: true })}
+            </div>
+            <div class="meta-report-fee-nested meta-cv-bottomline-body${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
+              <div class="meta-report-fee-mode-pills">${pills}</div>
+              <div class="meta-cv-fee-footer">
+                <div class="meta-cv-fee-value-inline" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: true })}</div>
+                <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      }
+
       const cards = META_REPORT_FEE_MODE_META.map(({ value, icon, title, desc }) => `
             <label class="meta-report-fee-mode-card">
               <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${feeMode === value ? ' checked' : ''} />
@@ -8916,7 +9039,7 @@
           <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
             <div class="meta-report-fee-mode-grid${compact ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
             </div>
-            <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee)}</div>
+            <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
             <div class="meta-report-fee-save-row">
               <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee settings</button>
             </div>
@@ -8942,9 +9065,10 @@
       document.querySelectorAll(`input[name="${prefix}-fee-mode"]`).forEach((radio) => {
         radio.checked = radio.value === feeMode;
       });
+      const inlineFeeValue = metaReportUsesInlineFeeValue(prefix);
       const valueBlock = document.getElementById(`${prefix}-fee-value`);
       if (valueBlock) {
-        valueBlock.innerHTML = metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee);
+        valueBlock.innerHTML = metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue });
         bindMetaReportFeeValueInputEnterKey(prefix);
       }
     }
@@ -8977,6 +9101,7 @@
         radio.onchange = () => {
           if (!radio.checked) return;
           const nested = document.getElementById(`${prefix}-fee-nested`);
+          const inlineFeeValue = metaReportUsesInlineFeeValue(prefix);
           const valueBlock = document.getElementById(`${prefix}-fee-value`);
           if (valueBlock && nested) {
             valueBlock.innerHTML = metaReportFeeValueBlockHtml(
@@ -8984,6 +9109,7 @@
               radio.value || '',
               nested.dataset.feePercent ?? 20,
               nested.dataset.marketingFee ?? 0,
+              { inline: inlineFeeValue },
             );
             bindMetaReportFeeValueInputEnterKey(prefix);
           }
@@ -9061,14 +9187,6 @@
           · ${esc(monthStatus.status || 'empty')}
         </p>
         <div class="meta-cv-editor-skeleton" aria-busy="true" aria-label="Loading month details">
-          <div class="meta-cv-skeleton-section">
-            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
-            <div class="meta-cv-skeleton-row">
-              <div class="meta-cv-skeleton-pill"></div>
-              <div class="meta-cv-skeleton-pill"></div>
-              <div class="meta-cv-skeleton-pill meta-cv-skeleton-pill--short"></div>
-            </div>
-          </div>
           <div class="meta-cv-skeleton-grid">
             ${Array.from({ length: 5 }).map(() => `
               <div class="meta-cv-skeleton-field">
@@ -9079,7 +9197,6 @@
           </div>
           <div class="meta-cv-skeleton-panel">
             <div class="meta-cv-skeleton-line meta-cv-skeleton-line--md"></div>
-            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--full"></div>
             <div class="meta-cv-skeleton-line meta-cv-skeleton-line--full"></div>
           </div>
           <div class="meta-cv-skeleton-actions">
@@ -9122,7 +9239,6 @@
       const displayWon = draft?.wonLeads ?? wonValue;
       const displayAvgLead = draft?.avgLeadValue ?? avgLeadValue;
       const displayAvgProfit = draft?.avgProfitPerWon ?? avgProfit;
-      const feeEnabled = Boolean(client.metaReportFeeEnabled);
 
       const reportSettingsSaving = state.settingsSaving && state.settingsSavingScope === 'report';
 
@@ -9133,9 +9249,6 @@
           · ${esc(monthStatus.status || 'empty')}
           · ${monthStatus.updatedAt ? `Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}` : 'Not updated yet'}
         </p>
-        <div class="meta-report-settings-group meta-report-settings-group--stacked meta-cv-client-settings${reportSettingsSaving ? ' is-saving' : ''}">
-          ${renderMetaReportBottomlineFeeSettings(client, 'meta-cv', { compact: true })}
-        </div>
         <div class="meta-cv-editor-grid">
           <label>Client
             <select id="meta-cv-client-select" class="admin-select">
@@ -9160,6 +9273,10 @@
           <label>Avg profit per won${showProfit ? '' : ' (optional)'}
             <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(displayAvgProfit)}" />
           </label>
+        </div>
+        <div class="meta-report-settings-group meta-report-settings-group--stacked meta-cv-client-settings${reportSettingsSaving ? ' is-saving' : ''}">
+          ${renderMetaReportSaveIndicator('meta-cv-settings-status', reportSettingsSaving)}
+          ${renderMetaReportBottomlineFeeSettings(client, 'meta-cv', { variant: 'cv' })}
         </div>
         <div class="meta-cv-editor-actions">
           <div class="meta-cv-editor-actions-left">
