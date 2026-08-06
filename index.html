@@ -4380,8 +4380,37 @@
 
     .meta-reports-page { padding-bottom: 32px; }
     .meta-report-client-page .meta-report-settings {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-      margin-bottom: 16px; padding: 14px 16px;
+      align-items: stretch; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 18px; box-shadow: var(--shadow-sm); flex-direction: column;
+      gap: 0; justify-content: flex-start; margin-bottom: 16px; padding: 18px 20px; width: 100%;
+    }
+    .meta-report-client-page .meta-report-settings-group {
+      align-items: stretch; flex: 1; width: 100%;
+    }
+    .meta-report-settings-card-head {
+      align-items: center; display: flex; justify-content: space-between;
+      margin-bottom: 14px; width: 100%;
+    }
+    .meta-report-settings-card-title {
+      color: var(--text-muted); font-size: 12px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .meta-report-bottomline-row {
+      align-items: center; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; margin-bottom: 14px;
+      padding-bottom: 14px; width: 100%;
+    }
+    .meta-report-client-page .meta-report-fee-nested {
+      background: linear-gradient(180deg, #faf7f3 0%, var(--panel-soft) 100%);
+      border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
+    }
+    .meta-report-fee-input-row {
+      display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); width: 100%;
+    }
+    @media (min-width: 640px) {
+      .meta-report-fee-input-row.has-input {
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+      }
     }
     .meta-report-client-page .meta-report-toolbar {
       background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
@@ -4496,6 +4525,10 @@
     .meta-report-line-items-editor.is-settings-saving { opacity: 0.72; }
     .meta-report-line-items-editor.is-settings-saving .meta-report-switch-track {
       pointer-events: none;
+    }
+    .meta-cv-client-settings {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: var(--shadow-sm); margin-bottom: 14px; padding: 16px 18px; width: 100%;
     }
     .meta-cv-client-settings .meta-report-settings-group {
       align-items: stretch; flex-direction: column; gap: 12px; width: 100%;
@@ -4862,7 +4895,6 @@
       const legacyKey = getAdminApiKey();
       if (legacyKey) headers['x-api-key'] = legacyKey;
 
-      const fetchStart = performance.now();
       let response;
       try {
         response = await fetch(path, {
@@ -4871,11 +4903,6 @@
           credentials: 'include',
         });
       } catch (networkError) {
-        if (String(path).includes('/api/meta-reports')) {
-          // #region agent log
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'E',location:'index.html:adminFetch',message:'network fetch failed',data:{path,method:options.method||'GET',elapsedMs:Math.round(performance.now()-fetchStart),error:String(networkError?.message||networkError)},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
-        }
         throw networkError;
       }
       const data = await response.json().catch(() => ({}));
@@ -8112,10 +8139,13 @@
             </div>
           </div>
           <div class="meta-report-settings">
+            <div class="meta-report-settings-card-head">
+              <span class="meta-report-settings-card-title">Report settings</span>
+              <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
+            </div>
             <div class="meta-report-settings-group meta-report-settings-group--stacked">
               ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report')}
             </div>
-            <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
@@ -8181,28 +8211,11 @@
 
     async function patchMetaReportSettings(clientId, patch) {
       metaReportsState._settingsInflight = (metaReportsState._settingsInflight || 0) + 1;
-      const inflight = metaReportsState._settingsInflight;
-      const reqId = `${Date.now()}-${inflight}`;
-      const start = performance.now();
-      // #region agent log
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'D',location:'index.html:patchMetaReportSettings',message:'settings PATCH start',data:{reqId,clientId,inflight,patchKeys:Object.keys(patch||{})},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       try {
-        const result = await adminFetchWithRetry(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`, {
+        return await adminFetchWithRetry(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`, {
           method: 'PATCH',
           body: JSON.stringify(patch),
         }, { retries: 2, timeoutMs: 20000 });
-        const elapsedMs = Math.round(performance.now() - start);
-        // #region agent log
-        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'A',location:'index.html:patchMetaReportSettings',message:'settings PATCH ok',data:{reqId,clientId,elapsedMs,perf:result?._perf||null,inflight},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        return result;
-      } catch (error) {
-        const elapsedMs = Math.round(performance.now() - start);
-        // #region agent log
-        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'E',location:'index.html:patchMetaReportSettings',message:'settings PATCH failed',data:{reqId,clientId,elapsedMs,inflight,error:String(error?.message||error)},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        throw error;
       } finally {
         metaReportsState._settingsInflight = Math.max(0, (metaReportsState._settingsInflight || 1) - 1);
       }
@@ -8964,14 +8977,16 @@
       const marketingFee = settings.metaReportMarketingFeeAmount ?? 0;
       return `
         <div class="meta-report-bottomline-fee-settings">
-          ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline')}
+          <div class="meta-report-bottomline-row">
+            ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline')}
+          </div>
           <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested">
             <div class="meta-report-fee-mode-grid">
               <label class="meta-report-fee-mode-card">
                 <input type="radio" name="${prefix}-fee-mode" value=""${!feeMode ? ' checked' : ''} />
                 <span class="meta-report-fee-mode-card-text">
                   None
-                  <small>No Censio fee on this report</small>
+                  <small>No Censio fee</small>
                 </span>
               </label>
               <label class="meta-report-fee-mode-card">
@@ -8985,18 +9000,20 @@
                 <input type="radio" name="${prefix}-fee-mode" value="marketing"${feeMode === 'marketing' ? ' checked' : ''} />
                 <span class="meta-report-fee-mode-card-text">
                   Marketing fee
-                  <small>Fixed amount (Dkr)</small>
+                  <small>Fixed Dkr amount</small>
                 </span>
               </label>
             </div>
-            <label class="meta-report-fee-input-block${feeMode === 'performance' ? '' : ' is-hidden'}" id="${prefix}-fee-percent-block">
-              Performance fee %
-              <input type="number" step="any" min="0" max="100" id="${prefix}-setting-fee-percent" value="${esc(feePercent)}"${feeMode === 'performance' ? '' : ' disabled'} />
-            </label>
-            <label class="meta-report-fee-input-block${feeMode === 'marketing' ? '' : ' is-hidden'}" id="${prefix}-marketing-fee-block">
-              Marketing fee (Dkr)
-              <input type="number" step="any" min="0" id="${prefix}-setting-marketing-fee" value="${esc(marketingFee)}"${feeMode === 'marketing' ? '' : ' disabled'} />
-            </label>
+            <div class="meta-report-fee-input-row${feeMode ? ' has-input' : ''}">
+              <label class="meta-report-fee-input-block${feeMode === 'performance' ? '' : ' is-hidden'}" id="${prefix}-fee-percent-block">
+                Performance fee %
+                <input type="number" step="any" min="0" max="100" id="${prefix}-setting-fee-percent" value="${esc(feePercent)}"${feeMode === 'performance' ? '' : ' disabled'} />
+              </label>
+              <label class="meta-report-fee-input-block${feeMode === 'marketing' ? '' : ' is-hidden'}" id="${prefix}-marketing-fee-block">
+                Marketing fee (Dkr)
+                <input type="number" step="any" min="0" id="${prefix}-setting-marketing-fee" value="${esc(marketingFee)}"${feeMode === 'marketing' ? '' : ' disabled'} />
+              </label>
+            </div>
           </div>
         </div>
       `;
@@ -9025,6 +9042,8 @@
       }
       document.getElementById(`${prefix}-fee-percent-block`)?.classList.toggle('is-hidden', feeMode !== 'performance');
       document.getElementById(`${prefix}-marketing-fee-block`)?.classList.toggle('is-hidden', feeMode !== 'marketing');
+      document.querySelector(`#${prefix}-fee-nested .meta-report-fee-input-row`)
+        ?.classList.toggle('has-input', Boolean(feeMode));
     }
 
     function bindMetaReportBottomlineFeeEvents(clientId, prefix, saveSettingsFn) {

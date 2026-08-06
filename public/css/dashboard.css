@@ -4371,8 +4371,37 @@
 
     .meta-reports-page { padding-bottom: 32px; }
     .meta-report-client-page .meta-report-settings {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-      margin-bottom: 16px; padding: 14px 16px;
+      align-items: stretch; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 18px; box-shadow: var(--shadow-sm); flex-direction: column;
+      gap: 0; justify-content: flex-start; margin-bottom: 16px; padding: 18px 20px; width: 100%;
+    }
+    .meta-report-client-page .meta-report-settings-group {
+      align-items: stretch; flex: 1; width: 100%;
+    }
+    .meta-report-settings-card-head {
+      align-items: center; display: flex; justify-content: space-between;
+      margin-bottom: 14px; width: 100%;
+    }
+    .meta-report-settings-card-title {
+      color: var(--text-muted); font-size: 12px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .meta-report-bottomline-row {
+      align-items: center; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; margin-bottom: 14px;
+      padding-bottom: 14px; width: 100%;
+    }
+    .meta-report-client-page .meta-report-fee-nested {
+      background: linear-gradient(180deg, #faf7f3 0%, var(--panel-soft) 100%);
+      border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
+    }
+    .meta-report-fee-input-row {
+      display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); width: 100%;
+    }
+    @media (min-width: 640px) {
+      .meta-report-fee-input-row.has-input {
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+      }
     }
     .meta-report-client-page .meta-report-toolbar {
       background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
@@ -4487,6 +4516,10 @@
     .meta-report-line-items-editor.is-settings-saving { opacity: 0.72; }
     .meta-report-line-items-editor.is-settings-saving .meta-report-switch-track {
       pointer-events: none;
+    }
+    .meta-cv-client-settings {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: var(--shadow-sm); margin-bottom: 14px; padding: 16px 18px; width: 100%;
     }
     .meta-cv-client-settings .meta-report-settings-group {
       align-items: stretch; flex-direction: column; gap: 12px; width: 100%;
