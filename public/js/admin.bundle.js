@@ -914,7 +914,11 @@ Resume the interrupted ${v}?`)&&(l=h.id,d=Number(h.batchOffset)||0)}}if(n?setFbL
         </div>
         <div class="meta-cv-month-pills">${renderMetaCvMonthPills(a,n)}</div>
       </article>
-    `).join(""):'<div class="meta-report-empty" style="padding:32px 12px">No matching clients.</div>'}function renderMetaReportSwitch(e,t,n){return`
+    `).join(""):'<div class="meta-report-empty" style="padding:32px 12px">No matching clients.</div>'}function renderMetaReportSaveIndicator(e,t=!1){return`
+    <span class="meta-report-save-indicator${t?" is-visible":""}" id="${esc(e)}" aria-live="polite">
+      <span class="meta-report-save-indicator-spinner"></span> Saving\u2026
+    </span>
+  `}function renderMetaReportSwitch(e,t,n){return`
     <div class="meta-report-switch">
       <label class="meta-report-switch-track" for="${esc(e)}" aria-label="${esc(n)}">
         <input type="checkbox" class="meta-report-switch-input" id="${esc(e)}"${t?" checked":""} />
@@ -936,7 +940,7 @@ Resume the interrupted ${v}?`)&&(l=h.id,d=Number(h.batchOffset)||0)}}if(n?setFbL
     <div class="meta-report-settings meta-cv-client-settings${t.settingsSaving?" is-saving":""}">
       <div class="meta-cv-settings-head">
         <span class="meta-cv-settings-title">Report settings</span>
-        <span class="meta-cv-settings-status" id="meta-cv-settings-status" aria-live="polite">${t.settingsSaving?"Saving settings\u2026":""}</span>
+        ${renderMetaReportSaveIndicator("meta-cv-settings-status",t.settingsSaving)}
       </div>
       <div class="meta-report-settings-group">
         ${renderMetaReportSwitch("meta-cv-setting-bottomline",n.metaReportShowBottomline,"Show bottomline")}
@@ -980,7 +984,6 @@ Resume the interrupted ${v}?`)&&(l=h.id,d=Number(h.batchOffset)||0)}}if(n?setFbL
         </div>
         <div class="meta-cv-line-items-toggle-row">
           ${renderMetaReportSwitch("meta-cv-setting-other",b,'Show "Other" section to client')}
-          <span class="meta-cv-other-settings-status" id="meta-cv-other-settings-status" aria-live="polite">${t.settingsSaving?"Saving\u2026":""}</span>
         </div>
       </div>
       <div id="meta-cv-line-items-list">
@@ -994,7 +997,10 @@ Resume the interrupted ${v}?`)&&(l=h.id,d=Number(h.batchOffset)||0)}}if(n?setFbL
       </div>
     </div>
     <div class="meta-cv-editor-actions">
-      <a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/${encodeURIComponent(n.clientId)}">Open full editor</a>
+      <div class="meta-cv-editor-actions-left">
+        <a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/${encodeURIComponent(n.clientId)}">Open full editor</a>
+        ${renderMetaReportSaveIndicator("meta-cv-save-indicator",t.saving)}
+      </div>
       <button type="button" class="admin-btn admin-btn--primary" id="meta-cv-save"${t.saving||t.loadingEditor||t.settingsSaving?" disabled":""}>
         ${t.saving?"Saving\u2026":"Save values"}
       </button>

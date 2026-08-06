@@ -4403,9 +4403,16 @@
       display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px;
     }
     .meta-cv-editor-grid input, .meta-cv-editor-grid select { font: inherit; padding: 8px 10px; }
+    .meta-cv-line-items-editor.is-settings-saving { opacity: 0.72; }
+    .meta-cv-line-items-editor.is-settings-saving .meta-report-switch-track {
+      pointer-events: none;
+    }
     .meta-cv-editor-actions {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
       margin-top: 16px;
+    }
+    .meta-cv-editor-actions-left {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
     }
     .meta-cv-legend {
       align-items: center; color: var(--text-muted); display: flex; flex-wrap: wrap; font-size: 12px; gap: 12px;
@@ -4439,16 +4446,8 @@
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.06em; text-transform: uppercase;
     }
-    .meta-cv-settings-status {
-      color: var(--primary); font-size: 12px; font-weight: 600;
-    }
-    .meta-cv-other-settings-status {
-      color: var(--primary); font-size: 12px; font-weight: 600; margin-left: auto;
-    }
-    .meta-cv-line-items-editor.is-settings-saving { opacity: 0.72; }
-    .meta-cv-line-items-editor.is-settings-saving .meta-report-switch-track,
-    .meta-cv-line-items-editor.is-settings-saving .meta-cv-other-settings-status {
-      pointer-events: none;
+    .meta-cv-line-items-toggle-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; width: 100%;
     }
     @media (max-width: 980px) {
       .meta-cv-layout { grid-template-columns: 1fr; }
@@ -8835,6 +8834,14 @@
       }).join('');
     }
 
+    function renderMetaReportSaveIndicator(id, visible = false) {
+      return `
+        <span class="meta-report-save-indicator${visible ? ' is-visible' : ''}" id="${esc(id)}" aria-live="polite">
+          <span class="meta-report-save-indicator-spinner"></span> Saving…
+        </span>
+      `;
+    }
+
     function renderMetaReportSwitch(id, checked, labelText) {
       return `
         <div class="meta-report-switch">
@@ -8889,7 +8896,7 @@
         <div class="meta-report-settings meta-cv-client-settings${state.settingsSaving ? ' is-saving' : ''}">
           <div class="meta-cv-settings-head">
             <span class="meta-cv-settings-title">Report settings</span>
-            <span class="meta-cv-settings-status" id="meta-cv-settings-status" aria-live="polite">${state.settingsSaving ? 'Saving settings…' : ''}</span>
+            ${renderMetaReportSaveIndicator('meta-cv-settings-status', state.settingsSaving)}
           </div>
           <div class="meta-report-settings-group">
             ${renderMetaReportSwitch('meta-cv-setting-bottomline', client.metaReportShowBottomline, 'Show bottomline')}
@@ -8933,7 +8940,6 @@
             </div>
             <div class="meta-cv-line-items-toggle-row">
               ${renderMetaReportSwitch('meta-cv-setting-other', showOtherToClient, 'Show "Other" section to client')}
-              <span class="meta-cv-other-settings-status" id="meta-cv-other-settings-status" aria-live="polite">${state.settingsSaving ? 'Saving…' : ''}</span>
             </div>
           </div>
           <div id="meta-cv-line-items-list">
@@ -8947,7 +8953,10 @@
           </div>
         </div>
         <div class="meta-cv-editor-actions">
-          <a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Open full editor</a>
+          <div class="meta-cv-editor-actions-left">
+            <a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Open full editor</a>
+            ${renderMetaReportSaveIndicator('meta-cv-save-indicator', state.saving)}
+          </div>
           <button type="button" class="admin-btn admin-btn--primary" id="meta-cv-save"${state.saving || state.loadingEditor || state.settingsSaving ? ' disabled' : ''}>
             ${state.saving ? 'Saving…' : 'Save values'}
           </button>
