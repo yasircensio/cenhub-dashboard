@@ -4582,39 +4582,21 @@
       display: flex; flex-wrap: wrap; gap: 6px; width: 100%;
     }
     .meta-report-fee-mode-pill {
-      align-items: center; background: var(--panel); border: 1.5px solid var(--border); border-radius: 999px;
-      cursor: pointer; display: inline-flex; font-size: 11.5px; font-weight: 600; gap: 6px; padding: 0;
-      position: relative; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      align-items: center; background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+      cursor: pointer; display: inline-flex; font-size: 11.5px; font-weight: 600; padding: 0;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
     }
     .meta-report-fee-mode-pill input {
       height: 1px; opacity: 0; position: absolute; width: 1px;
     }
-    .meta-report-fee-mode-pill-label {
-      color: var(--text-soft); display: inline-block; padding: 6px 0 6px 11px;
-    }
-    .meta-report-fee-mode-pill-badge {
-      border-radius: 999px; display: none; flex-shrink: 0; font-size: 9px; font-weight: 800;
-      letter-spacing: 0.04em; line-height: 1; margin-right: 8px; padding: 3px 6px; text-transform: uppercase;
+    .meta-report-fee-mode-pill span {
+      color: var(--text-soft); display: inline-block; padding: 6px 11px;
     }
     .meta-report-fee-mode-pill:hover { border-color: var(--border-strong); }
     .meta-report-fee-mode-pill:has(input:checked) {
-      background: #fff8f3; border-color: var(--primary); box-shadow: 0 0 0 1px rgba(196, 106, 47, 0.12);
+      background: #fff8f3; border-color: var(--primary); box-shadow: 0 0 0 1px rgba(196, 106, 47, 0.1);
     }
-    .meta-report-fee-mode-pill:has(input:checked) .meta-report-fee-mode-pill-label { color: var(--primary); font-weight: 700; }
-    .meta-report-fee-mode-pill.is-applied:not(:has(input:checked)) {
-      background: rgba(22, 163, 74, 0.06); border-color: rgba(22, 163, 74, 0.35);
-    }
-    .meta-report-fee-mode-pill.is-applied:not(:has(input:checked)) .meta-report-fee-mode-pill-label { color: #15803d; }
-    .meta-report-fee-mode-pill.is-applied .meta-report-fee-mode-pill-badge.is-saved {
-      background: rgba(22, 163, 74, 0.12); color: #15803d; display: inline-block;
-    }
-    .meta-report-fee-mode-pill:has(input:checked) .meta-report-fee-mode-pill-badge.is-selected {
-      background: rgba(196, 106, 47, 0.14); color: var(--primary); display: inline-block;
-    }
-    .meta-report-fee-mode-pill.is-applied:has(input:checked) .meta-report-fee-mode-pill-badge.is-saved { display: none; }
-    .meta-report-fee-mode-pill.is-applied:has(input:checked) .meta-report-fee-mode-pill-badge.is-active {
-      background: var(--primary); color: #fff; display: inline-block;
-    }
+    .meta-report-fee-mode-pill:has(input:checked) span { color: var(--primary); }
     .meta-cv-fee-footer .admin-btn--small.is-dirty { box-shadow: 0 0 0 2px rgba(196, 106, 47, 0.18); }
     .meta-cv-fee-footer .admin-btn--small:disabled { cursor: default; opacity: 0.55; }
     .meta-cv-fee-footer {
@@ -9067,25 +9049,16 @@
       const draft = readMetaReportFeeDraftState(prefix);
       if (!nested || !draft) return;
 
-      nested.querySelectorAll('.meta-report-fee-mode-pill').forEach((pill) => {
-        const input = pill.querySelector('input');
-        const value = input?.value || '';
-        pill.classList.toggle('is-applied', value === draft.appliedMode);
-      });
-
       const statusEl = document.getElementById(`${prefix}-fee-status`);
       if (statusEl) {
         if (draft.isDirty) {
           statusEl.innerHTML = `
-            <span class="meta-cv-fee-status-label">On report</span>
             <span class="meta-cv-fee-status-value is-active">${esc(draft.appliedLabel)}</span>
             <span class="meta-cv-fee-status-arrow" aria-hidden="true">→</span>
-            <span class="meta-cv-fee-status-label">Selected</span>
             <span class="meta-cv-fee-status-pending">${esc(draft.selectedLabel)}</span>
           `;
         } else {
           statusEl.innerHTML = `
-            <span class="meta-cv-fee-status-label">Active</span>
             <span class="meta-cv-fee-status-value is-active">${esc(draft.appliedLabel)}</span>
           `;
         }
@@ -9127,12 +9100,9 @@
       if (variant === 'cv') {
         const appliedLabel = describeMetaReportFeeModeLabel(feeMode, feePercent, marketingFee);
         const pills = META_REPORT_FEE_MODE_META.map(({ value, title }) => `
-            <label class="meta-report-fee-mode-pill${feeMode === value ? ' is-applied' : ''}">
+            <label class="meta-report-fee-mode-pill">
               <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${feeMode === value ? ' checked' : ''} />
-              <span class="meta-report-fee-mode-pill-label">${esc(title)}</span>
-              <span class="meta-report-fee-mode-pill-badge is-saved">Saved</span>
-              <span class="meta-report-fee-mode-pill-badge is-selected">Selected</span>
-              <span class="meta-report-fee-mode-pill-badge is-active">Active</span>
+              <span>${esc(title)}</span>
             </label>`).join('');
         return `
         <div class="meta-report-bottomline-fee-settings meta-report-bottomline-fee-settings--cv">
@@ -9146,7 +9116,6 @@
             </div>
             <div class="meta-report-fee-nested meta-cv-bottomline-body${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
               <div class="meta-cv-fee-status" id="${prefix}-fee-status" aria-live="polite">
-                <span class="meta-cv-fee-status-label">Active</span>
                 <span class="meta-cv-fee-status-value is-active">${esc(appliedLabel)}</span>
               </div>
               <div class="meta-report-fee-mode-pills">${pills}</div>
