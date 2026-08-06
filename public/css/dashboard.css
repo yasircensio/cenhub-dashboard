@@ -4203,7 +4203,7 @@
       background: #fff8f3; border-color: var(--primary); box-shadow: 0 0 0 1px rgba(196, 106, 47, 0.12);
     }
     .meta-report-fee-mode-card input {
-      accent-color: var(--primary); flex-shrink: 0;
+      height: 1px; opacity: 0; position: absolute; width: 1px;
     }
     .meta-report-fee-mode-card-icon {
       align-items: center; background: var(--panel-soft); border-radius: 8px; color: var(--text-muted);
@@ -4219,6 +4219,18 @@
     }
     .meta-report-fee-mode-card-text small {
       color: var(--text-soft); font-size: 12px; font-weight: 500;
+    }
+    .meta-report-fee-mode-card-radio {
+      align-items: center; border: 1.5px solid var(--border-strong); border-radius: 50%;
+      display: flex; flex-shrink: 0; height: 18px; justify-content: center;
+      margin-left: auto; transition: border-color 0.15s ease, background 0.15s ease; width: 18px;
+    }
+    .meta-report-fee-mode-card-radio svg { opacity: 0; }
+    .meta-report-fee-mode-card:has(input:checked) .meta-report-fee-mode-card-radio {
+      background: var(--primary); border-color: var(--primary);
+    }
+    .meta-report-fee-mode-card:has(input:checked) .meta-report-fee-mode-card-radio svg {
+      color: #fff; opacity: 1;
     }
     .meta-report-fee-value {
       align-items: center; display: flex; min-height: 58px; margin-top: 12px; width: 100%;

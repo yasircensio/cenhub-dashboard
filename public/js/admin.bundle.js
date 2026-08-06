@@ -926,6 +926,7 @@ Resume the interrupted ${y}?`)&&(l=c.id,d=Number(c.batchOffset)||0)}}if(n?setFbL
             <span class="meta-report-fee-mode-card-title">${esc(m)}</span>
             <small>${esc(v)}</small>
           </span>
+          <span class="meta-report-fee-mode-card-radio" aria-hidden="true">${ICON_CHECK}</span>
         </label>`).join("");return`
     <div class="meta-report-bottomline-fee-settings">
       <div class="meta-report-bottomline-row">
