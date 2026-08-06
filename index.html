@@ -4446,6 +4446,43 @@
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px;
       justify-content: space-between; margin-bottom: 10px; width: 100%;
     }
+    .meta-cv-editor-skeleton {
+      display: flex; flex-direction: column; gap: 16px; margin-top: 4px;
+    }
+    .meta-cv-skeleton-section,
+    .meta-cv-skeleton-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      display: flex; flex-direction: column; gap: 12px; padding: 14px;
+    }
+    .meta-cv-skeleton-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 12px;
+    }
+    .meta-cv-skeleton-grid {
+      display: grid; gap: 12px; grid-template-columns: 1fr;
+    }
+    .meta-cv-skeleton-field { display: flex; flex-direction: column; gap: 8px; }
+    .meta-cv-skeleton-line,
+    .meta-cv-skeleton-input,
+    .meta-cv-skeleton-pill,
+    .meta-cv-skeleton-btn {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%;
+      border-radius: 10px;
+    }
+    .meta-cv-skeleton-line { height: 12px; }
+    .meta-cv-skeleton-line--xs { width: 72px; }
+    .meta-cv-skeleton-line--sm { width: 120px; }
+    .meta-cv-skeleton-line--md { width: 140px; }
+    .meta-cv-skeleton-line--full { width: 100%; height: 40px; }
+    .meta-cv-skeleton-input { height: 40px; width: 100%; }
+    .meta-cv-skeleton-pill { border-radius: 999px; height: 28px; width: 132px; }
+    .meta-cv-skeleton-pill--short { width: 72px; }
+    .meta-cv-skeleton-actions {
+      align-items: center; display: flex; justify-content: space-between; gap: 12px;
+    }
+    .meta-cv-skeleton-btn { height: 38px; width: 128px; }
+    .meta-cv-skeleton-btn--primary { width: 108px; }
     .meta-cv-settings-title {
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.06em; text-transform: uppercase;
@@ -8918,6 +8955,43 @@
       `;
     }
 
+    function renderMetaCvEditorSkeleton(client, monthKey, monthStatus = {}) {
+      return `
+        <h3>${esc(client.accountName)}</h3>
+        <p class="meta-cv-editor-sub">
+          ${esc(metaMonthLabel(monthKey))}
+          · ${esc(monthStatus.status || 'empty')}
+        </p>
+        <div class="meta-cv-editor-skeleton" aria-busy="true" aria-label="Loading month details">
+          <div class="meta-cv-skeleton-section">
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+            <div class="meta-cv-skeleton-row">
+              <div class="meta-cv-skeleton-pill"></div>
+              <div class="meta-cv-skeleton-pill"></div>
+              <div class="meta-cv-skeleton-pill meta-cv-skeleton-pill--short"></div>
+            </div>
+          </div>
+          <div class="meta-cv-skeleton-grid">
+            ${Array.from({ length: 5 }).map(() => `
+              <div class="meta-cv-skeleton-field">
+                <div class="meta-cv-skeleton-line meta-cv-skeleton-line--xs"></div>
+                <div class="meta-cv-skeleton-input"></div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="meta-cv-skeleton-panel">
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--md"></div>
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--full"></div>
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--full"></div>
+          </div>
+          <div class="meta-cv-skeleton-actions">
+            <div class="meta-cv-skeleton-btn"></div>
+            <div class="meta-cv-skeleton-btn meta-cv-skeleton-btn--primary"></div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderMetaCvEditor(overview) {
       const state = metaReportsState.customValues;
       const client = (overview.clients || []).find((row) => row.clientId === state.selectedClientId);
@@ -8931,6 +9005,10 @@
       }
 
       const monthStatus = client.months?.[monthKey] || {};
+      if (state.loadingEditor) {
+        return renderMetaCvEditorSkeleton(client, monthKey, monthStatus);
+      }
+
       const monthPayload = state.editorPayload?.months?.[monthKey] || null;
       const showProfit = client.metaReportShowBottomline;
       const wonValue = monthStatus.wonLeads != null
@@ -8975,7 +9053,6 @@
             </label>
           </div>
         </div>
-        ${state.loadingEditor ? '<div class="note" style="margin-bottom:12px">Loading month details…</div>' : ''}
         <div class="meta-cv-editor-grid">
           <label>Client
             <select id="meta-cv-client-select" class="admin-select">
