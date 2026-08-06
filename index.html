@@ -4819,11 +4819,22 @@
       const legacyKey = getAdminApiKey();
       if (legacyKey) headers['x-api-key'] = legacyKey;
 
-      const response = await fetch(path, {
-        ...options,
-        headers,
-        credentials: 'include',
-      });
+      const fetchStart = performance.now();
+      let response;
+      try {
+        response = await fetch(path, {
+          ...options,
+          headers,
+          credentials: 'include',
+        });
+      } catch (networkError) {
+        if (String(path).includes('/api/meta-reports')) {
+          // #region agent log
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'E',location:'index.html:adminFetch',message:'network fetch failed',data:{path,method:options.method||'GET',elapsedMs:Math.round(performance.now()-fetchStart),error:String(networkError?.message||networkError)},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+        }
+        throw networkError;
+      }
       const data = await response.json().catch(() => ({}));
       if (response.status === 401 && ADMIN_UI) {
         redirectToLogin();
@@ -8139,10 +8150,32 @@
     }
 
     async function patchMetaReportSettings(clientId, patch) {
-      return adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`, {
-        method: 'PATCH',
-        body: JSON.stringify(patch),
-      });
+      metaReportsState._settingsInflight = (metaReportsState._settingsInflight || 0) + 1;
+      const inflight = metaReportsState._settingsInflight;
+      const reqId = `${Date.now()}-${inflight}`;
+      const start = performance.now();
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'D',location:'index.html:patchMetaReportSettings',message:'settings PATCH start',data:{reqId,clientId,inflight,patchKeys:Object.keys(patch||{})},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      try {
+        const result = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`, {
+          method: 'PATCH',
+          body: JSON.stringify(patch),
+        });
+        const elapsedMs = Math.round(performance.now() - start);
+        // #region agent log
+        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'A',location:'index.html:patchMetaReportSettings',message:'settings PATCH ok',data:{reqId,clientId,elapsedMs,perf:result?._perf||null,inflight},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        return result;
+      } catch (error) {
+        const elapsedMs = Math.round(performance.now() - start);
+        // #region agent log
+        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'E',location:'index.html:patchMetaReportSettings',message:'settings PATCH failed',data:{reqId,clientId,elapsedMs,inflight,error:String(error?.message||error)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        throw error;
+      } finally {
+        metaReportsState._settingsInflight = Math.max(0, (metaReportsState._settingsInflight || 1) - 1);
+      }
     }
 
     async function refreshMetaReportsHubData({ silent = true } = {}) {
