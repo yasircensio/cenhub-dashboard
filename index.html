@@ -4424,8 +4424,31 @@
     .meta-cv-line-items-head-row {
       align-items: center; display: flex; justify-content: space-between; width: 100%;
     }
+    .meta-cv-line-items-toggle-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; width: 100%;
+    }
     .meta-cv-client-settings .meta-report-settings-group {
       flex-wrap: wrap; gap: 12px 16px;
+    }
+    .meta-cv-client-settings.is-saving { opacity: 0.72; pointer-events: none; }
+    .meta-cv-settings-head {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px;
+      justify-content: space-between; margin-bottom: 10px; width: 100%;
+    }
+    .meta-cv-settings-title {
+      color: var(--text-muted); font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .meta-cv-settings-status {
+      color: var(--primary); font-size: 12px; font-weight: 600;
+    }
+    .meta-cv-other-settings-status {
+      color: var(--primary); font-size: 12px; font-weight: 600; margin-left: auto;
+    }
+    .meta-cv-line-items-editor.is-settings-saving { opacity: 0.72; }
+    .meta-cv-line-items-editor.is-settings-saving .meta-report-switch-track,
+    .meta-cv-line-items-editor.is-settings-saving .meta-cv-other-settings-status {
+      pointer-events: none;
     }
     @media (max-width: 980px) {
       .meta-cv-layout { grid-template-columns: 1fr; }
@@ -7276,6 +7299,7 @@
         draftInputs: null,
         loadingEditor: false,
         saving: false,
+        settingsSaving: false,
       },
     };
 
@@ -8862,7 +8886,11 @@
           · ${esc(monthStatus.status || 'empty')}
           · ${monthStatus.updatedAt ? `Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}` : 'Not updated yet'}
         </p>
-        <div class="meta-report-settings meta-cv-client-settings">
+        <div class="meta-report-settings meta-cv-client-settings${state.settingsSaving ? ' is-saving' : ''}">
+          <div class="meta-cv-settings-head">
+            <span class="meta-cv-settings-title">Report settings</span>
+            <span class="meta-cv-settings-status" id="meta-cv-settings-status" aria-live="polite">${state.settingsSaving ? 'Saving settings…' : ''}</span>
+          </div>
           <div class="meta-report-settings-group">
             ${renderMetaReportSwitch('meta-cv-setting-bottomline', client.metaReportShowBottomline, 'Show bottomline')}
             ${renderMetaReportSwitch('meta-cv-setting-fee', client.metaReportFeeEnabled, 'Censio performance fee')}
@@ -8897,13 +8925,16 @@
             <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(displayAvgProfit)}" />
           </label>
         </div>
-        <div class="meta-report-line-items-editor">
+        <div class="meta-report-line-items-editor${state.settingsSaving ? ' is-settings-saving' : ''}">
           <div class="meta-report-line-items-head meta-cv-line-items-head">
             <div class="meta-cv-line-items-head-row">
               <h4>Other items</h4>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line">Add row</button>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-add-line"${state.settingsSaving ? ' disabled' : ''}>Add row</button>
             </div>
-            ${renderMetaReportSwitch('meta-cv-setting-other', showOtherToClient, 'Show "Other" section to client')}
+            <div class="meta-cv-line-items-toggle-row">
+              ${renderMetaReportSwitch('meta-cv-setting-other', showOtherToClient, 'Show "Other" section to client')}
+              <span class="meta-cv-other-settings-status" id="meta-cv-other-settings-status" aria-live="polite">${state.settingsSaving ? 'Saving…' : ''}</span>
+            </div>
           </div>
           <div id="meta-cv-line-items-list">
             ${displayLineItems.length ? displayLineItems.map((row, index) => `
@@ -8917,7 +8948,7 @@
         </div>
         <div class="meta-cv-editor-actions">
           <a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Open full editor</a>
-          <button type="button" class="admin-btn admin-btn--primary" id="meta-cv-save"${state.saving || state.loadingEditor ? ' disabled' : ''}>
+          <button type="button" class="admin-btn admin-btn--primary" id="meta-cv-save"${state.saving || state.loadingEditor || state.settingsSaving ? ' disabled' : ''}>
             ${state.saving ? 'Saving…' : 'Save values'}
           </button>
         </div>
@@ -8993,8 +9024,29 @@
       metaReportsState.customValues.saving = isPending;
       const saveBtn = document.getElementById('meta-cv-save');
       if (saveBtn) {
-        saveBtn.disabled = isPending || metaReportsState.customValues.loadingEditor;
+        saveBtn.disabled = isPending || metaReportsState.customValues.loadingEditor || metaReportsState.customValues.settingsSaving;
         saveBtn.textContent = isPending ? 'Saving…' : 'Save values';
+      }
+    }
+
+    function setMetaCvSettingsSaving(isPending) {
+      metaReportsState.customValues.settingsSaving = isPending;
+      const status = document.getElementById('meta-cv-settings-status');
+      if (status) status.textContent = isPending ? 'Saving settings…' : '';
+      const otherStatus = document.getElementById('meta-cv-other-settings-status');
+      if (otherStatus) otherStatus.textContent = isPending ? 'Saving…' : '';
+      document.querySelector('.meta-cv-client-settings')?.classList.toggle('is-saving', isPending);
+      document.querySelector('.meta-cv-line-items-editor')?.classList.toggle('is-settings-saving', isPending);
+      ['meta-cv-setting-bottomline', 'meta-cv-setting-fee', 'meta-cv-setting-other', 'meta-cv-setting-fee-percent']
+        .forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.disabled = isPending;
+        });
+      const addLine = document.getElementById('meta-cv-add-line');
+      if (addLine) addLine.disabled = isPending;
+      const saveBtn = document.getElementById('meta-cv-save');
+      if (saveBtn) {
+        saveBtn.disabled = isPending || metaReportsState.customValues.saving || metaReportsState.customValues.loadingEditor;
       }
     }
 
@@ -9084,6 +9136,7 @@
     }
 
     async function saveMetaCvClientSettings(clientId, patch, revert) {
+      setMetaCvSettingsSaving(true);
       try {
         const monthKey = metaReportsState.customValues.selectedMonthKey;
         const result = await patchMetaReportSettings(clientId, {
@@ -9108,11 +9161,13 @@
           };
         }
         metaReportsState.customValues.draftInputs = collectMetaCvSaveBody();
+        metaReportsState.customValues.settingsSaving = false;
         refreshMetaCvListAndEditor();
         showToast(describeMetaReportSettingsChange(patch, result.settings || {}), 'success');
       } catch (error) {
         showToast(error.message || 'Update failed', 'error');
         if (revert) revert();
+        setMetaCvSettingsSaving(false);
       }
     }
 
