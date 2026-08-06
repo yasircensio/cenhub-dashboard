@@ -9275,9 +9275,6 @@
           const monthKey = metaReportsState.customValues.selectedMonthKey;
           if (!clientId || !monthKey) return;
           const body = collectMetaCvSaveBody();
-          // #region agent log
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-flash',hypothesisId:'F',location:'index.html:meta-cv-save',message:'save body captured',data:{clientId,monthKey,body},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
           setMetaCvSavePending(true);
           try {
             const result = await adminFetch(
@@ -9288,9 +9285,6 @@
             metaReportsState.customValues.draftInputs = body;
             setMetaCvSavePending(false);
             refreshMetaCvListAndEditor();
-            // #region agent log
-            fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-flash',hypothesisId:'F',location:'index.html:meta-cv-save',message:'save applied without full editor wipe',data:{wonLeads:body.wonLeads,domWon:document.getElementById('meta-cv-won-leads')?.value},timestamp:Date.now()})}).catch(()=>{});
-            // #endregion
             showToast('Custom values saved', 'success');
             await refreshMetaCvOverviewSilently();
           } catch (error) {
