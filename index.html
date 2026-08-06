@@ -9613,31 +9613,10 @@
       if (!reloadEditor) return;
       metaReportsState.customValues.loadingEditor = true;
       refreshMetaCvListAndEditor();
-      // #region agent log (debug session b952dc, hypotheses H1-H5: client-observed round trip)
-      const __dbgClientStart = performance.now();
-      // #endregion agent log
       try {
         const result = await adminFetch(
           `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`,
         );
-        // #region agent log (debug session b952dc, hypotheses H1-H5)
-        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'b952dc' },
-          body: JSON.stringify({
-            sessionId: 'b952dc',
-            location: 'index.html:selectMetaCvMonth',
-            message: 'meta-cv month load timing',
-            data: {
-              clientRoundTripMs: Math.round(performance.now() - __dbgClientStart),
-              monthKey,
-              serverTiming: result._debugTiming || null,
-            },
-            hypothesisId: 'H1-H5',
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion agent log
         if (
           metaReportsState.customValues.selectedClientId === clientId
           && metaReportsState.customValues.selectedMonthKey === monthKey
