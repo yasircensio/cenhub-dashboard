@@ -29,6 +29,12 @@
     },
     "api/fb-lead-sync/[...path].js": {
       "maxDuration": 120
+    },
+    "api/meta-reports.js": {
+      "maxDuration": 60
+    },
+    "api/meta-reports/[...path].js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
