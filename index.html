@@ -8860,7 +8860,7 @@
         <p class="meta-cv-editor-sub">
           ${esc(metaMonthLabel(monthKey))}
           · ${esc(monthStatus.status || 'empty')}
-          · Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}
+          · ${monthStatus.updatedAt ? `Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}` : 'Not updated yet'}
         </p>
         <div class="meta-report-settings meta-cv-client-settings">
           <div class="meta-report-settings-group">
@@ -9019,8 +9019,10 @@
         month.avgLeadValue = savedMonth.avgLeadValue ?? body.avgLeadValue;
         month.avgProfitPerWon = savedMonth.avgProfitPerWon ?? body.avgProfitPerWon;
         month.lineItemCount = savedMonth.lineItems?.length ?? body.lineItems?.length ?? 0;
-        month.updatedAt = savedMonth.updatedAt || new Date().toISOString();
         month.status = classifyMetaCvMonthStatus(month, Boolean(client.metaReportShowBottomline));
+        month.updatedAt = month.status === 'empty'
+          ? null
+          : (savedMonth.updatedAt || new Date().toISOString());
       }
       if (result?.monthPayload) {
         metaReportsState.customValues.editorPayload = {

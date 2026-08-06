@@ -931,7 +931,7 @@ Resume the interrupted ${b}?`)&&(l=h.id,d=Number(h.batchOffset)||0)}}if(n?setFbL
     <p class="meta-cv-editor-sub">
       ${esc(metaMonthLabel(a))}
       \xB7 ${esc(s.status||"empty")}
-      \xB7 Updated ${esc(metaCvFormatUpdatedAt(s.updatedAt))}
+      \xB7 ${s.updatedAt?`Updated ${esc(metaCvFormatUpdatedAt(s.updatedAt))}`:"Not updated yet"}
     </p>
     <div class="meta-report-settings meta-cv-client-settings">
       <div class="meta-report-settings-group">
