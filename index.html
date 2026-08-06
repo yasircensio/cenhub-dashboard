@@ -2489,6 +2489,15 @@
       padding: 7px 11px;
     }
 
+    .admin-btn--secondary:disabled {
+      background: var(--panel-soft);
+      border-color: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
     .admin-btn:disabled {
       cursor: wait;
       opacity: 0.65;
@@ -4130,6 +4139,13 @@
       align-items: center; display: inline-flex; gap: 9px; user-select: none;
     }
     .meta-report-switch.is-disabled { cursor: not-allowed; opacity: 0.5; }
+    .meta-report-switch-input:disabled + .meta-report-switch-thumb,
+    .meta-report-switch-input:disabled ~ .meta-report-switch-thumb {
+      opacity: 0.85;
+    }
+    .meta-report-switch-track:has(.meta-report-switch-input:disabled) {
+      cursor: not-allowed; opacity: 0.5;
+    }
     .meta-report-switch-track {
       background: #e8e0d8; border-radius: 999px; cursor: pointer; display: inline-block; flex-shrink: 0;
       height: 22px; position: relative; transition: background 0.2s ease; width: 40px;
@@ -7995,7 +8011,7 @@
       const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
       const monthPayload = payload.months?.[activeKey] || null;
       const settings = payload.settings || {};
-      const effectiveFee = metaReportEffectiveFeeEnabled(settings, monthPayload);
+      const feeEnabled = Boolean(settings.metaReportFeeEnabled);
       const tabs = monthKeys.map((key) => `
         <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
       `).join('');
@@ -8049,13 +8065,13 @@
               </label>
               <label class="meta-report-switch">
                 <span class="meta-report-switch-track">
-                  <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-fee" ${effectiveFee ? 'checked' : ''} ${monthStatusIsEmpty(monthPayload, settings) ? 'disabled' : ''} />
+                  <input type="checkbox" class="meta-report-switch-input" id="meta-report-setting-fee" ${feeEnabled ? 'checked' : ''} />
                   <span class="meta-report-switch-thumb"></span>
                 </span>
                 <span class="meta-report-switch-label">Censio performance fee</span>
               </label>
-              <label class="meta-report-fee-field${effectiveFee ? '' : ' is-disabled'}" id="meta-report-fee-field">Fee %
-                <input type="number" step="any" min="0" max="100" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" ${effectiveFee ? '' : 'disabled'} />
+              <label class="meta-report-fee-field${feeEnabled ? '' : ' is-disabled'}" id="meta-report-fee-field">Fee %
+                <input type="number" step="any" min="0" max="100" id="meta-report-setting-fee-percent" value="${esc(settings.metaReportFeePercent ?? 20)}" ${feeEnabled ? '' : 'disabled'} />
               </label>
             </div>
             <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
@@ -8340,18 +8356,17 @@
       const bottomlineToggle = document.getElementById('meta-report-setting-bottomline');
       const feeToggle = document.getElementById('meta-report-setting-fee');
       const feePercent = document.getElementById('meta-report-setting-fee-percent');
-      const effectiveFee = metaReportEffectiveFeeEnabled(settings, monthPayload);
-      const feeLocked = monthStatusIsEmpty(monthPayload, settings);
+      const feeEnabled = Boolean(settings.metaReportFeeEnabled);
       if (bottomlineToggle) bottomlineToggle.checked = Boolean(settings.metaReportShowBottomline);
       if (feeToggle) {
-        feeToggle.checked = effectiveFee;
-        feeToggle.disabled = feeLocked;
+        feeToggle.checked = feeEnabled;
+        feeToggle.disabled = false;
       }
       if (feePercent) {
         feePercent.value = settings.metaReportFeePercent ?? 20;
         feePercent.dataset.prevValue = String(feePercent.value);
       }
-      syncMetaReportFeeFieldState(effectiveFee);
+      syncMetaReportFeeFieldState(feeEnabled);
     }
 
     function describeMetaReportSettingsChange(patch, settings) {
@@ -8482,7 +8497,7 @@
           );
         };
       }
-      if (feeToggle && !feeToggle.disabled) {
+      if (feeToggle) {
         feeToggle.onchange = () => {
           const next = feeToggle.checked;
           syncMetaReportFeeFieldState(next);
@@ -9027,8 +9042,7 @@
       const displayAvgLead = draft?.avgLeadValue ?? avgLeadValue;
       const displayAvgProfit = draft?.avgProfitPerWon ?? avgProfit;
       const displayLineItems = draft?.lineItems ?? lineItems;
-      const effectiveFee = metaReportEffectiveFeeEnabled(client, monthStatus);
-      const feeLocked = monthStatusIsEmpty(monthStatus, client);
+      const feeEnabled = Boolean(client.metaReportFeeEnabled);
 
       const showOtherSaving = state.settingsSaving && state.settingsSavingScope === 'other';
       const reportSettingsSaving = state.settingsSaving && state.settingsSavingScope === 'report';
@@ -9047,9 +9061,9 @@
           </div>
           <div class="meta-report-settings-group">
             ${renderMetaReportSwitch('meta-cv-setting-bottomline', client.metaReportShowBottomline, 'Show bottomline')}
-            ${renderMetaReportSwitch('meta-cv-setting-fee', effectiveFee, 'Censio performance fee', feeLocked)}
-            <label class="meta-report-fee-field${effectiveFee ? '' : ' is-disabled'}" id="meta-cv-fee-field">Fee %
-              <input type="number" step="any" min="0" max="100" id="meta-cv-setting-fee-percent" value="${esc(client.metaReportFeePercent ?? 20)}" ${effectiveFee ? '' : 'disabled'} />
+            ${renderMetaReportSwitch('meta-cv-setting-fee', feeEnabled, 'Censio performance fee')}
+            <label class="meta-report-fee-field${feeEnabled ? '' : ' is-disabled'}" id="meta-cv-fee-field">Fee %
+              <input type="number" step="any" min="0" max="100" id="meta-cv-setting-fee-percent" value="${esc(client.metaReportFeePercent ?? 20)}" ${feeEnabled ? '' : 'disabled'} />
             </label>
           </div>
         </div>
@@ -9355,7 +9369,7 @@
           );
         };
       }
-      if (feeToggle && !feeToggle.disabled) {
+      if (feeToggle) {
         feeToggle.onchange = () => {
           const next = feeToggle.checked;
           syncMetaReportFeeFieldState(next, 'meta-cv');

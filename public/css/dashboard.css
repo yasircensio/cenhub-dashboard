@@ -2480,6 +2480,15 @@
       padding: 7px 11px;
     }
 
+    .admin-btn--secondary:disabled {
+      background: var(--panel-soft);
+      border-color: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
     .admin-btn:disabled {
       cursor: wait;
       opacity: 0.65;
@@ -4121,6 +4130,13 @@
       align-items: center; display: inline-flex; gap: 9px; user-select: none;
     }
     .meta-report-switch.is-disabled { cursor: not-allowed; opacity: 0.5; }
+    .meta-report-switch-input:disabled + .meta-report-switch-thumb,
+    .meta-report-switch-input:disabled ~ .meta-report-switch-thumb {
+      opacity: 0.85;
+    }
+    .meta-report-switch-track:has(.meta-report-switch-input:disabled) {
+      cursor: not-allowed; opacity: 0.5;
+    }
     .meta-report-switch-track {
       background: #e8e0d8; border-radius: 999px; cursor: pointer; display: inline-block; flex-shrink: 0;
       height: 22px; position: relative; transition: background 0.2s ease; width: 40px;
