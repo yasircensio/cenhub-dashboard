@@ -4171,22 +4171,46 @@
     .meta-report-bottomline-fee-settings {
       display: flex; flex-direction: column; gap: 12px; width: 100%;
     }
+    .meta-report-settings-group--stacked {
+      align-items: stretch; flex-direction: column; width: 100%;
+    }
     .meta-report-fee-nested {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
-      display: flex; flex-direction: column; gap: 10px; margin-left: 4px; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; width: 100%;
     }
     .meta-report-fee-nested.is-hidden { display: none; }
-    .meta-report-fee-nested-label {
-      color: var(--text-soft); font-size: 12px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase;
+    .meta-report-fee-mode-grid {
+      display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%;
     }
-    .meta-report-fee-mode-options {
-      display: flex; flex-direction: column; gap: 8px;
+    @media (max-width: 720px) {
+      .meta-report-fee-mode-grid { grid-template-columns: 1fr; }
     }
-    .meta-report-fee-mode-option {
-      align-items: center; color: var(--text); cursor: pointer; display: flex;
-      font-size: 13px; font-weight: 600; gap: 8px;
+    .meta-report-fee-mode-card {
+      align-items: flex-start; background: var(--panel); border: 1.5px solid var(--border);
+      border-radius: 10px; cursor: pointer; display: flex; gap: 10px; padding: 12px 14px;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
     }
-    .meta-report-fee-mode-option input { accent-color: var(--primary); }
+    .meta-report-fee-mode-card:hover { border-color: var(--border-strong); }
+    .meta-report-fee-mode-card:has(input:checked) {
+      background: #fff8f3; border-color: var(--primary); box-shadow: 0 0 0 1px rgba(196, 106, 47, 0.12);
+    }
+    .meta-report-fee-mode-card input {
+      accent-color: var(--primary); flex-shrink: 0; margin-top: 2px;
+    }
+    .meta-report-fee-mode-card-text {
+      color: var(--text); display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 2px;
+      line-height: 1.35;
+    }
+    .meta-report-fee-mode-card-text small {
+      color: var(--text-soft); font-size: 12px; font-weight: 500;
+    }
+    .meta-report-fee-input-block {
+      display: flex; flex-direction: column; font-size: 13px; font-weight: 600; gap: 6px; width: 100%;
+    }
+    .meta-report-fee-input-block.is-hidden { display: none; }
+    .meta-report-fee-input-block input {
+      font: inherit; max-width: none; padding: 10px 12px; width: 100%;
+    }
 
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
@@ -4474,7 +4498,7 @@
       pointer-events: none;
     }
     .meta-cv-client-settings .meta-report-settings-group {
-      flex-wrap: wrap; gap: 12px 16px;
+      align-items: stretch; flex-direction: column; gap: 12px; width: 100%;
     }
     .meta-cv-client-settings.is-saving { opacity: 0.72; pointer-events: none; }
     .meta-cv-settings-head {
@@ -8088,7 +8112,7 @@
             </div>
           </div>
           <div class="meta-report-settings">
-            <div class="meta-report-settings-group">
+            <div class="meta-report-settings-group meta-report-settings-group--stacked">
               ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report')}
             </div>
             <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
@@ -8942,25 +8966,35 @@
         <div class="meta-report-bottomline-fee-settings">
           ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline')}
           <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested">
-            <span class="meta-report-fee-nested-label">Censio fee type</span>
-            <div class="meta-report-fee-mode-options">
-              <label class="meta-report-fee-mode-option">
+            <div class="meta-report-fee-mode-grid">
+              <label class="meta-report-fee-mode-card">
                 <input type="radio" name="${prefix}-fee-mode" value=""${!feeMode ? ' checked' : ''} />
-                <span>None</span>
+                <span class="meta-report-fee-mode-card-text">
+                  None
+                  <small>No Censio fee on this report</small>
+                </span>
               </label>
-              <label class="meta-report-fee-mode-option">
+              <label class="meta-report-fee-mode-card">
                 <input type="radio" name="${prefix}-fee-mode" value="performance"${feeMode === 'performance' ? ' checked' : ''} />
-                <span>Performance fee (% of profit)</span>
+                <span class="meta-report-fee-mode-card-text">
+                  Performance fee
+                  <small>% of profit (POAS)</small>
+                </span>
               </label>
-              <label class="meta-report-fee-mode-option">
+              <label class="meta-report-fee-mode-card">
                 <input type="radio" name="${prefix}-fee-mode" value="marketing"${feeMode === 'marketing' ? ' checked' : ''} />
-                <span>Marketing fee (fixed amount)</span>
+                <span class="meta-report-fee-mode-card-text">
+                  Marketing fee
+                  <small>Fixed amount (Dkr)</small>
+                </span>
               </label>
             </div>
-            <label class="meta-report-fee-field${feeMode === 'performance' ? '' : ' is-disabled'}" id="${prefix}-fee-percent-field">Performance fee %
+            <label class="meta-report-fee-input-block${feeMode === 'performance' ? '' : ' is-hidden'}" id="${prefix}-fee-percent-block">
+              Performance fee %
               <input type="number" step="any" min="0" max="100" id="${prefix}-setting-fee-percent" value="${esc(feePercent)}"${feeMode === 'performance' ? '' : ' disabled'} />
             </label>
-            <label class="meta-report-fee-field${feeMode === 'marketing' ? '' : ' is-disabled'}" id="${prefix}-marketing-fee-field">Marketing fee (Dkr)
+            <label class="meta-report-fee-input-block${feeMode === 'marketing' ? '' : ' is-hidden'}" id="${prefix}-marketing-fee-block">
+              Marketing fee (Dkr)
               <input type="number" step="any" min="0" id="${prefix}-setting-marketing-fee" value="${esc(marketingFee)}"${feeMode === 'marketing' ? '' : ' disabled'} />
             </label>
           </div>
@@ -8989,8 +9023,8 @@
         marketingFee.disabled = feeMode !== 'marketing';
         marketingFee.dataset.prevValue = String(marketingFee.value);
       }
-      document.getElementById(`${prefix}-fee-percent-field`)?.classList.toggle('is-disabled', feeMode !== 'performance');
-      document.getElementById(`${prefix}-marketing-fee-field`)?.classList.toggle('is-disabled', feeMode !== 'marketing');
+      document.getElementById(`${prefix}-fee-percent-block`)?.classList.toggle('is-hidden', feeMode !== 'performance');
+      document.getElementById(`${prefix}-marketing-fee-block`)?.classList.toggle('is-hidden', feeMode !== 'marketing');
     }
 
     function bindMetaReportBottomlineFeeEvents(clientId, prefix, saveSettingsFn) {
@@ -9180,7 +9214,7 @@
             <span class="meta-cv-settings-title">Report settings</span>
             ${renderMetaReportSaveIndicator('meta-cv-settings-status', reportSettingsSaving)}
           </div>
-          <div class="meta-report-settings-group">
+          <div class="meta-report-settings-group meta-report-settings-group--stacked">
             ${renderMetaReportBottomlineFeeSettings(client, 'meta-cv')}
           </div>
         </div>

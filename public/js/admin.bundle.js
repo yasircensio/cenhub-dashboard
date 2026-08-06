@@ -817,7 +817,7 @@ Resume the interrupted ${v}?`)&&(l=c.id,d=Number(c.batchOffset)||0)}}if(n?setFbL
         </div>
       </div>
       <div class="meta-report-settings">
-        <div class="meta-report-settings-group">
+        <div class="meta-report-settings-group meta-report-settings-group--stacked">
           ${renderMetaReportBottomlineFeeSettings(s,"meta-report")}
         </div>
         <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving\u2026</span>
@@ -905,30 +905,40 @@ Resume the interrupted ${v}?`)&&(l=c.id,d=Number(c.batchOffset)||0)}}if(n?setFbL
     <div class="meta-report-bottomline-fee-settings">
       ${renderMetaReportSwitch(`${t}-setting-bottomline`,n,"Show bottomline")}
       <div class="meta-report-fee-nested${n?"":" is-hidden"}" id="${t}-fee-nested">
-        <span class="meta-report-fee-nested-label">Censio fee type</span>
-        <div class="meta-report-fee-mode-options">
-          <label class="meta-report-fee-mode-option">
+        <div class="meta-report-fee-mode-grid">
+          <label class="meta-report-fee-mode-card">
             <input type="radio" name="${t}-fee-mode" value=""${a?"":" checked"} />
-            <span>None</span>
+            <span class="meta-report-fee-mode-card-text">
+              None
+              <small>No Censio fee on this report</small>
+            </span>
           </label>
-          <label class="meta-report-fee-mode-option">
+          <label class="meta-report-fee-mode-card">
             <input type="radio" name="${t}-fee-mode" value="performance"${a==="performance"?" checked":""} />
-            <span>Performance fee (% of profit)</span>
+            <span class="meta-report-fee-mode-card-text">
+              Performance fee
+              <small>% of profit (POAS)</small>
+            </span>
           </label>
-          <label class="meta-report-fee-mode-option">
+          <label class="meta-report-fee-mode-card">
             <input type="radio" name="${t}-fee-mode" value="marketing"${a==="marketing"?" checked":""} />
-            <span>Marketing fee (fixed amount)</span>
+            <span class="meta-report-fee-mode-card-text">
+              Marketing fee
+              <small>Fixed amount (Dkr)</small>
+            </span>
           </label>
         </div>
-        <label class="meta-report-fee-field${a==="performance"?"":" is-disabled"}" id="${t}-fee-percent-field">Performance fee %
+        <label class="meta-report-fee-input-block${a==="performance"?"":" is-hidden"}" id="${t}-fee-percent-block">
+          Performance fee %
           <input type="number" step="any" min="0" max="100" id="${t}-setting-fee-percent" value="${esc(s)}"${a==="performance"?"":" disabled"} />
         </label>
-        <label class="meta-report-fee-field${a==="marketing"?"":" is-disabled"}" id="${t}-marketing-fee-field">Marketing fee (Dkr)
+        <label class="meta-report-fee-input-block${a==="marketing"?"":" is-hidden"}" id="${t}-marketing-fee-block">
+          Marketing fee (Dkr)
           <input type="number" step="any" min="0" id="${t}-setting-marketing-fee" value="${esc(i)}"${a==="marketing"?"":" disabled"} />
         </label>
       </div>
     </div>
-  `}function syncMetaReportBottomlineFeeDom(e={},t="meta-report"){const n=!!e.metaReportShowBottomline,a=resolveMetaReportFeeMode(e),s=document.getElementById(`${t}-setting-bottomline`);s&&(s.checked=n),document.getElementById(`${t}-fee-nested`)?.classList.toggle("is-hidden",!n),document.querySelectorAll(`input[name="${t}-fee-mode"]`).forEach(r=>{r.checked=r.value===(a||"")});const i=document.getElementById(`${t}-setting-fee-percent`),o=document.getElementById(`${t}-setting-marketing-fee`);i&&(i.value=e.metaReportFeePercent??20,i.disabled=a!=="performance",i.dataset.prevValue=String(i.value)),o&&(o.value=e.metaReportMarketingFeeAmount??0,o.disabled=a!=="marketing",o.dataset.prevValue=String(o.value)),document.getElementById(`${t}-fee-percent-field`)?.classList.toggle("is-disabled",a!=="performance"),document.getElementById(`${t}-marketing-fee-field`)?.classList.toggle("is-disabled",a!=="marketing")}function bindMetaReportBottomlineFeeEvents(e,t,n){const a=n||((r,l)=>saveMetaReportClientSettings(e,r,l)),s=document.getElementById(`${t}-setting-bottomline`);s&&(s.onchange=()=>{const r=s.checked;a({metaReportShowBottomline:r},()=>{s.checked=!r})}),document.querySelectorAll(`input[name="${t}-fee-mode"]`).forEach(r=>{r.onchange=()=>{if(!r.checked)return;const l=r.value||null;a({metaReportFeeMode:l},()=>{document.querySelectorAll(`input[name="${t}-fee-mode"]`).forEach(d=>{d.checked=d===r?!r.checked:d.checked})})}});const i=document.getElementById(`${t}-setting-fee-percent`);if(i){i.dataset.prevValue=i.value;const r=()=>{if(i.disabled)return;const l=i.dataset.prevValue;let d=Number(i.value);Number.isFinite(d)||(d=20),d=Math.min(100,Math.max(0,d)),i.value=String(d),String(d)!==String(l)&&(i.dataset.prevValue=String(d),a({metaReportFeePercent:d},()=>{i.value=l,i.dataset.prevValue=l}))};i.onchange=r,i.onkeydown=l=>{l.key==="Enter"&&(l.preventDefault(),i.blur())}}const o=document.getElementById(`${t}-setting-marketing-fee`);if(o){o.dataset.prevValue=o.value;const r=()=>{if(o.disabled)return;const l=o.dataset.prevValue;let d=Number(o.value);Number.isFinite(d)||(d=0),d=Math.max(0,d),o.value=String(d),String(d)!==String(l)&&(o.dataset.prevValue=String(d),a({metaReportMarketingFeeAmount:d},()=>{o.value=l,o.dataset.prevValue=l}))};o.onchange=r,o.onkeydown=l=>{l.key==="Enter"&&(l.preventDefault(),o.blur())}}}function renderMetaReportSaveIndicator(e,t=!1){return`
+  `}function syncMetaReportBottomlineFeeDom(e={},t="meta-report"){const n=!!e.metaReportShowBottomline,a=resolveMetaReportFeeMode(e),s=document.getElementById(`${t}-setting-bottomline`);s&&(s.checked=n),document.getElementById(`${t}-fee-nested`)?.classList.toggle("is-hidden",!n),document.querySelectorAll(`input[name="${t}-fee-mode"]`).forEach(r=>{r.checked=r.value===(a||"")});const i=document.getElementById(`${t}-setting-fee-percent`),o=document.getElementById(`${t}-setting-marketing-fee`);i&&(i.value=e.metaReportFeePercent??20,i.disabled=a!=="performance",i.dataset.prevValue=String(i.value)),o&&(o.value=e.metaReportMarketingFeeAmount??0,o.disabled=a!=="marketing",o.dataset.prevValue=String(o.value)),document.getElementById(`${t}-fee-percent-block`)?.classList.toggle("is-hidden",a!=="performance"),document.getElementById(`${t}-marketing-fee-block`)?.classList.toggle("is-hidden",a!=="marketing")}function bindMetaReportBottomlineFeeEvents(e,t,n){const a=n||((r,l)=>saveMetaReportClientSettings(e,r,l)),s=document.getElementById(`${t}-setting-bottomline`);s&&(s.onchange=()=>{const r=s.checked;a({metaReportShowBottomline:r},()=>{s.checked=!r})}),document.querySelectorAll(`input[name="${t}-fee-mode"]`).forEach(r=>{r.onchange=()=>{if(!r.checked)return;const l=r.value||null;a({metaReportFeeMode:l},()=>{document.querySelectorAll(`input[name="${t}-fee-mode"]`).forEach(d=>{d.checked=d===r?!r.checked:d.checked})})}});const i=document.getElementById(`${t}-setting-fee-percent`);if(i){i.dataset.prevValue=i.value;const r=()=>{if(i.disabled)return;const l=i.dataset.prevValue;let d=Number(i.value);Number.isFinite(d)||(d=20),d=Math.min(100,Math.max(0,d)),i.value=String(d),String(d)!==String(l)&&(i.dataset.prevValue=String(d),a({metaReportFeePercent:d},()=>{i.value=l,i.dataset.prevValue=l}))};i.onchange=r,i.onkeydown=l=>{l.key==="Enter"&&(l.preventDefault(),i.blur())}}const o=document.getElementById(`${t}-setting-marketing-fee`);if(o){o.dataset.prevValue=o.value;const r=()=>{if(o.disabled)return;const l=o.dataset.prevValue;let d=Number(o.value);Number.isFinite(d)||(d=0),d=Math.max(0,d),o.value=String(d),String(d)!==String(l)&&(o.dataset.prevValue=String(d),a({metaReportMarketingFeeAmount:d},()=>{o.value=l,o.dataset.prevValue=l}))};o.onchange=r,o.onkeydown=l=>{l.key==="Enter"&&(l.preventDefault(),o.blur())}}}function renderMetaReportSaveIndicator(e,t=!1){return`
     <span class="meta-report-save-indicator${t?" is-visible":""}" id="${esc(e)}" aria-live="polite">
       <span class="meta-report-save-indicator-spinner"></span> Saving\u2026
     </span>
@@ -989,7 +999,7 @@ Resume the interrupted ${v}?`)&&(l=c.id,d=Number(c.batchOffset)||0)}}if(n?setFbL
         <span class="meta-cv-settings-title">Report settings</span>
         ${renderMetaReportSaveIndicator("meta-cv-settings-status",p)}
       </div>
-      <div class="meta-report-settings-group">
+      <div class="meta-report-settings-group meta-report-settings-group--stacked">
         ${renderMetaReportBottomlineFeeSettings(n,"meta-cv")}
       </div>
     </div>
