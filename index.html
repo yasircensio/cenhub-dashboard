@@ -4760,15 +4760,6 @@
     .meta-report-spend-chart-type .meta-report-chart-toggle-btn:disabled {
       cursor: default; opacity: 0.55;
     }
-    .meta-report-spend-chart-settings {
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .meta-report-spend-chart-settings-field {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 12px; justify-content: space-between;
-    }
-    .meta-report-spend-chart-settings-label {
-      color: var(--text-soft); font-size: 12px; font-weight: 600;
-    }
     .meta-report-scenario-charts {
       display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     }
@@ -8248,7 +8239,6 @@
                 <span class="meta-report-settings-card-title">Report settings</span>
               </div>
               <div class="meta-report-settings-group meta-report-settings-group--stacked">
-                ${renderMetaReportSpendChartSettings(settings)}
                 ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report', { compact: false, collapsible: true, externalSummary: true })}
               </div>
             </div>
@@ -8844,22 +8834,6 @@
           ${META_REPORT_SPEND_CHART_TYPE_OPTIONS.map(({ value, label }) => `
             <button type="button" class="meta-report-chart-toggle-btn${value === current ? ' is-active' : ''}" data-spend-chart-type="${esc(value)}"${editable ? '' : ' disabled'}>${esc(label)}</button>
           `).join('')}
-        </div>
-      `;
-    }
-
-    function renderMetaReportSpendChartSettings(settings = {}) {
-      const current = normalizeMetaReportSpendChartType(settings.metaReportSpendChartType);
-      return `
-        <div class="meta-report-spend-chart-settings">
-          <label class="meta-report-spend-chart-settings-field" for="meta-report-spend-chart-type">
-            <span class="meta-report-spend-chart-settings-label">Default spend chart</span>
-            <select id="meta-report-spend-chart-type" class="admin-select">
-              ${META_REPORT_SPEND_CHART_TYPE_OPTIONS.map(({ value, label }) => `
-                <option value="${esc(value)}"${value === current ? ' selected' : ''}>${esc(label)}</option>
-              `).join('')}
-            </select>
-          </label>
         </div>
       `;
     }
@@ -9775,10 +9749,6 @@
       document.querySelectorAll('[data-spend-chart-type]').forEach((button) => {
         button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === normalized);
       });
-      const settingsSelect = document.getElementById('meta-report-spend-chart-type');
-      if (settingsSelect && settingsSelect.value !== normalized) {
-        settingsSelect.value = normalized;
-      }
       const activePayload = payload || metaReportsState.clientPayload || metaReportsState.publicPayload;
       refreshMetaReportSpendAndScenarioCharts(activePayload);
       if (persist && clientId) {
@@ -9915,36 +9885,6 @@
           }
         };
       });
-    }
-
-    function bindMetaReportSpendChartSettings(clientId, payload) {
-      const select = document.getElementById('meta-report-spend-chart-type');
-      if (!select) return;
-      select.onchange = async () => {
-        const nextType = select.value;
-        const previous = normalizeMetaReportSpendChartType(payload?.settings?.metaReportSpendChartType);
-        select.disabled = true;
-        try {
-          const result = await setMetaReportSpendChartType(nextType, {
-            persist: true,
-            clientId,
-            payload,
-          });
-          if (result?.settings) {
-            payload.settings = { ...payload.settings, ...result.settings };
-            if (metaReportsState.clientPayload?.clientId === payload.clientId) {
-              metaReportsState.clientPayload.settings = payload.settings;
-            }
-            showToast('Default spend chart saved', 'success');
-          }
-        } catch (error) {
-          select.value = previous;
-          setMetaReportSpendChartType(previous, { payload });
-          showToast(error.message || 'Update failed', 'error');
-        } finally {
-          select.disabled = false;
-        }
-      };
     }
 
     function syncMetaReportChartToggleUi() {
@@ -10874,7 +10814,6 @@
       bindMetaReportCopyButtons();
       bindMetaReportBackfillButton(clientId);
       bindMetaReportBottomlineFeeEvents(clientId, 'meta-report');
-      bindMetaReportSpendChartSettings(clientId, payload);
       bindMetaReportShareEvents(payload);
     }
 

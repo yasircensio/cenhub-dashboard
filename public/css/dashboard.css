@@ -4751,15 +4751,6 @@
     .meta-report-spend-chart-type .meta-report-chart-toggle-btn:disabled {
       cursor: default; opacity: 0.55;
     }
-    .meta-report-spend-chart-settings {
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .meta-report-spend-chart-settings-field {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 12px; justify-content: space-between;
-    }
-    .meta-report-spend-chart-settings-label {
-      color: var(--text-soft); font-size: 12px; font-weight: 600;
-    }
     .meta-report-scenario-charts {
       display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     }
