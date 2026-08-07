@@ -4635,8 +4635,62 @@
     .meta-report-client-page .meta-report-preview-card {
       margin: 0; max-width: none;
     }
-    .meta-report-client-page .meta-report-tables-card {
-      margin: 0 auto; max-width: 560px;
+    .meta-report-client-page .meta-report-tables-card,
+    .meta-reports-page--public .meta-report-tables-card {
+      margin: 0; max-width: none;
+    }
+    .meta-report-content-layout {
+      align-items: start; display: grid; gap: 20px;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+    }
+    .meta-report-content-main { min-width: 0; }
+    .meta-report-charts-panel {
+      display: flex; flex-direction: column; gap: 16px; min-width: 0;
+    }
+    .meta-report-client-page .meta-report-charts-panel,
+    .meta-reports-page--public .meta-report-charts-panel {
+      position: sticky; top: 16px;
+    }
+    .meta-report-chart-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px;
+      min-width: 0; padding: 16px 16px 14px;
+    }
+    .meta-report-chart-head {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: space-between;
+    }
+    .meta-report-chart-title {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; margin: 0;
+    }
+    .meta-report-chart-toggle {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      display: inline-flex; gap: 2px; padding: 2px;
+    }
+    .meta-report-chart-toggle-btn {
+      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
+      cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; padding: 5px 10px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .meta-report-chart-toggle-btn.is-active {
+      background: var(--primary); box-shadow: 0 1px 4px rgba(255, 106, 0, 0.25); color: #fff;
+    }
+    .meta-report-chart-demo-badge {
+      background: rgba(255, 106, 0, 0.1); border-radius: 999px; color: #b45309;
+      font-size: 11px; font-weight: 600; padding: 4px 10px; width: fit-content;
+    }
+    .meta-report-chart-demo-badge[hidden] { display: none !important; }
+    .meta-report-chart-canvas-wrap {
+      height: 200px; min-height: 200px; position: relative; width: 100%;
+    }
+    .meta-report-chart-canvas-wrap canvas { display: block; height: 100% !important; width: 100% !important; }
+    .meta-report-chart-empty {
+      color: var(--text-soft); font-size: 13px; margin: 0; padding: 24px 8px; text-align: center;
+    }
+    .meta-report-chart-empty[hidden] { display: none !important; }
+    @media (max-width: 960px) {
+      .meta-report-content-layout { grid-template-columns: 1fr; }
+      .meta-report-client-page .meta-report-charts-panel,
+      .meta-reports-page--public .meta-report-charts-panel { position: static; }
     }
 
     .meta-cv-layout {
@@ -7688,6 +7742,11 @@
       selectedYear: new Date().getFullYear(),
       publicPayload: null,
       publicPageMounted: false,
+      chartInstances: { roas: null, poas: null },
+      chartRoasMode: 'kr',
+      chartPoasMode: 'kr',
+      chartSeries: null,
+      chartDemo: false,
       customValues: {
         mounted: false,
         overview: null,
@@ -8380,9 +8439,10 @@
       payload.months[metaReportsState.activeMonthKey] = monthPayload;
       const panel = document.getElementById('meta-report-month-panel');
       if (!panel) return;
-      panel.innerHTML = renderMetaReportMonthBody(
+      syncMetaReportMonthPanelDom(
         monthPayload,
         getMetaReportMonthBodyOptions(payload.settings, { editable: true }),
+        payload,
       );
       bindMetaReportsClientEditEvents(payload.clientId, payload);
       refreshMetaReportBackfillControl(payload);
@@ -8443,9 +8503,10 @@
 
       const panel = document.getElementById('meta-report-month-panel');
       if (panel) {
-        panel.innerHTML = renderMetaReportMonthBody(
+        syncMetaReportMonthPanelDom(
           payload.months?.[metaReportsState.activeMonthKey],
           getMetaReportMonthBodyOptions(settings, { editable: true }),
+          payload,
         );
         bindMetaReportsClientEditEvents(payload.clientId, payload);
       }
@@ -8477,9 +8538,10 @@
 
       const panel = document.getElementById('meta-report-month-panel');
       if (panel) {
-        panel.innerHTML = renderMetaReportMonthBody(
+        syncMetaReportMonthPanelDom(
           payload.months?.[metaReportsState.activeMonthKey],
           getMetaReportMonthBodyOptions(payload.settings, { editable: false }),
+          payload,
         );
       }
     }
@@ -8584,32 +8646,343 @@
       return { editable };
     }
 
-    function renderMetaReportMonthBody(monthPayload, { editable = false } = {}) {
+    const META_REPORT_CHART_MIN_POINTS = 2;
+
+    function isMetaReportCensioClient(payload) {
+      const clientId = String(payload?.clientId || '').toLowerCase();
+      const accountName = String(payload?.accountName || '');
+      return clientId === 'censio' || /censio/i.test(accountName);
+    }
+
+    function monthHasChartData(monthPayload) {
+      if (!monthPayload || monthPayload.meta?.emptyMonth) return false;
+      const spend = Number(monthPayload.meta?.spend) || 0;
+      const leads = Number(monthPayload.topline?.leads) || 0;
+      return spend > 0 || leads > 0;
+    }
+
+    function buildMetaReportChartSeries(payload) {
+      const monthKeys = payload?.monthKeys || [];
+      const months = payload?.months || {};
+      const series = [];
+
+      for (const monthKey of monthKeys) {
+        const monthPayload = months[monthKey];
+        if (!monthPayload || monthPayload.meta?.emptyMonth) continue;
+        if (!monthHasChartData(monthPayload)) continue;
+
+        const roasKr = Number(monthPayload.topline?.roasKr) || 0;
+        const roasX = Number(monthPayload.topline?.roasX) || 0;
+        const hasBottomline = Boolean(monthPayload.bottomline);
+        const poasKr = hasBottomline ? Number(monthPayload.bottomline.poasKr) || 0 : null;
+        const poasX = hasBottomline ? Number(monthPayload.bottomline.poasX) || 0 : null;
+
+        series.push({
+          monthKey,
+          label: metaMonthLabel(monthKey),
+          roasKr,
+          roasX,
+          poasKr,
+          poasX,
+          spend: Number(monthPayload.meta?.spend) || 0,
+          leads: Number(monthPayload.topline?.leads) || 0,
+          hasData: true,
+        });
+      }
+
+      return series;
+    }
+
+    function getMetaReportDemoSeries(clientId, accountName, year, monthKeys) {
+      const probe = { clientId, accountName };
+      if (!isMetaReportCensioClient(probe)) return null;
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
+      const targetYear = Number(year) || currentYear;
+
+      let keys = (monthKeys || []).filter((key) => {
+        const keyYear = Number(String(key).slice(0, 4));
+        const keyMonth = Number(String(key).slice(5, 7));
+        if (keyYear !== targetYear) return false;
+        if (targetYear === currentYear && keyMonth > currentMonth) return false;
+        return true;
+      });
+
+      if (!keys.length) {
+        const limit = targetYear === currentYear ? Math.min(8, currentMonth) : 8;
+        keys = Array.from({ length: limit }, (_, index) => `${targetYear}-${String(index + 1).padStart(2, '0')}`);
+      }
+
+      return keys.map((monthKey, index) => {
+        const t = keys.length > 1 ? index / (keys.length - 1) : 0;
+        const spend = Math.round(8000 + t * 10000);
+        const roasKr = Math.round(2000 + t * 15000);
+        const roasX = Number((0.5 + t * 2.5).toFixed(2));
+        const poasKr = Math.round(1500 + t * 12000);
+        const poasX = Number((0.4 + t * 2.2).toFixed(2));
+
+        return {
+          monthKey,
+          label: metaMonthLabel(monthKey),
+          roasKr,
+          roasX,
+          poasKr,
+          poasX,
+          spend,
+          leads: Math.round(20 + t * 80),
+          hasData: true,
+          demo: true,
+        };
+      });
+    }
+
+    function resolveMetaReportChartSeries(payload) {
+      const real = buildMetaReportChartSeries(payload);
+      if (real.length >= META_REPORT_CHART_MIN_POINTS) {
+        return { series: real, demo: false };
+      }
+      if (isMetaReportCensioClient(payload)) {
+        const demo = getMetaReportDemoSeries(
+          payload.clientId,
+          payload.accountName,
+          payload.year || metaReportsState.selectedYear,
+          payload.monthKeys,
+        );
+        if (demo && demo.length >= META_REPORT_CHART_MIN_POINTS) {
+          return { series: demo, demo: true };
+        }
+      }
+      return { series: real, demo: false };
+    }
+
+    function renderMetaReportChartsPanel() {
+      return `
+        <aside class="meta-report-charts-panel" id="meta-report-charts-panel">
+          <span class="meta-report-chart-demo-badge" id="meta-report-chart-demo-badge" hidden>Sample trend data</span>
+          <div class="meta-report-chart-card" data-meta-chart="roas">
+            <div class="meta-report-chart-head">
+              <h3 class="meta-report-chart-title">ROAS trend</h3>
+              <div class="meta-report-chart-toggle" id="meta-chart-roas-mode" role="group" aria-label="ROAS display mode">
+                <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
+                <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+              </div>
+            </div>
+            <div class="meta-report-chart-canvas-wrap">
+              <canvas id="meta-report-chart-roas" aria-label="ROAS trend chart"></canvas>
+              <p class="meta-report-chart-empty" id="meta-report-chart-roas-empty" hidden>Not enough data for a trend yet.</p>
+            </div>
+          </div>
+          <div class="meta-report-chart-card" data-meta-chart="poas">
+            <div class="meta-report-chart-head">
+              <h3 class="meta-report-chart-title">POAS trend</h3>
+              <div class="meta-report-chart-toggle" id="meta-chart-poas-mode" role="group" aria-label="POAS display mode">
+                <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
+                <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+              </div>
+            </div>
+            <div class="meta-report-chart-canvas-wrap">
+              <canvas id="meta-report-chart-poas" aria-label="POAS trend chart"></canvas>
+              <p class="meta-report-chart-empty" id="meta-report-chart-poas-empty" hidden>Not enough data for a trend yet.</p>
+            </div>
+          </div>
+        </aside>
+      `;
+    }
+
+    function destroyMetaReportCharts() {
+      if (metaReportsState.chartInstances.roas) {
+        metaReportsState.chartInstances.roas.destroy();
+        metaReportsState.chartInstances.roas = null;
+      }
+      if (metaReportsState.chartInstances.poas) {
+        metaReportsState.chartInstances.poas.destroy();
+        metaReportsState.chartInstances.poas = null;
+      }
+    }
+
+    function metaReportChartValue(point, mode, krKey, xKey) {
+      const raw = mode === 'x' ? point[xKey] : point[krKey];
+      return Number(raw) || 0;
+    }
+
+    function metaReportChartTooltipLabel(value, mode) {
+      return mode === 'x' ? metaFmtX(value) : metaFmtKr(value);
+    }
+
+    function metaReportChartAxisTick(value, mode) {
+      if (mode === 'x') return `${Number(value).toFixed(1)}x`;
+      const amount = Number(value) || 0;
+      if (Math.abs(amount) >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+      if (Math.abs(amount) >= 1000) return `${Math.round(amount / 1000)}K`;
+      return amount;
+    }
+
+    function buildMetaReportLineChart(canvas, series, mode, krKey, xKey) {
+      const labels = series.map((point) => point.label);
+      const values = series.map((point) => metaReportChartValue(point, mode, krKey, xKey));
+
+      return new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: mode === 'x' ? 'Multiplier' : 'Dkr',
+            data: values,
+            borderColor: '#ff6a00',
+            backgroundColor: 'rgba(255, 106, 0, 0.12)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#ff6a00',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 5,
+            fill: true,
+            tension: 0.3,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#ffffff',
+              borderColor: '#e8e0d8',
+              borderWidth: 1,
+              titleColor: '#1a1208',
+              bodyColor: '#1a1208',
+              padding: 10,
+              callbacks: {
+                label(context) {
+                  return metaReportChartTooltipLabel(context.parsed.y, mode);
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(26, 18, 8, 0.06)' },
+              ticks: { color: '#6b5348', font: { size: 11 } },
+            },
+            y: {
+              grid: { color: 'rgba(26, 18, 8, 0.08)' },
+              ticks: {
+                color: '#6b5348',
+                font: { size: 11 },
+                callback: (value) => metaReportChartAxisTick(value, mode),
+              },
+            },
+          },
+        },
+      });
+    }
+
+    function updateMetaReportChart(kind, series, mode) {
+      const canvas = document.getElementById(`meta-report-chart-${kind}`);
+      const emptyEl = document.getElementById(`meta-report-chart-${kind}-empty`);
+      if (!canvas || !emptyEl) return;
+
+      const krKey = kind === 'roas' ? 'roasKr' : 'poasKr';
+      const xKey = kind === 'roas' ? 'roasX' : 'poasX';
+      const chartSeries = kind === 'poas'
+        ? series.filter((point) => point.poasKr != null && point.poasX != null)
+        : series;
+
+      if (metaReportsState.chartInstances[kind]) {
+        metaReportsState.chartInstances[kind].destroy();
+        metaReportsState.chartInstances[kind] = null;
+      }
+
+      if (chartSeries.length < META_REPORT_CHART_MIN_POINTS || typeof Chart === 'undefined') {
+        canvas.hidden = true;
+        emptyEl.hidden = false;
+        return;
+      }
+
+      canvas.hidden = false;
+      emptyEl.hidden = true;
+      metaReportsState.chartInstances[kind] = buildMetaReportLineChart(canvas, chartSeries, mode, krKey, xKey);
+    }
+
+    function bindMetaReportChartToggles() {
+      const roasToggle = document.getElementById('meta-chart-roas-mode');
+      if (roasToggle) {
+        roasToggle.querySelectorAll('[data-mode]').forEach((button) => {
+          button.onclick = () => {
+            const mode = button.getAttribute('data-mode');
+            metaReportsState.chartRoasMode = mode;
+            roasToggle.querySelectorAll('[data-mode]').forEach((entry) => {
+              entry.classList.toggle('is-active', entry.getAttribute('data-mode') === mode);
+            });
+            updateMetaReportChart('roas', metaReportsState.chartSeries || [], mode);
+          };
+        });
+      }
+
+      const poasToggle = document.getElementById('meta-chart-poas-mode');
+      if (poasToggle) {
+        poasToggle.querySelectorAll('[data-mode]').forEach((button) => {
+          button.onclick = () => {
+            const mode = button.getAttribute('data-mode');
+            metaReportsState.chartPoasMode = mode;
+            poasToggle.querySelectorAll('[data-mode]').forEach((entry) => {
+              entry.classList.toggle('is-active', entry.getAttribute('data-mode') === mode);
+            });
+            updateMetaReportChart('poas', metaReportsState.chartSeries || [], mode);
+          };
+        });
+      }
+    }
+
+    function syncMetaReportChartToggleUi() {
+      ['roas', 'poas'].forEach((kind) => {
+        const mode = kind === 'roas' ? metaReportsState.chartRoasMode : metaReportsState.chartPoasMode;
+        const toggle = document.getElementById(`meta-chart-${kind}-mode`);
+        if (!toggle) return;
+        toggle.querySelectorAll('[data-mode]').forEach((button) => {
+          button.classList.toggle('is-active', button.getAttribute('data-mode') === mode);
+        });
+      });
+    }
+
+    function mountMetaReportCharts(payload, { editable = false } = {}) {
+      destroyMetaReportCharts();
+      if (!payload) return;
+
+      const { series, demo } = resolveMetaReportChartSeries(payload);
+      metaReportsState.chartSeries = series;
+      metaReportsState.chartDemo = demo;
+
+      const demoBadge = document.getElementById('meta-report-chart-demo-badge');
+      if (demoBadge) demoBadge.hidden = !(demo && editable);
+
+      bindMetaReportChartToggles();
+      syncMetaReportChartToggleUi();
+      updateMetaReportChart('roas', series, metaReportsState.chartRoasMode);
+      updateMetaReportChart('poas', series, metaReportsState.chartPoasMode);
+    }
+
+    function syncMetaReportMonthPanelDom(monthPayload, options = {}, yearPayload = null) {
+      const panel = document.getElementById('meta-report-month-panel');
+      if (!panel) return;
+      const payload = yearPayload
+        || metaReportsState.clientPayload
+        || metaReportsState.publicPayload;
+      panel.innerHTML = renderMetaReportMonthBody(monthPayload, options);
+      requestAnimationFrame(() => {
+        mountMetaReportCharts(payload, { editable: Boolean(options.editable) });
+      });
+    }
+
+    function renderMetaReportMonthTables(monthPayload, { editable = false } = {}) {
       if (!monthPayload) {
         return '<div class="meta-report-empty">No data for this month yet.</div>';
       }
       if (monthPayload.meta?.emptyMonth) {
         return `<div class="meta-report-empty">No ad spend recorded for this month yet.${editable ? ' Click "Refresh from Meta" below, or use "Backfill from Meta" above to pull historical months.' : ''}</div>`;
-      }
-
-      let editPanelHtml = '';
-      if (editable) {
-        editPanelHtml = `
-          <div class="meta-report-edit-panel" id="meta-report-edit-panel">
-            <h3>Edit month inputs</h3>
-            <div class="meta-report-edit-grid">
-              <label>Period start<input type="date" id="meta-report-period-start" value="${esc(monthPayload.periodStart || '')}" /></label>
-              <label>Period end<input type="date" id="meta-report-period-end" value="${esc(monthPayload.periodEnd || '')}" /></label>
-              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
-              <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
-              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
-            </div>
-            <div class="meta-report-edit-actions">
-              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
-              <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month">Save month</button>
-            </div>
-          </div>
-        `;
       }
 
       const metaRows = [
@@ -8659,21 +9032,53 @@
         groupsHtml += renderMetaReportMetricTable('Bottomline KPI\'er', bottomRows, 'bottomline', { highlightLastN: 2 });
       }
 
-      const previewLabel = editable ? 'Report preview' : 'Report';
-      const previewHtml = `
-        <div class="meta-report-preview-card">
-          <div class="meta-report-preview-card-label">${previewLabel}</div>
-          ${renderMetaReportHighlightStrip(monthPayload)}
-        </div>
-      `;
-      const tablesHtml = groupsHtml ? `
+      if (!groupsHtml) return '';
+
+      return `
         <div class="meta-report-tables-card">
           <div class="meta-report-tables-card-label">Details</div>
           <div class="meta-report-groups-stack">${groupsHtml}</div>
         </div>
+      `;
+    }
+
+    function renderMetaReportMonthBody(monthPayload, { editable = false } = {}) {
+      let editPanelHtml = '';
+      if (editable && monthPayload && !monthPayload.meta?.emptyMonth) {
+        editPanelHtml = `
+          <div class="meta-report-edit-panel" id="meta-report-edit-panel">
+            <h3>Edit month inputs</h3>
+            <div class="meta-report-edit-grid">
+              <label>Period start<input type="date" id="meta-report-period-start" value="${esc(monthPayload.periodStart || '')}" /></label>
+              <label>Period end<input type="date" id="meta-report-period-end" value="${esc(monthPayload.periodEnd || '')}" /></label>
+              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
+              <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
+              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
+            </div>
+            <div class="meta-report-edit-actions">
+              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
+              <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month">Save month</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const previewLabel = editable ? 'Report preview' : 'Report';
+      const previewHtml = monthPayload && !monthPayload.meta?.emptyMonth ? `
+        <div class="meta-report-preview-card">
+          <div class="meta-report-preview-card-label">${previewLabel}</div>
+          ${renderMetaReportHighlightStrip(monthPayload)}
+        </div>
       ` : '';
 
-      return `${editPanelHtml}${previewHtml}${tablesHtml}`;
+      const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable });
+      const chartsPanel = renderMetaReportChartsPanel();
+
+      return `${editPanelHtml}${previewHtml}
+        <div class="meta-report-content-layout">
+          <div class="meta-report-content-main">${tablesHtml}</div>
+          ${chartsPanel}
+        </div>`;
     }
 
     function renderMetaReportsHubPage(viewData) {
@@ -9022,9 +9427,10 @@
           metaReportsState.activeMonthKey = button.getAttribute('data-meta-month-tab');
           const panel = document.getElementById('meta-report-month-panel');
           if (panel) {
-            panel.innerHTML = renderMetaReportMonthBody(
+            syncMetaReportMonthPanelDom(
               payload.months?.[metaReportsState.activeMonthKey],
               getMetaReportMonthBodyOptions(payload.settings, { editable: true }),
+              payload,
             );
             bindMetaReportsClientEditEvents(clientId, payload);
           }
@@ -9120,9 +9526,10 @@
         if (monthPayload) {
           const panel = document.getElementById('meta-report-month-panel');
           if (panel) {
-            panel.innerHTML = renderMetaReportMonthBody(
+            syncMetaReportMonthPanelDom(
               monthPayload,
               getMetaReportMonthBodyOptions(settings, { editable: true }),
+              payload,
             );
             bindMetaReportsClientEditEvents(clientId, payload);
           }
@@ -9277,6 +9684,7 @@
           panel.innerHTML = renderMetaReportMonthPanelSkeleton();
           panel.classList.add('is-loading');
         }
+        destroyMetaReportCharts();
       } else {
         if (yearSelect) yearSelect.disabled = false;
         if (page) page.classList.remove('is-year-loading');
@@ -9347,6 +9755,7 @@
           panel.innerHTML = renderMetaReportMonthPanelSkeleton();
           panel.classList.add('is-loading');
         }
+        destroyMetaReportCharts();
       } else {
         if (yearSelect) yearSelect.disabled = false;
         if (page) page.classList.remove('is-year-loading');
@@ -9454,9 +9863,10 @@
           metaReportsState.activeMonthKey = button.getAttribute('data-meta-month-tab');
           const panel = document.getElementById('meta-report-month-panel');
           if (panel) {
-            panel.innerHTML = renderMetaReportMonthBody(
+            syncMetaReportMonthPanelDom(
               payload.months?.[metaReportsState.activeMonthKey],
               getMetaReportMonthBodyOptions(payload.settings, { editable: false }),
+              payload,
             );
           }
           document.querySelectorAll('[data-meta-month-tab]').forEach((tab) => {
@@ -9576,6 +9986,7 @@
           dashboard.innerHTML = renderMetaReportsClientPage(payload);
           metaReportsState.clientPageMounted = true;
           bindMetaReportsClientEvents(payload);
+          mountMetaReportCharts(payload, { editable: true });
         } else {
           updateMetaReportsClientContent(payload);
         }
@@ -9627,6 +10038,7 @@
           dashboard.innerHTML = renderPublicMetaReportPage(payload);
           metaReportsState.publicPageMounted = true;
           bindPublicMetaReportEvents(payload);
+          mountMetaReportCharts(payload, { editable: false });
         } else {
           updatePublicMetaReportContent(payload);
         }
