@@ -4459,6 +4459,8 @@
     }
     .meta-hub-switch-label { color: var(--text-soft); font-size: 11px; font-weight: 600; line-height: 1.2; }
     .meta-hub-switch.is-disabled { cursor: not-allowed; opacity: 0.45; }
+    .meta-hub-switch.is-saving { opacity: 0.72; }
+    .meta-hub-switch.is-saving .meta-hub-switch-track { pointer-events: none; }
     .meta-hub-switch-track {
       background: #e8e0d8; border-radius: 999px; flex-shrink: 0; height: 22px; position: relative; width: 38px;
       transition: background 0.2s ease;
@@ -4604,6 +4606,9 @@
     .meta-report-share-editor-actions {
       align-items: center; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap;
       gap: 8px; margin-top: 2px; padding-top: 14px;
+    }
+    .meta-report-share-editor-actions-end {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto;
     }
     .meta-report-share-note, .meta-report-share-empty, .meta-report-share-field-hint {
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
@@ -7788,7 +7793,7 @@
               <span class="meta-report-share-summary-value${enabled ? ' is-on' : ' is-off'}">${enabled ? 'Enabled' : 'Disabled'}</span>
             </div>
             <div class="meta-report-share-summary-row">
-              <span class="meta-report-share-summary-label">Link slug</span>
+              <span class="meta-report-share-summary-label">Slug</span>
               <span class="meta-report-share-summary-value" id="meta-report-share-slug-display">${esc(slugLabel)}</span>
             </div>
           </div>
@@ -7809,6 +7814,62 @@
       }
     }
 
+    function applyMetaReportEnabledUi(payload, enabled) {
+      if (!payload.settings) payload.settings = {};
+      payload.settings.metaReportEnabled = enabled;
+
+      document.getElementById('meta-report-share-card')?.classList.toggle('is-disabled', !enabled);
+
+      const summary = document.getElementById('meta-report-share-summary');
+      if (summary) {
+        summary.querySelectorAll('.meta-report-share-summary-row').forEach((row) => {
+          if (row.querySelector('.meta-report-share-summary-label')?.textContent !== 'Preview') return;
+          const previewValue = row.querySelector('.meta-report-share-summary-value');
+          if (!previewValue) return;
+          previewValue.textContent = enabled ? 'Enabled' : 'Disabled';
+          previewValue.classList.toggle('is-on', enabled);
+          previewValue.classList.toggle('is-off', !enabled);
+        });
+      }
+
+      const previewToggle = document.querySelector('[data-meta-client-preview]');
+      if (previewToggle) previewToggle.checked = enabled;
+      const switchLabel = previewToggle?.closest('.meta-hub-switch')?.querySelector('.meta-hub-switch-label');
+      if (switchLabel) switchLabel.textContent = enabled ? 'Enabled' : 'Disabled';
+
+      const rotateBtn = document.getElementById('meta-report-rotate-token');
+      if (rotateBtn) rotateBtn.disabled = !enabled;
+
+      const panel = document.querySelector('.meta-report-share-panel');
+      const existingNote = panel?.querySelector('.meta-report-share-note');
+      if (!enabled) {
+        if (!existingNote && panel) {
+          const note = document.createElement('p');
+          note.className = 'meta-report-share-note';
+          note.textContent = 'Preview disabled — link won\u2019t load.';
+          panel.appendChild(note);
+        }
+      } else if (existingNote) {
+        existingNote.remove();
+      }
+
+      syncMetaReportToolbarCopy(payload);
+    }
+
+    function updateMetaReportHubCardReportState(clientId, enabled) {
+      const card = document.querySelector(`[data-meta-hub-row="${clientId}"]`);
+      if (!card) return;
+      const badge = card.querySelector('.meta-report-badge');
+      if (badge && !badge.classList.contains('meta-report-badge--setup')) {
+        badge.className = enabled ? 'meta-report-badge meta-report-badge--on' : 'meta-report-badge meta-report-badge--off';
+        badge.textContent = enabled ? 'Report live' : 'Report off';
+      }
+      card.querySelectorAll('[data-meta-bottomline], [data-meta-fee]').forEach((input) => {
+        input.disabled = !enabled;
+        input.closest('.meta-hub-switch')?.classList.toggle('is-disabled', !enabled);
+      });
+    }
+
     function updateMetaReportShareSummary(payload) {
       const summary = document.getElementById('meta-report-share-summary');
       if (!summary) return;
@@ -7827,11 +7888,9 @@
       const card = document.getElementById('meta-report-share-card');
       const summary = document.getElementById('meta-report-share-summary');
       const editor = document.getElementById('meta-report-share-editor');
-      const doneBtn = document.getElementById('meta-report-share-done');
       card?.classList.toggle('is-editing', expanded);
       if (summary) summary.hidden = expanded;
       if (editor) editor.hidden = !expanded;
-      if (doneBtn) doneBtn.hidden = !expanded;
     }
 
     function renderMetaReportShareCard(payload) {
@@ -7848,7 +7907,6 @@
         <div class="meta-report-share-card${enabled ? '' : ' is-disabled'}${expanded ? ' is-editing' : ''}" id="meta-report-share-card">
           <div class="meta-report-share-card-head">
             <span class="meta-report-settings-card-title">Slug setting</span>
-            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-share-done"${expanded ? '' : ' hidden'}>Done</button>
           </div>
           ${hasLink ? renderMetaReportShareSummary(payload, { hidden: expanded }) : `
             <p class="meta-report-share-empty">Share link will appear once this client has a Meta ad account configured.</p>
@@ -7857,10 +7915,7 @@
           <div class="meta-report-share-editor" id="meta-report-share-editor"${expanded ? '' : ' hidden'}>
             <div class="meta-report-share-panel">
               <div class="meta-report-share-preview-row">
-                <div class="meta-report-share-preview-copy">
-                  <span class="meta-report-share-preview-title">Client preview</span>
-                  <span class="meta-report-share-preview-hint">Turn the public share link on or off</span>
-                </div>
+                <span class="meta-report-share-preview-title">Preview</span>
                 ${renderMetaHubSwitch({
                   label: enabled ? 'Enabled' : 'Disabled',
                   attr: 'data-meta-client-preview',
@@ -7869,20 +7924,21 @@
                 })}
               </div>
               <div class="meta-report-share-field">
-                <label for="meta-report-share-slug">Link slug</label>
                 <div class="meta-report-share-slug-row">
                   <span class="meta-report-share-slug-prefix">/report/</span>
-                  <input type="text" id="meta-report-share-slug" class="admin-input meta-report-share-slug-input" value="${esc(slug)}" autocomplete="off" spellcheck="false" />
+                  <input type="text" id="meta-report-share-slug" class="admin-input meta-report-share-slug-input" value="${esc(slug)}" autocomplete="off" spellcheck="false" aria-label="Report slug" />
                   <span class="meta-report-share-slug-suffix" id="meta-report-share-slug-suffix">-${esc(code || '····')}</span>
                 </div>
-                <p class="meta-report-share-field-hint">Use a short slug like “ml-tag”. Rotate link changes only the 4-digit suffix.</p>
               </div>
               <code class="meta-report-share-url" id="meta-report-share-url">${esc(fullUrl)}</code>
               <div class="meta-report-share-editor-actions">
                 <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${enabled ? '' : ' disabled'}>Rotate link</button>
-                <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-share-save">Save slug</button>
+                <div class="meta-report-share-editor-actions-end">
+                  <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-share-done">Done</button>
+                  <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-share-save">Save slug</button>
+                </div>
               </div>
-              ${enabled ? '' : '<p class="meta-report-share-note">Preview is disabled — this link will not load until you re-enable it.</p>'}
+              ${enabled ? '' : '<p class="meta-report-share-note">Preview disabled — link won\u2019t load.</p>'}
             </div>
           </div>
           ` : ''}
@@ -8009,23 +8065,31 @@
 
       const previewToggle = document.querySelector('[data-meta-client-preview]');
       if (previewToggle) {
+        let previewSaveSeq = 0;
         previewToggle.onchange = async () => {
-          previewToggle.disabled = true;
+          const seq = ++previewSaveSeq;
+          const enabled = previewToggle.checked;
+          const previous = !enabled;
+          const currentPayload = metaReportsState.clientPayload || payload;
+          applyMetaReportEnabledUi(currentPayload, enabled);
+          const switchEl = previewToggle.closest('.meta-hub-switch');
+          switchEl?.classList.add('is-saving');
           try {
-            const result = await patchMetaReportSettings(clientId, { metaReportEnabled: previewToggle.checked });
+            const result = await patchMetaReportSettings(clientId, { metaReportEnabled: enabled }, { fast: true });
+            if (seq !== previewSaveSeq) return;
             const settings = result.settings || {};
-            const currentPayload = metaReportsState.clientPayload || payload;
             currentPayload.settings = { ...currentPayload.settings, ...settings };
-            currentPayload.reportUrl = settings.reportUrl || null;
+            currentPayload.reportUrl = settings.reportUrl ?? currentPayload.reportUrl;
             metaReportsState.clientPayload = currentPayload;
-            refreshMetaReportClientShareUi(currentPayload);
-            showToast(previewToggle.checked ? 'Client preview enabled' : 'Client preview disabled', 'success');
+            applyMetaReportEnabledUi(currentPayload, Boolean(settings.metaReportEnabled));
+            showToast(enabled ? 'Client preview enabled' : 'Client preview disabled', 'success');
           } catch (error) {
+            if (seq !== previewSaveSeq) return;
+            applyMetaReportEnabledUi(currentPayload, previous);
+            previewToggle.checked = previous;
             showToast(error.message || 'Update failed', 'error');
-            previewToggle.checked = !previewToggle.checked;
           } finally {
-            const toggle = document.querySelector('[data-meta-client-preview]');
-            if (toggle) toggle.disabled = false;
+            if (seq === previewSaveSeq) switchEl?.classList.remove('is-saving');
           }
         };
       }
@@ -8696,13 +8760,15 @@
       });
     }
 
-    async function patchMetaReportSettings(clientId, patch) {
+    async function patchMetaReportSettings(clientId, patch, { fast = false } = {}) {
       metaReportsState._settingsInflight = (metaReportsState._settingsInflight || 0) + 1;
+      const path = `/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`;
+      const options = { method: 'PATCH', body: JSON.stringify(patch) };
       try {
-        return await adminFetchWithRetry(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/settings`, {
-          method: 'PATCH',
-          body: JSON.stringify(patch),
-        }, { retries: 2, timeoutMs: 20000 });
+        if (fast) {
+          return await adminFetch(path, options);
+        }
+        return await adminFetchWithRetry(path, options, { retries: 2, timeoutMs: 20000 });
       } finally {
         metaReportsState._settingsInflight = Math.max(0, (metaReportsState._settingsInflight || 1) - 1);
       }
@@ -8798,20 +8864,31 @@
 
     function bindMetaReportsHubRowEvents(root = document) {
       root.querySelectorAll('[data-meta-report-enabled]').forEach((input) => {
+        let saveSeq = 0;
         input.onchange = async () => {
           const clientId = input.getAttribute('data-meta-report-enabled');
-          input.disabled = true;
+          const seq = ++saveSeq;
+          const enabled = input.checked;
+          const previous = !enabled;
+          mergeHubClientFromSettings(clientId, { metaReportEnabled: enabled });
+          updateMetaReportHubCardReportState(clientId, enabled);
+          const switchEl = input.closest('.meta-hub-switch');
+          switchEl?.classList.add('is-saving');
           try {
-            const result = await patchMetaReportSettings(clientId, { metaReportEnabled: input.checked });
+            const result = await patchMetaReportSettings(clientId, { metaReportEnabled: enabled }, { fast: true });
+            if (seq !== saveSeq) return;
             const settings = result.settings || {};
             mergeHubClientFromSettings(clientId, settings);
-            showToast(input.checked ? 'Report enabled' : 'Report disabled', 'success');
-            refreshMetaReportsHubCards();
+            updateMetaReportHubCardReportState(clientId, Boolean(settings.metaReportEnabled ?? enabled));
+            showToast(enabled ? 'Report enabled' : 'Report disabled', 'success');
           } catch (error) {
+            if (seq !== saveSeq) return;
+            mergeHubClientFromSettings(clientId, { metaReportEnabled: previous });
+            input.checked = previous;
+            updateMetaReportHubCardReportState(clientId, previous);
             showToast(error.message || 'Update failed', 'error');
-            input.checked = !input.checked;
           } finally {
-            input.disabled = false;
+            if (seq === saveSeq) switchEl?.classList.remove('is-saving');
           }
         };
       });

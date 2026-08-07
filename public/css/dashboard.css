@@ -4450,6 +4450,8 @@
     }
     .meta-hub-switch-label { color: var(--text-soft); font-size: 11px; font-weight: 600; line-height: 1.2; }
     .meta-hub-switch.is-disabled { cursor: not-allowed; opacity: 0.45; }
+    .meta-hub-switch.is-saving { opacity: 0.72; }
+    .meta-hub-switch.is-saving .meta-hub-switch-track { pointer-events: none; }
     .meta-hub-switch-track {
       background: #e8e0d8; border-radius: 999px; flex-shrink: 0; height: 22px; position: relative; width: 38px;
       transition: background 0.2s ease;
@@ -4595,6 +4597,9 @@
     .meta-report-share-editor-actions {
       align-items: center; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap;
       gap: 8px; margin-top: 2px; padding-top: 14px;
+    }
+    .meta-report-share-editor-actions-end {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto;
     }
     .meta-report-share-note, .meta-report-share-empty, .meta-report-share-field-hint {
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
