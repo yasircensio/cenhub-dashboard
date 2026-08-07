@@ -9022,8 +9022,8 @@
           roasKr: 0, roasX: 0, poasKr: null, poasX: null,
         };
       }
-      const leads = metaReportRoundMoney(amount / efficiency.avgCpl);
-      const wonLeads = metaReportRoundMoney(leads * efficiency.winRate);
+      const leads = Math.round(amount / efficiency.avgCpl);
+      const wonLeads = Math.round(leads * efficiency.winRate);
       const totalLeadValue = metaReportRoundMoney(wonLeads * efficiency.avgLeadValue);
       const roasKr = metaReportRoundMoney(totalLeadValue - amount);
       const roasX = amount > 0 ? metaReportRoundRatio(roasKr / amount) : 0;
@@ -9233,7 +9233,7 @@
       const rows = [
         ['Ad spend', metaFmtKr(projection.baseline.spend), metaFmtKr(projection.projected.spend), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.spend, projection.baseline.spend))],
         ['Leads', metaFmtNum(projection.baseline.leads), metaFmtNum(projection.projected.leads), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.leads, projection.baseline.leads))],
-        ['Won leads', metaFmtNum(projection.baseline.wonLeads, 1), metaFmtNum(projection.projected.wonLeads, 1), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.wonLeads, projection.baseline.wonLeads))],
+        ['Won leads', metaFmtNum(projection.baseline.wonLeads), metaFmtNum(projection.projected.wonLeads), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.wonLeads, projection.baseline.wonLeads))],
         ['Total lead value', metaFmtKr(projection.baseline.totalLeadValue), metaFmtKr(projection.projected.totalLeadValue), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.totalLeadValue, projection.baseline.totalLeadValue))],
         ['ROAS', `${metaFmtKr(projection.baseline.roasKr)} · ${metaFmtX(projection.baseline.roasX)}`, `${metaFmtKr(projection.projected.roasKr)} · ${metaFmtX(projection.projected.roasX)}`, metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.roasKr, projection.baseline.roasKr))],
       ];

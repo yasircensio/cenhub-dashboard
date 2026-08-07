@@ -146,12 +146,12 @@ function testBudgetScenarioProjection() {
   approx(result.baseline.spend, 10000);
   approx(result.projected.spend, 20000);
   approx(result.projected.leads, 88);
-  approx(result.projected.wonLeads, 8.8);
-  approx(result.projected.totalLeadValue, 880000);
-  approx(result.projected.roasKr, 860000);
-  approx(result.projected.roasX, 43);
-  approx(result.projected.poasKr, 420000);
-  approx(result.projected.poasX, 21);
+  approx(result.projected.wonLeads, 9);
+  approx(result.projected.totalLeadValue, 900000);
+  approx(result.projected.roasKr, 880000);
+  approx(result.projected.roasX, 44);
+  approx(result.projected.poasKr, 430000);
+  approx(result.projected.poasX, 21.5);
 }
 
 function testBudgetScenarioInsufficientData() {
