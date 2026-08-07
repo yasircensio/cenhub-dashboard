@@ -1037,12 +1037,16 @@ Resume the interrupted ${$}?`)&&(l=g.id,d=Number(g.batchOffset)||0)}}if(a?setFbL
         <div class="brand-topbar-left">
           <div class="meta-report-public-topbar-brand">
             <img
-              class="meta-report-public-wordmark-image"
-              src="/censio-analytics-wordmark.png"
-              alt="Censio Analytics"
-              width="750"
-              height="120"
+              class="meta-report-public-brand-mark"
+              src="/censio-mark-orange.png"
+              alt=""
+              width="180"
+              height="251"
             />
+            <span class="meta-report-public-wordmark">
+              <span class="meta-report-public-wordmark-censio">Censio</span>
+              <span class="meta-report-public-wordmark-analytics">Analytics</span>
+            </span>
           </div>
         </div>
       </div>
