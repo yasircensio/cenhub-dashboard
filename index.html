@@ -4803,8 +4803,74 @@
       color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; min-width: 42px;
     }
     .meta-report-scenario-grid {
-      display: flex; flex-direction: column; gap: 0; overflow: hidden;
+      display: flex; flex-direction: column; gap: 16px;
     }
+    .meta-report-scenario-outcomes {
+      display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .meta-report-scenario-outcome-card {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
+      display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 18px 16px 16px;
+      position: relative;
+    }
+    .meta-report-scenario-outcome-card.is-featured {
+      background: linear-gradient(145deg, rgba(255, 106, 0, 0.08), rgba(255, 106, 0, 0.02));
+      border-color: rgba(255, 106, 0, 0.22);
+    }
+    .meta-report-scenario-outcome-card.is-positive {
+      background: linear-gradient(145deg, rgba(22, 163, 74, 0.1), rgba(22, 163, 74, 0.02));
+      border-color: rgba(22, 163, 74, 0.24);
+    }
+    .meta-report-scenario-outcome-card.is-negative {
+      background: linear-gradient(145deg, rgba(194, 65, 12, 0.08), rgba(194, 65, 12, 0.02));
+      border-color: rgba(194, 65, 12, 0.22);
+    }
+    .meta-report-scenario-outcome-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .meta-report-scenario-outcome-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700;
+      line-height: 1.15; overflow-wrap: anywhere;
+    }
+    .meta-report-scenario-outcome-card.is-positive .meta-report-scenario-outcome-value { color: #15803d; }
+    .meta-report-scenario-outcome-card.is-negative .meta-report-scenario-outcome-value { color: var(--error); }
+    .meta-report-scenario-outcome-sub {
+      color: var(--text-soft); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-scenario-outcome-delta {
+      align-self: flex-start; border-radius: 999px; font-size: 13px; font-weight: 700;
+      line-height: 1; margin-top: 4px; padding: 6px 10px;
+    }
+    .meta-report-scenario-outcome-delta.is-positive {
+      background: rgba(22, 163, 74, 0.14); color: #15803d;
+    }
+    .meta-report-scenario-outcome-delta.is-negative {
+      background: rgba(194, 65, 12, 0.12); color: var(--error);
+    }
+    .meta-report-scenario-outcome-delta.is-neutral {
+      background: var(--panel); color: var(--text-soft);
+    }
+    .meta-report-scenario-outcome-gain {
+      color: var(--text-soft); font-size: 12px; line-height: 1.35;
+    }
+    .meta-report-scenario-outcome-baseline {
+      color: var(--text-muted); font-size: 11px; margin-top: auto; padding-top: 4px;
+    }
+    .meta-report-scenario-details {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden;
+    }
+    .meta-report-scenario-details-head {
+      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px;
+      font-weight: 700; letter-spacing: 0.04em; padding: 10px 14px; text-transform: uppercase;
+    }
+    .meta-report-scenario-details-row {
+      align-items: center; border-bottom: 1px solid rgba(232, 224, 216, 0.7);
+      display: grid; gap: 10px; grid-template-columns: minmax(110px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 64px;
+      font-size: 12px; padding: 10px 14px;
+    }
+    .meta-report-scenario-details-row:last-child { border-bottom: 0; }
     .meta-report-scenario-grid-head,
     .meta-report-scenario-row {
       display: grid; gap: 12px; grid-template-columns: minmax(120px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 72px;
@@ -4837,9 +4903,15 @@
         height: 260px; min-height: 260px;
       }
       .meta-report-scenario-controls { grid-template-columns: 1fr; }
+      .meta-report-scenario-outcomes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .meta-report-scenario-outcome-value { font-size: 22px; }
+      .meta-report-scenario-details-row,
       .meta-report-scenario-grid-head,
       .meta-report-scenario-row { grid-template-columns: 1fr; gap: 4px; }
       .meta-report-scenario-delta { text-align: left; }
+    }
+    @media (max-width: 560px) {
+      .meta-report-scenario-outcomes { grid-template-columns: 1fr; }
     }
 
     .meta-cv-layout {
@@ -9265,43 +9337,155 @@
       `;
     }
 
+    function metaReportFormatDeltaPct(value) {
+      if (value == null || !Number.isFinite(value)) return '';
+      const sign = value > 0 ? '+' : '';
+      return `${sign}${value.toFixed(0)}%`;
+    }
+
+    function metaReportScenarioDeltaTone(delta = '') {
+      if (String(delta).startsWith('+')) return 'positive';
+      if (String(delta).startsWith('-')) return 'negative';
+      return 'neutral';
+    }
+
+    function metaReportFormatScenarioGain(projectedValue, baselineValue) {
+      const diff = metaReportRoundMoney(metaReportParseAmount(projectedValue) - metaReportParseAmount(baselineValue));
+      if (!diff) return '';
+      const sign = diff > 0 ? '+' : '−';
+      return `${sign}${metaFmtKr(Math.abs(diff))} vs baseline`;
+    }
+
+    function renderMetaReportScenarioOutcomeCard({
+      label,
+      projectedValue,
+      projectedSub = '',
+      baselineValue = '',
+      delta = '',
+      featured = false,
+      projectedAmount = null,
+      baselineAmount = null,
+    } = {}) {
+      const tone = metaReportScenarioDeltaTone(delta);
+      const gain = projectedAmount != null && baselineAmount != null
+        ? metaReportFormatScenarioGain(projectedAmount, baselineAmount)
+        : '';
+      return `
+        <div class="meta-report-scenario-outcome-card${featured ? ' is-featured' : ''}${tone !== 'neutral' ? ` is-${tone}` : ''}">
+          <div class="meta-report-scenario-outcome-label">${esc(label)}</div>
+          <div class="meta-report-scenario-outcome-value">${esc(projectedValue)}</div>
+          ${projectedSub ? `<div class="meta-report-scenario-outcome-sub">${esc(projectedSub)}</div>` : ''}
+          ${delta ? `<div class="meta-report-scenario-outcome-delta is-${tone}">${esc(delta)}</div>` : ''}
+          ${gain ? `<div class="meta-report-scenario-outcome-gain">${esc(gain)}</div>` : ''}
+          ${baselineValue ? `<div class="meta-report-scenario-outcome-baseline">Baseline ${esc(baselineValue)}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function renderMetaReportScenarioDetailRow(label, baseline, projected, delta) {
+      const tone = metaReportScenarioDeltaTone(delta);
+      return `
+        <div class="meta-report-scenario-details-row">
+          <span class="meta-report-scenario-label">${esc(label)}</span>
+          <span class="meta-report-scenario-value">${esc(baseline)}</span>
+          <span class="meta-report-scenario-value is-projected">${esc(projected)}</span>
+          <span class="meta-report-scenario-delta${tone === 'positive' ? ' is-positive' : tone === 'negative' ? ' is-negative' : ''}">${esc(delta || '—')}</span>
+        </div>
+      `;
+    }
+
     function renderMetaReportScenarioMetrics(projection) {
       if (!projection || projection.insufficientData) {
         return '<p class="meta-report-scenario-empty">Add months with ad spend and leads to model a budget scenario.</p>';
       }
 
-      const rows = [
-        ['Ad spend', metaFmtKr(projection.baseline.spend), metaFmtKr(projection.projected.spend), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.spend, projection.baseline.spend))],
-        ['Leads', metaFmtNum(projection.baseline.leads), metaFmtNum(projection.projected.leads), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.leads, projection.baseline.leads))],
-        ['Won leads', metaFmtNum(projection.baseline.wonLeads), metaFmtNum(projection.projected.wonLeads), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.wonLeads, projection.baseline.wonLeads))],
-        ['Total lead value', metaFmtKr(projection.baseline.totalLeadValue), metaFmtKr(projection.projected.totalLeadValue), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.totalLeadValue, projection.baseline.totalLeadValue))],
-        ['ROAS', `${metaFmtKr(projection.baseline.roasKr)} · ${metaFmtX(projection.baseline.roasX)}`, `${metaFmtKr(projection.projected.roasKr)} · ${metaFmtX(projection.projected.roasX)}`, metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.roasKr, projection.baseline.roasKr))],
+      const revenueDelta = metaReportFormatDeltaPct(
+        metaReportDeltaPct(projection.projected.totalLeadValue, projection.baseline.totalLeadValue),
+      );
+      const roasDelta = metaReportFormatDeltaPct(
+        metaReportDeltaPct(projection.projected.roasKr, projection.baseline.roasKr),
+      );
+
+      const outcomeCards = [
+        renderMetaReportScenarioOutcomeCard({
+          label: 'Projected revenue',
+          projectedValue: metaFmtKr(projection.projected.totalLeadValue),
+          baselineValue: metaFmtKr(projection.baseline.totalLeadValue),
+          projectedAmount: projection.projected.totalLeadValue,
+          baselineAmount: projection.baseline.totalLeadValue,
+          delta: revenueDelta,
+          featured: true,
+        }),
+        renderMetaReportScenarioOutcomeCard({
+          label: 'Projected ROAS',
+          projectedValue: metaFmtKr(projection.projected.roasKr),
+          projectedSub: metaFmtX(projection.projected.roasX),
+          baselineValue: `${metaFmtKr(projection.baseline.roasKr)} · ${metaFmtX(projection.baseline.roasX)}`,
+          projectedAmount: projection.projected.roasKr,
+          baselineAmount: projection.baseline.roasKr,
+          delta: roasDelta,
+          featured: true,
+        }),
       ];
 
       if (projection.hasBottomline) {
-        rows.push([
-          'POAS',
-          `${metaFmtKr(projection.baseline.poasKr)} · ${metaFmtX(projection.baseline.poasX)}`,
-          `${metaFmtKr(projection.projected.poasKr)} · ${metaFmtX(projection.projected.poasX)}`,
-          metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.poasKr, projection.baseline.poasKr)),
-        ]);
+        const profitDelta = metaReportFormatDeltaPct(
+          metaReportDeltaPct(projection.projected.poasKr, projection.baseline.poasKr),
+        );
+        outcomeCards.push(renderMetaReportScenarioOutcomeCard({
+          label: 'Projected profit',
+          projectedValue: metaFmtKr(projection.projected.poasKr),
+          projectedSub: metaFmtX(projection.projected.poasX),
+          baselineValue: `${metaFmtKr(projection.baseline.poasKr)} · ${metaFmtX(projection.baseline.poasX)}`,
+          projectedAmount: projection.projected.poasKr,
+          baselineAmount: projection.baseline.poasKr,
+          delta: profitDelta,
+          featured: true,
+        }));
+      } else {
+        const wonDelta = metaReportFormatDeltaPct(
+          metaReportDeltaPct(projection.projected.wonLeads, projection.baseline.wonLeads),
+        );
+        outcomeCards.push(renderMetaReportScenarioOutcomeCard({
+          label: 'Projected won leads',
+          projectedValue: metaFmtNum(projection.projected.wonLeads),
+          baselineValue: metaFmtNum(projection.baseline.wonLeads),
+          delta: wonDelta,
+        }));
+      }
+
+      const detailRows = [
+        renderMetaReportScenarioDetailRow(
+          'Ad spend',
+          metaFmtKr(projection.baseline.spend),
+          metaFmtKr(projection.projected.spend),
+          metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.spend, projection.baseline.spend)),
+        ),
+        renderMetaReportScenarioDetailRow(
+          'Leads',
+          metaFmtNum(projection.baseline.leads),
+          metaFmtNum(projection.projected.leads),
+          metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.leads, projection.baseline.leads)),
+        ),
+      ];
+
+      if (projection.hasBottomline) {
+        detailRows.push(renderMetaReportScenarioDetailRow(
+          'Won leads',
+          metaFmtNum(projection.baseline.wonLeads),
+          metaFmtNum(projection.projected.wonLeads),
+          metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.wonLeads, projection.baseline.wonLeads)),
+        ));
       }
 
       return `
-        <div class="meta-report-scenario-grid-head">
-          <span>Metric</span>
-          <span>Baseline</span>
-          <span>Projected</span>
-          <span>Change</span>
+        <div class="meta-report-scenario-outcomes">
+          ${outcomeCards.join('')}
         </div>
-        ${rows.map(([label, baseline, projected, delta]) => `
-          <div class="meta-report-scenario-row">
-            <span class="meta-report-scenario-label">${esc(label)}</span>
-            <span class="meta-report-scenario-value">${esc(baseline)}</span>
-            <span class="meta-report-scenario-value is-projected">${esc(projected)}</span>
-            <span class="meta-report-scenario-delta${delta.startsWith('+') ? ' is-positive' : delta.startsWith('-') ? ' is-negative' : ''}">${esc(delta || '—')}</span>
-          </div>
-        `).join('')}
+        <div class="meta-report-scenario-details">
+          <div class="meta-report-scenario-details-head">Investment & funnel</div>
+          ${detailRows.join('')}
+        </div>
       `;
     }
 

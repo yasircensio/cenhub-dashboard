@@ -4794,8 +4794,74 @@
       color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; min-width: 42px;
     }
     .meta-report-scenario-grid {
-      display: flex; flex-direction: column; gap: 0; overflow: hidden;
+      display: flex; flex-direction: column; gap: 16px;
     }
+    .meta-report-scenario-outcomes {
+      display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .meta-report-scenario-outcome-card {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
+      display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 18px 16px 16px;
+      position: relative;
+    }
+    .meta-report-scenario-outcome-card.is-featured {
+      background: linear-gradient(145deg, rgba(255, 106, 0, 0.08), rgba(255, 106, 0, 0.02));
+      border-color: rgba(255, 106, 0, 0.22);
+    }
+    .meta-report-scenario-outcome-card.is-positive {
+      background: linear-gradient(145deg, rgba(22, 163, 74, 0.1), rgba(22, 163, 74, 0.02));
+      border-color: rgba(22, 163, 74, 0.24);
+    }
+    .meta-report-scenario-outcome-card.is-negative {
+      background: linear-gradient(145deg, rgba(194, 65, 12, 0.08), rgba(194, 65, 12, 0.02));
+      border-color: rgba(194, 65, 12, 0.22);
+    }
+    .meta-report-scenario-outcome-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .meta-report-scenario-outcome-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700;
+      line-height: 1.15; overflow-wrap: anywhere;
+    }
+    .meta-report-scenario-outcome-card.is-positive .meta-report-scenario-outcome-value { color: #15803d; }
+    .meta-report-scenario-outcome-card.is-negative .meta-report-scenario-outcome-value { color: var(--error); }
+    .meta-report-scenario-outcome-sub {
+      color: var(--text-soft); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-scenario-outcome-delta {
+      align-self: flex-start; border-radius: 999px; font-size: 13px; font-weight: 700;
+      line-height: 1; margin-top: 4px; padding: 6px 10px;
+    }
+    .meta-report-scenario-outcome-delta.is-positive {
+      background: rgba(22, 163, 74, 0.14); color: #15803d;
+    }
+    .meta-report-scenario-outcome-delta.is-negative {
+      background: rgba(194, 65, 12, 0.12); color: var(--error);
+    }
+    .meta-report-scenario-outcome-delta.is-neutral {
+      background: var(--panel); color: var(--text-soft);
+    }
+    .meta-report-scenario-outcome-gain {
+      color: var(--text-soft); font-size: 12px; line-height: 1.35;
+    }
+    .meta-report-scenario-outcome-baseline {
+      color: var(--text-muted); font-size: 11px; margin-top: auto; padding-top: 4px;
+    }
+    .meta-report-scenario-details {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden;
+    }
+    .meta-report-scenario-details-head {
+      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px;
+      font-weight: 700; letter-spacing: 0.04em; padding: 10px 14px; text-transform: uppercase;
+    }
+    .meta-report-scenario-details-row {
+      align-items: center; border-bottom: 1px solid rgba(232, 224, 216, 0.7);
+      display: grid; gap: 10px; grid-template-columns: minmax(110px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 64px;
+      font-size: 12px; padding: 10px 14px;
+    }
+    .meta-report-scenario-details-row:last-child { border-bottom: 0; }
     .meta-report-scenario-grid-head,
     .meta-report-scenario-row {
       display: grid; gap: 12px; grid-template-columns: minmax(120px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 72px;
@@ -4828,9 +4894,15 @@
         height: 260px; min-height: 260px;
       }
       .meta-report-scenario-controls { grid-template-columns: 1fr; }
+      .meta-report-scenario-outcomes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .meta-report-scenario-outcome-value { font-size: 22px; }
+      .meta-report-scenario-details-row,
       .meta-report-scenario-grid-head,
       .meta-report-scenario-row { grid-template-columns: 1fr; gap: 4px; }
       .meta-report-scenario-delta { text-align: left; }
+    }
+    @media (max-width: 560px) {
+      .meta-report-scenario-outcomes { grid-template-columns: 1fr; }
     }
 
     .meta-cv-layout {
