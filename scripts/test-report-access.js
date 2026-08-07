@@ -7,6 +7,7 @@ const {
   isLegacyReportToken,
   normalizeReportSlug,
   parseHybridReportToken,
+  rebuildReportTokenWithSlug,
   reportSlugFromAccountName,
   resolveReportSlug,
   rotateReportAccessToken,
@@ -44,6 +45,9 @@ async function main() {
 
   const custom = await buildUniqueReportToken('ml-tag', 'ml-tagdaekning');
   assert.match(custom, /^ml-tag-\d{4}$/);
+
+  const preserved = await rebuildReportTokenWithSlug('ml-tagd-kning-2192', 'ml-tag', 'ml-tagdaekning');
+  assert.strictEqual(preserved, 'ml-tag-2192');
 
   const rotated = await rotateReportAccessToken('ml-tag-1234', 'ML Tagdækning', 'ml-tagdaekning', 'ml-tag');
   assert.match(rotated, /^ml-tag-\d{4}$/);
