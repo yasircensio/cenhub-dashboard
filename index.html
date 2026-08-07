@@ -9053,12 +9053,15 @@
       if (statusEl) {
         if (draft.isDirty) {
           statusEl.innerHTML = `
+            <span class="meta-cv-fee-status-label">Saved</span>
             <span class="meta-cv-fee-status-value is-active">${esc(draft.appliedLabel)}</span>
             <span class="meta-cv-fee-status-arrow" aria-hidden="true">→</span>
+            <span class="meta-cv-fee-status-label">Selected</span>
             <span class="meta-cv-fee-status-pending">${esc(draft.selectedLabel)}</span>
           `;
         } else {
           statusEl.innerHTML = `
+            <span class="meta-cv-fee-status-label">Saved</span>
             <span class="meta-cv-fee-status-value is-active">${esc(draft.appliedLabel)}</span>
           `;
         }
@@ -9116,6 +9119,7 @@
             </div>
             <div class="meta-report-fee-nested meta-cv-bottomline-body${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
               <div class="meta-cv-fee-status" id="${prefix}-fee-status" aria-live="polite">
+                <span class="meta-cv-fee-status-label">Saved</span>
                 <span class="meta-cv-fee-status-value is-active">${esc(appliedLabel)}</span>
               </div>
               <div class="meta-report-fee-mode-pills">${pills}</div>
