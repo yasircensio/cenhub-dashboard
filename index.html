@@ -4551,11 +4551,16 @@
       margin-bottom: 16px; padding: 14px 16px;
     }
     .meta-report-share-card.is-disabled { opacity: 0.88; }
-    .meta-report-share-card-head { margin-bottom: 8px; }
+    .meta-report-share-card-head {
+      align-items: center; display: flex; justify-content: space-between;
+      margin-bottom: 8px; min-height: 28px;
+    }
+    .meta-report-share-card.is-editing .meta-report-share-card-head { margin-bottom: 12px; }
     .meta-report-share-summary {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px 14px;
       justify-content: space-between;
     }
+    .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main {
       display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: 8px 16px; min-width: 0;
     }
@@ -4566,26 +4571,46 @@
     .meta-report-share-summary-value { color: var(--text); font-size: 13px; font-weight: 600; }
     .meta-report-share-summary-value.is-on { color: #15803d; }
     .meta-report-share-summary-value.is-off { color: var(--text-soft); }
-    .meta-report-share-editor {
-      border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px;
-      margin-top: 14px; padding-top: 14px;
-    }
     .meta-report-share-editor[hidden] { display: none !important; }
-    .meta-report-share-field { display: flex; flex-direction: column; gap: 6px; max-width: 420px; }
+    .meta-report-share-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      display: flex; flex-direction: column; gap: 14px; padding: 14px 16px;
+    }
+    .meta-report-share-preview-row {
+      align-items: center; display: flex; gap: 12px; justify-content: space-between;
+    }
+    .meta-report-share-preview-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .meta-report-share-preview-title { color: var(--text); font-size: 13px; font-weight: 700; }
+    .meta-report-share-preview-hint { color: var(--text-soft); font-size: 11.5px; line-height: 1.35; }
+    .meta-report-share-field { display: flex; flex-direction: column; gap: 8px; width: 100%; }
     .meta-report-share-field label { color: var(--text-soft); font-size: 12px; font-weight: 600; }
-    .meta-report-share-slug-row { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
-    .meta-report-share-slug-prefix { color: var(--text-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
-    .meta-report-share-slug-input { flex: 1 1 140px; min-width: 120px; }
-    .meta-report-share-slug-suffix { color: var(--text-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
-    .meta-report-share-url-row { margin-bottom: 0; }
+    .meta-report-share-slug-input-wrap {
+      align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      display: flex; gap: 0; max-width: 100%; overflow: hidden; width: min(100%, 460px);
+    }
+    .meta-report-share-slug-prefix,
+    .meta-report-share-slug-suffix {
+      color: var(--text-soft); flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px; white-space: nowrap;
+    }
+    .meta-report-share-slug-prefix { padding-left: 12px; }
+    .meta-report-share-slug-suffix { padding-right: 12px; }
+    .meta-report-share-slug-input {
+      background: transparent; border: 0; box-shadow: none; flex: 1 1 auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px; min-width: 72px; padding: 10px 6px; width: auto;
+    }
+    .meta-report-share-slug-input:focus { outline: none; }
     .meta-report-share-url {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 10px;
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
       color: var(--text); display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; padding: 10px 12px; word-break: break-word;
     }
-    .meta-report-share-editor-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta-report-share-editor-actions {
+      align-items: center; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap;
+      gap: 8px; margin-top: 2px; padding-top: 14px;
+    }
     .meta-report-share-note, .meta-report-share-empty, .meta-report-share-field-hint {
-      color: var(--text-soft); font-size: 12px; margin: 0;
+      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
     }
     .meta-report-client-page .meta-report-toolbar-actions { margin-left: auto; }
     .meta-report-client-page .meta-report-month-panel {
@@ -7752,7 +7777,7 @@
       return match ? match[1] : '';
     }
 
-    function renderMetaReportShareSummary(payload) {
+    function renderMetaReportShareSummary(payload, { hidden = false } = {}) {
       const settings = payload.settings || {};
       const enabled = Boolean(settings.metaReportEnabled);
       const slug = resolveMetaReportShareSlug(payload);
@@ -7760,7 +7785,7 @@
       const slugLabel = slug ? `${slug}-${code || '····'}` : 'Not set';
 
       return `
-        <div class="meta-report-share-summary" id="meta-report-share-summary">
+        <div class="meta-report-share-summary" id="meta-report-share-summary"${hidden ? ' hidden' : ''}>
           <div class="meta-report-share-summary-main">
             <div class="meta-report-share-summary-row">
               <span class="meta-report-share-summary-label">Preview</span>
@@ -7795,6 +7820,7 @@
       wrapper.innerHTML = renderMetaReportShareSummary(payload).trim();
       const next = wrapper.firstElementChild;
       if (!next) return;
+      next.hidden = metaReportsState.clientShareExpanded;
       summary.replaceWith(next);
       const editBtn = document.getElementById('meta-report-share-edit');
       if (editBtn) editBtn.onclick = () => setMetaReportShareExpanded(true);
@@ -7802,8 +7828,14 @@
 
     function setMetaReportShareExpanded(expanded) {
       metaReportsState.clientShareExpanded = Boolean(expanded);
+      const card = document.getElementById('meta-report-share-card');
+      const summary = document.getElementById('meta-report-share-summary');
       const editor = document.getElementById('meta-report-share-editor');
+      const doneBtn = document.getElementById('meta-report-share-done');
+      card?.classList.toggle('is-editing', expanded);
+      if (summary) summary.hidden = expanded;
       if (editor) editor.hidden = !expanded;
+      if (doneBtn) doneBtn.hidden = !expanded;
     }
 
     function renderMetaReportShareCard(payload) {
@@ -7817,39 +7849,45 @@
       const hasLink = Boolean(reportUrl);
 
       return `
-        <div class="meta-report-share-card${enabled ? '' : ' is-disabled'}" id="meta-report-share-card">
+        <div class="meta-report-share-card${enabled ? '' : ' is-disabled'}${expanded ? ' is-editing' : ''}" id="meta-report-share-card">
           <div class="meta-report-share-card-head">
-            <span class="meta-report-settings-card-title">Client preview</span>
+            <span class="meta-report-settings-card-title">Slug setting</span>
+            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-share-done"${expanded ? '' : ' hidden'}>Done</button>
           </div>
-          ${hasLink ? renderMetaReportShareSummary(payload) : `
+          ${hasLink ? renderMetaReportShareSummary(payload, { hidden: expanded }) : `
             <p class="meta-report-share-empty">Share link will appear once this client has a Meta ad account configured.</p>
           `}
           ${hasLink ? `
           <div class="meta-report-share-editor" id="meta-report-share-editor"${expanded ? '' : ' hidden'}>
-            ${renderMetaHubSwitch({
-              label: enabled ? 'Enabled' : 'Disabled',
-              attr: 'data-meta-client-preview',
-              value: payload.clientId,
-              checked: enabled,
-            })}
-            <div class="meta-report-share-field">
-              <label for="meta-report-share-slug">Link slug</label>
-              <div class="meta-report-share-slug-row">
-                <span class="meta-report-share-slug-prefix">/report/</span>
-                <input type="text" id="meta-report-share-slug" class="admin-input meta-report-share-slug-input" value="${esc(slug)}" autocomplete="off" spellcheck="false" />
-                <span class="meta-report-share-slug-suffix" id="meta-report-share-slug-suffix">-${esc(code || '····')}</span>
+            <div class="meta-report-share-panel">
+              <div class="meta-report-share-preview-row">
+                <div class="meta-report-share-preview-copy">
+                  <span class="meta-report-share-preview-title">Client preview</span>
+                  <span class="meta-report-share-preview-hint">Turn the public share link on or off</span>
+                </div>
+                ${renderMetaHubSwitch({
+                  label: enabled ? 'Enabled' : 'Disabled',
+                  attr: 'data-meta-client-preview',
+                  value: payload.clientId,
+                  checked: enabled,
+                })}
               </div>
-              <p class="meta-report-share-field-hint">Short name for the URL. The 4-digit code only changes when you rotate it.</p>
-            </div>
-            <div class="meta-report-share-url-row">
+              <div class="meta-report-share-field">
+                <label for="meta-report-share-slug">Link slug</label>
+                <div class="meta-report-share-slug-input-wrap">
+                  <span class="meta-report-share-slug-prefix">/report/</span>
+                  <input type="text" id="meta-report-share-slug" class="admin-input meta-report-share-slug-input" value="${esc(slug)}" autocomplete="off" spellcheck="false" />
+                  <span class="meta-report-share-slug-suffix" id="meta-report-share-slug-suffix">-${esc(code || '····')}</span>
+                </div>
+                <p class="meta-report-share-field-hint">Use a short slug like “ml-tag”. Only Rotate code changes the 4 digits.</p>
+              </div>
               <code class="meta-report-share-url" id="meta-report-share-url">${esc(fullUrl)}</code>
+              <div class="meta-report-share-editor-actions">
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${enabled ? '' : ' disabled'}>Rotate code</button>
+                <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-share-save">Save slug</button>
+              </div>
+              ${enabled ? '' : '<p class="meta-report-share-note">Preview is disabled — this link will not load until you re-enable it.</p>'}
             </div>
-            <div class="meta-report-share-editor-actions">
-              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${enabled ? '' : ' disabled'}>Rotate code</button>
-              <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-share-save">Save slug</button>
-              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-share-done">Done</button>
-            </div>
-            ${enabled ? '' : '<p class="meta-report-share-note">Preview is disabled — this link will not load until you re-enable it.</p>'}
           </div>
           ` : ''}
         </div>
@@ -7872,6 +7910,7 @@
       if (rotateBtn) rotateBtn.disabled = !payload.settings?.metaReportEnabled;
       const previewToggle = document.querySelector('[data-meta-client-preview]');
       if (previewToggle) previewToggle.checked = Boolean(payload.settings?.metaReportEnabled);
+      setMetaReportShareExpanded(metaReportsState.clientShareExpanded);
     }
 
     function syncMetaReportShareCard(payload) {
