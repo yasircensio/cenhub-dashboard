@@ -1041,7 +1041,7 @@ Resume the interrupted ${$}?`)&&(l=g.id,d=Number(g.batchOffset)||0)}}if(a?setFbL
               src="/censio-mark-orange.png"
               alt=""
               width="180"
-              height="251"
+              height="180"
             />
             <span class="meta-report-public-wordmark">
               <span class="meta-report-public-wordmark-censio">Censio</span>
