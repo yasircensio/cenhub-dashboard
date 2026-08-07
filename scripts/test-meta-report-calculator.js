@@ -75,12 +75,22 @@ function testLeadActionParsing() {
   assert.strictEqual(isLeadActionType('onsite_conversion.lead_grouped'), true);
   assert.strictEqual(isLeadActionType('link_click'), false);
 
+  // Prefer canonical `lead`; never sum overlapping lead action types.
   const total = parseLeadCountFromActions([
     { action_type: 'link_click', value: '100' },
     { action_type: 'lead', value: '30' },
     { action_type: 'onsite_conversion.lead_grouped', value: '19' },
   ]);
-  assert.strictEqual(total, 49);
+  assert.strictEqual(total, 30);
+
+  assert.strictEqual(parseLeadCountFromActions([
+    { action_type: 'onsite_conversion.lead_grouped', value: '19' },
+  ]), 19);
+
+  assert.strictEqual(parseLeadCountFromActions([
+    { action_type: 'lead', value: '308' },
+    { action_type: 'onsite_conversion.lead_grouped', value: '309' },
+  ]), 308);
 }
 
 function testMarketingFeeMode() {

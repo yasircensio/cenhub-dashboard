@@ -4637,13 +4637,47 @@
     }
     .meta-report-client-page .meta-report-tables-card,
     .meta-reports-page--public .meta-report-tables-card {
-      margin: 0; max-width: none;
+      margin: 0; max-width: none; padding: 14px 14px 16px;
+    }
+    .meta-report-client-page .meta-report-tables-card-label,
+    .meta-reports-page--public .meta-report-tables-card-label {
+      font-size: 13px; margin-bottom: 12px;
+    }
+    .meta-report-client-page .meta-report-groups-stack,
+    .meta-reports-page--public .meta-report-groups-stack {
+      gap: 14px;
+    }
+    .meta-report-client-page .meta-report-group-head,
+    .meta-reports-page--public .meta-report-group-head {
+      margin-bottom: 8px;
+    }
+    .meta-report-client-page .meta-report-group-title,
+    .meta-reports-page--public .meta-report-group-title {
+      font-size: 13px;
+    }
+    .meta-report-client-page .meta-report-group-table th,
+    .meta-reports-page--public .meta-report-group-table th {
+      font-size: 12px; padding: 6px 4px 6px 10px; white-space: nowrap; width: 1%;
+    }
+    .meta-report-client-page .meta-report-group-table td,
+    .meta-reports-page--public .meta-report-group-table td {
+      font-size: 12.5px; padding: 6px 10px 6px 8px; text-align: right; width: auto;
+    }
+    .meta-report-client-page .meta-report-group-table-wrap,
+    .meta-reports-page--public .meta-report-group-table-wrap {
+      border-radius: 12px;
     }
     .meta-report-content-layout {
-      align-items: start; display: grid; gap: 20px;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+      align-items: start; display: grid; gap: 24px;
+      grid-template-columns: minmax(240px, 360px) minmax(0, 1fr);
     }
-    .meta-report-content-main { min-width: 0; }
+    .meta-report-content-main {
+      max-width: 360px; min-width: 0;
+    }
+    .meta-report-client-page .meta-report-content-main,
+    .meta-reports-page--public .meta-report-content-main {
+      width: 100%;
+    }
     .meta-report-charts-panel {
       display: flex; flex-direction: column; gap: 16px; min-width: 0;
     }
@@ -4682,6 +4716,10 @@
     .meta-report-chart-canvas-wrap {
       height: 200px; min-height: 200px; position: relative; width: 100%;
     }
+    .meta-report-client-page .meta-report-chart-canvas-wrap,
+    .meta-reports-page--public .meta-report-chart-canvas-wrap {
+      height: 300px; min-height: 300px;
+    }
     .meta-report-chart-canvas-wrap canvas { display: block; height: 100% !important; width: 100% !important; }
     .meta-report-chart-empty {
       color: var(--text-soft); font-size: 13px; margin: 0; padding: 24px 8px; text-align: center;
@@ -4689,8 +4727,13 @@
     .meta-report-chart-empty[hidden] { display: none !important; }
     @media (max-width: 960px) {
       .meta-report-content-layout { grid-template-columns: 1fr; }
+      .meta-report-content-main { max-width: none; }
       .meta-report-client-page .meta-report-charts-panel,
       .meta-reports-page--public .meta-report-charts-panel { position: static; }
+      .meta-report-client-page .meta-report-chart-canvas-wrap,
+      .meta-reports-page--public .meta-report-chart-canvas-wrap {
+        height: 260px; min-height: 260px;
+      }
     }
 
     .meta-cv-layout {
@@ -8039,6 +8082,9 @@
       const hasLink = Boolean(payload.reportUrl);
       const statusHidden = shareExpanded || reportExpanded;
       const missing = metaReportMonthsNeedingBackfill(payload);
+      const resyncLabel = missing.length
+        ? `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`
+        : `${ICON_SYNC} Re-sync year from Meta`;
 
       return `
         <div class="meta-report-control-panel${shareExpanded ? ' is-editing-share' : ''}${reportExpanded ? ' is-editing-report' : ''}${settings.metaReportEnabled ? '' : ' is-share-disabled'}" id="meta-report-control-panel">
@@ -8049,12 +8095,10 @@
                   ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
                 </select>
               </label>
-              ${missing.length ? `
-                <div class="meta-report-backfill-wrap">
-                  <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta</button>
-                  <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
-                </div>
-              ` : ''}
+              <div class="meta-report-backfill-wrap">
+                <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${resyncLabel}</button>
+                <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
+              </div>
             </div>
             <div class="meta-report-control-bar-actions meta-report-toolbar-actions">
               <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
@@ -8452,11 +8496,9 @@
       const toolbarLeft = document.querySelector('.meta-report-client-page .meta-report-toolbar-left');
       const wrap = document.querySelector('.meta-report-backfill-wrap');
       const missing = metaReportMonthsNeedingBackfill(payload);
-      if (!missing.length) {
-        if (wrap) wrap.remove();
-        return;
-      }
-      const label = `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`;
+      const label = missing.length
+        ? `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`
+        : `${ICON_SYNC} Re-sync year from Meta`;
       const btn = document.getElementById('meta-report-backfill');
       if (btn) {
         btn.innerHTML = label;
@@ -8471,6 +8513,7 @@
         toolbarLeft.appendChild(div);
         bindMetaReportBackfillButton(payload.clientId);
       }
+      if (wrap && !btn && !toolbarLeft) wrap.remove();
     }
 
     function updateMetaReportsClientContent(payload) {
@@ -9549,14 +9592,16 @@
       backfillBtn.onclick = async () => {
         const payload = metaReportsState.clientPayload;
         const missing = metaReportMonthsNeedingBackfill(payload);
-        if (!missing.length) return;
+        // Re-sync every month in the loaded year so lead/spend fixes re-pull from Meta.
+        const targets = missing.length ? missing : (payload?.monthKeys || []);
+        if (!targets.length) return;
         backfillBtn.disabled = true;
         const progressEl = document.getElementById('meta-report-backfill-progress');
         let done = 0;
         let failed = 0;
-        for (const monthKey of missing) {
+        for (const monthKey of targets) {
           done += 1;
-          if (progressEl) progressEl.textContent = `Fetching ${metaMonthLabel(monthKey)} ${monthKey.slice(0, 4)}… (${done}/${missing.length})`;
+          if (progressEl) progressEl.textContent = `Fetching ${metaMonthLabel(monthKey)} ${monthKey.slice(0, 4)}… (${done}/${targets.length})`;
           try {
             await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
               method: 'POST',
@@ -9567,9 +9612,9 @@
         }
         if (progressEl) progressEl.textContent = '';
         if (failed) {
-          showToast(`Backfilled ${done - failed}/${missing.length} months. ${failed} failed (check Meta token access).`, 'error');
+          showToast(`Synced ${done - failed}/${targets.length} months. ${failed} failed (check Meta token access).`, 'error');
         } else {
-          showToast(`Backfilled ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`, 'success');
+          showToast(`Synced ${targets.length} month${targets.length === 1 ? '' : 's'} from Meta`, 'success');
         }
         await loadMetaReportsClientPage({ silent: true });
       };
