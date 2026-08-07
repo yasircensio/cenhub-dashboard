@@ -1040,9 +1040,11 @@ Resume the interrupted ${$}?`)&&(l=g.id,d=Number(g.batchOffset)||0)}}if(a?setFbL
       </div>
     </header>
     ${wrapDashboardShell(`
-    <div class="page-hero meta-report-public-hero">
-      <h1>${esc(t)}</h1>
-      <p>Meta ads performance report</p>
+    <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
+      <div class="meta-premium-page-hero-inner">
+        <h1>${esc(t)}</h1>
+        <p>Meta ads performance report</p>
+      </div>
     </div>
     <div class="meta-reports-page meta-reports-page--public">
       <div class="meta-report-toolbar">
