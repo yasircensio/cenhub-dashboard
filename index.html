@@ -4320,6 +4320,20 @@
       justify-content: flex-end; margin: 18px -24px 0; padding: 14px 24px;
     }
     .meta-report-public-hero { text-align: center; }
+    .meta-report-public-hero h1 {
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin: 0;
+    }
+    .meta-report-public-hero p {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      margin-top: 6px;
+    }
     .meta-reports-page--public .meta-report-month-panel {
       display: flex; flex-direction: column; gap: 32px; margin: 0 auto; max-width: none;
     }
@@ -8725,6 +8739,8 @@
 
     function updatePublicMetaReportContent(payload) {
       metaReportsState.publicPayload = payload;
+      const heroTitle = document.querySelector('.meta-report-public-hero h1');
+      if (heroTitle) heroTitle.textContent = metaReportClientDisplayName(payload);
       const monthKeys = payload.monthKeys || [];
       if (!metaReportsState.activeMonthKey) {
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
@@ -10628,7 +10644,12 @@
       `;
     }
 
+    function metaReportClientDisplayName(payload) {
+      return String(payload?.accountName || payload?.clientId || '').trim() || 'Meta report';
+    }
+
     function renderPublicMetaReportPage(payload) {
+      const clientName = metaReportClientDisplayName(payload);
       const monthKeys = payload.monthKeys || [];
       const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
       const monthPayload = payload.months?.[activeKey] || null;
@@ -10646,7 +10667,7 @@
         </header>
         ${wrapDashboardShell(`
         <div class="page-hero meta-report-public-hero">
-          <h1>${esc(payload.accountName)}</h1>
+          <h1>${esc(clientName)}</h1>
           <p>Meta ads performance report</p>
         </div>
         <div class="meta-reports-page meta-reports-page--public">

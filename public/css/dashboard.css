@@ -4311,6 +4311,20 @@
       justify-content: flex-end; margin: 18px -24px 0; padding: 14px 24px;
     }
     .meta-report-public-hero { text-align: center; }
+    .meta-report-public-hero h1 {
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin: 0;
+    }
+    .meta-report-public-hero p {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      margin-top: 6px;
+    }
     .meta-reports-page--public .meta-report-month-panel {
       display: flex; flex-direction: column; gap: 32px; margin: 0 auto; max-width: none;
     }
