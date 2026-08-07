@@ -4484,6 +4484,9 @@
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
       margin-bottom: 16px;
     }
+    .meta-cv-toolbar-left {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
+    }
     .meta-cv-summary {
       display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
     }
@@ -8687,7 +8690,7 @@
         if (yearSelect) yearSelect.disabled = true;
         if (search) search.disabled = true;
         if (page) page.classList.add('is-year-loading');
-        setMetaReportYearLoadingBanner('.meta-cv-toolbar', year, true);
+        setMetaReportYearLoadingBanner('.meta-cv-toolbar-left', year, true);
         const summary = document.querySelector('.meta-cv-summary');
         if (summary) {
           summary.classList.add('is-skeleton');
@@ -8709,7 +8712,7 @@
         if (yearSelect) yearSelect.disabled = false;
         if (search) search.disabled = false;
         if (page) page.classList.remove('is-year-loading');
-        setMetaReportYearLoadingBanner('.meta-cv-toolbar', year, false);
+        setMetaReportYearLoadingBanner('.meta-cv-toolbar-left', year, false);
         const summary = document.querySelector('.meta-cv-summary');
         if (summary) summary.classList.remove('is-skeleton');
         const legend = document.querySelector('.meta-cv-legend');
@@ -9622,9 +9625,12 @@
         </div>
         <div class="sync-history-page meta-reports-page">
           <div class="meta-cv-toolbar">
-            <label class="meta-report-year-field">Year
-              <select id="meta-cv-year" class="admin-select">${yearOptions}</select>
-            </label>
+            <div class="meta-cv-toolbar-left">
+              <label class="meta-report-year-field">Year
+                <select id="meta-cv-year" class="admin-select">${yearOptions}</select>
+              </label>
+              <span class="meta-report-year-loading-banner" id="meta-cv-year-loading-banner" hidden aria-live="polite"></span>
+            </div>
             <div class="meta-cv-search">
               <input id="meta-cv-search" type="search" placeholder="Search clients..." value="${esc(metaReportsState.customValues.searchQuery)}" autocomplete="off" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font:inherit" />
             </div>

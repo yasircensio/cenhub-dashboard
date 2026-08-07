@@ -4475,6 +4475,9 @@
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
       margin-bottom: 16px;
     }
+    .meta-cv-toolbar-left {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
+    }
     .meta-cv-summary {
       display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
     }
