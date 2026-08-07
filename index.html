@@ -8970,32 +8970,6 @@
       };
     }
 
-    function metaReportLinearRegression(points = []) {
-      const n = points.length;
-      if (n < 2) return { slope: 0, intercept: 0, r: 0 };
-      let sumX = 0;
-      let sumY = 0;
-      let sumXY = 0;
-      let sumXX = 0;
-      let sumYY = 0;
-      for (const point of points) {
-        const x = metaReportParseAmount(point.x);
-        const y = metaReportParseAmount(point.y);
-        sumX += x;
-        sumY += y;
-        sumXY += x * y;
-        sumXX += x * x;
-        sumYY += y * y;
-      }
-      const denom = (n * sumXX) - (sumX * sumX);
-      if (denom === 0) return { slope: 0, intercept: sumY / n, r: 0 };
-      const slope = ((n * sumXY) - (sumX * sumY)) / denom;
-      const intercept = (sumY - (slope * sumX)) / n;
-      const rDenom = Math.sqrt(((n * sumXX) - (sumX * sumX)) * ((n * sumYY) - (sumY * sumY)));
-      const r = rDenom > 0 ? ((n * sumXY) - (sumX * sumY)) / rDenom : 0;
-      return { slope, intercept, r };
-    }
-
     function metaReportSpendAxisTick(value) {
       const amount = Number(value) || 0;
       if (Math.abs(amount) >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
@@ -9074,27 +9048,27 @@
           <div class="meta-report-chart-tab-panel${activeTab === 'spend' ? ' is-active' : ''}" data-meta-chart-panel="spend" role="tabpanel"${activeTab === 'spend' ? '' : ' hidden'}>
             <div class="meta-report-chart-card" data-meta-chart="scatter-roas">
               <div class="meta-report-chart-head">
-                <h3 class="meta-report-chart-title">ROAS vs ad spend</h3>
-                <div class="meta-report-chart-toggle" id="meta-chart-scatter-roas-mode" role="group" aria-label="ROAS scatter display mode">
+                <h3 class="meta-report-chart-title">Ad spend & ROAS by month</h3>
+                <div class="meta-report-chart-toggle" id="meta-chart-scatter-roas-mode" role="group" aria-label="ROAS spend chart display mode">
                   <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
                   <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
                 </div>
               </div>
               <div class="meta-report-chart-canvas-wrap">
-                <canvas id="meta-report-chart-scatter-roas" aria-label="ROAS vs ad spend chart"></canvas>
+                <canvas id="meta-report-chart-scatter-roas" aria-label="Ad spend and ROAS by month chart"></canvas>
                 <p class="meta-report-chart-empty" id="meta-report-chart-scatter-roas-empty" hidden>Not enough data for a spend chart yet.</p>
               </div>
             </div>
             <div class="meta-report-chart-card" data-meta-chart="scatter-poas">
               <div class="meta-report-chart-head">
-                <h3 class="meta-report-chart-title">POAS vs ad spend</h3>
-                <div class="meta-report-chart-toggle" id="meta-chart-scatter-poas-mode" role="group" aria-label="POAS scatter display mode">
+                <h3 class="meta-report-chart-title">Ad spend & POAS by month</h3>
+                <div class="meta-report-chart-toggle" id="meta-chart-scatter-poas-mode" role="group" aria-label="POAS spend chart display mode">
                   <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
                   <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
                 </div>
               </div>
               <div class="meta-report-chart-canvas-wrap">
-                <canvas id="meta-report-chart-scatter-poas" aria-label="POAS vs ad spend chart"></canvas>
+                <canvas id="meta-report-chart-scatter-poas" aria-label="Ad spend and POAS by month chart"></canvas>
                 <p class="meta-report-chart-empty" id="meta-report-chart-scatter-poas-empty" hidden>Not enough data for a spend chart yet.</p>
               </div>
             </div>
@@ -9265,81 +9239,105 @@
       });
     }
 
-    function buildMetaReportScatterChart(canvas, series, mode, krKey, xKey, projection = null) {
+    function buildMetaReportSpendReturnChart(canvas, series, mode, krKey, xKey, returnLabel, projection = null) {
       const chartSeries = series.filter((point) => metaReportParseAmount(point.spend) > 0);
-      const scatterPoints = chartSeries.map((point) => ({
-        x: metaReportParseAmount(point.spend),
-        y: metaReportChartValue(point, mode, krKey, xKey),
-        label: point.label,
-        spend: point.spend,
-        rawPoint: point,
-      }));
-
-      const regressionPoints = scatterPoints.map((point) => ({ x: point.x, y: point.y }));
-      const regression = metaReportLinearRegression(regressionPoints);
-      const xValues = scatterPoints.map((point) => point.x);
-      const trendMinX = xValues.length ? Math.min(...xValues) : 0;
-      const trendMaxX = xValues.length ? Math.max(...xValues) : 0;
-      const projectedX = projection ? metaReportParseAmount(projection.projected?.spend) : 0;
-      const lineMaxX = Math.max(trendMaxX, projectedX);
-      const trendLine = lineMaxX > trendMinX ? [
-        { x: trendMinX, y: (regression.slope * trendMinX) + regression.intercept },
-        { x: lineMaxX, y: (regression.slope * lineMaxX) + regression.intercept },
-      ] : [];
-
-      const datasets = [{
-        type: 'scatter',
-        label: 'Months',
-        data: scatterPoints,
-        borderColor: '#ff6a00',
-        backgroundColor: '#ff6a00',
-        pointBackgroundColor: '#ff6a00',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 6,
-      }];
-
-      if (trendLine.length === 2 && chartSeries.length >= META_REPORT_CHART_MIN_POINTS) {
-        datasets.push({
-          type: 'line',
-          label: 'Trend',
-          data: trendLine,
-          borderColor: 'rgba(255, 106, 0, 0.35)',
-          backgroundColor: 'transparent',
-          borderDash: [6, 4],
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          fill: false,
-        });
-      }
+      const labels = chartSeries.map((point) => point.label);
+      const spendValues = chartSeries.map((point) => metaReportParseAmount(point.spend));
+      const returnValues = chartSeries.map((point) => metaReportChartValue(point, mode, krKey, xKey));
 
       if (projection && !projection.insufficientData) {
-        const projectedY = metaReportParseAmount(projection.projected[mode === 'x' ? xKey : krKey]);
-        if (projectedX > 0) {
-          datasets.push({
-            type: 'scatter',
-            label: 'Projected',
-            data: [{ x: projectedX, y: projectedY, label: 'Projected' }],
-            borderColor: '#138b53',
-            backgroundColor: '#138b53',
-            pointStyle: 'rectRot',
-            pointRadius: 7,
-            pointHoverRadius: 8,
-          });
-        }
+        labels.push('Projected');
+        spendValues.push(metaReportParseAmount(projection.projected.spend));
+        returnValues.push(metaReportParseAmount(projection.projected[mode === 'x' ? xKey : krKey]));
+      }
+
+      const dualAxis = mode === 'x';
+      const datasets = [
+        {
+          type: 'bar',
+          label: 'Ad spend',
+          data: spendValues,
+          backgroundColor: 'rgba(19, 139, 83, 0.88)',
+          borderColor: '#138b53',
+          borderWidth: 1.5,
+          borderRadius: 4,
+          yAxisID: 'ySpend',
+          order: 2,
+        },
+        {
+          type: 'bar',
+          label: returnLabel,
+          data: returnValues,
+          backgroundColor: 'rgba(255, 106, 0, 0.88)',
+          borderColor: '#ff6a00',
+          borderWidth: 1.5,
+          borderRadius: 4,
+          yAxisID: dualAxis ? 'yReturn' : 'ySpend',
+          order: 1,
+        },
+      ];
+
+      const scales = {
+        x: {
+          grid: { display: false },
+          ticks: { color: '#6b5348', font: { size: 11 } },
+        },
+        ySpend: {
+          type: 'linear',
+          position: 'left',
+          title: {
+            display: true,
+            text: dualAxis ? 'Ad spend (Dkr)' : 'Dkr',
+            color: dualAxis ? '#138b53' : '#6b5348',
+            font: { size: 11, weight: '600' },
+          },
+          grid: { color: 'rgba(26, 18, 8, 0.08)' },
+          ticks: {
+            color: dualAxis ? '#138b53' : '#6b5348',
+            font: { size: 11 },
+            callback: (value) => metaReportSpendAxisTick(value),
+          },
+        },
+      };
+
+      if (dualAxis) {
+        scales.yReturn = {
+          type: 'linear',
+          position: 'right',
+          title: {
+            display: true,
+            text: 'Multiplier',
+            color: '#ff6a00',
+            font: { size: 11, weight: '600' },
+          },
+          grid: { drawOnChartArea: false },
+          ticks: {
+            color: '#ff6a00',
+            font: { size: 11 },
+            callback: (value) => metaReportChartAxisTick(value, 'x'),
+          },
+        };
       }
 
       return new Chart(canvas, {
-        data: { datasets },
+        type: 'bar',
+        data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          parsing: false,
-          interaction: { mode: 'nearest', intersect: true },
+          interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { display: false },
+            legend: {
+              display: true,
+              position: 'top',
+              align: 'end',
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                font: { size: 11, weight: '600' },
+                color: '#6b5348',
+              },
+            },
             tooltip: {
               backgroundColor: '#ffffff',
               borderColor: '#e8e0d8',
@@ -9348,43 +9346,20 @@
               bodyColor: '#1a1208',
               padding: 10,
               callbacks: {
-                title(items) {
-                  const raw = items[0]?.raw;
-                  return raw?.label || 'Point';
-                },
                 label(context) {
-                  const raw = context.raw || {};
-                  if (raw.label === 'Projected') {
-                    return metaReportChartTooltipLabel(raw.y, mode);
+                  const datasetLabel = context.dataset.label || '';
+                  if (context.dataset.yAxisID === 'yReturn') {
+                    return `${datasetLabel}: ${metaReportChartTooltipLabel(context.parsed.y, 'x')}`;
                   }
-                  const spendLabel = metaFmtKr(raw.spend ?? raw.x);
-                  const returnLabel = metaReportChartTooltipLabel(raw.y, mode);
-                  return `${spendLabel} · ${returnLabel}`;
+                  if (context.datasetIndex === 1 && !dualAxis) {
+                    return `${datasetLabel}: ${metaReportChartTooltipLabel(context.parsed.y, mode)}`;
+                  }
+                  return `${datasetLabel}: ${metaFmtKr(context.parsed.y)}`;
                 },
               },
             },
           },
-          scales: {
-            x: {
-              type: 'linear',
-              title: { display: true, text: 'Ad spend', color: '#6b5348', font: { size: 11, weight: '600' } },
-              grid: { color: 'rgba(26, 18, 8, 0.06)' },
-              ticks: {
-                color: '#6b5348',
-                font: { size: 11 },
-                callback: (value) => metaReportSpendAxisTick(value),
-              },
-            },
-            y: {
-              title: { display: true, text: mode === 'x' ? 'Multiplier' : 'Return (Dkr)', color: '#6b5348', font: { size: 11, weight: '600' } },
-              grid: { color: 'rgba(26, 18, 8, 0.08)' },
-              ticks: {
-                color: '#6b5348',
-                font: { size: 11 },
-                callback: (value) => metaReportChartAxisTick(value, mode),
-              },
-            },
-          },
+          scales,
         },
       });
     }
@@ -9440,12 +9415,13 @@
 
       canvas.hidden = false;
       emptyEl.hidden = true;
-      metaReportsState.chartScatterInstances[kind] = buildMetaReportScatterChart(
+      metaReportsState.chartScatterInstances[kind] = buildMetaReportSpendReturnChart(
         canvas,
         chartSeries,
         mode,
         krKey,
         xKey,
+        kind === 'roas' ? 'ROAS' : 'POAS',
         projection,
       );
     }
