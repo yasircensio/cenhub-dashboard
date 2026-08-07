@@ -4311,6 +4311,59 @@
       justify-content: flex-end; margin: 18px -24px 0; padding: 14px 24px;
     }
     .meta-report-public-hero { text-align: left; }
+    .brand-topbar-lockup {
+      align-items: center;
+      display: flex;
+      gap: 14px;
+    }
+    .brand-topbar-divider {
+      background: rgba(255, 255, 255, 0.22);
+      flex-shrink: 0;
+      height: 28px;
+      width: 1px;
+    }
+    .brand-product-label {
+      color: rgba(255, 255, 255, 0.92);
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+    .meta-report-public-brand { margin-bottom: 12px; }
+    .meta-report-public-brand-accent {
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      border-radius: 999px;
+      height: 3px;
+      margin-bottom: 14px;
+      opacity: 0.85;
+      width: 56px;
+    }
+    .meta-report-public-brand-label {
+      color: rgba(255, 255, 255, 0.72);
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      margin: 0;
+    }
+    .meta-report-public-brand-label strong {
+      color: #fff;
+      font-weight: 700;
+    }
+    .meta-report-public-subtitle {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    .brand-footer--public-report {
+      margin-top: 32px;
+      padding-bottom: 8px;
+    }
+    .brand-footer--public-report strong {
+      color: var(--text);
+      font-weight: 600;
+    }
     .meta-reports-page--public .meta-report-month-panel {
       display: flex; flex-direction: column; gap: 32px; margin: 0 auto; max-width: none;
     }
