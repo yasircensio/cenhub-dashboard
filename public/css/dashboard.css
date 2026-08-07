@@ -3964,8 +3964,8 @@
       .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .kpi-grid > .card { min-height: 152px; }
       .admin-hub-hero h1 { font-size: 18px; }
-      .meta-cv-page-hero { padding: 22px 20px 24px; }
-      .meta-cv-page-hero h1 { font-size: 1.5rem; }
+      .meta-premium-page-hero { padding: 22px 20px 24px; }
+      .meta-premium-page-hero h1 { font-size: 1.5rem; }
       .sync-history-toolbar {
         align-items: stretch;
         flex-direction: column;
@@ -4322,17 +4322,14 @@
     .meta-cv-summary.is-skeleton,
     .meta-cv-legend.is-skeleton { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
 
-    .meta-report-hub-hero { padding-bottom: 20px; }
-    .meta-report-hub-hero p { max-width: 52rem; }
-
-    .meta-cv-page-hero {
+    .meta-premium-page-hero {
       background: #13100e;
       margin-bottom: 24px;
       overflow: hidden;
       padding: 28px 32px 30px;
       position: relative;
     }
-    .meta-cv-page-hero::before {
+    .meta-premium-page-hero::before {
       background:
         radial-gradient(ellipse 52% 110% at 0% 50%, rgba(255, 106, 0, 0.14) 0%, transparent 68%),
         radial-gradient(ellipse 52% 110% at 100% 50%, rgba(255, 120, 50, 0.08) 0%, transparent 68%);
@@ -4341,7 +4338,7 @@
       pointer-events: none;
       position: absolute;
     }
-    .meta-cv-page-hero::after {
+    .meta-premium-page-hero::after {
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 32%);
       border-radius: inherit;
       content: '';
@@ -4349,9 +4346,9 @@
       pointer-events: none;
       position: absolute;
     }
-    .meta-cv-page-hero-inner { position: relative; z-index: 1; }
-    .meta-cv-page-hero .admin-breadcrumb { margin-bottom: 18px; }
-    .meta-cv-page-hero h1 {
+    .meta-premium-page-hero-inner { position: relative; z-index: 1; }
+    .meta-premium-page-hero .admin-breadcrumb { margin-bottom: 18px; }
+    .meta-premium-page-hero h1 {
       background: linear-gradient(135deg, #fff 0%, #f3e8de 38%, #ffb380 72%, var(--primary) 100%);
       -webkit-background-clip: text;
       background-clip: text;

@@ -723,13 +723,15 @@ Resume the interrupted ${y}?`)&&(l=p.id,d=Number(p.batchOffset)||0)}}if(n?setFbL
   `:"";return`${n}${r}${l}`}function renderMetaReportsHubPage(e){const t=e.clients||[],n=e.meta||{};return`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports"))}
     ${wrapDashboardShell(`
-    <div class="page-hero admin-hub-hero meta-report-hub-hero">
-      <div class="admin-breadcrumb">
-        <a href="/admin">Clients</a>
-        <span aria-hidden="true"> / </span>
-        <span>Meta reports</span>
+    <div class="page-hero admin-hub-hero meta-premium-page-hero">
+      <div class="meta-premium-page-hero-inner">
+        <div class="admin-breadcrumb">
+          <a href="/admin">Clients</a>
+          <span aria-hidden="true"> / </span>
+          <span>Meta reports</span>
+        </div>
+        <h1>Meta client reports</h1>
       </div>
-      <h1>Meta client reports</h1>
     </div>
     <div class="admin-hub meta-reports-page">
       <div class="meta-hub-layout">
@@ -759,15 +761,17 @@ Resume the interrupted ${y}?`)&&(l=p.id,d=Number(p.batchOffset)||0)}}if(n?setFbL
   `).join("");return`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports"))}
     ${wrapDashboardShell(`
-    <div class="page-hero admin-hub-hero">
-      <div class="admin-breadcrumb">
-        <a href="/admin">Clients</a>
-        <span aria-hidden="true"> / </span>
-        <a href="/admin/meta-reports">Meta reports</a>
-        <span aria-hidden="true"> / </span>
-        <span>${esc(e.accountName)}</span>
+    <div class="page-hero admin-hub-hero meta-premium-page-hero">
+      <div class="meta-premium-page-hero-inner">
+        <div class="admin-breadcrumb">
+          <a href="/admin">Clients</a>
+          <span aria-hidden="true"> / </span>
+          <a href="/admin/meta-reports">Meta reports</a>
+          <span aria-hidden="true"> / </span>
+          <span>${esc(e.accountName)}</span>
+        </div>
+        <h1>${esc(e.accountName)}</h1>
       </div>
-      <h1>${esc(e.accountName)}</h1>
     </div>
     <div class="sync-history-page meta-reports-page meta-report-client-page">
       <div class="meta-report-toolbar">
@@ -1102,8 +1106,8 @@ Resume the interrupted ${y}?`)&&(l=p.id,d=Number(p.batchOffset)||0)}}if(n?setFbL
   `).join("");return`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-custom"))}
     ${wrapDashboardShell(`
-    <div class="page-hero admin-hub-hero meta-cv-page-hero">
-      <div class="meta-cv-page-hero-inner">
+    <div class="page-hero admin-hub-hero meta-premium-page-hero">
+      <div class="meta-premium-page-hero-inner">
         <div class="admin-breadcrumb">
           <a href="/admin">Clients</a>
           <span aria-hidden="true"> / </span>
