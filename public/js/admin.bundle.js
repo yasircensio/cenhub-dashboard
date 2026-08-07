@@ -730,7 +730,6 @@ Resume the interrupted ${y}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
         <span>Meta reports</span>
       </div>
       <h1>Meta client reports</h1>
-      <p>Monthly Meta ads reports for partner clients. Toggle reporting, copy share links, and edit monthly inputs.</p>
     </div>
     <div class="admin-hub meta-reports-page">
       <div class="meta-hub-layout">
@@ -769,7 +768,6 @@ Resume the interrupted ${y}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
         <span>${esc(e.accountName)}</span>
       </div>
       <h1>${esc(e.accountName)}</h1>
-      <p>Edit monthly Meta report inputs. Leads and ad metrics refresh from Meta; won leads and profit are manual.</p>
     </div>
     <div class="sync-history-page meta-reports-page meta-report-client-page">
       <div class="meta-report-toolbar">
@@ -1113,7 +1111,6 @@ Resume the interrupted ${y}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
         <span>Custom values</span>
       </div>
       <h1>Custom values</h1>
-      <p>Update won leads, average values, and other inputs across clients for each month \u2014 without opening every report.</p>
     </div>
     <div class="sync-history-page meta-reports-page">
       <div class="meta-cv-toolbar">
