@@ -928,6 +928,7 @@ Resume the interrupted ${y}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
         </div>
         <div class="meta-report-fee-nested meta-cv-bottomline-body${s?"":" is-hidden"}" id="${t}-fee-nested" data-fee-mode="${esc(i)}" data-fee-percent="${esc(o)}" data-marketing-fee="${esc(r)}">
           <div class="meta-cv-fee-status" id="${t}-fee-status" aria-live="polite">
+            <span class="meta-cv-fee-status-label">Saved</span>
             <span class="meta-cv-fee-status-value is-active">${esc(c)}</span>
           </div>
           <div class="meta-report-fee-mode-pills">${b}</div>
