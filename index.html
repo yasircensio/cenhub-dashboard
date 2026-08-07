@@ -4289,24 +4289,6 @@
     .meta-report-fee-save-row .admin-btn--small.is-dirty { box-shadow: 0 0 0 2px rgba(196, 106, 47, 0.18); }
     .meta-report-bottomline-fee-settings--client.is-collapsed .meta-report-bottomline-editor { display: none; }
     .meta-report-bottomline-fee-settings--client.is-editing .meta-report-bottomline-summary { display: none; }
-    .meta-report-bottomline-summary {
-      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
-      border-radius: 12px; display: flex; gap: 12px; justify-content: space-between;
-      padding: 12px 14px; width: 100%;
-    }
-    .meta-report-bottomline-summary-content {
-      display: flex; flex-direction: column; gap: 6px; min-width: 0;
-    }
-    .meta-report-bottomline-summary-row {
-      align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px 10px;
-    }
-    .meta-report-bottomline-summary-label {
-      color: var(--text-soft); font-size: 12px; font-weight: 600;
-    }
-    .meta-report-bottomline-summary-value {
-      color: var(--text); font-size: 13px; font-weight: 600;
-    }
-    .meta-report-bottomline-summary-value.is-on { color: #15803d; }
     .meta-report-bottomline-editor .meta-report-bottomline-row {
       margin-bottom: 12px;
     }
@@ -4518,61 +4500,68 @@
     }
 
     .meta-reports-page { padding-bottom: 32px; }
+    .meta-report-client-page .meta-report-toolbar,
+    .meta-report-client-page .meta-report-share-card,
     .meta-report-client-page .meta-report-settings {
-      align-items: stretch; background: var(--panel); border: 1px solid var(--border);
-      border-radius: 18px; box-shadow: var(--shadow-sm); flex-direction: column;
-      gap: 0; justify-content: flex-start; margin-bottom: 16px; padding: 18px 20px; width: 100%;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: var(--shadow-sm); margin-bottom: 16px; padding: 18px 20px; width: 100%;
+    }
+    .meta-report-client-page .meta-report-toolbar {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+    }
+    .meta-report-client-page .meta-report-settings {
+      align-items: stretch; flex-direction: column; gap: 0; justify-content: flex-start;
     }
     .meta-report-client-page .meta-report-settings-group {
       align-items: stretch; flex: 1; width: 100%;
     }
     .meta-report-settings-card-head {
       align-items: center; display: flex; justify-content: space-between;
-      margin-bottom: 14px; width: 100%;
+      margin-bottom: 10px; width: 100%;
+    }
+    .meta-report-share-card.is-editing .meta-report-settings-card-head,
+    .meta-report-client-page .meta-report-settings:not(.is-collapsed) .meta-report-settings-card-head {
+      margin-bottom: 12px;
     }
     .meta-report-settings-card-title {
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
     }
     .meta-report-client-page .meta-report-settings.is-collapsed {
-      padding-bottom: 14px;
-    }
-    .meta-report-client-page .meta-report-settings.is-collapsed .meta-report-settings-card-head {
-      margin-bottom: 10px;
+      padding-bottom: 18px;
     }
     .meta-report-client-page .meta-report-fee-nested {
       background: linear-gradient(180deg, #faf7f3 0%, var(--panel-soft) 100%);
       border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
     }
-    .meta-report-client-page .meta-report-toolbar {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-      margin-bottom: 16px; padding: 14px 16px;
-    }
-    .meta-report-share-card {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-      margin-bottom: 16px; padding: 14px 16px;
-    }
     .meta-report-share-card.is-disabled { opacity: 0.88; }
-    .meta-report-share-card-head {
-      align-items: center; display: flex; justify-content: space-between;
-      margin-bottom: 8px; min-height: 28px;
-    }
-    .meta-report-share-card.is-editing .meta-report-share-card-head { margin-bottom: 12px; }
-    .meta-report-share-summary {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 14px;
-      justify-content: space-between;
+    .meta-report-share-summary,
+    .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary {
+      align-items: center; background: transparent; border: 0; border-radius: 0;
+      display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: space-between;
+      padding: 0; width: 100%;
     }
     .meta-report-share-summary[hidden] { display: none !important; }
-    .meta-report-share-summary-main {
+    .meta-report-share-summary-main,
+    .meta-report-bottomline-summary-content {
       display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: 8px 16px; min-width: 0;
     }
-    .meta-report-share-summary-row {
+    .meta-report-share-summary-row,
+    .meta-report-bottomline-summary-row {
       align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px;
     }
-    .meta-report-share-summary-label { color: var(--text-soft); font-size: 12px; font-weight: 600; }
-    .meta-report-share-summary-value { color: var(--text); font-size: 13px; font-weight: 600; }
-    .meta-report-share-summary-value.is-on { color: #15803d; }
-    .meta-report-share-summary-value.is-off { color: var(--text-soft); }
+    .meta-report-share-summary-label,
+    .meta-report-bottomline-summary-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-share-summary-value,
+    .meta-report-bottomline-summary-value {
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-share-summary-value.is-on,
+    .meta-report-bottomline-summary-value.is-on { color: #15803d; }
+    .meta-report-share-summary-value.is-off,
+    .meta-report-bottomline-summary-value.is-off { color: var(--text-soft); }
     .meta-report-share-editor[hidden] { display: none !important; }
     .meta-report-share-panel {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
@@ -7905,7 +7894,7 @@
 
       return `
         <div class="meta-report-share-card${enabled ? '' : ' is-disabled'}${expanded ? ' is-editing' : ''}" id="meta-report-share-card">
-          <div class="meta-report-share-card-head">
+          <div class="meta-report-settings-card-head">
             <span class="meta-report-settings-card-title">Slug setting</span>
           </div>
           ${hasLink ? renderMetaReportShareSummary(payload, { hidden: expanded }) : `
@@ -9872,7 +9861,7 @@
           <div class="meta-report-bottomline-summary-content">
             <div class="meta-report-bottomline-summary-row">
               <span class="meta-report-bottomline-summary-label">Bottomline</span>
-              <span class="meta-report-bottomline-summary-value${showBottomline ? ' is-on' : ''}">${showBottomline ? 'Enabled' : 'Off'}</span>
+              <span class="meta-report-bottomline-summary-value${showBottomline ? ' is-on' : ' is-off'}">${showBottomline ? 'Enabled' : 'Disabled'}</span>
             </div>
             ${showBottomline ? `
             <div class="meta-report-bottomline-summary-row">
