@@ -8416,11 +8416,37 @@
       if (refreshBtn) refreshBtn.onclick = () => refreshMetaReportsHubData({ silent: false });
     }
 
+    function mergeHubClientFromSettings(clientId, settings = {}) {
+      if (!settings || typeof settings !== 'object') return null;
+      return mergeHubClient(clientId, {
+        metaReportEnabled: settings.metaReportEnabled,
+        metaReportShowBottomline: settings.metaReportShowBottomline,
+        metaReportFeeEnabled: settings.metaReportFeeEnabled,
+        metaReportFeeMode: settings.metaReportFeeMode,
+        metaReportFeePercent: settings.metaReportFeePercent,
+        metaReportMarketingFeeAmount: settings.metaReportMarketingFeeAmount,
+        reportUrl: settings.reportUrl,
+      });
+    }
+
+    function refreshMetaReportsHubCards() {
+      if (!metaReportsState.dashboardData) return;
+      updateMetaReportsHubDom(getMetaReportsHubView(
+        metaReportsState.dashboardData,
+        metaReportsState.filter,
+        metaReportsState.searchQuery,
+      ));
+    }
+
+    function resolveMetaReportStoredFeeMode(settings = {}) {
+      if (settings.metaReportFeeMode) return settings.metaReportFeeMode;
+      if (Number(settings.metaReportMarketingFeeAmount) > 0) return 'marketing';
+      return 'performance';
+    }
+
     function resolveMetaReportFeeModeToRestore(client) {
       if (!client) return 'performance';
-      if (client.metaReportFeeMode) return client.metaReportFeeMode;
-      if (Number(client.metaReportMarketingFeeAmount) > 0) return 'marketing';
-      return 'performance';
+      return resolveMetaReportStoredFeeMode(client);
     }
 
     function bindMetaReportsHubRowEvents(root = document) {
@@ -8431,18 +8457,9 @@
           try {
             const result = await patchMetaReportSettings(clientId, { metaReportEnabled: input.checked });
             const settings = result.settings || {};
-            mergeHubClient(clientId, {
-              metaReportEnabled: settings.metaReportEnabled,
-              metaReportShowBottomline: settings.metaReportShowBottomline,
-              metaReportFeeEnabled: settings.metaReportFeeEnabled,
-              reportUrl: settings.reportUrl,
-            });
+            mergeHubClientFromSettings(clientId, settings);
             showToast(input.checked ? 'Report enabled' : 'Report disabled', 'success');
-            updateMetaReportsHubDom(getMetaReportsHubView(
-              metaReportsState.dashboardData,
-              metaReportsState.filter,
-              metaReportsState.searchQuery,
-            ));
+            refreshMetaReportsHubCards();
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             input.checked = !input.checked;
@@ -8458,8 +8475,9 @@
           input.disabled = true;
           try {
             const result = await patchMetaReportSettings(clientId, { metaReportShowBottomline: input.checked });
-            mergeHubClient(clientId, { metaReportShowBottomline: result.settings?.metaReportShowBottomline });
+            mergeHubClientFromSettings(clientId, result.settings || {});
             showToast('Bottomline setting saved', 'success');
+            refreshMetaReportsHubCards();
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             input.checked = !input.checked;
@@ -8482,12 +8500,9 @@
                 }
               : { metaReportFeeEnabled: false };
             const result = await patchMetaReportSettings(clientId, patch);
-            mergeHubClient(clientId, {
-              metaReportFeeEnabled: result.settings?.metaReportFeeEnabled,
-              metaReportFeeMode: result.settings?.metaReportFeeMode,
-              metaReportMarketingFeeAmount: result.settings?.metaReportMarketingFeeAmount,
-            });
+            mergeHubClientFromSettings(clientId, result.settings || {});
             showToast('Fee setting saved', 'success');
+            refreshMetaReportsHubCards();
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             input.checked = !input.checked;
@@ -9242,7 +9257,8 @@
     }
 
     function resolveMetaReportFeeMode(settings = {}) {
-      return settings.metaReportFeeMode || (settings.metaReportFeeEnabled ? 'performance' : null);
+      if (!settings.metaReportFeeEnabled) return '';
+      return resolveMetaReportStoredFeeMode(settings);
     }
 
     const META_REPORT_FEE_MODE_META = [
@@ -9302,7 +9318,8 @@
       return prefix === 'meta-cv';
     }
 
-    function describeMetaReportFeeModeLabel(mode, feePercent, marketingFee) {
+    function describeMetaReportFeeModeLabel(mode, feePercent, marketingFee, { feeEnabled = true } = {}) {
+      if (!feeEnabled || mode === '' || mode == null) return 'No Censio fee';
       if (mode === 'performance') {
         const pct = Number(feePercent);
         return `Performance fee · ${Number.isFinite(pct) ? pct : 20}%`;
@@ -9330,7 +9347,13 @@
         const parsed = Number(input?.value);
         if (Number.isFinite(parsed)) selectedMarketing = parsed;
       }
-      const appliedMode = nested.dataset.feeMode || '';
+      const appliedMode = nested.dataset.feeEnabled === 'true'
+        ? resolveMetaReportStoredFeeMode({
+          metaReportFeeEnabled: true,
+          metaReportFeeMode: nested.dataset.feeMode || null,
+          metaReportMarketingFeeAmount: nested.dataset.marketingFee,
+        })
+        : '';
       const appliedPercent = Number(nested.dataset.feePercent);
       const appliedMarketing = Number(nested.dataset.marketingFee);
       const modeDirty = selectedMode !== appliedMode;
@@ -9449,16 +9472,19 @@
 
     function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false, variant = 'default', collapsible = false } = {}) {
       const showBottomline = Boolean(settings.metaReportShowBottomline);
-      const feeMode = resolveMetaReportFeeMode(settings) || '';
+      const feeEnabled = Boolean(settings.metaReportFeeEnabled);
+      const storedMode = settings.metaReportFeeMode || '';
+      const displayMode = resolveMetaReportFeeMode(settings);
       const feePercent = settings.metaReportFeePercent ?? 20;
       const marketingFee = settings.metaReportMarketingFeeAmount ?? 0;
       const inlineFeeValue = metaReportUsesInlineFeeValue(prefix);
+      const feeDataAttrs = `data-fee-mode="${esc(storedMode)}" data-fee-enabled="${feeEnabled ? 'true' : 'false'}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}"`;
 
       if (variant === 'cv') {
-        const appliedLabel = describeMetaReportFeeModeLabel(feeMode, feePercent, marketingFee);
+        const appliedLabel = describeMetaReportFeeModeLabel(displayMode, feePercent, marketingFee);
         const pills = META_REPORT_FEE_MODE_META.map(({ value, title }) => `
             <label class="meta-report-fee-mode-pill">
-              <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${feeMode === value ? ' checked' : ''} />
+              <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${displayMode === value ? ' checked' : ''} />
               <span>${esc(title)}</span>
             </label>`).join('');
         return `
@@ -9471,13 +9497,13 @@
               </div>
               ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Enable bottomline on report', false, { hideLabel: true })}
             </div>
-            <div class="meta-report-fee-nested meta-cv-bottomline-body${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
+            <div class="meta-report-fee-nested meta-cv-bottomline-body${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" ${feeDataAttrs}>
               <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
                 <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
               </div>
               <div class="meta-report-fee-mode-pills">${pills}</div>
               <div class="meta-cv-fee-footer">
-                <div class="meta-cv-fee-value-inline" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: true })}</div>
+                <div class="meta-cv-fee-value-inline" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, displayMode, feePercent, marketingFee, { inline: true })}</div>
                 <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save" disabled>Saved</button>
               </div>
             </div>
@@ -9486,10 +9512,10 @@
       `;
       }
 
-      const appliedLabel = describeMetaReportFeeModeLabel(feeMode, feePercent, marketingFee);
+      const appliedLabel = describeMetaReportFeeModeLabel(displayMode, feePercent, marketingFee);
       const cards = META_REPORT_FEE_MODE_META.map(({ value, icon, title, desc }) => `
             <label class="meta-report-fee-mode-card">
-              <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${feeMode === value ? ' checked' : ''} />
+              <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${displayMode === value ? ' checked' : ''} />
               <span class="meta-report-fee-mode-card-icon" aria-hidden="true">${esc(icon)}</span>
               <span class="meta-report-fee-mode-card-text">
                 <span class="meta-report-fee-mode-card-title">${esc(title)}</span>
@@ -9518,13 +9544,13 @@
               </div>
               ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline', false, { hideLabel: true })}
             </div>
-            <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
+            <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" ${feeDataAttrs}>
               <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
                 <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
               </div>
               <div class="meta-report-fee-mode-grid${compact ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
               </div>
-              <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
+              <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, displayMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
               ${editorActions}
             </div>
           </div>
@@ -9534,7 +9560,9 @@
 
     function syncMetaReportBottomlineFeeDom(settings = {}, prefix = 'meta-report') {
       const showBottomline = Boolean(settings.metaReportShowBottomline);
-      const feeMode = resolveMetaReportFeeMode(settings) || '';
+      const feeEnabled = Boolean(settings.metaReportFeeEnabled);
+      const storedMode = settings.metaReportFeeMode || '';
+      const displayMode = resolveMetaReportFeeMode(settings);
       const feePercent = settings.metaReportFeePercent ?? 20;
       const marketingFee = settings.metaReportMarketingFeeAmount ?? 0;
       const bottomlineToggle = document.getElementById(`${prefix}-setting-bottomline`);
@@ -9542,17 +9570,18 @@
       const nested = document.getElementById(`${prefix}-fee-nested`);
       nested?.classList.toggle('is-hidden', !showBottomline);
       if (nested) {
-        nested.dataset.feeMode = feeMode;
+        nested.dataset.feeMode = storedMode;
+        nested.dataset.feeEnabled = feeEnabled ? 'true' : 'false';
         nested.dataset.feePercent = String(feePercent);
         nested.dataset.marketingFee = String(marketingFee);
       }
       document.querySelectorAll(`input[name="${prefix}-fee-mode"]`).forEach((radio) => {
-        radio.checked = radio.value === feeMode;
+        radio.checked = radio.value === displayMode;
       });
       const inlineFeeValue = metaReportUsesInlineFeeValue(prefix);
       const valueBlock = document.getElementById(`${prefix}-fee-value`);
       if (valueBlock) {
-        valueBlock.innerHTML = metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue });
+        valueBlock.innerHTML = metaReportFeeValueBlockHtml(prefix, displayMode, feePercent, marketingFee, { inline: inlineFeeValue });
         bindMetaReportFeeValueInputEnterKey(prefix);
       }
       syncMetaReportFeeSelectionState(prefix);
