@@ -6876,7 +6876,7 @@
           method: 'PUT',
           body: JSON.stringify({ fbLeadSyncEnabled: enabled }),
         });
-        showToast(enabled ? 'Hourly FB lead sync enabled' : 'Hourly FB lead sync disabled', 'success');
+        showToast(enabled ? 'Automatic FB lead sync enabled' : 'Automatic FB lead sync disabled', 'success');
         const client = fbLeadSyncState.clients.find((row) => row.clientId === clientId);
         if (client) client.fbLeadSyncEnabled = enabled;
       } catch (error) {
@@ -10858,7 +10858,7 @@
                 <div class="field-group" style="grid-column:1/-1">
                   <label class="setup-ready-toggle">
                     <input id="setup-fb-lead-sync-enabled" type="checkbox" ${account.fbLeadSyncEnabled ? 'checked' : ''} />
-                    <span>Enable hourly FB lead ID sync</span>
+                    <span>Enable automatic FB lead ID sync</span>
                   </label>
                 </div>
                 <div class="field-group" style="grid-column:1/-1">
