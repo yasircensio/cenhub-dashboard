@@ -4339,6 +4339,7 @@
     }
     .meta-report-year-loading-banner[hidden] { display: none !important; }
     .meta-report-client-page.is-year-loading .meta-report-settings,
+    .meta-reports-page--public.is-year-loading .meta-report-tabs,
     .meta-reports-page.is-year-loading .meta-cv-summary,
     .meta-reports-page.is-year-loading .meta-cv-legend {
       opacity: 0.45; pointer-events: none; transition: opacity 0.15s ease;

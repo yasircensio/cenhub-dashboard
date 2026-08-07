@@ -4348,6 +4348,7 @@
     }
     .meta-report-year-loading-banner[hidden] { display: none !important; }
     .meta-report-client-page.is-year-loading .meta-report-settings,
+    .meta-reports-page--public.is-year-loading .meta-report-tabs,
     .meta-reports-page.is-year-loading .meta-cv-summary,
     .meta-reports-page.is-year-loading .meta-cv-legend {
       opacity: 0.45; pointer-events: none; transition: opacity 0.15s ease;
@@ -8320,11 +8321,14 @@
         </div>
         <div class="meta-reports-page meta-reports-page--public">
           <div class="meta-report-toolbar">
-            <label class="meta-report-year-field">Year
-              <select id="meta-report-year" class="admin-select">
-                ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
-              </select>
-            </label>
+            <div class="meta-report-toolbar-left">
+              <label class="meta-report-year-field">Year
+                <select id="meta-report-year" class="admin-select">
+                  ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
+                </select>
+              </label>
+              <span class="meta-report-year-loading-banner" id="meta-report-public-year-loading-banner" hidden aria-live="polite"></span>
+            </div>
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
@@ -8856,6 +8860,34 @@
       }
     }
 
+    function setMetaReportPublicYearLoading(year, loading) {
+      const page = document.querySelector('.meta-reports-page--public');
+      const yearSelect = document.getElementById('meta-report-year');
+      if (loading) {
+        if (yearSelect) yearSelect.disabled = true;
+        if (page) page.classList.add('is-year-loading');
+        setMetaReportYearLoadingBanner('.meta-reports-page--public .meta-report-toolbar-left', year, true);
+        const tabsEl = document.querySelector('.meta-reports-page--public .meta-report-tabs');
+        if (tabsEl) {
+          tabsEl.innerHTML = renderMetaReportTabsSkeleton();
+          tabsEl.setAttribute('aria-busy', 'true');
+        }
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) {
+          panel.innerHTML = renderMetaReportMonthPanelSkeleton();
+          panel.classList.add('is-loading');
+        }
+      } else {
+        if (yearSelect) yearSelect.disabled = false;
+        if (page) page.classList.remove('is-year-loading');
+        setMetaReportYearLoadingBanner('.meta-reports-page--public .meta-report-toolbar-left', year, false);
+        const tabsEl = document.querySelector('.meta-reports-page--public .meta-report-tabs');
+        if (tabsEl) tabsEl.removeAttribute('aria-busy');
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.remove('is-loading');
+      }
+    }
+
     function bindMetaReportsClientChromeEvents(payload) {
       const clientId = payload.clientId;
 
@@ -8997,13 +9029,21 @@
             yearSelect.value = String(metaReportsState.selectedYear);
             return;
           }
-          metaReportsState.selectedYear = Number(yearSelect.value);
+          const previousYear = metaReportsState.selectedYear;
+          const newYear = Number(yearSelect.value);
+          if (newYear === previousYear) return;
+          metaReportsState.selectedYear = newYear;
           metaReportsState.activeMonthKey = null;
-          yearSelect.disabled = true;
+          setMetaReportPublicYearLoading(newYear, true);
           try {
             await loadPublicMetaReportPage({ silent: true });
+          } catch (error) {
+            metaReportsState.selectedYear = previousYear;
+            if (yearSelect) yearSelect.value = String(previousYear);
+            await loadPublicMetaReportPage({ silent: true });
+            showToast(error.message || 'Load failed', 'error');
           } finally {
-            yearSelect.disabled = false;
+            setMetaReportPublicYearLoading(newYear, false);
           }
         };
       }
@@ -9145,6 +9185,8 @@
       } catch (error) {
         if (!metaReportsState.publicPageMounted) {
           dashboard.innerHTML = wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message || 'Report not found')}</div>`);
+        } else if (silent) {
+          throw error;
         } else {
           showToast(error.message || 'Load failed', 'error');
         }
