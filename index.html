@@ -4267,6 +4267,7 @@
       border-top: 1px solid var(--border); display: flex; justify-content: flex-end;
       margin-top: 14px; padding-top: 14px; width: 100%;
     }
+    .meta-report-fee-save-row .admin-btn--small.is-dirty { box-shadow: 0 0 0 2px rgba(196, 106, 47, 0.18); }
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
       box-shadow: var(--shadow-sm); margin-bottom: 0; padding: 22px 24px 0;
@@ -4569,15 +4570,15 @@
       background: transparent; border: 0; border-radius: 0; border-top: 1px solid var(--border);
       padding: 10px 12px 12px;
     }
-    .meta-cv-fee-status {
+    .meta-report-fee-status {
       align-items: center; display: flex; flex-wrap: wrap; font-size: 11.5px; font-weight: 600;
       gap: 6px; line-height: 1.4; margin-bottom: 8px; min-height: 18px; width: 100%;
     }
-    .meta-cv-fee-status-label { color: var(--text-muted); font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
-    .meta-cv-fee-status-value { color: var(--text); font-weight: 600; }
-    .meta-cv-fee-status-value.is-active { color: #15803d; }
-    .meta-cv-fee-status-arrow { color: var(--text-soft); font-weight: 500; }
-    .meta-cv-fee-status-pending { color: #b45309; font-weight: 700; }
+    .meta-report-fee-status-value { color: var(--text); font-weight: 600; }
+    .meta-report-fee-status-value.is-active { color: #15803d; }
+    .meta-report-fee-status-arrow { color: var(--text-soft); font-weight: 500; }
+    .meta-report-fee-status-pending { color: #b45309; font-weight: 700; }
+    .meta-report-client-page .meta-report-fee-status { font-size: 13px; margin-bottom: 12px; }
     .meta-report-fee-mode-pills {
       display: flex; flex-wrap: wrap; gap: 6px; width: 100%;
     }
@@ -9043,53 +9044,50 @@
       };
     }
 
-    function syncMetaCvFeeSelectionState(prefix) {
-      if (prefix !== 'meta-cv') return;
+    function metaReportFeeStatusHtml(draft) {
+      if (draft.isDirty) {
+        return `
+            <span class="meta-report-fee-status-value is-active">${esc(draft.appliedLabel)}</span>
+            <span class="meta-report-fee-status-arrow" aria-hidden="true">→</span>
+            <span class="meta-report-fee-status-pending">${esc(draft.selectedLabel)}</span>`;
+      }
+      return `<span class="meta-report-fee-status-value is-active">${esc(draft.appliedLabel)}</span>`;
+    }
+
+    function syncMetaReportFeeSelectionState(prefix) {
       const nested = document.getElementById(`${prefix}-fee-nested`);
       const draft = readMetaReportFeeDraftState(prefix);
       if (!nested || !draft) return;
 
       const statusEl = document.getElementById(`${prefix}-fee-status`);
       if (statusEl) {
-        if (draft.isDirty) {
-          statusEl.innerHTML = `
-            <span class="meta-cv-fee-status-label">Saved</span>
-            <span class="meta-cv-fee-status-value is-active">${esc(draft.appliedLabel)}</span>
-            <span class="meta-cv-fee-status-arrow" aria-hidden="true">→</span>
-            <span class="meta-cv-fee-status-pending">${esc(draft.selectedLabel)}</span>
-          `;
-        } else {
-          statusEl.innerHTML = `
-            <span class="meta-cv-fee-status-label">Saved</span>
-            <span class="meta-cv-fee-status-value is-active">${esc(draft.appliedLabel)}</span>
-          `;
-        }
+        statusEl.innerHTML = metaReportFeeStatusHtml(draft);
       }
 
       const saveBtn = document.getElementById(`${prefix}-fee-save`);
       if (saveBtn) {
-        saveBtn.disabled = !draft.isDirty;
         saveBtn.classList.toggle('is-dirty', draft.isDirty);
-        saveBtn.textContent = draft.isDirty ? 'Save changes' : 'Saved';
+        if (prefix === 'meta-cv') {
+          saveBtn.disabled = !draft.isDirty;
+          saveBtn.textContent = draft.isDirty ? 'Save changes' : 'Saved';
+        }
       }
     }
 
-    function bindMetaCvFeeAmountInputs(prefix) {
-      if (prefix !== 'meta-cv') return;
+    function bindMetaReportFeeAmountInputs(prefix) {
       const percentInput = document.getElementById(`${prefix}-setting-fee-percent`);
       const marketingInput = document.getElementById(`${prefix}-setting-marketing-fee`);
       if (percentInput) {
-        percentInput.oninput = () => syncMetaCvFeeSelectionState(prefix);
+        percentInput.oninput = () => syncMetaReportFeeSelectionState(prefix);
       }
       if (marketingInput) {
-        marketingInput.oninput = () => syncMetaCvFeeSelectionState(prefix);
+        marketingInput.oninput = () => syncMetaReportFeeSelectionState(prefix);
       }
     }
 
-    function bindMetaCvFeeDraftTracking(prefix) {
-      if (prefix !== 'meta-cv') return;
-      bindMetaCvFeeAmountInputs(prefix);
-      syncMetaCvFeeSelectionState(prefix);
+    function bindMetaReportFeeDraftTracking(prefix) {
+      bindMetaReportFeeAmountInputs(prefix);
+      syncMetaReportFeeSelectionState(prefix);
     }
 
     function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false, variant = 'default' } = {}) {
@@ -9117,9 +9115,8 @@
               ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Enable bottomline on report', false, { hideLabel: true })}
             </div>
             <div class="meta-report-fee-nested meta-cv-bottomline-body${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
-              <div class="meta-cv-fee-status" id="${prefix}-fee-status" aria-live="polite">
-                <span class="meta-cv-fee-status-label">Saved</span>
-                <span class="meta-cv-fee-status-value is-active">${esc(appliedLabel)}</span>
+              <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
+                <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
               </div>
               <div class="meta-report-fee-mode-pills">${pills}</div>
               <div class="meta-cv-fee-footer">
@@ -9132,6 +9129,7 @@
       `;
       }
 
+      const appliedLabel = describeMetaReportFeeModeLabel(feeMode, feePercent, marketingFee);
       const cards = META_REPORT_FEE_MODE_META.map(({ value, icon, title, desc }) => `
             <label class="meta-report-fee-mode-card">
               <input type="radio" name="${prefix}-fee-mode" value="${esc(value)}"${feeMode === value ? ' checked' : ''} />
@@ -9152,6 +9150,9 @@
             ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline', false, { hideLabel: true })}
           </div>
           <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
+            <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
+              <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
+            </div>
             <div class="meta-report-fee-mode-grid${compact ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
             </div>
             <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
@@ -9186,7 +9187,7 @@
         valueBlock.innerHTML = metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue });
         bindMetaReportFeeValueInputEnterKey(prefix);
       }
-      syncMetaCvFeeSelectionState(prefix);
+      syncMetaReportFeeSelectionState(prefix);
     }
 
     function bindMetaReportFeeValueInputEnterKey(prefix) {
@@ -9229,13 +9230,13 @@
             );
             bindMetaReportFeeValueInputEnterKey(prefix);
           }
-          bindMetaCvFeeAmountInputs(prefix);
-          syncMetaCvFeeSelectionState(prefix);
+          bindMetaReportFeeAmountInputs(prefix);
+          syncMetaReportFeeSelectionState(prefix);
         };
       });
 
       bindMetaReportFeeValueInputEnterKey(prefix);
-      bindMetaCvFeeDraftTracking(prefix);
+      bindMetaReportFeeDraftTracking(prefix);
 
       const saveBtn = document.getElementById(`${prefix}-fee-save`);
       if (saveBtn) {
@@ -9271,11 +9272,11 @@
               metaReportFeePercent: Number(nested?.dataset.feePercent) || 20,
               metaReportMarketingFeeAmount: Number(nested?.dataset.marketingFee) || 0,
             }, prefix));
-            syncMetaCvFeeSelectionState(prefix);
+            syncMetaReportFeeSelectionState(prefix);
           } finally {
             saveBtn.disabled = false;
             saveBtn.textContent = originalLabel;
-            syncMetaCvFeeSelectionState(prefix);
+            syncMetaReportFeeSelectionState(prefix);
           }
         };
       }
