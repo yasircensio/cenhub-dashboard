@@ -646,7 +646,6 @@ Resume the interrupted ${g}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
       <div class="meta-report-share-head">
         <div>
           <span class="meta-report-share-title">Client preview</span>
-          <span class="meta-report-share-hint">Share link uses your slug plus a 4-digit code</span>
         </div>
       </div>
       ${l?renderMetaReportShareSummary(e):`
