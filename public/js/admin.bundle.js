@@ -659,16 +659,16 @@ Resume the interrupted ${g}?`)&&(l=m.id,d=Number(m.batchOffset)||0)}}if(n?setFbL
           </div>
           <div class="meta-report-share-field">
             <label for="meta-report-share-slug">Link slug</label>
-            <div class="meta-report-share-slug-input-wrap">
+            <div class="meta-report-share-slug-row">
               <span class="meta-report-share-slug-prefix">/report/</span>
               <input type="text" id="meta-report-share-slug" class="admin-input meta-report-share-slug-input" value="${esc(i)}" autocomplete="off" spellcheck="false" />
               <span class="meta-report-share-slug-suffix" id="meta-report-share-slug-suffix">-${esc(o||"\xB7\xB7\xB7\xB7")}</span>
             </div>
-            <p class="meta-report-share-field-hint">Use a short slug like \u201Cml-tag\u201D. Only Rotate code changes the 4 digits.</p>
+            <p class="meta-report-share-field-hint">Use a short slug like \u201Cml-tag\u201D. Rotate link changes only the 4-digit suffix.</p>
           </div>
           <code class="meta-report-share-url" id="meta-report-share-url">${esc(s)}</code>
           <div class="meta-report-share-editor-actions">
-            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${n?"":" disabled"}>Rotate code</button>
+            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${n?"":" disabled"}>Rotate link</button>
             <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-share-save">Save slug</button>
           </div>
           ${n?"":'<p class="meta-report-share-note">Preview is disabled \u2014 this link will not load until you re-enable it.</p>'}

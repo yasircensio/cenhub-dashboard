@@ -4584,22 +4584,18 @@
     .meta-report-share-preview-hint { color: var(--text-soft); font-size: 11.5px; line-height: 1.35; }
     .meta-report-share-field { display: flex; flex-direction: column; gap: 8px; width: 100%; }
     .meta-report-share-field label { color: var(--text-soft); font-size: 12px; font-weight: 600; }
-    .meta-report-share-slug-input-wrap {
-      align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px;
-      display: flex; gap: 0; max-width: 100%; overflow: hidden; width: min(100%, 460px);
+    .meta-report-share-slug-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px;
     }
     .meta-report-share-slug-prefix,
     .meta-report-share-slug-suffix {
-      color: var(--text-soft); flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 12.5px; white-space: nowrap;
+      color: var(--text-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px; line-height: 1.2; user-select: none; white-space: nowrap;
     }
-    .meta-report-share-slug-prefix { padding-left: 12px; }
-    .meta-report-share-slug-suffix { padding-right: 12px; }
     .meta-report-share-slug-input {
-      background: transparent; border: 0; box-shadow: none; flex: 1 1 auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 12.5px; min-width: 72px; padding: 10px 6px; width: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
+      max-width: 220px; min-width: 96px; width: auto;
     }
-    .meta-report-share-slug-input:focus { outline: none; }
     .meta-report-share-url {
       background: #fff; border: 1px solid var(--border); border-radius: 10px;
       color: var(--text); display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -7874,16 +7870,16 @@
               </div>
               <div class="meta-report-share-field">
                 <label for="meta-report-share-slug">Link slug</label>
-                <div class="meta-report-share-slug-input-wrap">
+                <div class="meta-report-share-slug-row">
                   <span class="meta-report-share-slug-prefix">/report/</span>
                   <input type="text" id="meta-report-share-slug" class="admin-input meta-report-share-slug-input" value="${esc(slug)}" autocomplete="off" spellcheck="false" />
                   <span class="meta-report-share-slug-suffix" id="meta-report-share-slug-suffix">-${esc(code || '····')}</span>
                 </div>
-                <p class="meta-report-share-field-hint">Use a short slug like “ml-tag”. Only Rotate code changes the 4 digits.</p>
+                <p class="meta-report-share-field-hint">Use a short slug like “ml-tag”. Rotate link changes only the 4-digit suffix.</p>
               </div>
               <code class="meta-report-share-url" id="meta-report-share-url">${esc(fullUrl)}</code>
               <div class="meta-report-share-editor-actions">
-                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${enabled ? '' : ' disabled'}>Rotate code</button>
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${enabled ? '' : ' disabled'}>Rotate link</button>
                 <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-share-save">Save slug</button>
               </div>
               ${enabled ? '' : '<p class="meta-report-share-note">Preview is disabled — this link will not load until you re-enable it.</p>'}
@@ -7933,7 +7929,7 @@
       const rotateBtn = document.getElementById('meta-report-rotate-token');
       if (!rotateBtn) return;
       rotateBtn.onclick = async () => {
-        if (!window.confirm('Rotate the 4-digit code? The old link will stop working.')) return;
+        if (!window.confirm('Rotate the share link? The old link will stop working.')) return;
         rotateBtn.disabled = true;
         try {
           const result = await patchMetaReportSettings(clientId, { rotateAccessToken: true });
@@ -7950,7 +7946,7 @@
           } else {
             syncMetaReportShareCard(nextPayload);
           }
-          showToast('Share link code rotated', 'success');
+          showToast('Share link rotated', 'success');
         } catch (error) {
           showToast(error.message || 'Rotate failed', 'error');
         } finally {
