@@ -668,10 +668,8 @@ Resume the interrupted ${g}?`)&&(l=f.id,d=Number(f.batchOffset)||0)}}if(n?setFbL
         </div>
       </div>
     </div>
-  `}function renderMetaReportClientControlPanel(e,{monthKeys:t=[],activeKey:n=""}={}){const a=e.settings||{},s=metaReportsState.clientShareExpanded,o=metaReportsState.clientReportSettingsExpanded,i=!!e.reportUrl,r=s||o,l=t.map(c=>`
-    <button type="button" class="meta-report-tab${c===n?" is-active":""}" data-meta-month-tab="${esc(c)}">${esc(metaMonthLabel(c))}</button>
-  `).join(""),d=metaReportMonthsNeedingBackfill(e);return`
-    <div class="meta-report-control-panel${s?" is-editing-share":""}${o?" is-editing-report":""}${a.metaReportEnabled?"":" is-share-disabled"}" id="meta-report-control-panel">
+  `}function renderMetaReportClientControlPanel(e){const t=e.settings||{},n=metaReportsState.clientShareExpanded,a=metaReportsState.clientReportSettingsExpanded,s=!!e.reportUrl,o=n||a,i=metaReportMonthsNeedingBackfill(e);return`
+    <div class="meta-report-control-panel${n?" is-editing-share":""}${a?" is-editing-report":""}${t.metaReportEnabled?"":" is-share-disabled"}" id="meta-report-control-panel">
       <div class="meta-report-control-bar">
         <div class="meta-report-control-bar-left meta-report-toolbar-left">
           <label class="meta-report-year-field">Year
@@ -679,39 +677,36 @@ Resume the interrupted ${g}?`)&&(l=f.id,d=Number(f.batchOffset)||0)}}if(n?setFbL
               ${renderMetaReportYearSelectOptions(e,{disableUnavailable:!0})}
             </select>
           </label>
-          ${d.length?`
+          ${i.length?`
             <div class="meta-report-backfill-wrap">
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${ICON_SYNC} Backfill ${d.length} month${d.length===1?"":"s"} from Meta</button>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${ICON_SYNC} Backfill ${i.length} month${i.length===1?"":"s"} from Meta</button>
               <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
             </div>
           `:""}
         </div>
-        <div class="meta-report-control-bar-tabs">
-          <div class="meta-report-tabs" role="tablist">${l}</div>
-        </div>
         <div class="meta-report-control-bar-actions meta-report-toolbar-actions">
           <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving\u2026</span>
-          ${i?`<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(e.reportUrl)}"${a.metaReportEnabled?"":" disabled"}>Copy link</button>`:""}
+          ${s?`<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(e.reportUrl)}"${t.metaReportEnabled?"":" disabled"}>Copy link</button>`:""}
         </div>
       </div>
-      ${i?`
-        <div class="meta-report-control-status"${r?" hidden":""} id="meta-report-control-status">
+      ${s?`
+        <div class="meta-report-control-status"${o?" hidden":""} id="meta-report-control-status">
           <div class="meta-report-control-status-grid">
             ${renderMetaReportShareSummary(e)}
-            ${renderMetaReportBottomlineFeeSummary(a,"meta-report")}
+            ${renderMetaReportBottomlineFeeSummary(t,"meta-report")}
           </div>
         </div>
       `:`
         <p class="meta-report-share-empty">Share link will appear once this client has a Meta ad account configured.</p>
       `}
       <div class="meta-report-control-editors">
-        ${i?renderMetaReportShareEditor(e):""}
+        ${s?renderMetaReportShareEditor(e):""}
         <div class="meta-report-control-editor meta-report-control-editor--report" id="meta-report-report-editor-wrap">
           <div class="meta-report-settings-card-head">
             <span class="meta-report-settings-card-title">Report settings</span>
           </div>
           <div class="meta-report-settings-group meta-report-settings-group--stacked">
-            ${renderMetaReportBottomlineFeeSettings(a,"meta-report",{compact:!1,collapsible:!0,externalSummary:!0})}
+            ${renderMetaReportBottomlineFeeSettings(t,"meta-report",{compact:!1,collapsible:!0,externalSummary:!0})}
           </div>
         </div>
       </div>
@@ -848,7 +843,9 @@ Resume the interrupted ${g}?`)&&(l=f.id,d=Number(f.batchOffset)||0)}}if(n?setFbL
       </div>
     </div>
     `)}
-  `}function renderMetaReportsClientPage(e){const t=e.monthKeys||[],n=metaReportsState.activeMonthKey||t[t.length-1]||"",a=e.months?.[n]||null,s=e.settings||{};return`
+  `}function renderMetaReportsClientPage(e){const t=e.monthKeys||[],n=metaReportsState.activeMonthKey||t[t.length-1]||"",a=e.months?.[n]||null,s=e.settings||{},o=t.map(i=>`
+    <button type="button" class="meta-report-tab${i===n?" is-active":""}" data-meta-month-tab="${esc(i)}">${esc(metaMonthLabel(i))}</button>
+  `).join("");return`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports"))}
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero meta-premium-page-hero">
@@ -864,7 +861,8 @@ Resume the interrupted ${g}?`)&&(l=f.id,d=Number(f.batchOffset)||0)}}if(n?setFbL
       </div>
     </div>
     <div class="sync-history-page meta-reports-page meta-report-client-page">
-      ${renderMetaReportClientControlPanel(e,{monthKeys:t,activeKey:n})}
+      ${renderMetaReportClientControlPanel(e)}
+      <div class="meta-report-tabs" role="tablist">${o}</div>
       <div class="meta-report-month-panel" id="meta-report-month-panel">
         ${renderMetaReportMonthBody(a,getMetaReportMonthBodyOptions(s,{editable:!0}))}
       </div>
