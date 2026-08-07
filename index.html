@@ -9254,32 +9254,42 @@
       const dualAxis = mode === 'x';
       const datasets = [
         {
-          type: 'bar',
+          type: 'line',
           label: 'Ad spend',
           data: spendValues,
-          backgroundColor: 'rgba(19, 139, 83, 0.88)',
           borderColor: '#138b53',
-          borderWidth: 1.5,
-          borderRadius: 4,
+          backgroundColor: 'rgba(19, 139, 83, 0.16)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#138b53',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 5,
+          fill: true,
+          tension: 0.3,
           yAxisID: 'ySpend',
-          order: 2,
         },
         {
-          type: 'bar',
+          type: 'line',
           label: returnLabel,
           data: returnValues,
-          backgroundColor: 'rgba(255, 106, 0, 0.88)',
           borderColor: '#ff6a00',
-          borderWidth: 1.5,
-          borderRadius: 4,
+          backgroundColor: 'rgba(255, 106, 0, 0.12)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#ff6a00',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 5,
+          fill: true,
+          tension: 0.3,
           yAxisID: dualAxis ? 'yReturn' : 'ySpend',
-          order: 1,
         },
       ];
 
       const scales = {
         x: {
-          grid: { display: false },
+          grid: { color: 'rgba(26, 18, 8, 0.06)' },
           ticks: { color: '#6b5348', font: { size: 11 } },
         },
         ySpend: {
@@ -9320,7 +9330,7 @@
       }
 
       return new Chart(canvas, {
-        type: 'bar',
+        type: 'line',
         data: { labels, datasets },
         options: {
           responsive: true,
