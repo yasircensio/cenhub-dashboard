@@ -3965,7 +3965,7 @@
       .kpi-grid > .card { min-height: 152px; }
       .admin-hub-hero h1 { font-size: 18px; }
       .meta-premium-page-hero { padding: 22px 20px 24px; }
-      .meta-premium-page-hero h1 { font-size: 1.5rem; }
+      .meta-premium-page-hero h1 { font-size: 18px; }
       .sync-history-toolbar {
         align-items: stretch;
         flex-direction: column;

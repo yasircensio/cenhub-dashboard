@@ -3974,7 +3974,7 @@
       .kpi-grid > .card { min-height: 152px; }
       .admin-hub-hero h1 { font-size: 18px; }
       .meta-premium-page-hero { padding: 22px 20px 24px; }
-      .meta-premium-page-hero h1 { font-size: 1.5rem; }
+      .meta-premium-page-hero h1 { font-size: 18px; }
       .sync-history-toolbar {
         align-items: stretch;
         flex-direction: column;
@@ -8382,6 +8382,13 @@
       if (refreshBtn) refreshBtn.onclick = () => refreshMetaReportsHubData({ silent: false });
     }
 
+    function resolveMetaReportFeeModeToRestore(client) {
+      if (!client) return 'performance';
+      if (client.metaReportFeeMode) return client.metaReportFeeMode;
+      if (Number(client.metaReportMarketingFeeAmount) > 0) return 'marketing';
+      return 'performance';
+    }
+
     function bindMetaReportsHubRowEvents(root = document) {
       root.querySelectorAll('[data-meta-report-enabled]').forEach((input) => {
         input.onchange = async () => {
@@ -8431,14 +8438,20 @@
       root.querySelectorAll('[data-meta-fee]').forEach((input) => {
         input.onchange = async () => {
           const clientId = input.getAttribute('data-meta-fee');
+          const client = (metaReportsState.dashboardData?.clients || []).find((row) => row.clientId === clientId);
           input.disabled = true;
           try {
-            const result = await patchMetaReportSettings(clientId, {
-              metaReportFeeMode: input.checked ? 'performance' : null,
-            });
+            const patch = input.checked
+              ? {
+                  metaReportFeeEnabled: true,
+                  metaReportFeeMode: resolveMetaReportFeeModeToRestore(client),
+                }
+              : { metaReportFeeEnabled: false };
+            const result = await patchMetaReportSettings(clientId, patch);
             mergeHubClient(clientId, {
               metaReportFeeEnabled: result.settings?.metaReportFeeEnabled,
               metaReportFeeMode: result.settings?.metaReportFeeMode,
+              metaReportMarketingFeeAmount: result.settings?.metaReportMarketingFeeAmount,
             });
             showToast('Fee setting saved', 'success');
           } catch (error) {
