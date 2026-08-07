@@ -4296,6 +4296,21 @@
       display: flex; flex-direction: column; gap: 32px; margin: 0 auto; max-width: none;
     }
     .meta-report-month-panel.is-loading { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
+    .meta-report-year-loading-banner {
+      align-items: center; color: var(--text-soft); display: inline-flex; font-size: 12.5px;
+      font-weight: 600; gap: 7px; white-space: nowrap;
+    }
+    .meta-report-year-loading-banner[hidden] { display: none !important; }
+    .meta-report-client-page.is-year-loading .meta-report-settings,
+    .meta-reports-page.is-year-loading .meta-cv-summary,
+    .meta-reports-page.is-year-loading .meta-cv-legend {
+      opacity: 0.45; pointer-events: none; transition: opacity 0.15s ease;
+    }
+    .meta-report-tab-skeleton { border-radius: 999px; display: inline-block; height: 34px; width: 58px; }
+    .meta-report-year-content-skeleton { display: flex; flex-direction: column; gap: 24px; }
+    .meta-cv-client-skeleton { pointer-events: none; }
+    .meta-cv-summary.is-skeleton,
+    .meta-cv-legend.is-skeleton { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
 
     .meta-report-hub-hero { padding-bottom: 20px; }
     .meta-report-hub-hero p { max-width: 52rem; }
@@ -8544,6 +8559,168 @@
       };
     }
 
+    function renderMetaReportTabsSkeleton(count = 12) {
+      return Array.from({ length: count }).map(() => (
+        '<span class="meta-cv-skeleton-pill meta-report-tab-skeleton" aria-hidden="true"></span>'
+      )).join('');
+    }
+
+    function renderMetaReportMonthPanelSkeleton() {
+      return `
+        <div class="meta-report-year-content-skeleton" aria-busy="true" aria-label="Loading year data">
+          <div class="meta-cv-skeleton-panel">
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--md"></div>
+            <div class="meta-cv-skeleton-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+              ${Array.from({ length: 5 }).map(() => `
+                <div class="meta-cv-skeleton-field">
+                  <div class="meta-cv-skeleton-line meta-cv-skeleton-line--xs"></div>
+                  <div class="meta-cv-skeleton-input"></div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="meta-report-groups-stack">
+            ${Array.from({ length: 3 }).map(() => `
+              <div class="meta-cv-skeleton-panel">
+                <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+                <div class="meta-cv-skeleton-line meta-cv-skeleton-line--full"></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMetaCvListSkeleton(rowCount = 5) {
+      return Array.from({ length: rowCount }).map(() => `
+        <article class="meta-cv-client meta-cv-client-skeleton" aria-hidden="true">
+          <div class="meta-cv-skeleton-row">
+            <div class="meta-cv-skeleton-field" style="flex:1">
+              <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+              <div class="meta-cv-skeleton-line meta-cv-skeleton-line--xs"></div>
+            </div>
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--xs"></div>
+          </div>
+          <div class="meta-cv-skeleton-row" style="margin-top:12px">
+            ${Array.from({ length: 12 }).map(() => '<span class="meta-cv-skeleton-pill meta-cv-skeleton-pill--short"></span>').join('')}
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function renderMetaCvSummarySkeleton() {
+      return Array.from({ length: 4 }).map(() => '<span class="meta-cv-skeleton-pill"></span>').join('');
+    }
+
+    function renderMetaCvEditorYearSkeleton() {
+      return `
+        <div class="meta-cv-editor-skeleton" aria-busy="true" aria-label="Loading year data">
+          <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+          <div class="meta-cv-skeleton-line meta-cv-skeleton-line--xs"></div>
+          <div class="meta-cv-skeleton-grid">
+            ${Array.from({ length: 5 }).map(() => `
+              <div class="meta-cv-skeleton-field">
+                <div class="meta-cv-skeleton-line meta-cv-skeleton-line--xs"></div>
+                <div class="meta-cv-skeleton-input"></div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="meta-cv-skeleton-panel">
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--md"></div>
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--full"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function setMetaReportYearLoadingBanner(toolbarSelector, year, loading) {
+      const toolbar = document.querySelector(toolbarSelector);
+      if (!toolbar) return;
+      let banner = toolbar.querySelector('.meta-report-year-loading-banner');
+      if (loading) {
+        if (!banner) {
+          banner = document.createElement('span');
+          banner.className = 'meta-report-year-loading-banner';
+          banner.setAttribute('aria-live', 'polite');
+          toolbar.appendChild(banner);
+        }
+        banner.innerHTML = `<span class="meta-report-save-indicator-spinner"></span> Loading ${esc(year)}…`;
+        banner.hidden = false;
+      } else if (banner) {
+        banner.hidden = true;
+      }
+    }
+
+    function setMetaReportClientYearLoading(year, loading) {
+      const page = document.querySelector('.meta-report-client-page');
+      const yearSelect = document.getElementById('meta-report-year');
+      if (loading) {
+        if (yearSelect) yearSelect.disabled = true;
+        if (page) page.classList.add('is-year-loading');
+        setMetaReportYearLoadingBanner('.meta-report-client-page .meta-report-toolbar-left', year, true);
+        const tabsEl = document.querySelector('.meta-report-tabs');
+        if (tabsEl) {
+          tabsEl.innerHTML = renderMetaReportTabsSkeleton();
+          tabsEl.setAttribute('aria-busy', 'true');
+        }
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) {
+          panel.innerHTML = renderMetaReportMonthPanelSkeleton();
+          panel.classList.add('is-loading');
+        }
+      } else {
+        if (yearSelect) yearSelect.disabled = false;
+        if (page) page.classList.remove('is-year-loading');
+        setMetaReportYearLoadingBanner('.meta-report-client-page .meta-report-toolbar-left', year, false);
+        const tabsEl = document.querySelector('.meta-report-tabs');
+        if (tabsEl) tabsEl.removeAttribute('aria-busy');
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.remove('is-loading');
+      }
+    }
+
+    function setMetaCvYearLoading(year, loading) {
+      const page = document.querySelector('.sync-history-page.meta-reports-page');
+      const yearSelect = document.getElementById('meta-cv-year');
+      const search = document.getElementById('meta-cv-search');
+      if (loading) {
+        if (yearSelect) yearSelect.disabled = true;
+        if (search) search.disabled = true;
+        if (page) page.classList.add('is-year-loading');
+        setMetaReportYearLoadingBanner('.meta-cv-toolbar', year, true);
+        const summary = document.querySelector('.meta-cv-summary');
+        if (summary) {
+          summary.classList.add('is-skeleton');
+          summary.innerHTML = renderMetaCvSummarySkeleton();
+        }
+        const legend = document.querySelector('.meta-cv-legend');
+        if (legend) legend.setAttribute('aria-hidden', 'true');
+        const list = document.getElementById('meta-cv-client-list');
+        if (list) {
+          list.innerHTML = renderMetaCvListSkeleton();
+          list.setAttribute('aria-busy', 'true');
+        }
+        const editor = document.getElementById('meta-cv-editor');
+        if (editor) {
+          editor.innerHTML = renderMetaCvEditorYearSkeleton();
+          editor.setAttribute('aria-busy', 'true');
+        }
+      } else {
+        if (yearSelect) yearSelect.disabled = false;
+        if (search) search.disabled = false;
+        if (page) page.classList.remove('is-year-loading');
+        setMetaReportYearLoadingBanner('.meta-cv-toolbar', year, false);
+        const summary = document.querySelector('.meta-cv-summary');
+        if (summary) summary.classList.remove('is-skeleton');
+        const legend = document.querySelector('.meta-cv-legend');
+        if (legend) legend.removeAttribute('aria-hidden');
+        const list = document.getElementById('meta-cv-client-list');
+        if (list) list.removeAttribute('aria-busy');
+        const editor = document.getElementById('meta-cv-editor');
+        if (editor) editor.removeAttribute('aria-busy');
+      }
+    }
+
     function bindMetaReportsClientChromeEvents(payload) {
       const clientId = payload.clientId;
 
@@ -8555,13 +8732,21 @@
             yearSelect.value = String(metaReportsState.selectedYear);
             return;
           }
-          metaReportsState.selectedYear = Number(yearSelect.value);
+          const previousYear = metaReportsState.selectedYear;
+          const newYear = Number(yearSelect.value);
+          if (newYear === previousYear) return;
+          metaReportsState.selectedYear = newYear;
           metaReportsState.activeMonthKey = null;
-          yearSelect.disabled = true;
+          setMetaReportClientYearLoading(newYear, true);
           try {
             await loadMetaReportsClientPage({ silent: true });
+          } catch (error) {
+            metaReportsState.selectedYear = previousYear;
+            if (yearSelect) yearSelect.value = String(previousYear);
+            await loadMetaReportsClientPage({ silent: true });
+            showToast(error.message || 'Load failed', 'error');
           } finally {
-            yearSelect.disabled = false;
+            setMetaReportClientYearLoading(newYear, false);
           }
         };
       }
@@ -8776,6 +8961,8 @@
             ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
             ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
           `;
+        } else if (silent) {
+          throw error;
         } else {
           showToast(error.message || 'Load failed', 'error');
         }
@@ -9726,11 +9913,24 @@
       const yearSelect = document.getElementById('meta-cv-year');
       if (yearSelect) {
         yearSelect.onchange = async () => {
-          metaReportsState.selectedYear = Number(yearSelect.value);
+          const previousYear = metaReportsState.selectedYear;
+          const newYear = Number(yearSelect.value);
+          if (newYear === previousYear) return;
+          metaReportsState.selectedYear = newYear;
           metaReportsState.customValues.selectedClientId = null;
           metaReportsState.customValues.selectedMonthKey = null;
           metaReportsState.customValues.editorPayload = null;
-          await loadMetaReportsCustomValuesPage({ silent: true });
+          setMetaCvYearLoading(newYear, true);
+          try {
+            await loadMetaReportsCustomValuesPage({ silent: true });
+          } catch (error) {
+            metaReportsState.selectedYear = previousYear;
+            if (yearSelect) yearSelect.value = String(previousYear);
+            await loadMetaReportsCustomValuesPage({ silent: true, keepSelection: true });
+            showToast(error.message || 'Load failed', 'error');
+          } finally {
+            setMetaCvYearLoading(newYear, false);
+          }
         };
       }
       const search = document.getElementById('meta-cv-search');
@@ -9786,6 +9986,8 @@
             ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-custom'))}
             ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
           `;
+        } else if (silent) {
+          throw error;
         } else {
           showToast(error.message || 'Load failed', 'error');
         }

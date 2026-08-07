@@ -4254,6 +4254,10 @@
     .meta-report-fee-value-input-suffix {
       color: var(--text-soft); flex-shrink: 0; font-size: 12px; font-weight: 700;
     }
+    .meta-report-fee-save-row {
+      border-top: 1px solid var(--border); display: flex; justify-content: flex-end;
+      margin-top: 14px; padding-top: 14px; width: 100%;
+    }
     .meta-report-fee-save-row .admin-btn--small.is-dirty { box-shadow: 0 0 0 2px rgba(196, 106, 47, 0.18); }
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
@@ -4283,6 +4287,21 @@
       display: flex; flex-direction: column; gap: 32px; margin: 0 auto; max-width: none;
     }
     .meta-report-month-panel.is-loading { opacity: 0.55; pointer-events: none; transition: opacity 0.15s ease; }
+    .meta-report-year-loading-banner {
+      align-items: center; color: var(--text-soft); display: inline-flex; font-size: 12.5px;
+      font-weight: 600; gap: 7px; white-space: nowrap;
+    }
+    .meta-report-year-loading-banner[hidden] { display: none !important; }
+    .meta-report-client-page.is-year-loading .meta-report-settings,
+    .meta-reports-page.is-year-loading .meta-cv-summary,
+    .meta-reports-page.is-year-loading .meta-cv-legend {
+      opacity: 0.45; pointer-events: none; transition: opacity 0.15s ease;
+    }
+    .meta-report-tab-skeleton { border-radius: 999px; display: inline-block; height: 34px; width: 58px; }
+    .meta-report-year-content-skeleton { display: flex; flex-direction: column; gap: 24px; }
+    .meta-cv-client-skeleton { pointer-events: none; }
+    .meta-cv-summary.is-skeleton,
+    .meta-cv-legend.is-skeleton { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
 
     .meta-report-hub-hero { padding-bottom: 20px; }
     .meta-report-hub-hero p { max-width: 52rem; }
