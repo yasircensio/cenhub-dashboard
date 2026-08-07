@@ -4537,9 +4537,9 @@
     .meta-report-share-card.is-disabled { opacity: 0.88; }
     .meta-report-share-summary,
     .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary {
-      align-items: center; background: transparent; border: 0; border-radius: 0;
-      display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: space-between;
-      padding: 0; width: 100%;
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px 14px;
+      justify-content: space-between; padding: 12px 14px; width: 100%;
     }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
@@ -4559,10 +4559,7 @@
       color: var(--text); font-size: 13px; font-weight: 600;
     }
     .meta-report-share-summary-value.is-on,
-    .meta-report-bottomline-summary-value.is-on {
-      background: var(--primary-soft); border-radius: 999px; color: var(--text-muted);
-      padding: 1px 8px;
-    }
+    .meta-report-bottomline-summary-value.is-on { color: #15803d; }
     .meta-report-share-summary-value.is-off,
     .meta-report-bottomline-summary-value.is-off { color: var(--text-soft); }
     .meta-report-share-editor[hidden] { display: none !important; }
