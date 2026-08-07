@@ -1111,7 +1111,6 @@ Resume the interrupted ${y}?`)&&(l=p.id,d=Number(p.batchOffset)||0)}}if(n?setFbL
           <span aria-hidden="true"> / </span>
           <span>Custom values</span>
         </div>
-        <div class="meta-cv-hero-accent" aria-hidden="true"></div>
         <h1>Custom values</h1>
       </div>
     </div>
