@@ -4287,6 +4287,33 @@
       margin-top: 14px; padding-top: 14px; width: 100%;
     }
     .meta-report-fee-save-row .admin-btn--small.is-dirty { box-shadow: 0 0 0 2px rgba(196, 106, 47, 0.18); }
+    .meta-report-bottomline-fee-settings--client.is-collapsed .meta-report-bottomline-editor { display: none; }
+    .meta-report-bottomline-fee-settings--client.is-editing .meta-report-bottomline-summary { display: none; }
+    .meta-report-bottomline-summary {
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; gap: 12px; justify-content: space-between;
+      padding: 12px 14px; width: 100%;
+    }
+    .meta-report-bottomline-summary-content {
+      display: flex; flex-direction: column; gap: 6px; min-width: 0;
+    }
+    .meta-report-bottomline-summary-row {
+      align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px 10px;
+    }
+    .meta-report-bottomline-summary-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-bottomline-summary-value {
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-bottomline-summary-value.is-on { color: #15803d; }
+    .meta-report-bottomline-editor .meta-report-bottomline-row {
+      margin-bottom: 12px;
+    }
+    .meta-report-fee-editor-actions {
+      border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: flex-end; margin-top: 14px; padding-top: 14px; width: 100%;
+    }
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
       box-shadow: var(--shadow-sm); margin-bottom: 0; padding: 22px 24px 0;
@@ -4503,6 +4530,12 @@
     .meta-report-settings-card-title {
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .meta-report-client-page .meta-report-settings.is-collapsed {
+      padding-bottom: 14px;
+    }
+    .meta-report-client-page .meta-report-settings.is-collapsed .meta-report-settings-card-head {
+      margin-bottom: 10px;
     }
     .meta-report-client-page .meta-report-fee-nested {
       background: linear-gradient(180deg, #faf7f3 0%, var(--panel-soft) 100%);
@@ -7566,6 +7599,7 @@
       hubMounted: false,
       clientPayload: null,
       clientPageMounted: false,
+      clientReportSettingsExpanded: false,
       activeMonthKey: null,
       selectedYear: new Date().getFullYear(),
       publicPayload: null,
@@ -8245,13 +8279,13 @@
               <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token">Rotate link</button>
             </div>
           </div>
-          <div class="meta-report-settings">
+          <div class="meta-report-settings${metaReportsState.clientReportSettingsExpanded ? '' : ' is-collapsed'}">
             <div class="meta-report-settings-card-head">
               <span class="meta-report-settings-card-title">Report settings</span>
               <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
             </div>
             <div class="meta-report-settings-group meta-report-settings-group--stacked">
-              ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report', { compact: false })}
+              ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report', { compact: false, collapsible: true })}
             </div>
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
@@ -8577,6 +8611,22 @@
           || payload?.months?.[metaReportsState.activeMonthKey]
           || null;
         syncMetaReportSettingsControls(settings, monthPayload);
+
+        if (Object.prototype.hasOwnProperty.call(patch, 'metaReportShowBottomline')) {
+          if (settings.metaReportShowBottomline) {
+            setMetaReportClientSettingsExpanded('meta-report', true);
+          } else {
+            setMetaReportClientSettingsExpanded('meta-report', false);
+          }
+          updateMetaReportBottomlineFeeSummary(settings, 'meta-report');
+        } else if (
+          Object.prototype.hasOwnProperty.call(patch, 'metaReportFeeMode')
+          || Object.prototype.hasOwnProperty.call(patch, 'metaReportFeePercent')
+          || Object.prototype.hasOwnProperty.call(patch, 'metaReportMarketingFeeAmount')
+        ) {
+          setMetaReportClientSettingsExpanded('meta-report', false);
+          updateMetaReportBottomlineFeeSummary(settings, 'meta-report');
+        }
 
         if (monthPayload) {
           const panel = document.getElementById('meta-report-month-panel');
@@ -9019,6 +9069,7 @@
         }
         if (!metaReportsState.clientPageMounted) {
           metaReportsState.clientPayload = payload;
+          metaReportsState.clientReportSettingsExpanded = false;
           dashboard.innerHTML = renderMetaReportsClientPage(payload);
           metaReportsState.clientPageMounted = true;
           bindMetaReportsClientEvents(payload);
@@ -9347,7 +9398,56 @@
       syncMetaReportFeeSelectionState(prefix);
     }
 
-    function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false, variant = 'default' } = {}) {
+    function renderMetaReportBottomlineFeeSummary(settings = {}, prefix = 'meta-report') {
+      const showBottomline = Boolean(settings.metaReportShowBottomline);
+      const feeMode = resolveMetaReportFeeMode(settings) || '';
+      const feePercent = settings.metaReportFeePercent ?? 20;
+      const marketingFee = settings.metaReportMarketingFeeAmount ?? 0;
+      const feeLabel = describeMetaReportFeeModeLabel(feeMode, feePercent, marketingFee);
+      return `
+        <div class="meta-report-bottomline-summary" id="${prefix}-fee-summary">
+          <div class="meta-report-bottomline-summary-content">
+            <div class="meta-report-bottomline-summary-row">
+              <span class="meta-report-bottomline-summary-label">Bottomline</span>
+              <span class="meta-report-bottomline-summary-value${showBottomline ? ' is-on' : ''}">${showBottomline ? 'Enabled' : 'Off'}</span>
+            </div>
+            ${showBottomline ? `
+            <div class="meta-report-bottomline-summary-row">
+              <span class="meta-report-bottomline-summary-label">Censio fee</span>
+              <span class="meta-report-bottomline-summary-value">${esc(feeLabel)}</span>
+            </div>` : ''}
+          </div>
+          <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="${prefix}-fee-edit">Edit</button>
+        </div>
+      `;
+    }
+
+    function setMetaReportClientSettingsExpanded(prefix, expanded) {
+      if (prefix !== 'meta-report') return;
+      metaReportsState.clientReportSettingsExpanded = Boolean(expanded);
+      const root = document.querySelector('.meta-report-bottomline-fee-settings--client');
+      const settingsCard = document.querySelector('.meta-report-client-page .meta-report-settings');
+      const editor = document.getElementById(`${prefix}-fee-editor`);
+      root?.classList.toggle('is-editing', expanded);
+      root?.classList.toggle('is-collapsed', !expanded);
+      settingsCard?.classList.toggle('is-collapsed', !expanded);
+      editor?.classList.toggle('is-hidden', !expanded);
+    }
+
+    function updateMetaReportBottomlineFeeSummary(settings = {}, prefix = 'meta-report') {
+      const summary = document.getElementById(`${prefix}-fee-summary`);
+      if (!summary) return;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = renderMetaReportBottomlineFeeSummary(settings, prefix);
+      const next = wrapper.firstElementChild;
+      if (next) summary.replaceWith(next);
+      const editBtn = document.getElementById(`${prefix}-fee-edit`);
+      if (editBtn) {
+        editBtn.onclick = () => setMetaReportClientSettingsExpanded(prefix, true);
+      }
+    }
+
+    function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false, variant = 'default', collapsible = false } = {}) {
       const showBottomline = Boolean(settings.metaReportShowBottomline);
       const feeMode = resolveMetaReportFeeMode(settings) || '';
       const feePercent = settings.metaReportFeePercent ?? 20;
@@ -9397,24 +9497,35 @@
               </span>
               <span class="meta-report-fee-mode-card-radio" aria-hidden="true">${ICON_CHECK}</span>
             </label>`).join('');
-      return `
-        <div class="meta-report-bottomline-fee-settings">
-          <div class="meta-report-bottomline-row">
-            <div class="meta-report-bottomline-row-text">
-              <span class="meta-report-bottomline-row-title">Show bottomline</span>
-              <span class="meta-report-bottomline-row-desc">Adds profit, ROAS and Censio fee breakdown to this report</span>
-            </div>
-            ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline', false, { hideLabel: true })}
-          </div>
-          <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
-            <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
-              <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
-            </div>
-            <div class="meta-report-fee-mode-grid${compact ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
-            </div>
-            <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
+      const expanded = collapsible ? metaReportsState.clientReportSettingsExpanded : true;
+      const editorActions = collapsible ? `
+            <div class="meta-report-fee-editor-actions">
+              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="${prefix}-fee-done">Done</button>
+              <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee settings</button>
+            </div>` : `
             <div class="meta-report-fee-save-row">
               <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee settings</button>
+            </div>`;
+      const summaryHtml = collapsible ? renderMetaReportBottomlineFeeSummary(settings, prefix) : '';
+      return `
+        <div class="meta-report-bottomline-fee-settings${collapsible ? ' meta-report-bottomline-fee-settings--client' : ''}${collapsible ? (expanded ? ' is-editing' : ' is-collapsed') : ''}">
+          ${summaryHtml}
+          <div class="meta-report-bottomline-editor${collapsible && !expanded ? ' is-hidden' : ''}" id="${prefix}-fee-editor">
+            <div class="meta-report-bottomline-row">
+              <div class="meta-report-bottomline-row-text">
+                <span class="meta-report-bottomline-row-title">Show bottomline</span>
+                <span class="meta-report-bottomline-row-desc">Adds profit, ROAS and Censio fee breakdown to this report</span>
+              </div>
+              ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline', false, { hideLabel: true })}
+            </div>
+            <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" data-fee-mode="${esc(feeMode)}" data-fee-percent="${esc(feePercent)}" data-marketing-fee="${esc(marketingFee)}">
+              <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
+                <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
+              </div>
+              <div class="meta-report-fee-mode-grid${compact ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
+              </div>
+              <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, feeMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
+              ${editorActions}
             </div>
           </div>
         </div>
@@ -9445,6 +9556,9 @@
         bindMetaReportFeeValueInputEnterKey(prefix);
       }
       syncMetaReportFeeSelectionState(prefix);
+      if (prefix === 'meta-report') {
+        updateMetaReportBottomlineFeeSummary(settings, prefix);
+      }
     }
 
     function bindMetaReportFeeValueInputEnterKey(prefix) {
@@ -9460,6 +9574,19 @@
 
     function bindMetaReportBottomlineFeeEvents(clientId, prefix, saveSettingsFn) {
       const saveSettings = saveSettingsFn || ((patch, revert) => saveMetaReportClientSettings(clientId, patch, revert));
+      const editBtn = document.getElementById(`${prefix}-fee-edit`);
+      if (editBtn) {
+        editBtn.onclick = () => setMetaReportClientSettingsExpanded(prefix, true);
+      }
+      const doneBtn = document.getElementById(`${prefix}-fee-done`);
+      if (doneBtn) {
+        doneBtn.onclick = () => {
+          const settings = metaReportsState.clientPayload?.settings || {};
+          syncMetaReportBottomlineFeeDom(settings, prefix);
+          setMetaReportClientSettingsExpanded(prefix, false);
+          updateMetaReportBottomlineFeeSummary(settings, prefix);
+        };
+      }
       const bottomlineToggle = document.getElementById(`${prefix}-setting-bottomline`);
       if (bottomlineToggle) {
         bottomlineToggle.onchange = () => {

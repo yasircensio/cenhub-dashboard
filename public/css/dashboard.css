@@ -4278,6 +4278,33 @@
       margin-top: 14px; padding-top: 14px; width: 100%;
     }
     .meta-report-fee-save-row .admin-btn--small.is-dirty { box-shadow: 0 0 0 2px rgba(196, 106, 47, 0.18); }
+    .meta-report-bottomline-fee-settings--client.is-collapsed .meta-report-bottomline-editor { display: none; }
+    .meta-report-bottomline-fee-settings--client.is-editing .meta-report-bottomline-summary { display: none; }
+    .meta-report-bottomline-summary {
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; gap: 12px; justify-content: space-between;
+      padding: 12px 14px; width: 100%;
+    }
+    .meta-report-bottomline-summary-content {
+      display: flex; flex-direction: column; gap: 6px; min-width: 0;
+    }
+    .meta-report-bottomline-summary-row {
+      align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px 10px;
+    }
+    .meta-report-bottomline-summary-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-bottomline-summary-value {
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-bottomline-summary-value.is-on { color: #15803d; }
+    .meta-report-bottomline-editor .meta-report-bottomline-row {
+      margin-bottom: 12px;
+    }
+    .meta-report-fee-editor-actions {
+      border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: flex-end; margin-top: 14px; padding-top: 14px; width: 100%;
+    }
     .meta-report-edit-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
       box-shadow: var(--shadow-sm); margin-bottom: 0; padding: 22px 24px 0;
@@ -4494,6 +4521,12 @@
     .meta-report-settings-card-title {
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .meta-report-client-page .meta-report-settings.is-collapsed {
+      padding-bottom: 14px;
+    }
+    .meta-report-client-page .meta-report-settings.is-collapsed .meta-report-settings-card-head {
+      margin-bottom: 10px;
     }
     .meta-report-client-page .meta-report-fee-nested {
       background: linear-gradient(180deg, #faf7f3 0%, var(--panel-soft) 100%);
