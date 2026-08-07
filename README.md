@@ -145,7 +145,7 @@ Separate from the GHL dashboard: monthly Meta performance reports for partner-ac
 
 - **Staff checklist:** `/admin/meta-reports` — enable reporting per client, bottomline, Censio fee %, copy share link
 - **Staff editor:** `/admin/meta-reports/{client_id}` — month tabs (Jan through current month), partial-month date range, custom fee rows
-- **Client view:** `/report/{token}` — read-only share link (unguessable token; rotate from staff editor)
+- **Client view:** `/report/{token}` — read-only share link (auto slug from company name + 4-digit code; rotate code from staff editor)
 - **API:** `GET /api/meta-reports` (staff), `GET /api/meta-reports/public/{token}?year=2026` (public)
 - **Cron:** existing Meta sync cron also refreshes the **current month** snapshot for enabled report clients
 

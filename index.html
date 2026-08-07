@@ -4546,6 +4546,27 @@
       background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
       margin-bottom: 16px; padding: 14px 16px;
     }
+    .meta-report-share-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      margin-bottom: 16px; padding: 16px 18px;
+    }
+    .meta-report-share-card.is-disabled { opacity: 0.88; }
+    .meta-report-share-head {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: space-between; margin-bottom: 14px;
+    }
+    .meta-report-share-title { color: var(--text); display: block; font-size: 14px; font-weight: 700; }
+    .meta-report-share-hint { color: var(--text-soft); display: block; font-size: 12px; margin-top: 2px; }
+    .meta-report-share-url-row { margin-bottom: 12px; }
+    .meta-report-share-url {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12.5px; line-height: 1.45; overflow-wrap: anywhere; padding: 10px 12px; word-break: break-word;
+    }
+    .meta-report-share-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta-report-share-note, .meta-report-share-empty {
+      color: var(--text-soft); font-size: 12px; margin: 10px 0 0;
+    }
     .meta-report-client-page .meta-report-month-panel {
       background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
       gap: 32px; padding: 0;
@@ -7682,6 +7703,117 @@
       `;
     }
 
+    function metaReportFullUrl(reportPath) {
+      if (!reportPath) return '';
+      return `${window.location.origin}${reportPath}`;
+    }
+
+    function renderMetaReportShareCard(payload) {
+      const settings = payload.settings || {};
+      const enabled = Boolean(settings.metaReportEnabled);
+      const reportUrl = payload.reportUrl || null;
+      const fullUrl = metaReportFullUrl(reportUrl);
+
+      return `
+        <div class="meta-report-share-card${enabled ? '' : ' is-disabled'}" id="meta-report-share-card">
+          <div class="meta-report-share-head">
+            <div>
+              <span class="meta-report-share-title">Client preview</span>
+              <span class="meta-report-share-hint">Read-only share link for your client</span>
+            </div>
+            ${renderMetaHubSwitch({
+              label: enabled ? 'Enabled' : 'Disabled',
+              attr: 'data-meta-client-preview',
+              value: payload.clientId,
+              checked: enabled,
+            })}
+          </div>
+          <div class="meta-report-share-body" id="meta-report-share-body">
+            ${reportUrl ? `
+              <div class="meta-report-share-url-row">
+                <code class="meta-report-share-url" id="meta-report-share-url">${esc(fullUrl)}</code>
+              </div>
+              <div class="meta-report-share-actions">
+                <button type="button" class="admin-btn admin-btn--secondary" id="meta-report-copy-link" data-copy-report-url="${esc(reportUrl)}"${enabled ? '' : ' disabled'}>Copy link</button>
+                <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token"${enabled ? '' : ' disabled'}>Rotate code</button>
+              </div>
+              ${enabled ? '' : '<p class="meta-report-share-note">Preview is disabled — this link will not load until you re-enable it.</p>'}
+            ` : `
+              <p class="meta-report-share-empty">Enable client preview to generate a share link.</p>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function syncMetaReportShareCard(payload) {
+      const card = document.getElementById('meta-report-share-card');
+      if (!card) return;
+      const parent = card.parentElement;
+      if (!parent) return;
+      const markup = renderMetaReportShareCard(payload);
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = markup.trim();
+      const nextCard = wrapper.firstElementChild;
+      if (!nextCard) return;
+      parent.replaceChild(nextCard, card);
+      bindMetaReportShareEvents(payload);
+    }
+
+    function bindMetaReportRotateButton(clientId) {
+      const rotateBtn = document.getElementById('meta-report-rotate-token');
+      if (!rotateBtn) return;
+      rotateBtn.onclick = async () => {
+        if (!window.confirm('Rotate the 4-digit code? The old link will stop working.')) return;
+        rotateBtn.disabled = true;
+        try {
+          const result = await patchMetaReportSettings(clientId, { rotateAccessToken: true });
+          const reportUrl = result.settings?.reportUrl || null;
+          const currentPayload = metaReportsState.clientPayload;
+          if (currentPayload) {
+            currentPayload.reportUrl = reportUrl;
+            if (result.settings) currentPayload.settings = { ...currentPayload.settings, ...result.settings };
+          }
+          syncMetaReportShareCard(currentPayload || { clientId, reportUrl, settings: result.settings || {} });
+          showToast('Share link code rotated', 'success');
+        } catch (error) {
+          showToast(error.message || 'Rotate failed', 'error');
+        } finally {
+          const btn = document.getElementById('meta-report-rotate-token');
+          if (btn) btn.disabled = false;
+        }
+      };
+    }
+
+    function bindMetaReportShareEvents(payload) {
+      const clientId = payload.clientId;
+      bindMetaReportCopyButtons();
+      bindMetaReportRotateButton(clientId);
+
+      const previewToggle = document.querySelector('[data-meta-client-preview]');
+      if (previewToggle) {
+        previewToggle.onchange = async () => {
+          previewToggle.disabled = true;
+          try {
+            const result = await patchMetaReportSettings(clientId, { metaReportEnabled: previewToggle.checked });
+            const settings = result.settings || {};
+            const currentPayload = metaReportsState.clientPayload || payload;
+            currentPayload.settings = { ...currentPayload.settings, ...settings };
+            currentPayload.reportUrl = settings.reportUrl || null;
+            metaReportsState.clientPayload = currentPayload;
+            syncMetaReportShareCard(currentPayload);
+            showToast(previewToggle.checked ? 'Client preview enabled' : 'Client preview disabled', 'success');
+          } catch (error) {
+            showToast(error.message || 'Update failed', 'error');
+            previewToggle.checked = !previewToggle.checked;
+          } finally {
+            const toggle = document.querySelector('[data-meta-client-preview]');
+            if (toggle) toggle.disabled = false;
+          }
+        };
+      }
+    }
+
     function renderMetaReportHubCard(client) {
       const canEdit = Boolean(client.clientId);
       const rowKey = client.clientId || client.metaAdAccountId || '';
@@ -7938,11 +8070,14 @@
       if (payload.reportUrl) {
         if (copyBtn) {
           copyBtn.setAttribute('data-copy-report-url', payload.reportUrl);
+          copyBtn.disabled = !payload.settings?.metaReportEnabled;
           copyBtn.hidden = false;
         }
       } else if (copyBtn) {
         copyBtn.hidden = true;
       }
+
+      syncMetaReportShareCard(payload);
 
       const settings = payload.settings || {};
       const monthPayload = payload.months?.[metaReportsState.activeMonthKey] || null;
@@ -8275,11 +8410,8 @@
                 `;
               })()}
             </div>
-            <div class="meta-report-toolbar-actions">
-              ${payload.reportUrl ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-copy-link" data-copy-report-url="${esc(payload.reportUrl)}">Copy client link</button>` : ''}
-              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-rotate-token">Rotate link</button>
-            </div>
           </div>
+          ${renderMetaReportShareCard(payload)}
           <div class="meta-report-settings${metaReportsState.clientReportSettingsExpanded ? '' : ' is-collapsed'}">
             <div class="meta-report-settings-card-head">
               <span class="meta-report-settings-card-title">Report settings</span>
@@ -8921,30 +9053,7 @@
       bindMetaReportCopyButtons();
       bindMetaReportBackfillButton(clientId);
       bindMetaReportBottomlineFeeEvents(clientId, 'meta-report');
-
-      const rotateBtn = document.getElementById('meta-report-rotate-token');
-      if (rotateBtn) {
-        rotateBtn.onclick = async () => {
-          if (!window.confirm('Rotate the client share link? The old link will stop working.')) return;
-          rotateBtn.disabled = true;
-          try {
-            const result = await patchMetaReportSettings(clientId, { rotateAccessToken: true });
-            const reportUrl = result.settings?.reportUrl;
-            const currentPayload = metaReportsState.clientPayload;
-            if (currentPayload) currentPayload.reportUrl = reportUrl;
-            const copyBtn = document.getElementById('meta-report-copy-link');
-            if (copyBtn && reportUrl) {
-              copyBtn.setAttribute('data-copy-report-url', reportUrl);
-              copyBtn.hidden = false;
-            }
-            showToast('Share link rotated', 'success');
-          } catch (error) {
-            showToast(error.message || 'Rotate failed', 'error');
-          } finally {
-            rotateBtn.disabled = false;
-          }
-        };
-      }
+      bindMetaReportShareEvents(payload);
     }
 
     function bindMetaReportsClientEvents(payload) {
