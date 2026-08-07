@@ -4732,6 +4732,39 @@
       display: flex; flex-direction: column; gap: 16px; min-width: 0;
     }
     .meta-report-chart-tab-panel[hidden] { display: none !important; }
+    .meta-report-spend-chart-toolbar {
+      display: flex; justify-content: flex-end; width: 100%;
+    }
+    .meta-report-spend-chart-type {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px;
+    }
+    .meta-report-spend-chart-type .meta-report-chart-toggle-btn:disabled {
+      cursor: default; opacity: 0.55;
+    }
+    .meta-report-spend-chart-settings {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .meta-report-spend-chart-settings-field {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 12px; justify-content: space-between;
+    }
+    .meta-report-spend-chart-settings-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-scenario-charts {
+      display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .meta-report-scenario-chart-card {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 18px;
+      display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px 16px 14px;
+    }
+    .meta-report-scenario-chart-canvas-wrap {
+      height: 260px; min-height: 260px; position: relative; width: 100%;
+    }
+    .meta-report-scenario-chart-canvas-wrap canvas {
+      display: block; height: 100% !important; width: 100% !important;
+    }
+    .meta-report-scenario-chart-card[hidden] { display: none !important; }
     .meta-report-scenario-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
       box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px;

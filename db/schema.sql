@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   meta_report_marketing_fee_amount NUMERIC NOT NULL DEFAULT 0,
   meta_report_show_other BOOLEAN NOT NULL DEFAULT TRUE,
   meta_report_table_columns INTEGER NOT NULL DEFAULT 1,
+  meta_report_spend_chart_type TEXT NOT NULL DEFAULT 'area',
   meta_report_access_token TEXT,
   meta_report_slug TEXT,
   meta_report_default_won_leads NUMERIC,
