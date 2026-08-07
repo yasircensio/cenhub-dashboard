@@ -143,7 +143,7 @@ Each client needs `metaPageId`, GHL token, and Meta page token or `META_SYSTEM_U
 
 Separate from the GHL dashboard: monthly Meta performance reports for partner-access ad accounts (~15 clients). Meta ad metrics and leads are fetched automatically; staff enter won leads, average lead value, and profit manually.
 
-- **Staff checklist:** `/admin/meta-reports` — enable reporting per client, bottomline, Censio fee %, copy share link
+- **Staff checklist:** `/admin/meta-reports` — clients with a Meta ad account get a share link automatically; toggle client preview on/off per client
 - **Staff editor:** `/admin/meta-reports/{client_id}` — month tabs (Jan through current month), partial-month date range, custom fee rows
 - **Client view:** `/report/{token}` — read-only share link (auto slug from company name + 4-digit code; rotate code from staff editor)
 - **API:** `GET /api/meta-reports` (staff), `GET /api/meta-reports/public/{token}?year=2026` (public)
