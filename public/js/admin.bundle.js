@@ -1035,7 +1035,10 @@ Resume the interrupted ${$}?`)&&(l=g.id,d=Number(g.batchOffset)||0)}}if(a?setFbL
     <header class="brand-topbar">
       <div class="brand-topbar-inner">
         <div class="brand-topbar-left">
-          <span class="meta-report-public-product-name">Censio Analytics</span>
+          <div class="meta-report-public-topbar-brand">
+            <div class="meta-report-public-topbar-accent" aria-hidden="true"></div>
+            <span class="meta-report-public-product-name">Censio Analytics</span>
+          </div>
         </div>
       </div>
     </header>
@@ -1043,6 +1046,7 @@ Resume the interrupted ${$}?`)&&(l=g.id,d=Number(g.batchOffset)||0)}}if(a?setFbL
     <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
       <div class="meta-premium-page-hero-inner">
         <h1>${esc(t)}</h1>
+        <p class="meta-report-public-subtitle">Meta ads performance report</p>
       </div>
     </div>
     <div class="meta-reports-page meta-reports-page--public">
