@@ -4768,7 +4768,7 @@
       display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px 16px 14px;
     }
     .meta-report-scenario-chart-canvas-wrap {
-      height: 260px; min-height: 260px; position: relative; width: 100%;
+      height: 300px; min-height: 300px; position: relative; width: 100%;
     }
     .meta-report-scenario-chart-canvas-wrap canvas {
       display: block; height: 100% !important; width: 100% !important;
@@ -7898,8 +7898,8 @@
       chartPoasMode: 'kr',
       chartScatterRoasMode: 'kr',
       chartScatterPoasMode: 'kr',
-      chartScenarioRoasMode: 'kr',
-      chartScenarioPoasMode: 'kr',
+      chartScenarioRoasMode: 'x',
+      chartScenarioPoasMode: 'x',
       chartSeries: null,
       chartDemo: false,
       chartProjection: null,
@@ -8816,6 +8816,8 @@
     }
 
     const META_REPORT_CHART_MIN_POINTS = 2;
+    const META_REPORT_SCENARIO_MAX_HISTORICAL = 9;
+    const META_REPORT_SCENARIO_PROJECTED_MONTHS = 4;
     const META_REPORT_SPEND_CHART_TYPE_OPTIONS = [
       { value: 'area', label: 'Area' },
       { value: 'bar', label: 'Bar' },
@@ -9066,6 +9068,37 @@
       return metaReportAggregateSeriesEfficiency(series).avgMonthlySpend;
     }
 
+    function trimMetaReportScenarioSeries(series, maxMonths = META_REPORT_SCENARIO_MAX_HISTORICAL) {
+      const filtered = series.filter((point) => metaReportParseAmount(point.spend) > 0);
+      return filtered.length > maxMonths ? filtered.slice(-maxMonths) : filtered;
+    }
+
+    function buildMetaReportScenarioProjectionSteps(projection, {
+      months = META_REPORT_SCENARIO_PROJECTED_MONTHS,
+      hasBottomline = false,
+    } = {}) {
+      if (!projection || projection.insufficientData) return [];
+      const baseSpend = metaReportParseAmount(projection.baselineSpend);
+      const targetMult = metaReportParseAmount(projection.multiplier) || 1;
+      const efficiency = projection.efficiency;
+      const steps = [];
+      for (let step = 1; step <= months; step += 1) {
+        const stepMult = metaReportRoundRatio(1 + ((targetMult - 1) * step) / months);
+        const spend = metaReportRoundMoney(baseSpend * stepMult);
+        const metrics = metaReportProjectBudgetAtSpend(spend, efficiency, hasBottomline);
+        steps.push({
+          label: `+${step} mo`,
+          spendMultiplier: stepMult,
+          spend: metrics.spend,
+          roasKr: metrics.roasKr,
+          roasX: metrics.roasX,
+          poasKr: metrics.poasKr,
+          poasX: metrics.poasX,
+        });
+      }
+      return steps;
+    }
+
     function metaReportDeltaPct(nextValue, baseValue) {
       const base = metaReportParseAmount(baseValue);
       const next = metaReportParseAmount(nextValue);
@@ -9204,8 +9237,8 @@
               <div class="meta-report-chart-head">
                 <h3 class="meta-report-chart-title">ROAS extrapolation</h3>
                 <div class="meta-report-chart-toggle" id="meta-scenario-roas-mode" role="group" aria-label="Scenario ROAS display mode">
-                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
-                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="x">Multiplier</button>
                 </div>
               </div>
               <div class="meta-report-scenario-chart-canvas-wrap">
@@ -9217,8 +9250,8 @@
               <div class="meta-report-chart-head">
                 <h3 class="meta-report-chart-title">POAS extrapolation</h3>
                 <div class="meta-report-chart-toggle" id="meta-scenario-poas-mode" role="group" aria-label="Scenario POAS display mode">
-                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
-                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="x">Multiplier</button>
                 </div>
               </div>
               <div class="meta-report-scenario-chart-canvas-wrap">
@@ -9628,6 +9661,217 @@
       });
     }
 
+    function buildMetaReportScenarioExtrapolationChart(canvas, {
+      series,
+      mode,
+      kind,
+      projection,
+      chartType = 'area',
+      hasBottomline = false,
+    } = {}) {
+      const krKey = kind === 'roas' ? 'roasKr' : 'poasKr';
+      const xKey = kind === 'roas' ? 'roasX' : 'poasX';
+      const returnLabel = kind === 'roas' ? 'ROAS' : 'POAS';
+      const chartSeries = trimMetaReportScenarioSeries(
+        kind === 'poas'
+          ? series.filter((point) => point.poasKr != null && point.poasX != null)
+          : series,
+      );
+      const baselineSpend = resolveMetaReportSpendChartBaseline(chartSeries, projection);
+      const useMultiplier = mode === 'x' && baselineSpend > 0;
+      const projectionSteps = buildMetaReportScenarioProjectionSteps(projection, { hasBottomline });
+      const normalizedType = normalizeMetaReportSpendChartType(chartType);
+      const labels = chartSeries.map((point) => point.label);
+      const spendValues = chartSeries.map((point) => (
+        useMultiplier
+          ? metaReportSpendMultiplierValue(point.spend, baselineSpend)
+          : metaReportParseAmount(point.spend)
+      ));
+      const returnValues = chartSeries.map((point) => metaReportChartValue(point, mode, krKey, xKey));
+      const firstProjectedIndex = chartSeries.length;
+      const lastHistoricalIndex = chartSeries.length - 1;
+
+      for (const step of projectionSteps) {
+        labels.push(step.label);
+        spendValues.push(useMultiplier ? step.spendMultiplier : step.spend);
+        returnValues.push(metaReportParseAmount(step[mode === 'x' ? xKey : krKey]));
+      }
+
+      const projectedIndices = new Set(
+        projectionSteps.map((_, index) => firstProjectedIndex + index),
+      );
+      const hasProjected = projectionSteps.length > 0;
+
+      function pointStyleAt(index, color) {
+        const isProjected = projectedIndices.has(index);
+        return {
+          pointBackgroundColor: color,
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          pointRadius: isProjected ? 7 : (normalizedType === 'scatter' ? 5 : 4),
+          pointHoverRadius: isProjected ? 8 : (normalizedType === 'scatter' ? 6 : 5),
+          pointStyle: isProjected ? 'rectRot' : 'circle',
+        };
+      }
+
+      function buildMetricDataset(label, values, color, fillColor) {
+        const pointStyles = values.map((_, index) => pointStyleAt(index, color));
+        const common = {
+          label,
+          data: values,
+          borderColor: color,
+          yAxisID: 'y',
+        };
+
+        if (normalizedType === 'bar') {
+          return {
+            ...common,
+            type: 'bar',
+            backgroundColor: color === '#138b53' ? 'rgba(19, 139, 83, 0.72)' : 'rgba(255, 106, 0, 0.72)',
+            borderRadius: 4,
+            borderWidth: 0,
+          };
+        }
+
+        if (normalizedType === 'scatter') {
+          return {
+            ...common,
+            type: 'line',
+            backgroundColor: 'transparent',
+            borderWidth: 0,
+            showLine: false,
+            fill: false,
+            pointBackgroundColor: pointStyles.map((entry) => entry.pointBackgroundColor),
+            pointBorderColor: pointStyles.map((entry) => entry.pointBorderColor),
+            pointBorderWidth: pointStyles.map((entry) => entry.pointBorderWidth),
+            pointRadius: pointStyles.map((entry) => entry.pointRadius),
+            pointHoverRadius: pointStyles.map((entry) => entry.pointHoverRadius),
+            pointStyle: pointStyles.map((entry) => entry.pointStyle),
+          };
+        }
+
+        return {
+          ...common,
+          type: 'line',
+          backgroundColor: fillColor,
+          borderWidth: 2.5,
+          fill: normalizedType === 'area',
+          tension: 0.3,
+          pointBackgroundColor: pointStyles.map((entry) => entry.pointBackgroundColor),
+          pointBorderColor: pointStyles.map((entry) => entry.pointBorderColor),
+          pointBorderWidth: pointStyles.map((entry) => entry.pointBorderWidth),
+          pointRadius: pointStyles.map((entry) => entry.pointRadius),
+          pointHoverRadius: pointStyles.map((entry) => entry.pointHoverRadius),
+          pointStyle: pointStyles.map((entry) => entry.pointStyle),
+        };
+      }
+
+      const datasets = [
+        buildMetricDataset('Ad spend', spendValues, '#138b53', 'rgba(19, 139, 83, 0.16)'),
+        buildMetricDataset(returnLabel, returnValues, '#ff6a00', 'rgba(255, 106, 0, 0.12)'),
+      ];
+
+      if (hasProjected && normalizedType !== 'bar') {
+        const connectorBase = {
+          type: 'line',
+          borderWidth: 2,
+          fill: false,
+          tension: 0,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          spanGaps: true,
+          yAxisID: 'y',
+        };
+        const connectorData = (values) => labels.map((_, index) => (
+          index === lastHistoricalIndex || projectedIndices.has(index) ? values[index] : null
+        ));
+        datasets.push({
+          ...connectorBase,
+          label: '',
+          data: connectorData(spendValues),
+          borderColor: 'rgba(19, 139, 83, 0.55)',
+          borderDash: [5, 4],
+        });
+        datasets.push({
+          ...connectorBase,
+          label: '',
+          data: connectorData(returnValues),
+          borderColor: 'rgba(255, 106, 0, 0.55)',
+          borderDash: [5, 4],
+        });
+      }
+
+      const yAxisTitle = useMultiplier ? 'Multiplier (×)' : 'Dkr';
+      const yTick = (value) => (
+        useMultiplier ? metaReportChartAxisTick(value, 'x') : metaReportChartAxisTick(value, 'kr')
+      );
+
+      return new Chart(canvas, {
+        type: normalizedType === 'bar' ? 'bar' : 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              align: 'end',
+              labels: {
+                boxWidth: 10,
+                boxHeight: 10,
+                font: { size: 11, weight: '600' },
+                color: '#6b5348',
+                filter(item) {
+                  return Boolean(item.text);
+                },
+              },
+            },
+            tooltip: {
+              backgroundColor: '#ffffff',
+              borderColor: '#e8e0d8',
+              borderWidth: 1,
+              titleColor: '#1a1208',
+              bodyColor: '#1a1208',
+              padding: 10,
+              filter(item) {
+                return Boolean(item.dataset.label);
+              },
+              callbacks: {
+                label(context) {
+                  const datasetLabel = context.dataset.label || '';
+                  return `${datasetLabel}: ${metaReportChartTooltipLabel(context.parsed.y, mode)}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(26, 18, 8, 0.06)' },
+              ticks: { color: '#6b5348', font: { size: 11 }, maxRotation: 45, minRotation: 0 },
+            },
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: {
+                display: true,
+                text: yAxisTitle,
+                color: '#6b5348',
+                font: { size: 11, weight: '600' },
+              },
+              grid: { color: 'rgba(26, 18, 8, 0.08)' },
+              ticks: {
+                color: '#6b5348',
+                font: { size: 11 },
+                callback: yTick,
+              },
+            },
+          },
+        },
+      });
+    }
+
     function updateMetaReportChart(kind, series, mode) {
       const canvas = document.getElementById(`meta-report-chart-${kind}`);
       const emptyEl = document.getElementById(`meta-report-chart-${kind}-empty`);
@@ -9724,13 +9968,39 @@
     }
 
     function updateMetaReportScenarioChart(kind, series, projection, mode) {
-      const projectionLabel = `Projected (${Number(projection?.multiplier || metaReportsState.budgetMultiplier).toFixed(1)}×)`;
-      updateMetaReportSpendReturnChart(kind, series, mode, {
+      const canvas = document.getElementById(`meta-report-scenario-chart-${kind}`);
+      const emptyEl = document.getElementById(`meta-report-scenario-chart-${kind}-empty`);
+      if (!canvas || !emptyEl) return;
+
+      const chartSeries = kind === 'poas'
+        ? series.filter((point) => point.poasKr != null && point.poasX != null)
+        : series.filter((point) => metaReportParseAmount(point.spend) > 0);
+      const trimmedSeries = trimMetaReportScenarioSeries(chartSeries);
+
+      if (metaReportsState.scenarioChartInstances[kind]) {
+        metaReportsState.scenarioChartInstances[kind].destroy();
+        metaReportsState.scenarioChartInstances[kind] = null;
+      }
+
+      if (
+        trimmedSeries.length < META_REPORT_CHART_MIN_POINTS
+        || typeof Chart === 'undefined'
+        || projection?.insufficientData
+      ) {
+        canvas.hidden = true;
+        emptyEl.hidden = false;
+        return;
+      }
+
+      canvas.hidden = false;
+      emptyEl.hidden = true;
+      metaReportsState.scenarioChartInstances[kind] = buildMetaReportScenarioExtrapolationChart(canvas, {
+        series: chartSeries,
+        mode,
+        kind,
         projection,
-        showProjection: true,
-        projectionLabel,
         chartType: metaReportsState.spendChartType,
-        target: 'scenario',
+        hasBottomline: kind === 'poas',
       });
     }
 
