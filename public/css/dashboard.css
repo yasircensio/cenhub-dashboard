@@ -4539,7 +4539,7 @@
     }
     .meta-report-share-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-      margin-bottom: 16px; padding: 16px 18px;
+      margin-bottom: 16px; padding: 14px 16px;
     }
     .meta-report-share-card.is-disabled { opacity: 0.88; }
     .meta-report-share-card.is-collapsed .meta-report-share-editor { display: none; }

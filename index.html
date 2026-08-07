@@ -4548,7 +4548,7 @@
     }
     .meta-report-share-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-      margin-bottom: 16px; padding: 16px 18px;
+      margin-bottom: 16px; padding: 14px 16px;
     }
     .meta-report-share-card.is-disabled { opacity: 0.88; }
     .meta-report-share-card.is-collapsed .meta-report-share-editor { display: none; }
@@ -4558,11 +4558,10 @@
       justify-content: space-between; margin-bottom: 0;
     }
     .meta-report-share-card.is-editing .meta-report-share-head { margin-bottom: 14px; }
-    .meta-report-share-title { color: var(--text); display: block; font-size: 14px; font-weight: 700; }
-    .meta-report-share-hint { color: var(--text-soft); display: block; font-size: 12px; margin-top: 2px; }
+    .meta-report-share-title { color: var(--text); display: block; font-size: 14px; font-weight: 700; line-height: 1.2; }
     .meta-report-share-summary {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px 14px;
-      justify-content: space-between; margin-top: 12px;
+      justify-content: space-between; margin-top: 6px;
     }
     .meta-report-share-summary-main {
       display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: 8px 16px; min-width: 0;
@@ -7806,7 +7805,6 @@
           <div class="meta-report-share-head">
             <div>
               <span class="meta-report-share-title">Client preview</span>
-              <span class="meta-report-share-hint">Share link uses your slug plus a 4-digit code</span>
             </div>
           </div>
           ${hasLink ? renderMetaReportShareSummary(payload) : `
