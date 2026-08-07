@@ -4725,6 +4725,85 @@
       color: var(--text-soft); font-size: 13px; margin: 0; padding: 24px 8px; text-align: center;
     }
     .meta-report-chart-empty[hidden] { display: none !important; }
+    .meta-report-chart-tabs {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      display: inline-flex; gap: 2px; padding: 2px; width: fit-content;
+    }
+    .meta-report-chart-tab {
+      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
+      cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .meta-report-chart-tab.is-active {
+      background: var(--primary); box-shadow: 0 1px 4px rgba(255, 106, 0, 0.25); color: #fff;
+    }
+    .meta-report-chart-tab-panel {
+      display: flex; flex-direction: column; gap: 16px; min-width: 0;
+    }
+    .meta-report-chart-tab-panel[hidden] { display: none !important; }
+    .meta-report-scenario-insight {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0; padding: 10px 12px;
+    }
+    .meta-report-scenario-insight.is-positive {
+      background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.18); color: #15803d;
+    }
+    .meta-report-scenario-insight.is-negative {
+      background: rgba(194, 65, 12, 0.08); border-color: rgba(194, 65, 12, 0.18); color: #c2410c;
+    }
+    .meta-report-scenario-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px;
+      margin-top: 8px; padding: 18px 20px 20px;
+    }
+    .meta-report-scenario-title {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0 0 4px;
+    }
+    .meta-report-scenario-copy {
+      color: var(--text-soft); font-size: 13px; line-height: 1.45; margin: 0;
+    }
+    .meta-report-scenario-controls {
+      align-items: end; display: grid; gap: 14px 18px;
+      grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.8fr);
+    }
+    .meta-report-scenario-field {
+      display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    }
+    .meta-report-scenario-field > span {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-scenario-slider-row {
+      align-items: center; display: flex; gap: 12px;
+    }
+    .meta-report-scenario-slider-row input[type="range"] { flex: 1; min-width: 0; }
+    .meta-report-scenario-slider-row output {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; min-width: 42px;
+    }
+    .meta-report-scenario-grid {
+      display: flex; flex-direction: column; gap: 0; overflow: hidden;
+    }
+    .meta-report-scenario-grid-head,
+    .meta-report-scenario-row {
+      display: grid; gap: 12px; grid-template-columns: minmax(120px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 72px;
+    }
+    .meta-report-scenario-grid-head {
+      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.04em; padding: 0 0 10px; text-transform: uppercase;
+    }
+    .meta-report-scenario-row {
+      border-bottom: 1px solid rgba(232, 224, 216, 0.7); font-size: 13px; padding: 11px 0;
+    }
+    .meta-report-scenario-row:last-child { border-bottom: 0; }
+    .meta-report-scenario-label { color: var(--text); font-weight: 500; }
+    .meta-report-scenario-value { color: var(--text); font-variant-numeric: tabular-nums; }
+    .meta-report-scenario-value.is-projected { color: var(--text); font-weight: 700; }
+    .meta-report-scenario-delta { font-size: 12px; font-weight: 700; text-align: right; }
+    .meta-report-scenario-delta.is-positive { color: #15803d; }
+    .meta-report-scenario-delta.is-negative { color: var(--error); }
+    .meta-report-scenario-empty,
+    .meta-report-scenario-disclaimer {
+      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
+    }
     @media (max-width: 960px) {
       .meta-report-content-layout { grid-template-columns: 1fr; }
       .meta-report-content-main { max-width: none; }
@@ -4734,6 +4813,10 @@
       .meta-reports-page--public .meta-report-chart-canvas-wrap {
         height: 260px; min-height: 260px;
       }
+      .meta-report-scenario-controls { grid-template-columns: 1fr; }
+      .meta-report-scenario-grid-head,
+      .meta-report-scenario-row { grid-template-columns: 1fr; gap: 4px; }
+      .meta-report-scenario-delta { text-align: left; }
     }
 
     .meta-cv-layout {
@@ -7786,10 +7869,17 @@
       publicPayload: null,
       publicPageMounted: false,
       chartInstances: { roas: null, poas: null },
+      chartScatterInstances: { roas: null, poas: null },
+      chartTab: 'trend',
       chartRoasMode: 'kr',
       chartPoasMode: 'kr',
+      chartScatterRoasMode: 'kr',
+      chartScatterPoasMode: 'kr',
       chartSeries: null,
       chartDemo: false,
+      chartProjection: null,
+      budgetMultiplier: 2,
+      budgetBaseline: 'year',
       customValues: {
         mounted: false,
         overview: null,
@@ -8729,6 +8819,9 @@
           poasX,
           spend: Number(monthPayload.meta?.spend) || 0,
           leads: Number(monthPayload.topline?.leads) || 0,
+          wonLeads: Number(monthPayload.topline?.wonLeads) || 0,
+          avgLeadValue: Number(monthPayload.topline?.avgLeadValue) || 0,
+          avgProfitPerWon: Number(monthPayload.inputs?.avgProfitPerWon) || 0,
           hasData: true,
         });
       }
@@ -8765,6 +8858,8 @@
         const roasX = Number((0.5 + t * 2.5).toFixed(2));
         const poasKr = Math.round(1500 + t * 12000);
         const poasX = Number((0.4 + t * 2.2).toFixed(2));
+        const leads = Math.round(20 + t * 80);
+        const wonLeads = Math.max(1, Math.round(leads * (0.08 + t * 0.04)));
 
         return {
           monthKey,
@@ -8774,7 +8869,10 @@
           poasKr,
           poasX,
           spend,
-          leads: Math.round(20 + t * 80),
+          leads,
+          wonLeads,
+          avgLeadValue: 85000,
+          avgProfitPerWon: 42000,
           hasData: true,
           demo: true,
         };
@@ -8800,49 +8898,321 @@
       return { series: real, demo: false };
     }
 
+    function metaReportParseAmount(value) {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function metaReportRoundMoney(value) {
+      return Math.round(metaReportParseAmount(value) * 100) / 100;
+    }
+
+    function metaReportRoundRatio(value) {
+      return Math.round(metaReportParseAmount(value) * 100000000) / 100000000;
+    }
+
+    function metaReportAggregateSeriesEfficiency(series = []) {
+      let totalSpend = 0;
+      let totalLeads = 0;
+      let totalWon = 0;
+      let weightedLeadValue = 0;
+      let weightedProfit = 0;
+
+      for (const point of series) {
+        const spend = metaReportParseAmount(point.spend);
+        const leads = metaReportParseAmount(point.leads);
+        const wonLeads = metaReportParseAmount(point.wonLeads);
+        if (spend <= 0 && leads <= 0) continue;
+        totalSpend += spend;
+        totalLeads += leads;
+        totalWon += wonLeads;
+        weightedLeadValue += wonLeads * metaReportParseAmount(point.avgLeadValue);
+        weightedProfit += wonLeads * metaReportParseAmount(point.avgProfitPerWon);
+      }
+
+      const spendMonths = series.filter((point) => metaReportParseAmount(point.spend) > 0).length;
+      return {
+        avgCpl: totalLeads > 0 ? metaReportRoundMoney(totalSpend / totalLeads) : 0,
+        winRate: totalLeads > 0 ? metaReportRoundRatio(totalWon / totalLeads) : 0,
+        avgLeadValue: totalWon > 0 ? metaReportRoundMoney(weightedLeadValue / totalWon) : 0,
+        avgProfitPerWon: totalWon > 0 ? metaReportRoundMoney(weightedProfit / totalWon) : 0,
+        avgMonthlySpend: spendMonths > 0 ? metaReportRoundMoney(totalSpend / spendMonths) : 0,
+      };
+    }
+
+    function metaReportProjectBudgetAtSpend(spend, efficiency, hasBottomline = false) {
+      const amount = metaReportParseAmount(spend);
+      if (amount <= 0 || efficiency.avgCpl <= 0) {
+        return {
+          spend: 0, leads: 0, wonLeads: 0, totalLeadValue: 0,
+          roasKr: 0, roasX: 0, poasKr: null, poasX: null,
+        };
+      }
+      const leads = metaReportRoundMoney(amount / efficiency.avgCpl);
+      const wonLeads = metaReportRoundMoney(leads * efficiency.winRate);
+      const totalLeadValue = metaReportRoundMoney(wonLeads * efficiency.avgLeadValue);
+      const roasKr = metaReportRoundMoney(totalLeadValue - amount);
+      const roasX = amount > 0 ? metaReportRoundRatio(roasKr / amount) : 0;
+      let poasKr = null;
+      let poasX = null;
+      if (hasBottomline && efficiency.avgProfitPerWon > 0) {
+        const totalProfit = metaReportRoundMoney(wonLeads * efficiency.avgProfitPerWon);
+        poasKr = metaReportRoundMoney(totalProfit - amount);
+        poasX = amount > 0 ? metaReportRoundRatio(poasKr / amount) : 0;
+      }
+      return { spend: amount, leads, wonLeads, totalLeadValue, roasKr, roasX, poasKr, poasX };
+    }
+
+    function metaReportProjectBudgetScenario({ series = [], baselineSpend, multiplier = 1, hasBottomline = false } = {}) {
+      const efficiency = metaReportAggregateSeriesEfficiency(series);
+      const baseSpend = metaReportParseAmount(baselineSpend);
+      const mult = metaReportParseAmount(multiplier) || 1;
+      const baseline = metaReportProjectBudgetAtSpend(baseSpend, efficiency, hasBottomline);
+      const projected = metaReportProjectBudgetAtSpend(metaReportRoundMoney(baseSpend * mult), efficiency, hasBottomline);
+      return {
+        efficiency,
+        baseline,
+        projected,
+        multiplier: mult,
+        baselineSpend: baseSpend,
+        hasBottomline,
+        insufficientData: efficiency.avgCpl <= 0 || baseSpend <= 0,
+      };
+    }
+
+    function metaReportLinearRegression(points = []) {
+      const n = points.length;
+      if (n < 2) return { slope: 0, intercept: 0, r: 0 };
+      let sumX = 0;
+      let sumY = 0;
+      let sumXY = 0;
+      let sumXX = 0;
+      let sumYY = 0;
+      for (const point of points) {
+        const x = metaReportParseAmount(point.x);
+        const y = metaReportParseAmount(point.y);
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumXX += x * x;
+        sumYY += y * y;
+      }
+      const denom = (n * sumXX) - (sumX * sumX);
+      if (denom === 0) return { slope: 0, intercept: sumY / n, r: 0 };
+      const slope = ((n * sumXY) - (sumX * sumY)) / denom;
+      const intercept = (sumY - (slope * sumX)) / n;
+      const rDenom = Math.sqrt(((n * sumXX) - (sumX * sumX)) * ((n * sumYY) - (sumY * sumY)));
+      const r = rDenom > 0 ? ((n * sumXY) - (sumX * sumY)) / rDenom : 0;
+      return { slope, intercept, r };
+    }
+
+    function metaReportEfficiencyInsight(series = [], yKey = 'roasX') {
+      const points = series
+        .filter((point) => metaReportParseAmount(point.spend) > 0)
+        .map((point) => ({ x: metaReportParseAmount(point.spend), y: metaReportParseAmount(point[yKey]) }));
+      if (points.length < 2) {
+        return { tone: 'neutral', message: 'Not enough months to assess spend efficiency yet.' };
+      }
+      const { slope, r } = metaReportLinearRegression(points);
+      if (Math.abs(r) < 0.25) {
+        return { tone: 'neutral', message: 'Return is stable across spend levels.' };
+      }
+      if (slope > 0) {
+        return { tone: 'positive', message: 'Higher spend months tend to maintain or improve return — scaling looks promising.' };
+      }
+      return { tone: 'negative', message: 'Higher spend months show lower efficiency — improve targeting/creative before scaling.' };
+    }
+
+    function metaReportSpendAxisTick(value) {
+      const amount = Number(value) || 0;
+      if (Math.abs(amount) >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+      if (Math.abs(amount) >= 1000) return `${Math.round(amount / 1000)}K`;
+      return amount;
+    }
+
+    function metaReportDeltaPct(nextValue, baseValue) {
+      const base = metaReportParseAmount(baseValue);
+      const next = metaReportParseAmount(nextValue);
+      if (!base) return null;
+      return metaReportRoundRatio(((next - base) / Math.abs(base)) * 100);
+    }
+
+    function metaReportFormatDeltaPct(value) {
+      if (value == null || !Number.isFinite(value)) return '';
+      const sign = value > 0 ? '+' : '';
+      return `${sign}${value.toFixed(0)}%`;
+    }
+
+    function metaReportResolveBaselineSpend(payload, series) {
+      if (metaReportsState.budgetBaseline === 'month' && metaReportsState.activeMonthKey) {
+        const month = series.find((point) => point.monthKey === metaReportsState.activeMonthKey);
+        if (month && metaReportParseAmount(month.spend) > 0) return metaReportParseAmount(month.spend);
+      }
+      const efficiency = metaReportAggregateSeriesEfficiency(series);
+      return efficiency.avgMonthlySpend;
+    }
+
+    function payloadHasMetaReportBottomline(payload) {
+      if (payload?.settings?.metaReportShowBottomline === false) return false;
+      return seriesHasBottomline(metaReportsState.chartSeries || buildMetaReportChartSeries(payload));
+    }
+
+    function seriesHasBottomline(series = []) {
+      return series.some((point) => point.poasKr != null && point.poasX != null);
+    }
+
     function renderMetaReportChartsPanel() {
+      const activeTab = metaReportsState.chartTab || 'trend';
       return `
         <aside class="meta-report-charts-panel" id="meta-report-charts-panel">
           <span class="meta-report-chart-demo-badge" id="meta-report-chart-demo-badge" hidden>Sample trend data</span>
-          <div class="meta-report-chart-card" data-meta-chart="roas">
-            <div class="meta-report-chart-head">
-              <h3 class="meta-report-chart-title">ROAS trend</h3>
-              <div class="meta-report-chart-toggle" id="meta-chart-roas-mode" role="group" aria-label="ROAS display mode">
-                <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
-                <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+          <div class="meta-report-chart-tabs" role="tablist" aria-label="Chart views">
+            <button type="button" class="meta-report-chart-tab${activeTab === 'trend' ? ' is-active' : ''}" data-meta-chart-tab="trend" role="tab" aria-selected="${activeTab === 'trend'}">Monthly trend</button>
+            <button type="button" class="meta-report-chart-tab${activeTab === 'spend' ? ' is-active' : ''}" data-meta-chart-tab="spend" role="tab" aria-selected="${activeTab === 'spend'}">Spend vs return</button>
+          </div>
+          <div class="meta-report-chart-tab-panel${activeTab === 'trend' ? ' is-active' : ''}" data-meta-chart-panel="trend" role="tabpanel"${activeTab === 'trend' ? '' : ' hidden'}>
+            <div class="meta-report-chart-card" data-meta-chart="roas">
+              <div class="meta-report-chart-head">
+                <h3 class="meta-report-chart-title">ROAS trend</h3>
+                <div class="meta-report-chart-toggle" id="meta-chart-roas-mode" role="group" aria-label="ROAS display mode">
+                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+                </div>
+              </div>
+              <div class="meta-report-chart-canvas-wrap">
+                <canvas id="meta-report-chart-roas" aria-label="ROAS trend chart"></canvas>
+                <p class="meta-report-chart-empty" id="meta-report-chart-roas-empty" hidden>Not enough data for a trend yet.</p>
               </div>
             </div>
-            <div class="meta-report-chart-canvas-wrap">
-              <canvas id="meta-report-chart-roas" aria-label="ROAS trend chart"></canvas>
-              <p class="meta-report-chart-empty" id="meta-report-chart-roas-empty" hidden>Not enough data for a trend yet.</p>
+            <div class="meta-report-chart-card" data-meta-chart="poas">
+              <div class="meta-report-chart-head">
+                <h3 class="meta-report-chart-title">POAS trend</h3>
+                <div class="meta-report-chart-toggle" id="meta-chart-poas-mode" role="group" aria-label="POAS display mode">
+                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+                </div>
+              </div>
+              <div class="meta-report-chart-canvas-wrap">
+                <canvas id="meta-report-chart-poas" aria-label="POAS trend chart"></canvas>
+                <p class="meta-report-chart-empty" id="meta-report-chart-poas-empty" hidden>Not enough data for a trend yet.</p>
+              </div>
             </div>
           </div>
-          <div class="meta-report-chart-card" data-meta-chart="poas">
-            <div class="meta-report-chart-head">
-              <h3 class="meta-report-chart-title">POAS trend</h3>
-              <div class="meta-report-chart-toggle" id="meta-chart-poas-mode" role="group" aria-label="POAS display mode">
-                <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
-                <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+          <div class="meta-report-chart-tab-panel${activeTab === 'spend' ? ' is-active' : ''}" data-meta-chart-panel="spend" role="tabpanel"${activeTab === 'spend' ? '' : ' hidden'}>
+            <p class="meta-report-scenario-insight" id="meta-report-spend-insight"></p>
+            <div class="meta-report-chart-card" data-meta-chart="scatter-roas">
+              <div class="meta-report-chart-head">
+                <h3 class="meta-report-chart-title">ROAS vs ad spend</h3>
+                <div class="meta-report-chart-toggle" id="meta-chart-scatter-roas-mode" role="group" aria-label="ROAS scatter display mode">
+                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+                </div>
+              </div>
+              <div class="meta-report-chart-canvas-wrap">
+                <canvas id="meta-report-chart-scatter-roas" aria-label="ROAS vs ad spend chart"></canvas>
+                <p class="meta-report-chart-empty" id="meta-report-chart-scatter-roas-empty" hidden>Not enough data for a spend chart yet.</p>
               </div>
             </div>
-            <div class="meta-report-chart-canvas-wrap">
-              <canvas id="meta-report-chart-poas" aria-label="POAS trend chart"></canvas>
-              <p class="meta-report-chart-empty" id="meta-report-chart-poas-empty" hidden>Not enough data for a trend yet.</p>
+            <div class="meta-report-chart-card" data-meta-chart="scatter-poas">
+              <div class="meta-report-chart-head">
+                <h3 class="meta-report-chart-title">POAS vs ad spend</h3>
+                <div class="meta-report-chart-toggle" id="meta-chart-scatter-poas-mode" role="group" aria-label="POAS scatter display mode">
+                  <button type="button" class="meta-report-chart-toggle-btn is-active" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn" data-mode="x">Multiplier</button>
+                </div>
+              </div>
+              <div class="meta-report-chart-canvas-wrap">
+                <canvas id="meta-report-chart-scatter-poas" aria-label="POAS vs ad spend chart"></canvas>
+                <p class="meta-report-chart-empty" id="meta-report-chart-scatter-poas-empty" hidden>Not enough data for a spend chart yet.</p>
+              </div>
             </div>
           </div>
         </aside>
       `;
     }
 
+    function renderMetaReportScenarioCard() {
+      return `
+        <section class="meta-report-scenario-card" id="meta-report-scenario-card">
+          <div class="meta-report-scenario-head">
+            <div>
+              <h3 class="meta-report-scenario-title">Budget scenario</h3>
+              <p class="meta-report-scenario-copy">Estimate what happens if ad spend scales while funnel efficiency stays constant.</p>
+            </div>
+          </div>
+          <div class="meta-report-scenario-controls">
+            <label class="meta-report-scenario-field">
+              <span>Budget multiplier</span>
+              <div class="meta-report-scenario-slider-row">
+                <input type="range" id="meta-report-budget-multiplier" min="0.5" max="3" step="0.1" value="${esc(metaReportsState.budgetMultiplier)}" />
+                <output id="meta-report-budget-multiplier-value">${esc(Number(metaReportsState.budgetMultiplier).toFixed(1))}×</output>
+              </div>
+            </label>
+            <label class="meta-report-scenario-field">
+              <span>Baseline spend</span>
+              <select id="meta-report-budget-baseline" class="admin-select">
+                <option value="year"${metaReportsState.budgetBaseline === 'year' ? ' selected' : ''}>Year average</option>
+                <option value="month"${metaReportsState.budgetBaseline === 'month' ? ' selected' : ''}>Selected month</option>
+              </select>
+            </label>
+          </div>
+          <div class="meta-report-scenario-grid" id="meta-report-scenario-grid"></div>
+          <p class="meta-report-scenario-disclaimer">Estimate assumes current funnel efficiency (CPL, win rate, lead value) stays constant.</p>
+        </section>
+      `;
+    }
+
+    function renderMetaReportScenarioMetrics(projection) {
+      if (!projection || projection.insufficientData) {
+        return '<p class="meta-report-scenario-empty">Add months with ad spend and leads to model a budget scenario.</p>';
+      }
+
+      const rows = [
+        ['Ad spend', metaFmtKr(projection.baseline.spend), metaFmtKr(projection.projected.spend), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.spend, projection.baseline.spend))],
+        ['Leads', metaFmtNum(projection.baseline.leads), metaFmtNum(projection.projected.leads), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.leads, projection.baseline.leads))],
+        ['Won leads', metaFmtNum(projection.baseline.wonLeads, 1), metaFmtNum(projection.projected.wonLeads, 1), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.wonLeads, projection.baseline.wonLeads))],
+        ['Total lead value', metaFmtKr(projection.baseline.totalLeadValue), metaFmtKr(projection.projected.totalLeadValue), metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.totalLeadValue, projection.baseline.totalLeadValue))],
+        ['ROAS', `${metaFmtKr(projection.baseline.roasKr)} · ${metaFmtX(projection.baseline.roasX)}`, `${metaFmtKr(projection.projected.roasKr)} · ${metaFmtX(projection.projected.roasX)}`, metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.roasKr, projection.baseline.roasKr))],
+      ];
+
+      if (projection.hasBottomline) {
+        rows.push([
+          'POAS',
+          `${metaFmtKr(projection.baseline.poasKr)} · ${metaFmtX(projection.baseline.poasX)}`,
+          `${metaFmtKr(projection.projected.poasKr)} · ${metaFmtX(projection.projected.poasX)}`,
+          metaReportFormatDeltaPct(metaReportDeltaPct(projection.projected.poasKr, projection.baseline.poasKr)),
+        ]);
+      }
+
+      return `
+        <div class="meta-report-scenario-grid-head">
+          <span>Metric</span>
+          <span>Baseline</span>
+          <span>Projected</span>
+          <span>Change</span>
+        </div>
+        ${rows.map(([label, baseline, projected, delta]) => `
+          <div class="meta-report-scenario-row">
+            <span class="meta-report-scenario-label">${esc(label)}</span>
+            <span class="meta-report-scenario-value">${esc(baseline)}</span>
+            <span class="meta-report-scenario-value is-projected">${esc(projected)}</span>
+            <span class="meta-report-scenario-delta${delta.startsWith('+') ? ' is-positive' : delta.startsWith('-') ? ' is-negative' : ''}">${esc(delta || '—')}</span>
+          </div>
+        `).join('')}
+      `;
+    }
+
     function destroyMetaReportCharts() {
-      if (metaReportsState.chartInstances.roas) {
-        metaReportsState.chartInstances.roas.destroy();
-        metaReportsState.chartInstances.roas = null;
-      }
-      if (metaReportsState.chartInstances.poas) {
-        metaReportsState.chartInstances.poas.destroy();
-        metaReportsState.chartInstances.poas = null;
-      }
+      ['roas', 'poas'].forEach((kind) => {
+        if (metaReportsState.chartInstances[kind]) {
+          metaReportsState.chartInstances[kind].destroy();
+          metaReportsState.chartInstances[kind] = null;
+        }
+        if (metaReportsState.chartScatterInstances[kind]) {
+          metaReportsState.chartScatterInstances[kind].destroy();
+          metaReportsState.chartScatterInstances[kind] = null;
+        }
+      });
     }
 
     function metaReportChartValue(point, mode, krKey, xKey) {
@@ -8923,6 +9293,130 @@
       });
     }
 
+    function buildMetaReportScatterChart(canvas, series, mode, krKey, xKey, projection = null) {
+      const chartSeries = series.filter((point) => metaReportParseAmount(point.spend) > 0);
+      const scatterPoints = chartSeries.map((point) => ({
+        x: metaReportParseAmount(point.spend),
+        y: metaReportChartValue(point, mode, krKey, xKey),
+        label: point.label,
+        spend: point.spend,
+        rawPoint: point,
+      }));
+
+      const regressionPoints = scatterPoints.map((point) => ({ x: point.x, y: point.y }));
+      const regression = metaReportLinearRegression(regressionPoints);
+      const xValues = scatterPoints.map((point) => point.x);
+      const trendMinX = xValues.length ? Math.min(...xValues) : 0;
+      const trendMaxX = xValues.length ? Math.max(...xValues) : 0;
+      const projectedX = projection ? metaReportParseAmount(projection.projected?.spend) : 0;
+      const lineMaxX = Math.max(trendMaxX, projectedX);
+      const trendLine = lineMaxX > trendMinX ? [
+        { x: trendMinX, y: (regression.slope * trendMinX) + regression.intercept },
+        { x: lineMaxX, y: (regression.slope * lineMaxX) + regression.intercept },
+      ] : [];
+
+      const datasets = [{
+        type: 'scatter',
+        label: 'Months',
+        data: scatterPoints,
+        borderColor: '#ff6a00',
+        backgroundColor: '#ff6a00',
+        pointBackgroundColor: '#ff6a00',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 6,
+      }];
+
+      if (trendLine.length === 2 && chartSeries.length >= META_REPORT_CHART_MIN_POINTS) {
+        datasets.push({
+          type: 'line',
+          label: 'Trend',
+          data: trendLine,
+          borderColor: 'rgba(255, 106, 0, 0.35)',
+          backgroundColor: 'transparent',
+          borderDash: [6, 4],
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+        });
+      }
+
+      if (projection && !projection.insufficientData) {
+        const projectedY = metaReportParseAmount(projection.projected[mode === 'x' ? xKey : krKey]);
+        if (projectedX > 0) {
+          datasets.push({
+            type: 'scatter',
+            label: 'Projected',
+            data: [{ x: projectedX, y: projectedY, label: 'Projected' }],
+            borderColor: '#138b53',
+            backgroundColor: '#138b53',
+            pointStyle: 'rectRot',
+            pointRadius: 7,
+            pointHoverRadius: 8,
+          });
+        }
+      }
+
+      return new Chart(canvas, {
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          parsing: false,
+          interaction: { mode: 'nearest', intersect: true },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#ffffff',
+              borderColor: '#e8e0d8',
+              borderWidth: 1,
+              titleColor: '#1a1208',
+              bodyColor: '#1a1208',
+              padding: 10,
+              callbacks: {
+                title(items) {
+                  const raw = items[0]?.raw;
+                  return raw?.label || 'Point';
+                },
+                label(context) {
+                  const raw = context.raw || {};
+                  if (raw.label === 'Projected') {
+                    return metaReportChartTooltipLabel(raw.y, mode);
+                  }
+                  const spendLabel = metaFmtKr(raw.spend ?? raw.x);
+                  const returnLabel = metaReportChartTooltipLabel(raw.y, mode);
+                  return `${spendLabel} · ${returnLabel}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              title: { display: true, text: 'Ad spend', color: '#6b5348', font: { size: 11, weight: '600' } },
+              grid: { color: 'rgba(26, 18, 8, 0.06)' },
+              ticks: {
+                color: '#6b5348',
+                font: { size: 11 },
+                callback: (value) => metaReportSpendAxisTick(value),
+              },
+            },
+            y: {
+              title: { display: true, text: mode === 'x' ? 'Multiplier' : 'Return (Dkr)', color: '#6b5348', font: { size: 11, weight: '600' } },
+              grid: { color: 'rgba(26, 18, 8, 0.08)' },
+              ticks: {
+                color: '#6b5348',
+                font: { size: 11 },
+                callback: (value) => metaReportChartAxisTick(value, mode),
+              },
+            },
+          },
+        },
+      });
+    }
+
     function updateMetaReportChart(kind, series, mode) {
       const canvas = document.getElementById(`meta-report-chart-${kind}`);
       const emptyEl = document.getElementById(`meta-report-chart-${kind}-empty`);
@@ -8948,6 +9442,75 @@
       canvas.hidden = false;
       emptyEl.hidden = true;
       metaReportsState.chartInstances[kind] = buildMetaReportLineChart(canvas, chartSeries, mode, krKey, xKey);
+    }
+
+    function updateMetaReportScatterChart(kind, series, mode, projection = null) {
+      const canvas = document.getElementById(`meta-report-chart-scatter-${kind}`);
+      const emptyEl = document.getElementById(`meta-report-chart-scatter-${kind}-empty`);
+      if (!canvas || !emptyEl) return;
+
+      const krKey = kind === 'roas' ? 'roasKr' : 'poasKr';
+      const xKey = kind === 'roas' ? 'roasX' : 'poasX';
+      const chartSeries = kind === 'poas'
+        ? series.filter((point) => point.poasKr != null && point.poasX != null)
+        : series.filter((point) => metaReportParseAmount(point.spend) > 0);
+
+      if (metaReportsState.chartScatterInstances[kind]) {
+        metaReportsState.chartScatterInstances[kind].destroy();
+        metaReportsState.chartScatterInstances[kind] = null;
+      }
+
+      if (chartSeries.length < META_REPORT_CHART_MIN_POINTS || typeof Chart === 'undefined') {
+        canvas.hidden = true;
+        emptyEl.hidden = false;
+        return;
+      }
+
+      canvas.hidden = false;
+      emptyEl.hidden = true;
+      metaReportsState.chartScatterInstances[kind] = buildMetaReportScatterChart(
+        canvas,
+        chartSeries,
+        mode,
+        krKey,
+        xKey,
+        projection,
+      );
+    }
+
+    function setMetaReportChartTab(tab) {
+      metaReportsState.chartTab = tab;
+      document.querySelectorAll('[data-meta-chart-tab]').forEach((button) => {
+        const active = button.getAttribute('data-meta-chart-tab') === tab;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      document.querySelectorAll('[data-meta-chart-panel]').forEach((panel) => {
+        const active = panel.getAttribute('data-meta-chart-panel') === tab;
+        panel.classList.toggle('is-active', active);
+        panel.hidden = !active;
+      });
+      mountActiveMetaReportCharts();
+    }
+
+    function mountActiveMetaReportCharts() {
+      const series = metaReportsState.chartSeries || [];
+      const projection = metaReportsState.chartProjection;
+      if (metaReportsState.chartTab === 'spend') {
+        updateMetaReportScatterChart('roas', series, metaReportsState.chartScatterRoasMode, projection);
+        updateMetaReportScatterChart('poas', series, metaReportsState.chartScatterPoasMode, projection);
+      } else {
+        updateMetaReportChart('roas', series, metaReportsState.chartRoasMode);
+        updateMetaReportChart('poas', series, metaReportsState.chartPoasMode);
+      }
+    }
+
+    function bindMetaReportChartTabs() {
+      document.querySelectorAll('[data-meta-chart-tab]').forEach((button) => {
+        button.onclick = () => {
+          setMetaReportChartTab(button.getAttribute('data-meta-chart-tab'));
+        };
+      });
     }
 
     function bindMetaReportChartToggles() {
@@ -8978,17 +9541,98 @@
           };
         });
       }
+
+      const scatterRoasToggle = document.getElementById('meta-chart-scatter-roas-mode');
+      if (scatterRoasToggle) {
+        scatterRoasToggle.querySelectorAll('[data-mode]').forEach((button) => {
+          button.onclick = () => {
+            const mode = button.getAttribute('data-mode');
+            metaReportsState.chartScatterRoasMode = mode;
+            scatterRoasToggle.querySelectorAll('[data-mode]').forEach((entry) => {
+              entry.classList.toggle('is-active', entry.getAttribute('data-mode') === mode);
+            });
+            updateMetaReportScatterChart('roas', metaReportsState.chartSeries || [], mode, metaReportsState.chartProjection);
+          };
+        });
+      }
+
+      const scatterPoasToggle = document.getElementById('meta-chart-scatter-poas-mode');
+      if (scatterPoasToggle) {
+        scatterPoasToggle.querySelectorAll('[data-mode]').forEach((button) => {
+          button.onclick = () => {
+            const mode = button.getAttribute('data-mode');
+            metaReportsState.chartScatterPoasMode = mode;
+            scatterPoasToggle.querySelectorAll('[data-mode]').forEach((entry) => {
+              entry.classList.toggle('is-active', entry.getAttribute('data-mode') === mode);
+            });
+            updateMetaReportScatterChart('poas', metaReportsState.chartSeries || [], mode, metaReportsState.chartProjection);
+          };
+        });
+      }
     }
 
     function syncMetaReportChartToggleUi() {
-      ['roas', 'poas'].forEach((kind) => {
-        const mode = kind === 'roas' ? metaReportsState.chartRoasMode : metaReportsState.chartPoasMode;
-        const toggle = document.getElementById(`meta-chart-${kind}-mode`);
+      [
+        ['roas', metaReportsState.chartRoasMode, 'meta-chart-roas-mode'],
+        ['poas', metaReportsState.chartPoasMode, 'meta-chart-poas-mode'],
+        ['scatter-roas', metaReportsState.chartScatterRoasMode, 'meta-chart-scatter-roas-mode'],
+        ['scatter-poas', metaReportsState.chartScatterPoasMode, 'meta-chart-scatter-poas-mode'],
+      ].forEach(([, mode, id]) => {
+        const toggle = document.getElementById(id);
         if (!toggle) return;
         toggle.querySelectorAll('[data-mode]').forEach((button) => {
           button.classList.toggle('is-active', button.getAttribute('data-mode') === mode);
         });
       });
+    }
+
+    function syncMetaReportSpendInsight(series) {
+      const insightEl = document.getElementById('meta-report-spend-insight');
+      if (!insightEl) return;
+      const insight = metaReportEfficiencyInsight(series, metaReportsState.chartScatterRoasMode === 'x' ? 'roasX' : 'roasKr');
+      insightEl.textContent = insight.message;
+      insightEl.className = `meta-report-scenario-insight${insight.tone !== 'neutral' ? ` is-${insight.tone}` : ''}`;
+    }
+
+    function bindMetaReportScenarioControls(payload) {
+      const slider = document.getElementById('meta-report-budget-multiplier');
+      const output = document.getElementById('meta-report-budget-multiplier-value');
+      const baselineSelect = document.getElementById('meta-report-budget-baseline');
+      if (slider) {
+        slider.oninput = () => {
+          metaReportsState.budgetMultiplier = Number(slider.value) || 1;
+          if (output) output.textContent = `${metaReportsState.budgetMultiplier.toFixed(1)}×`;
+          syncMetaReportScenario(payload);
+        };
+      }
+      if (baselineSelect) {
+        baselineSelect.onchange = () => {
+          metaReportsState.budgetBaseline = baselineSelect.value === 'month' ? 'month' : 'year';
+          syncMetaReportScenario(payload);
+        };
+      }
+    }
+
+    function syncMetaReportScenario(payload) {
+      const series = metaReportsState.chartSeries || [];
+      const hasBottomline = payloadHasMetaReportBottomline(payload);
+      const baselineSpend = metaReportResolveBaselineSpend(payload, series);
+      const projection = metaReportProjectBudgetScenario({
+        series,
+        baselineSpend,
+        multiplier: metaReportsState.budgetMultiplier,
+        hasBottomline,
+      });
+      metaReportsState.chartProjection = projection;
+
+      const grid = document.getElementById('meta-report-scenario-grid');
+      if (grid) grid.innerHTML = renderMetaReportScenarioMetrics(projection);
+
+      syncMetaReportSpendInsight(series);
+      if (metaReportsState.chartTab === 'spend') {
+        updateMetaReportScatterChart('roas', series, metaReportsState.chartScatterRoasMode, projection);
+        updateMetaReportScatterChart('poas', series, metaReportsState.chartScatterPoasMode, projection);
+      }
     }
 
     function mountMetaReportCharts(payload, { editable = false } = {}) {
@@ -9002,10 +9646,12 @@
       const demoBadge = document.getElementById('meta-report-chart-demo-badge');
       if (demoBadge) demoBadge.hidden = !(demo && editable);
 
+      bindMetaReportChartTabs();
       bindMetaReportChartToggles();
+      bindMetaReportScenarioControls(payload);
       syncMetaReportChartToggleUi();
-      updateMetaReportChart('roas', series, metaReportsState.chartRoasMode);
-      updateMetaReportChart('poas', series, metaReportsState.chartPoasMode);
+      setMetaReportChartTab(metaReportsState.chartTab || 'trend');
+      syncMetaReportScenario(payload);
     }
 
     function syncMetaReportMonthPanelDom(monthPayload, options = {}, yearPayload = null) {
@@ -9121,7 +9767,8 @@
         <div class="meta-report-content-layout">
           <div class="meta-report-content-main">${tablesHtml}</div>
           ${chartsPanel}
-        </div>`;
+        </div>
+        ${renderMetaReportScenarioCard()}`;
     }
 
     function renderMetaReportsHubPage(viewData) {

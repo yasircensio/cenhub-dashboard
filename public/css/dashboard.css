@@ -4716,6 +4716,85 @@
       color: var(--text-soft); font-size: 13px; margin: 0; padding: 24px 8px; text-align: center;
     }
     .meta-report-chart-empty[hidden] { display: none !important; }
+    .meta-report-chart-tabs {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      display: inline-flex; gap: 2px; padding: 2px; width: fit-content;
+    }
+    .meta-report-chart-tab {
+      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
+      cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .meta-report-chart-tab.is-active {
+      background: var(--primary); box-shadow: 0 1px 4px rgba(255, 106, 0, 0.25); color: #fff;
+    }
+    .meta-report-chart-tab-panel {
+      display: flex; flex-direction: column; gap: 16px; min-width: 0;
+    }
+    .meta-report-chart-tab-panel[hidden] { display: none !important; }
+    .meta-report-scenario-insight {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0; padding: 10px 12px;
+    }
+    .meta-report-scenario-insight.is-positive {
+      background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.18); color: #15803d;
+    }
+    .meta-report-scenario-insight.is-negative {
+      background: rgba(194, 65, 12, 0.08); border-color: rgba(194, 65, 12, 0.18); color: #c2410c;
+    }
+    .meta-report-scenario-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px;
+      margin-top: 8px; padding: 18px 20px 20px;
+    }
+    .meta-report-scenario-title {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0 0 4px;
+    }
+    .meta-report-scenario-copy {
+      color: var(--text-soft); font-size: 13px; line-height: 1.45; margin: 0;
+    }
+    .meta-report-scenario-controls {
+      align-items: end; display: grid; gap: 14px 18px;
+      grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.8fr);
+    }
+    .meta-report-scenario-field {
+      display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    }
+    .meta-report-scenario-field > span {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-scenario-slider-row {
+      align-items: center; display: flex; gap: 12px;
+    }
+    .meta-report-scenario-slider-row input[type="range"] { flex: 1; min-width: 0; }
+    .meta-report-scenario-slider-row output {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; min-width: 42px;
+    }
+    .meta-report-scenario-grid {
+      display: flex; flex-direction: column; gap: 0; overflow: hidden;
+    }
+    .meta-report-scenario-grid-head,
+    .meta-report-scenario-row {
+      display: grid; gap: 12px; grid-template-columns: minmax(120px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 72px;
+    }
+    .meta-report-scenario-grid-head {
+      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.04em; padding: 0 0 10px; text-transform: uppercase;
+    }
+    .meta-report-scenario-row {
+      border-bottom: 1px solid rgba(232, 224, 216, 0.7); font-size: 13px; padding: 11px 0;
+    }
+    .meta-report-scenario-row:last-child { border-bottom: 0; }
+    .meta-report-scenario-label { color: var(--text); font-weight: 500; }
+    .meta-report-scenario-value { color: var(--text); font-variant-numeric: tabular-nums; }
+    .meta-report-scenario-value.is-projected { color: var(--text); font-weight: 700; }
+    .meta-report-scenario-delta { font-size: 12px; font-weight: 700; text-align: right; }
+    .meta-report-scenario-delta.is-positive { color: #15803d; }
+    .meta-report-scenario-delta.is-negative { color: var(--error); }
+    .meta-report-scenario-empty,
+    .meta-report-scenario-disclaimer {
+      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
+    }
     @media (max-width: 960px) {
       .meta-report-content-layout { grid-template-columns: 1fr; }
       .meta-report-content-main { max-width: none; }
@@ -4725,6 +4804,10 @@
       .meta-reports-page--public .meta-report-chart-canvas-wrap {
         height: 260px; min-height: 260px;
       }
+      .meta-report-scenario-controls { grid-template-columns: 1fr; }
+      .meta-report-scenario-grid-head,
+      .meta-report-scenario-row { grid-template-columns: 1fr; gap: 4px; }
+      .meta-report-scenario-delta { text-align: left; }
     }
 
     .meta-cv-layout {
