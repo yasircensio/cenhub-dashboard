@@ -8802,8 +8802,17 @@
       `;
     }
 
-    function getMetaReportMonthBodyOptions(settings = {}, { editable = false } = {}) {
-      return { editable };
+    function getMetaReportMonthBodyOptions(settings = {}, { editable = false, yearPayload = null } = {}) {
+      return { editable, yearPayload };
+    }
+
+    function shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable = false } = {}) {
+      if (!monthPayload || monthPayload.meta?.emptyMonth) return false;
+      if (!yearPayload) return false;
+      const { series, demo } = resolveMetaReportChartSeries(yearPayload);
+      if (series.length < META_REPORT_CHART_MIN_POINTS) return false;
+      if (demo && !editable) return false;
+      return true;
     }
 
     const META_REPORT_CHART_MIN_POINTS = 2;
@@ -9978,7 +9987,7 @@
 
     function mountMetaReportCharts(payload, { editable = false, clientId = null } = {}) {
       destroyMetaReportCharts();
-      if (!payload) return;
+      if (!payload || !document.getElementById('meta-report-charts-panel')) return;
 
       hydrateMetaReportSpendChartType(payload);
       const { series, demo } = resolveMetaReportChartSeries(payload);
@@ -10009,7 +10018,10 @@
       const payload = yearPayload
         || metaReportsState.clientPayload
         || metaReportsState.publicPayload;
-      panel.innerHTML = renderMetaReportMonthBody(monthPayload, options);
+      panel.innerHTML = renderMetaReportMonthBody(monthPayload, {
+        ...options,
+        yearPayload: options.yearPayload || payload,
+      });
       requestAnimationFrame(() => {
         mountMetaReportCharts(payload, {
           editable: Boolean(options.editable),
@@ -10083,7 +10095,7 @@
       `;
     }
 
-    function renderMetaReportMonthBody(monthPayload, { editable = false } = {}) {
+    function renderMetaReportMonthBody(monthPayload, { editable = false, yearPayload = null } = {}) {
       let editPanelHtml = '';
       if (editable && monthPayload && !monthPayload.meta?.emptyMonth) {
         editPanelHtml = `
@@ -10113,14 +10125,21 @@
       ` : '';
 
       const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable });
-      const chartsPanel = renderMetaReportChartsPanel({ editable });
+      const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
+      const chartsPanel = showYearVisuals ? renderMetaReportChartsPanel({ editable }) : '';
+      const scenarioCard = showYearVisuals ? renderMetaReportScenarioCard() : '';
 
-      return `${editPanelHtml}${previewHtml}
+      const bodyHtml = showYearVisuals ? `
         <div class="meta-report-content-layout">
           <div class="meta-report-content-main">${tablesHtml}</div>
           ${chartsPanel}
         </div>
-        ${renderMetaReportScenarioCard()}`;
+        ${scenarioCard}
+      ` : `
+        <div class="meta-report-content-main">${tablesHtml}</div>
+      `;
+
+      return `${editPanelHtml}${previewHtml}${bodyHtml}`;
     }
 
     function renderMetaReportsHubPage(viewData) {
@@ -10194,7 +10213,7 @@
           ${renderMetaReportClientControlPanel(payload)}
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
-            ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(settings, { editable: true }))}
+            ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(settings, { editable: true, yearPayload: payload }))}
           </div>
         </div>
         `)}
@@ -10235,7 +10254,7 @@
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
-            ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(payload.settings, { editable: false }))}
+            ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(payload.settings, { editable: false, yearPayload: payload }))}
           </div>
         </div>
         `)}
