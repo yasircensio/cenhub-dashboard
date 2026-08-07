@@ -4729,6 +4729,15 @@
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
       display: inline-flex; gap: 2px; padding: 2px; width: fit-content;
     }
+    .meta-report-chart-toolbar {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 12px;
+      justify-content: space-between; width: 100%;
+    }
+    .meta-report-chart-toolbar .meta-report-chart-tabs { flex: 0 0 auto; }
+    .meta-report-spend-chart-type-wrap {
+      display: flex; flex: 0 0 auto; justify-content: flex-end; margin-left: auto;
+    }
+    .meta-report-spend-chart-type-wrap[hidden] { display: none !important; }
     .meta-report-chart-tab {
       background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
       cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px;
@@ -4741,12 +4750,12 @@
       display: flex; flex-direction: column; gap: 16px; min-width: 0;
     }
     .meta-report-chart-tab-panel[hidden] { display: none !important; }
-    .meta-report-spend-chart-toolbar {
-      display: flex; justify-content: flex-end; width: 100%;
-    }
     .meta-report-spend-chart-type {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
       display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px;
+    }
+    .meta-report-spend-chart-type .meta-report-chart-toggle-btn {
+      cursor: pointer;
     }
     .meta-report-spend-chart-type .meta-report-chart-toggle-btn:disabled {
       cursor: default; opacity: 0.55;
@@ -9097,9 +9106,16 @@
       return `
         <aside class="meta-report-charts-panel" id="meta-report-charts-panel">
           <span class="meta-report-chart-demo-badge" id="meta-report-chart-demo-badge" hidden>Sample trend data</span>
-          <div class="meta-report-chart-tabs" role="tablist" aria-label="Chart views">
-            <button type="button" class="meta-report-chart-tab${activeTab === 'trend' ? ' is-active' : ''}" data-meta-chart-tab="trend" role="tab" aria-selected="${activeTab === 'trend'}">Monthly trend</button>
-            <button type="button" class="meta-report-chart-tab${activeTab === 'spend' ? ' is-active' : ''}" data-meta-chart-tab="spend" role="tab" aria-selected="${activeTab === 'spend'}">Spend vs return</button>
+          <div class="meta-report-chart-toolbar">
+            <div class="meta-report-chart-tabs" role="tablist" aria-label="Chart views">
+              <button type="button" class="meta-report-chart-tab${activeTab === 'trend' ? ' is-active' : ''}" data-meta-chart-tab="trend" role="tab" aria-selected="${activeTab === 'trend'}">Monthly trend</button>
+              <button type="button" class="meta-report-chart-tab${activeTab === 'spend' ? ' is-active' : ''}" data-meta-chart-tab="spend" role="tab" aria-selected="${activeTab === 'spend'}">Spend vs return</button>
+            </div>
+            ${editable ? `
+            <div class="meta-report-spend-chart-type-wrap" id="meta-report-spend-chart-type-wrap"${activeTab === 'spend' ? '' : ' hidden'}>
+              ${renderMetaReportSpendChartTypePicker({ editable: true })}
+            </div>
+            ` : ''}
           </div>
           <div class="meta-report-chart-tab-panel${activeTab === 'trend' ? ' is-active' : ''}" data-meta-chart-panel="trend" role="tabpanel"${activeTab === 'trend' ? '' : ' hidden'}>
             <div class="meta-report-chart-card" data-meta-chart="roas">
@@ -9130,11 +9146,6 @@
             </div>
           </div>
           <div class="meta-report-chart-tab-panel${activeTab === 'spend' ? ' is-active' : ''}" data-meta-chart-panel="spend" role="tabpanel"${activeTab === 'spend' ? '' : ' hidden'}>
-            ${editable ? `
-            <div class="meta-report-spend-chart-toolbar">
-              ${renderMetaReportSpendChartTypePicker({ editable: true })}
-            </div>
-            ` : ''}
             <div class="meta-report-chart-card" data-meta-chart="scatter-roas">
               <div class="meta-report-chart-head">
                 <h3 class="meta-report-chart-title">Ad spend & ROAS by month</h3>
@@ -9721,6 +9732,11 @@
       }
     }
 
+    function syncMetaReportSpendChartTypeToolbar(tab = metaReportsState.chartTab || 'trend') {
+      const wrap = document.getElementById('meta-report-spend-chart-type-wrap');
+      if (wrap) wrap.hidden = tab !== 'spend';
+    }
+
     function setMetaReportChartTab(tab) {
       metaReportsState.chartTab = tab;
       document.querySelectorAll('[data-meta-chart-tab]').forEach((button) => {
@@ -9733,6 +9749,7 @@
         panel.classList.toggle('is-active', active);
         panel.hidden = !active;
       });
+      syncMetaReportSpendChartTypeToolbar(tab);
       mountActiveMetaReportCharts();
     }
 
@@ -9875,17 +9892,17 @@
     }
 
     function bindMetaReportSpendChartTypePicker(clientId, payload) {
-      document.querySelectorAll('[data-spend-chart-type]').forEach((button) => {
+      document.querySelectorAll('#meta-report-spend-chart-type-wrap [data-spend-chart-type]').forEach((button) => {
         button.onclick = async () => {
           const nextType = button.getAttribute('data-spend-chart-type');
           if (!nextType || nextType === metaReportsState.spendChartType) return;
-          const previous = metaReportsState.spendChartType;
-          button.disabled = true;
+
+          setMetaReportSpendChartType(nextType, { payload });
+          if (!clientId) return;
+
           try {
-            const result = await setMetaReportSpendChartType(nextType, {
-              persist: Boolean(clientId),
-              clientId,
-              payload,
+            const result = await patchMetaReportSettings(clientId, {
+              metaReportSpendChartType: normalizeMetaReportSpendChartType(nextType),
             });
             if (result?.settings && payload) {
               payload.settings = { ...payload.settings, ...result.settings };
@@ -9894,10 +9911,7 @@
               }
             }
           } catch (error) {
-            setMetaReportSpendChartType(previous, { payload });
-            showToast(error.message || 'Chart type save failed', 'error');
-          } finally {
-            button.disabled = false;
+            showToast(error.message || 'Could not save chart type default', 'error');
           }
         };
       });
@@ -10002,10 +10016,14 @@
       bindMetaReportChartTabs();
       bindMetaReportChartToggles();
       bindMetaReportScenarioControls(payload);
-      if (editable && clientId) {
+      if (editable) {
         bindMetaReportSpendChartTypePicker(clientId, payload);
       }
       syncMetaReportChartToggleUi();
+      syncMetaReportSpendChartTypeToolbar(metaReportsState.chartTab || 'trend');
+      document.querySelectorAll('[data-spend-chart-type]').forEach((button) => {
+        button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === metaReportsState.spendChartType);
+      });
       setMetaReportChartTab(metaReportsState.chartTab || 'trend');
       syncMetaReportScenario(payload);
     }
