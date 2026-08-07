@@ -2019,6 +2019,23 @@
       gap: 8px;
     }
 
+    .field-group label.setup-ready-toggle {
+      cursor: pointer;
+      display: inline-flex;
+      margin-bottom: 0;
+    }
+
+    .field-group label.setup-ready-toggle input[type="checkbox"] {
+      accent-color: var(--primary);
+      border: 0;
+      box-shadow: none;
+      flex-shrink: 0;
+      height: auto;
+      margin: 0;
+      padding: 0;
+      width: auto;
+    }
+
     .field-label-row {
       align-items: center;
       display: flex;
