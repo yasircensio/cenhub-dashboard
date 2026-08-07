@@ -4790,90 +4790,158 @@
       align-items: center; display: flex; gap: 12px;
     }
     .meta-report-scenario-slider-row input[type="range"] { flex: 1; min-width: 0; }
-    .meta-report-scenario-slider-row output {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; min-width: 42px;
+    .meta-report-scenario-slider-row output,
+    .meta-report-scenario-multiplier-pill {
+      background: var(--primary); border-radius: 999px; box-shadow: 0 2px 8px rgba(255, 106, 0, 0.28);
+      color: #fff; font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700;
+      line-height: 1; min-width: 52px; padding: 8px 14px; text-align: center;
     }
     .meta-report-scenario-grid {
       display: flex; flex-direction: column; gap: 16px;
+    }
+    .meta-report-scenario-context {
+      background: linear-gradient(90deg, rgba(255, 106, 0, 0.1), rgba(255, 106, 0, 0.03));
+      border: 1px solid rgba(255, 106, 0, 0.18); border-radius: 12px;
+      color: var(--primary-dark); font-size: 13px; font-weight: 600; padding: 10px 14px;
     }
     .meta-report-scenario-outcomes {
       display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .meta-report-scenario-outcome-card {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
-      display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 18px 16px 16px;
-      position: relative;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: 0 2px 12px rgba(26, 18, 8, 0.04); display: flex; flex-direction: column;
+      gap: 10px; min-width: 0; overflow: hidden; padding: 16px 16px 14px; position: relative;
     }
-    .meta-report-scenario-outcome-card.is-featured {
-      background: linear-gradient(145deg, rgba(255, 106, 0, 0.08), rgba(255, 106, 0, 0.02));
+    .meta-report-scenario-outcome-card::before {
+      background: var(--scenario-accent, var(--border)); border-radius: 18px 0 0 18px;
+      bottom: 0; content: ''; left: 0; position: absolute; top: 0; width: 4px;
+    }
+    .meta-report-scenario-outcome-card.is-revenue {
+      --scenario-accent: #1d4ed8;
+      background: linear-gradient(145deg, rgba(29, 78, 216, 0.08), rgba(239, 246, 255, 0.5));
+      border-color: rgba(29, 78, 216, 0.2);
+    }
+    .meta-report-scenario-outcome-card.is-roas {
+      --scenario-accent: #ff6a00;
+      background: linear-gradient(145deg, rgba(255, 106, 0, 0.1), rgba(255, 244, 235, 0.6));
       border-color: rgba(255, 106, 0, 0.22);
     }
-    .meta-report-scenario-outcome-card.is-positive {
-      background: linear-gradient(145deg, rgba(22, 163, 74, 0.1), rgba(22, 163, 74, 0.02));
-      border-color: rgba(22, 163, 74, 0.24);
+    .meta-report-scenario-outcome-card.is-profit {
+      --scenario-accent: #15803d;
+      background: linear-gradient(145deg, rgba(21, 128, 61, 0.1), rgba(240, 253, 244, 0.55));
+      border-color: rgba(21, 128, 61, 0.22);
+    }
+    .meta-report-scenario-outcome-card.is-leads {
+      --scenario-accent: #7c3aed;
+      background: linear-gradient(145deg, rgba(124, 58, 237, 0.08), rgba(245, 243, 255, 0.55));
+      border-color: rgba(124, 58, 237, 0.2);
     }
     .meta-report-scenario-outcome-card.is-negative {
-      background: linear-gradient(145deg, rgba(194, 65, 12, 0.08), rgba(194, 65, 12, 0.02));
+      --scenario-accent: var(--error);
+      background: linear-gradient(145deg, rgba(194, 65, 12, 0.08), rgba(255, 247, 245, 0.6));
       border-color: rgba(194, 65, 12, 0.22);
     }
+    .meta-report-scenario-outcome-head {
+      align-items: flex-start; display: flex; gap: 10px; justify-content: space-between;
+    }
+    .meta-report-scenario-outcome-head-left {
+      align-items: center; display: flex; gap: 8px; min-width: 0;
+    }
+    .meta-report-scenario-outcome-icon {
+      align-items: center; background: rgba(255, 255, 255, 0.72); border-radius: 10px;
+      color: var(--scenario-accent, var(--text-soft)); display: inline-flex; flex-shrink: 0;
+      height: 32px; justify-content: center; width: 32px;
+    }
     .meta-report-scenario-outcome-label {
-      color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-    .meta-report-scenario-outcome-value {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700;
-      line-height: 1.15; overflow-wrap: anywhere;
-    }
-    .meta-report-scenario-outcome-card.is-positive .meta-report-scenario-outcome-value { color: #15803d; }
-    .meta-report-scenario-outcome-card.is-negative .meta-report-scenario-outcome-value { color: var(--error); }
-    .meta-report-scenario-outcome-sub {
-      color: var(--text-soft); font-size: 13px; font-weight: 600;
+      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+      line-height: 1.3; text-transform: uppercase;
     }
     .meta-report-scenario-outcome-delta {
-      align-self: flex-start; border-radius: 999px; font-size: 13px; font-weight: 700;
-      line-height: 1; margin-top: 4px; padding: 6px 10px;
+      border-radius: 999px; flex-shrink: 0; font-size: 13px; font-weight: 700;
+      line-height: 1; padding: 6px 11px;
     }
     .meta-report-scenario-outcome-delta.is-positive {
-      background: rgba(22, 163, 74, 0.14); color: #15803d;
+      background: rgba(22, 163, 74, 0.16); color: #15803d;
     }
     .meta-report-scenario-outcome-delta.is-negative {
-      background: rgba(194, 65, 12, 0.12); color: var(--error);
+      background: rgba(194, 65, 12, 0.14); color: var(--error);
     }
     .meta-report-scenario-outcome-delta.is-neutral {
-      background: var(--panel); color: var(--text-soft);
+      background: var(--panel-soft); color: var(--text-soft);
     }
+    .meta-report-scenario-outcome-hero {
+      color: var(--scenario-accent, var(--text)); font-family: 'Poppins', sans-serif;
+      font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums;
+      line-height: 1.1; overflow-wrap: anywhere;
+    }
+    .meta-report-scenario-outcome-card.is-negative .meta-report-scenario-outcome-hero { color: var(--error); }
+    .meta-report-scenario-outcome-secondary {
+      color: var(--text); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums;
+    }
+    .meta-report-scenario-compare-bar { margin: 2px 0 0; width: 100%; }
+    .meta-report-scenario-compare-bar.is-compact { margin: 0; }
+    .meta-report-scenario-compare-bar-track {
+      background: rgba(26, 18, 8, 0.08); border-radius: 999px; height: 8px;
+      overflow: hidden; position: relative; width: 100%;
+    }
+    .meta-report-scenario-compare-bar.is-compact .meta-report-scenario-compare-bar-track { height: 5px; }
+    .meta-report-scenario-compare-bar-base,
+    .meta-report-scenario-compare-bar-projected {
+      border-radius: 999px; height: 100%; left: 0; position: absolute; top: 0;
+    }
+    .meta-report-scenario-compare-bar-base { background: rgba(26, 18, 8, 0.18); z-index: 1; }
+    .meta-report-scenario-compare-bar-projected {
+      background: var(--scenario-accent, #ff6a00); opacity: 0.88; z-index: 2;
+    }
+    .meta-report-scenario-outcome-card.is-revenue .meta-report-scenario-compare-bar-projected { background: #1d4ed8; }
+    .meta-report-scenario-outcome-card.is-roas .meta-report-scenario-compare-bar-projected { background: #ff6a00; }
+    .meta-report-scenario-outcome-card.is-profit .meta-report-scenario-compare-bar-projected { background: #15803d; }
+    .meta-report-scenario-outcome-card.is-leads .meta-report-scenario-compare-bar-projected { background: #7c3aed; }
     .meta-report-scenario-outcome-gain {
-      color: var(--text-soft); font-size: 12px; line-height: 1.35;
+      color: var(--text-soft); font-size: 12px; font-weight: 600; line-height: 1.35;
     }
     .meta-report-scenario-outcome-baseline {
-      color: var(--text-muted); font-size: 11px; margin-top: auto; padding-top: 4px;
+      color: var(--text-muted); font-size: 11px; margin-top: auto; padding-top: 2px;
     }
     .meta-report-scenario-details {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
-      overflow: hidden;
+      display: flex; flex-direction: column; gap: 10px;
     }
     .meta-report-scenario-details-head {
-      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px;
-      font-weight: 700; letter-spacing: 0.04em; padding: 10px 14px; text-transform: uppercase;
+      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
-    .meta-report-scenario-details-row {
-      align-items: center; border-bottom: 1px solid rgba(232, 224, 216, 0.7);
-      display: grid; gap: 10px; grid-template-columns: minmax(110px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 64px;
-      font-size: 12px; padding: 10px 14px;
+    .meta-report-scenario-details-chips {
+      display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-    .meta-report-scenario-details-row:last-child { border-bottom: 0; }
-    .meta-report-scenario-grid-head,
-    .meta-report-scenario-row {
-      display: grid; gap: 12px; grid-template-columns: minmax(120px, 1fr) minmax(0, 1fr) minmax(0, 1fr) 72px;
+    .meta-report-scenario-detail-chip {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 12px 14px;
     }
-    .meta-report-scenario-grid-head {
-      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px; font-weight: 700;
-      letter-spacing: 0.04em; padding: 0 0 10px; text-transform: uppercase;
+    .meta-report-scenario-detail-chip-head {
+      align-items: center; display: flex; gap: 8px; justify-content: space-between;
     }
-    .meta-report-scenario-row {
-      border-bottom: 1px solid rgba(232, 224, 216, 0.7); font-size: 13px; padding: 11px 0;
+    .meta-report-scenario-detail-chip-label {
+      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
-    .meta-report-scenario-row:last-child { border-bottom: 0; }
+    .meta-report-scenario-detail-chip-delta {
+      border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; padding: 4px 8px;
+    }
+    .meta-report-scenario-detail-chip-delta.is-positive {
+      background: rgba(22, 163, 74, 0.14); color: #15803d;
+    }
+    .meta-report-scenario-detail-chip-delta.is-negative {
+      background: rgba(194, 65, 12, 0.12); color: var(--error);
+    }
+    .meta-report-scenario-detail-chip-values {
+      align-items: baseline; color: var(--text); display: flex; flex-wrap: wrap;
+      font-size: 12px; font-variant-numeric: tabular-nums; gap: 6px;
+    }
+    .meta-report-scenario-detail-chip-values .is-projected { font-size: 14px; font-weight: 700; }
+    .meta-report-scenario-detail-chip-arrow { color: var(--text-muted); font-size: 11px; }
+    .meta-report-scenario-detail-chip .meta-report-scenario-compare-bar-projected {
+      background: rgba(255, 106, 0, 0.55);
+    }
     .meta-report-scenario-label { color: var(--text); font-weight: 500; }
     .meta-report-scenario-value { color: var(--text); font-variant-numeric: tabular-nums; }
     .meta-report-scenario-value.is-projected { color: var(--text); font-weight: 700; }
@@ -4895,10 +4963,8 @@
       }
       .meta-report-scenario-controls { grid-template-columns: 1fr; }
       .meta-report-scenario-outcomes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .meta-report-scenario-outcome-value { font-size: 22px; }
-      .meta-report-scenario-details-row,
-      .meta-report-scenario-grid-head,
-      .meta-report-scenario-row { grid-template-columns: 1fr; gap: 4px; }
+      .meta-report-scenario-outcome-hero { font-size: 24px; }
+      .meta-report-scenario-details-chips { grid-template-columns: 1fr; }
       .meta-report-scenario-delta { text-align: left; }
     }
     @media (max-width: 560px) {
