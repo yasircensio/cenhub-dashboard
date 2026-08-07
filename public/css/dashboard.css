@@ -4320,7 +4320,8 @@
       font-weight: 600; gap: 7px; white-space: nowrap;
     }
     .meta-report-year-loading-banner[hidden] { display: none !important; }
-    .meta-report-client-page.is-year-loading .meta-report-settings,
+    .meta-report-client-page.is-year-loading .meta-report-control-status,
+    .meta-report-client-page.is-year-loading .meta-report-control-editors,
     .meta-reports-page--public.is-year-loading .meta-report-tabs,
     .meta-reports-page.is-year-loading .meta-cv-summary,
     .meta-reports-page.is-year-loading .meta-cv-legend {
@@ -4491,17 +4492,40 @@
     }
 
     .meta-reports-page { padding-bottom: 32px; }
-    .meta-report-client-page .meta-report-toolbar,
-    .meta-report-client-page .meta-report-share-card,
-    .meta-report-client-page .meta-report-settings {
+    .meta-report-client-page .meta-report-control-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
-      box-shadow: var(--shadow-sm); margin-bottom: 16px; padding: 18px 20px; width: 100%;
+      box-shadow: var(--shadow-sm); margin-bottom: 16px; padding: 14px 16px 16px; width: 100%;
     }
-    .meta-report-client-page .meta-report-toolbar {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+    .meta-report-control-panel.is-share-disabled { opacity: 0.92; }
+    .meta-report-control-bar {
+      align-items: center; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap;
+      gap: 12px 16px; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px;
     }
-    .meta-report-client-page .meta-report-settings {
-      align-items: stretch; flex-direction: column; gap: 0; justify-content: flex-start;
+    .meta-report-control-bar-left {
+      align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 10px;
+    }
+    .meta-report-control-bar-tabs { flex: 1 1 280px; min-width: 0; }
+    .meta-report-control-bar-tabs .meta-report-tabs { margin: 0; }
+    .meta-report-control-bar-actions {
+      align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 8px; margin-left: auto;
+    }
+    .meta-report-control-status { margin-bottom: 0; }
+    .meta-report-control-status[hidden] { display: none !important; }
+    .meta-report-control-status-grid {
+      display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .meta-report-control-editors {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .meta-report-control-editor .meta-report-settings-card-head {
+      margin-bottom: 10px;
+    }
+    .meta-report-control-editor .meta-report-settings-card-head:first-child {
+      margin-top: 4px;
+    }
+    .meta-report-control-panel:not(.is-editing-share) .meta-report-control-editor--share,
+    .meta-report-control-panel:not(.is-editing-report) .meta-report-control-editor--report {
+      display: none;
     }
     .meta-report-client-page .meta-report-settings-group {
       align-items: stretch; flex: 1; width: 100%;
@@ -4510,27 +4534,19 @@
       align-items: center; display: flex; justify-content: space-between;
       margin-bottom: 10px; width: 100%;
     }
-    .meta-report-share-card.is-editing .meta-report-settings-card-head,
-    .meta-report-client-page .meta-report-settings:not(.is-collapsed) .meta-report-settings-card-head {
-      margin-bottom: 12px;
-    }
     .meta-report-settings-card-title {
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
-    }
-    .meta-report-client-page .meta-report-settings.is-collapsed {
-      padding-bottom: 18px;
     }
     .meta-report-client-page .meta-report-fee-nested {
       background: linear-gradient(180deg, #faf7f3 0%, var(--panel-soft) 100%);
       border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
     }
-    .meta-report-share-card.is-disabled { opacity: 0.88; }
     .meta-report-share-summary,
     .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary {
-      align-items: center; background: transparent; border: 0; border-radius: 0;
-      display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: space-between;
-      padding: 0; width: 100%;
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px 14px;
+      justify-content: space-between; padding: 12px 14px; width: 100%;
     }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
@@ -4594,6 +4610,11 @@
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
     }
     .meta-report-client-page .meta-report-toolbar-actions { margin-left: auto; }
+    @media (max-width: 820px) {
+      .meta-report-control-status-grid { grid-template-columns: 1fr; }
+      .meta-report-control-bar-tabs { flex-basis: 100%; order: 3; }
+      .meta-report-control-bar-actions { margin-left: 0; width: 100%; }
+    }
     .meta-report-client-page .meta-report-month-panel {
       background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
       gap: 32px; padding: 0;

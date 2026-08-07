@@ -4329,7 +4329,8 @@
       font-weight: 600; gap: 7px; white-space: nowrap;
     }
     .meta-report-year-loading-banner[hidden] { display: none !important; }
-    .meta-report-client-page.is-year-loading .meta-report-settings,
+    .meta-report-client-page.is-year-loading .meta-report-control-status,
+    .meta-report-client-page.is-year-loading .meta-report-control-editors,
     .meta-reports-page--public.is-year-loading .meta-report-tabs,
     .meta-reports-page.is-year-loading .meta-cv-summary,
     .meta-reports-page.is-year-loading .meta-cv-legend {
@@ -4500,17 +4501,40 @@
     }
 
     .meta-reports-page { padding-bottom: 32px; }
-    .meta-report-client-page .meta-report-toolbar,
-    .meta-report-client-page .meta-report-share-card,
-    .meta-report-client-page .meta-report-settings {
+    .meta-report-client-page .meta-report-control-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
-      box-shadow: var(--shadow-sm); margin-bottom: 16px; padding: 18px 20px; width: 100%;
+      box-shadow: var(--shadow-sm); margin-bottom: 16px; padding: 14px 16px 16px; width: 100%;
     }
-    .meta-report-client-page .meta-report-toolbar {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+    .meta-report-control-panel.is-share-disabled { opacity: 0.92; }
+    .meta-report-control-bar {
+      align-items: center; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap;
+      gap: 12px 16px; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px;
     }
-    .meta-report-client-page .meta-report-settings {
-      align-items: stretch; flex-direction: column; gap: 0; justify-content: flex-start;
+    .meta-report-control-bar-left {
+      align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 10px;
+    }
+    .meta-report-control-bar-tabs { flex: 1 1 280px; min-width: 0; }
+    .meta-report-control-bar-tabs .meta-report-tabs { margin: 0; }
+    .meta-report-control-bar-actions {
+      align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 8px; margin-left: auto;
+    }
+    .meta-report-control-status { margin-bottom: 0; }
+    .meta-report-control-status[hidden] { display: none !important; }
+    .meta-report-control-status-grid {
+      display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .meta-report-control-editors {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .meta-report-control-editor .meta-report-settings-card-head {
+      margin-bottom: 10px;
+    }
+    .meta-report-control-editor .meta-report-settings-card-head:first-child {
+      margin-top: 4px;
+    }
+    .meta-report-control-panel:not(.is-editing-share) .meta-report-control-editor--share,
+    .meta-report-control-panel:not(.is-editing-report) .meta-report-control-editor--report {
+      display: none;
     }
     .meta-report-client-page .meta-report-settings-group {
       align-items: stretch; flex: 1; width: 100%;
@@ -4519,22 +4543,14 @@
       align-items: center; display: flex; justify-content: space-between;
       margin-bottom: 10px; width: 100%;
     }
-    .meta-report-share-card.is-editing .meta-report-settings-card-head,
-    .meta-report-client-page .meta-report-settings:not(.is-collapsed) .meta-report-settings-card-head {
-      margin-bottom: 12px;
-    }
     .meta-report-settings-card-title {
       color: var(--text-muted); font-size: 12px; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
-    }
-    .meta-report-client-page .meta-report-settings.is-collapsed {
-      padding-bottom: 18px;
     }
     .meta-report-client-page .meta-report-fee-nested {
       background: linear-gradient(180deg, #faf7f3 0%, var(--panel-soft) 100%);
       border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
     }
-    .meta-report-share-card.is-disabled { opacity: 0.88; }
     .meta-report-share-summary,
     .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary {
       align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
@@ -4603,6 +4619,11 @@
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
     }
     .meta-report-client-page .meta-report-toolbar-actions { margin-left: auto; }
+    @media (max-width: 820px) {
+      .meta-report-control-status-grid { grid-template-columns: 1fr; }
+      .meta-report-control-bar-tabs { flex-basis: 100%; order: 3; }
+      .meta-report-control-bar-actions { margin-left: 0; width: 100%; }
+    }
     .meta-report-client-page .meta-report-month-panel {
       background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
       gap: 32px; padding: 0;
@@ -7807,7 +7828,7 @@
       if (!payload.settings) payload.settings = {};
       payload.settings.metaReportEnabled = enabled;
 
-      document.getElementById('meta-report-share-card')?.classList.toggle('is-disabled', !enabled);
+      document.getElementById('meta-report-control-panel')?.classList.toggle('is-share-disabled', !enabled);
 
       const summary = document.getElementById('meta-report-share-summary');
       if (summary) {
@@ -7872,35 +7893,49 @@
       if (editBtn) editBtn.onclick = () => setMetaReportShareExpanded(true);
     }
 
-    function setMetaReportShareExpanded(expanded) {
-      metaReportsState.clientShareExpanded = Boolean(expanded);
-      const card = document.getElementById('meta-report-share-card');
-      const summary = document.getElementById('meta-report-share-summary');
-      const editor = document.getElementById('meta-report-share-editor');
-      card?.classList.toggle('is-editing', expanded);
-      if (summary) summary.hidden = expanded;
-      if (editor) editor.hidden = !expanded;
+    function syncMetaReportControlPanelUi() {
+      const panel = document.getElementById('meta-report-control-panel');
+      if (!panel) return;
+      const shareExpanded = metaReportsState.clientShareExpanded;
+      const reportExpanded = metaReportsState.clientReportSettingsExpanded;
+      panel.classList.toggle('is-editing-share', shareExpanded);
+      panel.classList.toggle('is-editing-report', reportExpanded);
+      const status = document.getElementById('meta-report-control-status');
+      if (status) status.hidden = shareExpanded || reportExpanded;
     }
 
-    function renderMetaReportShareCard(payload) {
+    function setMetaReportShareExpanded(expanded) {
+      metaReportsState.clientShareExpanded = Boolean(expanded);
+      if (expanded) {
+        metaReportsState.clientReportSettingsExpanded = false;
+      }
+      const summary = document.getElementById('meta-report-share-summary');
+      const editor = document.getElementById('meta-report-share-editor');
+      if (summary) summary.hidden = expanded;
+      if (editor) editor.hidden = !expanded;
+      const reportRoot = document.querySelector('.meta-report-bottomline-fee-settings--client');
+      const reportEditor = document.getElementById('meta-report-fee-editor');
+      reportRoot?.classList.toggle('is-editing', metaReportsState.clientReportSettingsExpanded);
+      reportRoot?.classList.toggle('is-collapsed', !metaReportsState.clientReportSettingsExpanded);
+      if (reportEditor) reportEditor.classList.toggle('is-hidden', !metaReportsState.clientReportSettingsExpanded);
+      syncMetaReportControlPanelUi();
+    }
+
+    function renderMetaReportShareEditor(payload) {
       const settings = payload.settings || {};
       const enabled = Boolean(settings.metaReportEnabled);
       const reportUrl = payload.reportUrl || null;
+      if (!reportUrl) return '';
       const fullUrl = metaReportFullUrl(reportUrl);
       const slug = resolveMetaReportShareSlug(payload);
       const code = resolveMetaReportShareCode(payload);
       const expanded = metaReportsState.clientShareExpanded;
-      const hasLink = Boolean(reportUrl);
 
       return `
-        <div class="meta-report-share-card${enabled ? '' : ' is-disabled'}${expanded ? ' is-editing' : ''}" id="meta-report-share-card">
+        <div class="meta-report-control-editor meta-report-control-editor--share" id="meta-report-share-editor-wrap">
           <div class="meta-report-settings-card-head">
             <span class="meta-report-settings-card-title">Slug setting</span>
           </div>
-          ${hasLink ? renderMetaReportShareSummary(payload, { hidden: expanded }) : `
-            <p class="meta-report-share-empty">Share link will appear once this client has a Meta ad account configured.</p>
-          `}
-          ${hasLink ? `
           <div class="meta-report-share-editor" id="meta-report-share-editor"${expanded ? '' : ' hidden'}>
             <div class="meta-report-share-panel">
               <div class="meta-report-share-preview-row">
@@ -7930,7 +7965,66 @@
               ${enabled ? '' : '<p class="meta-report-share-note">Preview disabled — link won\u2019t load.</p>'}
             </div>
           </div>
-          ` : ''}
+        </div>
+      `;
+    }
+
+    function renderMetaReportClientControlPanel(payload, { monthKeys = [], activeKey = '' } = {}) {
+      const settings = payload.settings || {};
+      const shareExpanded = metaReportsState.clientShareExpanded;
+      const reportExpanded = metaReportsState.clientReportSettingsExpanded;
+      const hasLink = Boolean(payload.reportUrl);
+      const statusHidden = shareExpanded || reportExpanded;
+      const tabs = monthKeys.map((key) => `
+        <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
+      `).join('');
+      const missing = metaReportMonthsNeedingBackfill(payload);
+
+      return `
+        <div class="meta-report-control-panel${shareExpanded ? ' is-editing-share' : ''}${reportExpanded ? ' is-editing-report' : ''}${settings.metaReportEnabled ? '' : ' is-share-disabled'}" id="meta-report-control-panel">
+          <div class="meta-report-control-bar">
+            <div class="meta-report-control-bar-left meta-report-toolbar-left">
+              <label class="meta-report-year-field">Year
+                <select id="meta-report-year" class="admin-select">
+                  ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
+                </select>
+              </label>
+              ${missing.length ? `
+                <div class="meta-report-backfill-wrap">
+                  <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta</button>
+                  <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
+                </div>
+              ` : ''}
+            </div>
+            <div class="meta-report-control-bar-tabs">
+              <div class="meta-report-tabs" role="tablist">${tabs}</div>
+            </div>
+            <div class="meta-report-control-bar-actions meta-report-toolbar-actions">
+              <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
+              ${hasLink ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(payload.reportUrl)}"${settings.metaReportEnabled ? '' : ' disabled'}>Copy link</button>` : ''}
+            </div>
+          </div>
+          ${hasLink ? `
+            <div class="meta-report-control-status"${statusHidden ? ' hidden' : ''} id="meta-report-control-status">
+              <div class="meta-report-control-status-grid">
+                ${renderMetaReportShareSummary(payload)}
+                ${renderMetaReportBottomlineFeeSummary(settings, 'meta-report')}
+              </div>
+            </div>
+          ` : `
+            <p class="meta-report-share-empty">Share link will appear once this client has a Meta ad account configured.</p>
+          `}
+          <div class="meta-report-control-editors">
+            ${hasLink ? renderMetaReportShareEditor(payload) : ''}
+            <div class="meta-report-control-editor meta-report-control-editor--report" id="meta-report-report-editor-wrap">
+              <div class="meta-report-settings-card-head">
+                <span class="meta-report-settings-card-title">Report settings</span>
+              </div>
+              <div class="meta-report-settings-group meta-report-settings-group--stacked">
+                ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report', { compact: false, collapsible: true, externalSummary: true })}
+              </div>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -7938,8 +8032,8 @@
     function refreshMetaReportClientShareUi(payload) {
       syncMetaReportToolbarCopy(payload);
       updateMetaReportShareSummary(payload);
-      const card = document.getElementById('meta-report-share-card');
-      if (card) card.classList.toggle('is-disabled', !payload.settings?.metaReportEnabled);
+      updateMetaReportBottomlineFeeSummary(payload.settings || {}, 'meta-report');
+      document.getElementById('meta-report-control-panel')?.classList.toggle('is-share-disabled', !payload.settings?.metaReportEnabled);
       const urlEl = document.getElementById('meta-report-share-url');
       if (urlEl && payload.reportUrl) urlEl.textContent = metaReportFullUrl(payload.reportUrl);
       const suffixEl = document.getElementById('meta-report-share-slug-suffix');
@@ -7955,16 +8049,16 @@
     }
 
     function syncMetaReportShareCard(payload) {
-      const card = document.getElementById('meta-report-share-card');
-      if (!card) return;
-      const parent = card.parentElement;
+      const wrap = document.getElementById('meta-report-share-editor-wrap');
+      if (!wrap) return;
+      const parent = wrap.parentElement;
       if (!parent) return;
-      const markup = renderMetaReportShareCard(payload);
-      const wrapper = document.createElement('div');
-      wrapper.innerHTML = markup.trim();
-      const nextCard = wrapper.firstElementChild;
-      if (!nextCard) return;
-      parent.replaceChild(nextCard, card);
+      const markup = renderMetaReportShareEditor(payload);
+      const shell = document.createElement('div');
+      shell.innerHTML = markup.trim();
+      const next = shell.firstElementChild;
+      if (!next) return;
+      parent.replaceChild(next, wrap);
       setMetaReportShareExpanded(metaReportsState.clientShareExpanded);
       bindMetaReportShareEvents(payload);
       syncMetaReportToolbarCopy(payload);
@@ -8337,7 +8431,7 @@
       }
 
       syncMetaReportToolbarCopy(payload);
-      syncMetaReportShareCard(payload);
+      refreshMetaReportClientShareUi(payload);
 
       const settings = payload.settings || {};
       const monthPayload = payload.months?.[metaReportsState.activeMonthKey] || null;
@@ -8632,9 +8726,6 @@
       const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
       const monthPayload = payload.months?.[activeKey] || null;
       const settings = payload.settings || {};
-      const tabs = monthKeys.map((key) => `
-        <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
-      `).join('');
 
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
@@ -8652,39 +8743,7 @@
           </div>
         </div>
         <div class="sync-history-page meta-reports-page meta-report-client-page">
-          <div class="meta-report-toolbar">
-            <div class="meta-report-toolbar-left">
-              <label class="meta-report-year-field">Year
-                <select id="meta-report-year" class="admin-select">
-                  ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
-                </select>
-              </label>
-              ${(() => {
-                const missing = metaReportMonthsNeedingBackfill(payload);
-                if (!missing.length) return '';
-                return `
-                  <div class="meta-report-backfill-wrap">
-                    <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta</button>
-                    <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
-                  </div>
-                `;
-              })()}
-            </div>
-            <div class="meta-report-toolbar-actions">
-              ${payload.reportUrl ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(payload.reportUrl)}"${settings.metaReportEnabled ? '' : ' disabled'}>Copy link</button>` : ''}
-            </div>
-          </div>
-          ${renderMetaReportShareCard(payload)}
-          <div class="meta-report-settings${metaReportsState.clientReportSettingsExpanded ? '' : ' is-collapsed'}">
-            <div class="meta-report-settings-card-head">
-              <span class="meta-report-settings-card-title">Report settings</span>
-              <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
-            </div>
-            <div class="meta-report-settings-group meta-report-settings-group--stacked">
-              ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report', { compact: false, collapsible: true })}
-            </div>
-          </div>
-          <div class="meta-report-tabs" role="tablist">${tabs}</div>
+          ${renderMetaReportClientControlPanel(payload, { monthKeys, activeKey })}
           <div class="meta-report-month-panel" id="meta-report-month-panel">
             ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(settings, { editable: true }))}
           </div>
@@ -9877,13 +9936,19 @@
     function setMetaReportClientSettingsExpanded(prefix, expanded) {
       if (prefix !== 'meta-report') return;
       metaReportsState.clientReportSettingsExpanded = Boolean(expanded);
+      if (expanded) {
+        metaReportsState.clientShareExpanded = false;
+      }
       const root = document.querySelector('.meta-report-bottomline-fee-settings--client');
-      const settingsCard = document.querySelector('.meta-report-client-page .meta-report-settings');
       const editor = document.getElementById(`${prefix}-fee-editor`);
       root?.classList.toggle('is-editing', expanded);
       root?.classList.toggle('is-collapsed', !expanded);
-      settingsCard?.classList.toggle('is-collapsed', !expanded);
-      editor?.classList.toggle('is-hidden', !expanded);
+      if (editor) editor.classList.toggle('is-hidden', !expanded);
+      const shareSummary = document.getElementById('meta-report-share-summary');
+      const shareEditor = document.getElementById('meta-report-share-editor');
+      if (shareSummary) shareSummary.hidden = metaReportsState.clientShareExpanded;
+      if (shareEditor) shareEditor.hidden = !metaReportsState.clientShareExpanded;
+      syncMetaReportControlPanelUi();
     }
 
     function updateMetaReportBottomlineFeeSummary(settings = {}, prefix = 'meta-report') {
@@ -9899,7 +9964,7 @@
       }
     }
 
-    function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false, variant = 'default', collapsible = false } = {}) {
+    function renderMetaReportBottomlineFeeSettings(settings = {}, prefix = 'meta-report', { compact = false, variant = 'default', collapsible = false, externalSummary = false } = {}) {
       const showBottomline = Boolean(settings.metaReportShowBottomline);
       const feeEnabled = Boolean(settings.metaReportFeeEnabled);
       const storedMode = settings.metaReportFeeMode || '';
@@ -9961,7 +10026,7 @@
             <div class="meta-report-fee-save-row">
               <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee settings</button>
             </div>`;
-      const summaryHtml = collapsible ? renderMetaReportBottomlineFeeSummary(settings, prefix) : '';
+      const summaryHtml = collapsible && !externalSummary ? renderMetaReportBottomlineFeeSummary(settings, prefix) : '';
       return `
         <div class="meta-report-bottomline-fee-settings${collapsible ? ' meta-report-bottomline-fee-settings--client' : ''}${collapsible ? (expanded ? ' is-editing' : ' is-collapsed') : ''}">
           ${summaryHtml}
