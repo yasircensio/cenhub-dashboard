@@ -4320,50 +4320,14 @@
       justify-content: flex-end; margin: 18px -24px 0; padding: 14px 24px;
     }
     .meta-report-public-hero { text-align: left; }
-    .brand-topbar-lockup {
-      align-items: center;
-      display: flex;
-      gap: 14px;
-    }
-    .brand-topbar-divider {
-      background: rgba(255, 255, 255, 0.22);
-      flex-shrink: 0;
-      height: 28px;
-      width: 1px;
-    }
-    .brand-product-label {
-      color: rgba(255, 255, 255, 0.92);
-      font-family: 'Poppins', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      white-space: nowrap;
-    }
-    .meta-report-public-brand { margin-bottom: 12px; }
-    .meta-report-public-brand-accent {
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      border-radius: 999px;
-      height: 3px;
-      margin-bottom: 14px;
-      opacity: 0.85;
-      width: 56px;
-    }
-    .meta-report-public-brand-label {
-      color: rgba(255, 255, 255, 0.72);
-      font-family: 'Poppins', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      margin: 0;
-    }
-    .meta-report-public-brand-label strong {
+    .meta-report-public-product-name {
       color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(1.35rem, 3vw, 1.85rem);
       font-weight: 700;
-    }
-    .meta-report-public-subtitle {
-      color: rgba(255, 255, 255, 0.72);
-      font-size: 13px;
-      margin-top: 6px;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      white-space: nowrap;
     }
     .brand-footer--public-report {
       margin-top: 32px;
@@ -10686,15 +10650,6 @@
       return String(payload?.accountName || payload?.clientId || '').trim() || 'Meta report';
     }
 
-    function renderMetaReportPublicBrandBlock() {
-      return `
-        <div class="meta-report-public-brand">
-          <div class="meta-report-public-brand-accent" aria-hidden="true"></div>
-          <p class="meta-report-public-brand-label">by <strong>Censio Analytics</strong></p>
-        </div>
-      `;
-    }
-
     function syncMetaReportPublicBranding(payload) {
       const clientName = metaReportClientDisplayName(payload);
       document.title = `${clientName} · Censio Analytics`;
@@ -10714,19 +10669,15 @@
       return `
         <header class="brand-topbar">
           <div class="brand-topbar-inner">
-            <div class="brand-topbar-left brand-topbar-lockup">
-              <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-              <span class="brand-topbar-divider" aria-hidden="true"></span>
-              <span class="brand-product-label">Censio Analytics</span>
+            <div class="brand-topbar-left">
+              <span class="meta-report-public-product-name">Censio Analytics</span>
             </div>
           </div>
         </header>
         ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
           <div class="meta-premium-page-hero-inner">
-            ${renderMetaReportPublicBrandBlock()}
             <h1>${esc(clientName)}</h1>
-            <p class="meta-report-public-subtitle">Meta ads performance report</p>
           </div>
         </div>
         <div class="meta-reports-page meta-reports-page--public">

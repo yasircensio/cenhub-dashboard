@@ -1029,29 +1029,20 @@ Resume the interrupted ${$}?`)&&(l=g.id,d=Number(g.batchOffset)||0)}}if(a?setFbL
       </div>
     </div>
     `)}
-  `}function metaReportClientDisplayName(e){return String(e?.accountName||e?.clientId||"").trim()||"Meta report"}function renderMetaReportPublicBrandBlock(){return`
-    <div class="meta-report-public-brand">
-      <div class="meta-report-public-brand-accent" aria-hidden="true"></div>
-      <p class="meta-report-public-brand-label">by <strong>Censio Analytics</strong></p>
-    </div>
-  `}function syncMetaReportPublicBranding(e){const t=metaReportClientDisplayName(e);document.title=`${t} \xB7 Censio Analytics`;const a=document.querySelector(".meta-report-public-hero h1");a&&(a.textContent=t)}function renderPublicMetaReportPage(e){const t=metaReportClientDisplayName(e),a=e.monthKeys||[],n=metaReportsState.activeMonthKey||a[a.length-1]||"",s=e.months?.[n]||null,o=a.map(r=>`
+  `}function metaReportClientDisplayName(e){return String(e?.accountName||e?.clientId||"").trim()||"Meta report"}function syncMetaReportPublicBranding(e){const t=metaReportClientDisplayName(e);document.title=`${t} \xB7 Censio Analytics`;const a=document.querySelector(".meta-report-public-hero h1");a&&(a.textContent=t)}function renderPublicMetaReportPage(e){const t=metaReportClientDisplayName(e),a=e.monthKeys||[],n=metaReportsState.activeMonthKey||a[a.length-1]||"",s=e.months?.[n]||null,o=a.map(r=>`
     <button type="button" class="meta-report-tab${r===n?" is-active":""}" data-meta-month-tab="${esc(r)}">${esc(metaMonthLabel(r))}</button>
   `).join("");return`
     <header class="brand-topbar">
       <div class="brand-topbar-inner">
-        <div class="brand-topbar-left brand-topbar-lockup">
-          <img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />
-          <span class="brand-topbar-divider" aria-hidden="true"></span>
-          <span class="brand-product-label">Censio Analytics</span>
+        <div class="brand-topbar-left">
+          <span class="meta-report-public-product-name">Censio Analytics</span>
         </div>
       </div>
     </header>
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
       <div class="meta-premium-page-hero-inner">
-        ${renderMetaReportPublicBrandBlock()}
         <h1>${esc(t)}</h1>
-        <p class="meta-report-public-subtitle">Meta ads performance report</p>
       </div>
     </div>
     <div class="meta-reports-page meta-reports-page--public">
