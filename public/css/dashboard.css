@@ -4732,16 +4732,6 @@
       display: flex; flex-direction: column; gap: 16px; min-width: 0;
     }
     .meta-report-chart-tab-panel[hidden] { display: none !important; }
-    .meta-report-scenario-insight {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
-      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0; padding: 10px 12px;
-    }
-    .meta-report-scenario-insight.is-positive {
-      background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.18); color: #15803d;
-    }
-    .meta-report-scenario-insight.is-negative {
-      background: rgba(194, 65, 12, 0.08); border-color: rgba(194, 65, 12, 0.18); color: #c2410c;
-    }
     .meta-report-scenario-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
       box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px;

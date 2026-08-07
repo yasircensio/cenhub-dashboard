@@ -4741,16 +4741,6 @@
       display: flex; flex-direction: column; gap: 16px; min-width: 0;
     }
     .meta-report-chart-tab-panel[hidden] { display: none !important; }
-    .meta-report-scenario-insight {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
-      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0; padding: 10px 12px;
-    }
-    .meta-report-scenario-insight.is-positive {
-      background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.18); color: #15803d;
-    }
-    .meta-report-scenario-insight.is-negative {
-      background: rgba(194, 65, 12, 0.08); border-color: rgba(194, 65, 12, 0.18); color: #c2410c;
-    }
     .meta-report-scenario-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
       box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px;
@@ -9006,23 +8996,6 @@
       return { slope, intercept, r };
     }
 
-    function metaReportEfficiencyInsight(series = [], yKey = 'roasX') {
-      const points = series
-        .filter((point) => metaReportParseAmount(point.spend) > 0)
-        .map((point) => ({ x: metaReportParseAmount(point.spend), y: metaReportParseAmount(point[yKey]) }));
-      if (points.length < 2) {
-        return { tone: 'neutral', message: 'Not enough months to assess spend efficiency yet.' };
-      }
-      const { slope, r } = metaReportLinearRegression(points);
-      if (Math.abs(r) < 0.25) {
-        return { tone: 'neutral', message: 'Return is stable across spend levels.' };
-      }
-      if (slope > 0) {
-        return { tone: 'positive', message: 'Higher spend months tend to maintain or improve return — scaling looks promising.' };
-      }
-      return { tone: 'negative', message: 'Higher spend months show lower efficiency — improve targeting/creative before scaling.' };
-    }
-
     function metaReportSpendAxisTick(value) {
       const amount = Number(value) || 0;
       if (Math.abs(amount) >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
@@ -9099,7 +9072,6 @@
             </div>
           </div>
           <div class="meta-report-chart-tab-panel${activeTab === 'spend' ? ' is-active' : ''}" data-meta-chart-panel="spend" role="tabpanel"${activeTab === 'spend' ? '' : ' hidden'}>
-            <p class="meta-report-scenario-insight" id="meta-report-spend-insight"></p>
             <div class="meta-report-chart-card" data-meta-chart="scatter-roas">
               <div class="meta-report-chart-head">
                 <h3 class="meta-report-chart-title">ROAS vs ad spend</h3>
@@ -9586,14 +9558,6 @@
       });
     }
 
-    function syncMetaReportSpendInsight(series) {
-      const insightEl = document.getElementById('meta-report-spend-insight');
-      if (!insightEl) return;
-      const insight = metaReportEfficiencyInsight(series, metaReportsState.chartScatterRoasMode === 'x' ? 'roasX' : 'roasKr');
-      insightEl.textContent = insight.message;
-      insightEl.className = `meta-report-scenario-insight${insight.tone !== 'neutral' ? ` is-${insight.tone}` : ''}`;
-    }
-
     function bindMetaReportScenarioControls(payload) {
       const slider = document.getElementById('meta-report-budget-multiplier');
       const output = document.getElementById('meta-report-budget-multiplier-value');
@@ -9628,7 +9592,6 @@
       const grid = document.getElementById('meta-report-scenario-grid');
       if (grid) grid.innerHTML = renderMetaReportScenarioMetrics(projection);
 
-      syncMetaReportSpendInsight(series);
       if (metaReportsState.chartTab === 'spend') {
         updateMetaReportScatterChart('roas', series, metaReportsState.chartScatterRoasMode, projection);
         updateMetaReportScatterChart('poas', series, metaReportsState.chartScatterPoasMode, projection);
