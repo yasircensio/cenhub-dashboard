@@ -9044,6 +9044,19 @@
       return amount;
     }
 
+    function metaReportSpendMultiplierValue(spend, baselineSpend) {
+      const base = metaReportParseAmount(baselineSpend);
+      const amount = metaReportParseAmount(spend);
+      if (base <= 0) return 0;
+      return metaReportRoundRatio(amount / base);
+    }
+
+    function resolveMetaReportSpendChartBaseline(series, projection = null) {
+      const fromProjection = metaReportParseAmount(projection?.baselineSpend);
+      if (fromProjection > 0) return fromProjection;
+      return metaReportAggregateSeriesEfficiency(series).avgMonthlySpend;
+    }
+
     function metaReportDeltaPct(nextValue, baseValue) {
       const base = metaReportParseAmount(baseValue);
       const next = metaReportParseAmount(nextValue);
@@ -9364,10 +9377,19 @@
       projection = null,
       projectionLabel = 'Projected',
       showProjection = false,
+      baselineSpend = null,
     } = {}) {
       const chartSeries = series.filter((point) => metaReportParseAmount(point.spend) > 0);
       const labels = chartSeries.map((point) => point.label);
-      const spendValues = chartSeries.map((point) => metaReportParseAmount(point.spend));
+      const spendBaseline = metaReportParseAmount(
+        baselineSpend ?? (projection?.baselineSpend ?? 0),
+      ) || resolveMetaReportSpendChartBaseline(chartSeries, projection);
+      const useSpendMultiplier = mode === 'x' && spendBaseline > 0;
+      const spendValues = chartSeries.map((point) => (
+        useSpendMultiplier
+          ? metaReportSpendMultiplierValue(point.spend, spendBaseline)
+          : metaReportParseAmount(point.spend)
+      ));
       const returnValues = chartSeries.map((point) => metaReportChartValue(point, mode, krKey, xKey));
       const normalizedType = normalizeMetaReportSpendChartType(chartType);
       const dualAxis = mode === 'x';
@@ -9375,7 +9397,11 @@
 
       if (showProjection && projection && !projection.insufficientData) {
         labels.push(projectionLabel || `Projected (${Number(projection.multiplier).toFixed(1)}×)`);
-        spendValues.push(metaReportParseAmount(projection.projected.spend));
+        spendValues.push(
+          useSpendMultiplier
+            ? metaReportParseAmount(projection.multiplier)
+            : metaReportParseAmount(projection.projected.spend),
+        );
         returnValues.push(metaReportParseAmount(projection.projected[mode === 'x' ? xKey : krKey]));
       }
 
@@ -9505,7 +9531,7 @@
           position: 'left',
           title: {
             display: true,
-            text: dualAxis ? 'Ad spend (Dkr)' : 'Dkr',
+            text: useSpendMultiplier ? 'Ad spend (×)' : (dualAxis ? 'Ad spend (Dkr)' : 'Dkr'),
             color: dualAxis ? '#138b53' : '#6b5348',
             font: { size: 11, weight: '600' },
           },
@@ -9513,7 +9539,9 @@
           ticks: {
             color: dualAxis ? '#138b53' : '#6b5348',
             font: { size: 11 },
-            callback: (value) => metaReportSpendAxisTick(value),
+            callback: (value) => (
+              useSpendMultiplier ? metaReportChartAxisTick(value, 'x') : metaReportSpendAxisTick(value)
+            ),
           },
         },
       };
@@ -9573,6 +9601,9 @@
                 label(context) {
                   const datasetLabel = context.dataset.label || '';
                   if (context.dataset.yAxisID === 'yReturn') {
+                    return `${datasetLabel}: ${metaReportChartTooltipLabel(context.parsed.y, 'x')}`;
+                  }
+                  if (useSpendMultiplier && context.dataset.yAxisID === 'ySpend') {
                     return `${datasetLabel}: ${metaReportChartTooltipLabel(context.parsed.y, 'x')}`;
                   }
                   if (context.datasetIndex === 1 && !dualAxis) {
@@ -9658,6 +9689,9 @@
 
       canvas.hidden = false;
       emptyEl.hidden = true;
+      const baselineSpend = mode === 'x'
+        ? resolveMetaReportSpendChartBaseline(chartSeries, projection)
+        : null;
       metaReportsState[instanceKey][kind] = buildMetaReportDualMetricChart(canvas, {
         series: chartSeries,
         mode,
@@ -9668,6 +9702,7 @@
         projection,
         projectionLabel,
         showProjection,
+        baselineSpend,
       });
     }
 
