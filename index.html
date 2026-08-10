@@ -4960,15 +4960,31 @@
       .meta-report-scenario-outcomes { grid-template-columns: 1fr; }
     }
 
-    .meta-report-comparison-card {
-      display: flex; flex-direction: column; gap: 12px; margin-top: 8px; width: 100%;
+    .meta-report-comparison-card,
+    .meta-report-comparison-view {
+      display: flex; flex-direction: column; gap: 16px; width: 100%;
     }
-    .meta-report-comparison-focus {
-      display: flex; flex-direction: column; gap: 12px; margin: 0 auto;
-      max-width: 600px; width: 100%;
+    .meta-report-view-mode-tabs {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      display: inline-flex; flex-wrap: wrap; gap: 2px; margin: 4px 0 8px; padding: 2px; width: fit-content;
     }
-    .meta-report-comparison-title {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0;
+    .meta-report-view-mode-tabs .meta-report-chart-tab {
+      font-size: 13px; padding: 9px 16px;
+    }
+    .meta-report-view-panel {
+      display: flex; flex-direction: column; gap: 16px; min-width: 0; width: 100%;
+    }
+    .meta-report-view-panel[hidden] { display: none !important; }
+    .meta-report-comparison-controls {
+      display: flex; flex-direction: column; gap: 12px; width: 100%;
+    }
+    .meta-report-comparison-table-focus {
+      margin: 0 auto; max-width: 600px; width: 100%;
+    }
+    .meta-report-comparison-chart-panel {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px;
+      padding: 16px 20px 18px; width: 100%;
     }
     .meta-report-comparison-presets {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
@@ -5031,48 +5047,19 @@
       align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;
       padding-top: 0; text-transform: uppercase;
     }
-    .meta-report-comparison-view-card {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 600px; overflow: hidden;
-      padding: 18px 20px 20px; width: 100%;
-    }
-    .meta-report-comparison-view-head {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
-      margin-bottom: 14px;
-    }
-    .meta-report-comparison-tabs {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
-      display: inline-flex; gap: 2px; padding: 2px;
-    }
-    .meta-report-comparison-tabs .meta-report-chart-tab {
-      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
-      cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-    .meta-report-comparison-tabs .meta-report-chart-tab.is-active {
-      background: var(--primary); box-shadow: 0 1px 4px rgba(255, 106, 0, 0.25); color: #fff;
-    }
-    .meta-report-comparison-tab-panel {
-      display: flex; flex-direction: column; gap: 10px; min-width: 0;
-    }
-    .meta-report-comparison-tab-panel[hidden] { display: none !important; }
-    .meta-report-comparison-tab-panel .meta-report-groups-stack { gap: 14px; }
-    .meta-report-comparison-tab-panel .meta-report-group-head { margin-bottom: 8px; }
-    .meta-report-comparison-tab-panel .meta-report-group-title { font-size: 14px; }
-    .meta-report-comparison-tab-panel .meta-report-group-table th,
-    .meta-report-comparison-tab-panel .meta-report-group-table td {
+    .meta-report-comparison-table-focus .meta-report-groups-stack { gap: 14px; }
+    .meta-report-comparison-table-focus .meta-report-group-head { margin-bottom: 8px; }
+    .meta-report-comparison-table-focus .meta-report-group-title { font-size: 14px; }
+    .meta-report-comparison-table-focus .meta-report-group-table th,
+    .meta-report-comparison-table-focus .meta-report-group-table td {
       padding: 8px 10px;
     }
-    .meta-report-comparison-tab-panel .meta-report-group-table-wrap { overflow: visible; }
-    .meta-report-comparison-tab-panel .meta-report-group-table td {
+    .meta-report-comparison-table-focus .meta-report-group-table-wrap { overflow: visible; }
+    .meta-report-comparison-table-focus .meta-report-group-table td {
       overflow: visible; text-overflow: clip; white-space: nowrap;
     }
     #meta-report-comparison-table-wrap {
       -webkit-overflow-scrolling: touch; overflow-x: auto;
-    }
-    .meta-report-comparison-chart-card {
-      background: transparent; border: 0; box-shadow: none; display: flex;
-      flex-direction: column; gap: 12px; min-width: 0; padding: 0;
     }
     .meta-report-comparison-chart-toolbar {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: flex-end;
@@ -8279,7 +8266,7 @@
       comparisonPeriodA: { startDate: null, endDate: null },
       comparisonPeriodB: { startDate: null, endDate: null },
       comparisonChartMode: 'kr',
-      comparisonTab: 'table',
+      reportViewMode: 'monthly',
       comparisonYearCache: {},
       comparisonResult: null,
       comparisonLoading: false,
@@ -9151,6 +9138,9 @@
 
     function switchMetaReportMonthTab(monthKey, { editable = false } = {}) {
       if (!monthKey) return;
+      if (metaReportsState.reportViewMode === 'comparison') {
+        metaReportsState.reportViewMode = 'monthly';
+      }
       metaReportsState.activeMonthKey = monthKey;
       const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
       if (!payload) return;
@@ -11295,16 +11285,24 @@
       return `<div class="meta-report-groups-stack">${groupsHtml}</div>`;
     }
 
-    function renderMetaReportComparisonCard() {
+    function renderMetaReportViewModeTabs() {
+      const viewMode = metaReportsState.reportViewMode || 'monthly';
+      return `
+        <div class="meta-report-view-mode-tabs" role="tablist" aria-label="Report views">
+          <button type="button" class="meta-report-chart-tab${viewMode === 'monthly' ? ' is-active' : ''}" data-report-view-mode="monthly" role="tab" aria-selected="${viewMode === 'monthly'}">Monthly report</button>
+          <button type="button" class="meta-report-chart-tab${viewMode === 'comparison' ? ' is-active' : ''}" data-report-view-mode="comparison" role="tab" aria-selected="${viewMode === 'comparison'}">Period comparison</button>
+        </div>
+      `;
+    }
+
+    function renderMetaReportComparisonView() {
       const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
       const comparison = metaReportsState.comparisonResult || computeMetaReportComparison(payload);
       const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
-      const activeTab = metaReportsState.comparisonTab || 'table';
 
       return `
-        <section class="meta-report-comparison-card" id="meta-report-comparison-card">
-          <div class="meta-report-comparison-focus">
-            <h3 class="meta-report-comparison-title">Period comparison</h3>
+        <section class="meta-report-comparison-view" id="meta-report-comparison-view">
+          <div class="meta-report-comparison-controls">
             <div class="meta-report-comparison-presets" id="meta-report-comparison-presets">
               ${META_REPORT_COMPARISON_PRESETS.map(({ id, label }) => {
                 const disabled = metaReportComparisonPresetDisabled(id, payload);
@@ -11317,30 +11315,20 @@
             <div id="meta-report-comparison-range-wrap">
               ${renderMetaReportComparisonPeriodTiles(periodA, periodB, payload)}
             </div>
-            <div class="meta-report-comparison-view-card">
-              <div class="meta-report-comparison-view-head">
-                <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
-                  <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
-                  <button type="button" class="meta-report-chart-tab${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-tab="chart" role="tab" aria-selected="${activeTab === 'chart'}">Show in chart</button>
-                </div>
+          </div>
+          <div class="meta-report-comparison-table-focus">
+            <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
+          </div>
+          <div class="meta-report-comparison-chart-panel">
+            <div class="meta-report-comparison-chart-toolbar">
+              <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
+                <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'kr' ? ' is-active' : ''}" data-mode="kr">Dkr</button>
+                <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'x' ? ' is-active' : ''}" data-mode="x">Multiplier</button>
               </div>
-              <div class="meta-report-comparison-tab-panel${activeTab === 'table' ? ' is-active' : ''}" data-comparison-panel="table" role="tabpanel"${activeTab === 'table' ? '' : ' hidden'}>
-                <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
-              </div>
-              <div class="meta-report-comparison-tab-panel${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-panel="chart" role="tabpanel"${activeTab === 'chart' ? '' : ' hidden'}>
-                <div class="meta-report-comparison-chart-card">
-                  <div class="meta-report-comparison-chart-toolbar">
-                    <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
-                      <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'kr' ? ' is-active' : ''}" data-mode="kr">Dkr</button>
-                      <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'x' ? ' is-active' : ''}" data-mode="x">Multiplier</button>
-                    </div>
-                  </div>
-                  <div class="meta-report-comparison-chart-canvas-wrap">
-                    <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
-                    <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
-                  </div>
-                </div>
-              </div>
+            </div>
+            <div class="meta-report-comparison-chart-canvas-wrap">
+              <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
+              <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
             </div>
           </div>
         </section>
@@ -11573,7 +11561,6 @@
 
     function mountMetaReportComparisonChart(comparison) {
       destroyMetaReportComparisonChart();
-      if ((metaReportsState.comparisonTab || 'table') !== 'chart') return;
       const canvas = document.getElementById('meta-report-comparison-chart');
       if (!canvas) return;
       metaReportsState.comparisonChartInstance = buildMetaReportComparisonChart(
@@ -11583,29 +11570,46 @@
       );
     }
 
-    function setMetaReportComparisonTab(tab) {
-      metaReportsState.comparisonTab = tab === 'chart' ? 'chart' : 'table';
-      document.querySelectorAll('[data-comparison-tab]').forEach((button) => {
-        const isActive = button.getAttribute('data-comparison-tab') === metaReportsState.comparisonTab;
+    function setMetaReportViewMode(mode, payload, { editable = false } = {}) {
+      metaReportsState.reportViewMode = mode === 'comparison' ? 'comparison' : 'monthly';
+      document.querySelectorAll('[data-report-view-mode]').forEach((button) => {
+        const isActive = button.getAttribute('data-report-view-mode') === metaReportsState.reportViewMode;
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-selected', isActive);
       });
-      document.querySelectorAll('[data-comparison-panel]').forEach((panel) => {
-        const isActive = panel.getAttribute('data-comparison-panel') === metaReportsState.comparisonTab;
+      document.querySelectorAll('[data-report-view-panel]').forEach((panel) => {
+        const isActive = panel.getAttribute('data-report-view-panel') === metaReportsState.reportViewMode;
         panel.classList.toggle('is-active', isActive);
         panel.hidden = !isActive;
       });
-      if (metaReportsState.comparisonTab === 'chart') {
-        const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
-        mountMetaReportComparisonChart(metaReportsState.comparisonResult || computeMetaReportComparison(payload));
-      } else {
+      const previewCard = document.querySelector('#meta-report-month-panel .meta-report-preview-card');
+      if (previewCard) previewCard.hidden = metaReportsState.reportViewMode === 'comparison';
+      if (metaReportsState.reportViewMode === 'monthly') {
         destroyMetaReportComparisonChart();
+        mountMetaReportTrendCharts(payload, { editable, clientId: payload?.clientId || null });
+        if (editable) syncMetaReportScenario(payload);
+      } else {
+        destroyMetaReportCharts();
+        if (payload) {
+          bindMetaReportComparisonControls(payload, { editable });
+          void refreshMetaReportComparison(payload, { editable });
+        }
       }
     }
 
+    function bindMetaReportViewModeTabs(payload, { editable = false } = {}) {
+      document.querySelectorAll('[data-report-view-mode]').forEach((button) => {
+        button.onclick = () => {
+          const mode = button.getAttribute('data-report-view-mode');
+          if (!mode || mode === metaReportsState.reportViewMode) return;
+          setMetaReportViewMode(mode, payload, { editable });
+        };
+      });
+    }
+
     function syncMetaReportComparisonUi(payload, { editable = false } = {}) {
-      const card = document.getElementById('meta-report-comparison-card');
-      if (!card) return;
+      const view = document.getElementById('meta-report-comparison-view');
+      if (!view) return;
 
       const comparison = computeMetaReportComparison(payload);
       metaReportsState.comparisonResult = comparison;
@@ -11621,13 +11625,11 @@
         emptyEl.hidden = !(comparison.insufficientData || comparison.samePeriod);
       }
 
-      if ((metaReportsState.comparisonTab || 'table') === 'chart') {
-        mountMetaReportComparisonChart(comparison);
-      }
+      mountMetaReportComparisonChart(comparison);
     }
 
     async function refreshMetaReportComparison(payload, { editable = false } = {}) {
-      if (!payload || !document.getElementById('meta-report-comparison-card')) return;
+      if (!payload || !document.getElementById('meta-report-comparison-view')) return;
       await ensureMetaReportComparisonYears(payload, { editable });
       syncMetaReportComparisonUi(payload, { editable });
     }
@@ -11641,9 +11643,9 @@
             if (!mode) return;
             metaReportsState.comparisonMode = mode;
             metaReportApplyComparisonPresetDefaults(payload, mode);
-            const card = document.getElementById('meta-report-comparison-card');
-            if (card) {
-              card.outerHTML = renderMetaReportComparisonCard();
+            const view = document.getElementById('meta-report-comparison-view');
+            if (view) {
+              view.outerHTML = renderMetaReportComparisonView();
               bindMetaReportComparisonControls(payload, { editable });
             }
             await refreshMetaReportComparison(payload, { editable });
@@ -11684,14 +11686,6 @@
         });
       };
 
-      document.querySelectorAll('[data-comparison-tab]').forEach((button) => {
-        button.onclick = () => {
-          const tab = button.getAttribute('data-comparison-tab');
-          if (!tab) return;
-          setMetaReportComparisonTab(tab);
-        };
-      });
-
       document.querySelectorAll('#meta-report-comparison-chart-mode .meta-report-chart-toggle-btn').forEach((button) => {
         button.onclick = () => {
           metaReportsState.comparisonChartMode = button.getAttribute('data-mode') || 'kr';
@@ -11704,11 +11698,10 @@
 
       bindPresetButtons();
       bindComparisonDateInputs();
-      setMetaReportComparisonTab(metaReportsState.comparisonTab || 'table');
     }
 
     function mountMetaReportComparison(payload, { editable = false } = {}) {
-      if (!document.getElementById('meta-report-comparison-card')) return;
+      if (!document.getElementById('meta-report-comparison-view')) return;
       bindMetaReportComparisonControls(payload, { editable });
       void refreshMetaReportComparison(payload, { editable });
     }
@@ -12930,35 +12923,45 @@
       mountMetaReportScenarioCharts(payload);
     }
 
+    function mountMetaReportTrendCharts(payload, { editable = false, clientId = null } = {}) {
+      const chartsPanel = document.getElementById('meta-report-charts-panel');
+      if (!payload || !chartsPanel) return;
+
+      hydrateMetaReportSpendChartType(payload);
+      hydrateMetaReportScenarioSettings(payload);
+      const { series, demo } = resolveMetaReportChartSeries(payload);
+      metaReportsState.chartSeries = series;
+      metaReportsState.chartDemo = demo;
+
+      const demoBadge = document.getElementById('meta-report-chart-demo-badge');
+      if (demoBadge) demoBadge.hidden = !(demo && editable);
+
+      bindMetaReportChartTabs();
+      bindMetaReportChartToggles();
+      if (editable) {
+        bindMetaReportScenarioControls(payload, { editable: true });
+        bindMetaReportSpendChartTypePicker(clientId, payload);
+      }
+      syncMetaReportChartToggleUi();
+      syncMetaReportSpendChartTypeToolbar(metaReportsState.chartTab || 'trend');
+      document.querySelectorAll('[data-spend-chart-type]').forEach((button) => {
+        button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === metaReportsState.spendChartType);
+      });
+      setMetaReportChartTab(metaReportsState.chartTab || 'trend');
+      if (editable) syncMetaReportScenario(payload);
+    }
+
     function mountMetaReportCharts(payload, { editable = false, clientId = null } = {}) {
       destroyMetaReportCharts();
-      const chartsPanel = document.getElementById('meta-report-charts-panel');
-      const comparisonCard = document.getElementById('meta-report-comparison-card');
-      if (!payload || (!chartsPanel && !comparisonCard)) return;
+      destroyMetaReportComparisonChart();
+      if (!payload) return;
 
-      if (chartsPanel) {
-        hydrateMetaReportSpendChartType(payload);
-        hydrateMetaReportScenarioSettings(payload);
-        const { series, demo } = resolveMetaReportChartSeries(payload);
-        metaReportsState.chartSeries = series;
-        metaReportsState.chartDemo = demo;
+      const viewMode = metaReportsState.reportViewMode || 'monthly';
+      bindMetaReportViewModeTabs(payload, { editable });
 
-        const demoBadge = document.getElementById('meta-report-chart-demo-badge');
-        if (demoBadge) demoBadge.hidden = !(demo && editable);
-
-        bindMetaReportChartTabs();
-        bindMetaReportChartToggles();
-        if (editable) {
-          bindMetaReportScenarioControls(payload, { editable: true });
-          bindMetaReportSpendChartTypePicker(clientId, payload);
-        }
-        syncMetaReportChartToggleUi();
-        syncMetaReportSpendChartTypeToolbar(metaReportsState.chartTab || 'trend');
-        document.querySelectorAll('[data-spend-chart-type]').forEach((button) => {
-          button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === metaReportsState.spendChartType);
-        });
-        setMetaReportChartTab(metaReportsState.chartTab || 'trend');
-        if (editable) syncMetaReportScenario(payload);
+      if (viewMode === 'monthly') {
+        mountMetaReportTrendCharts(payload, { editable, clientId });
+        return;
       }
 
       mountMetaReportComparison(payload, { editable });
@@ -13077,7 +13080,9 @@
       const previewLabel = editable
         ? (previewMonthKey ? `Report preview · ${metaMonthLabel(previewMonthKey)}` : 'Report preview')
         : (previewMonthKey ? `Report · ${metaMonthLabel(previewMonthKey)}` : 'Report');
-      const previewHtml = monthPayload && !monthPayload.meta?.emptyMonth ? `
+      const viewMode = metaReportsState.reportViewMode || 'monthly';
+      const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
+      const previewHtml = viewMode === 'monthly' && monthPayload && !monthPayload.meta?.emptyMonth ? `
         <div class="meta-report-preview-card">
           <div class="meta-report-preview-card-label">${previewLabel}</div>
           ${renderMetaReportHighlightStrip(monthPayload)}
@@ -13085,23 +13090,29 @@
       ` : '';
 
       const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable });
-      const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
       const chartsPanel = showYearVisuals ? renderMetaReportChartsPanel({ editable }) : '';
-      const comparisonCard = showYearVisuals ? renderMetaReportComparisonCard() : '';
       const scenarioCard = editable && showYearVisuals ? renderMetaReportScenarioCard() : '';
+      const viewTabsHtml = showYearVisuals ? renderMetaReportViewModeTabs() : '';
 
-      const bodyHtml = showYearVisuals ? `
-        <div class="meta-report-content-layout">
-          <div class="meta-report-content-main">${tablesHtml}</div>
-          ${chartsPanel}
-        </div>
-        ${comparisonCard}
-        ${scenarioCard}
-      ` : `
-        <div class="meta-report-content-main">${tablesHtml}</div>
-      `;
+      let bodyHtml;
+      if (showYearVisuals) {
+        bodyHtml = `
+          <div class="meta-report-view-panel${viewMode === 'monthly' ? ' is-active' : ''}" data-report-view-panel="monthly" role="tabpanel"${viewMode === 'monthly' ? '' : ' hidden'}>
+            <div class="meta-report-content-layout">
+              <div class="meta-report-content-main">${tablesHtml}</div>
+              ${chartsPanel}
+            </div>
+            ${scenarioCard}
+          </div>
+          <div class="meta-report-view-panel${viewMode === 'comparison' ? ' is-active' : ''}" data-report-view-panel="comparison" role="tabpanel"${viewMode === 'comparison' ? '' : ' hidden'}>
+            ${renderMetaReportComparisonView()}
+          </div>
+        `;
+      } else {
+        bodyHtml = `<div class="meta-report-content-main">${tablesHtml}</div>`;
+      }
 
-      return `${editPanelHtml}${previewHtml}${bodyHtml}`;
+      return `${editPanelHtml}${previewHtml}${viewTabsHtml}${bodyHtml}`;
     }
 
     function renderMetaReportsHubPage(viewData) {
