@@ -457,6 +457,7 @@ function testLastMonthBaselineMode() {
   const result = projectScenario({
     series,
     baselineMode: 'last',
+    activeMonthKey: '2026-08',
     multiplier: 2,
     monthWindow: '6',
     asOfDate,
@@ -465,6 +466,16 @@ function testLastMonthBaselineMode() {
   assert.strictEqual(result.insufficientData, false);
   approx(result.baselineSpend, 14000);
   approx(result.projected.spend, 28000);
+
+  const juneResult = projectScenario({
+    series,
+    baselineMode: 'last',
+    activeMonthKey: '2026-06',
+    multiplier: 2,
+    monthWindow: '6',
+    asOfDate,
+  });
+  approx(juneResult.baselineSpend, 12000);
 }
 
 function main() {

@@ -9526,13 +9526,23 @@
       return { spend: amount, leads, wonLeads, totalLeadValue, roasKr, roasX, poasKr, poasX };
     }
 
-    function resolveMetaReportLastMonthBaseline(series = [], asOfDate = new Date()) {
-      const currentKey = metaReportMonthKeyFromDate(asOfDate);
-      const previousKey = currentKey ? metaReportAddMonthsToMonthKey(currentKey, -1) : null;
+    function resolveMetaReportLastMonthBaseline(series = [], {
+      activeMonthKey = null,
+      asOfDate = new Date(),
+    } = {}) {
+      const sorted = series
+        .filter((point) => metaReportParseAmount(point.spend) > 0)
+        .sort((left, right) => String(left.monthKey).localeCompare(String(right.monthKey)));
 
+      if (!sorted.length) return null;
+
+      const referenceKey = activeMonthKey || metaReportMonthKeyFromDate(asOfDate);
+      if (!referenceKey) return null;
+
+      const previousKey = referenceKey ? metaReportAddMonthsToMonthKey(referenceKey, -1) : null;
       if (previousKey) {
-        const previous = series.find((point) => point.monthKey === previousKey);
-        if (previous && metaReportParseAmount(previous.spend) > 0) {
+        const previous = sorted.find((point) => point.monthKey === previousKey);
+        if (previous) {
           return {
             monthKey: previousKey,
             label: metaMonthLabel(previousKey),
@@ -9541,10 +9551,7 @@
         }
       }
 
-      const priorMonths = series
-        .filter((point) => metaReportParseAmount(point.spend) > 0 && (!currentKey || point.monthKey < currentKey))
-        .sort((left, right) => String(left.monthKey).localeCompare(String(right.monthKey)));
-
+      const priorMonths = sorted.filter((point) => point.monthKey < referenceKey);
       if (!priorMonths.length) return null;
 
       const last = priorMonths[priorMonths.length - 1];
@@ -9575,7 +9582,7 @@
       }
 
       if (baselineMode === 'last') {
-        const lastMonth = resolveMetaReportLastMonthBaseline(series, asOfDate);
+        const lastMonth = resolveMetaReportLastMonthBaseline(series, { activeMonthKey, asOfDate });
         return lastMonth?.spend > 0 ? lastMonth.spend : 0;
       }
 
@@ -9818,7 +9825,7 @@
       const currentKey = metaReportMonthKeyFromDate(new Date());
       const selectedMonth = activeKey ? series.find((point) => point.monthKey === activeKey) : null;
       const currentMonth = currentKey ? series.find((point) => point.monthKey === currentKey) : null;
-      const lastMonth = resolveMetaReportLastMonthBaseline(series);
+      const lastMonth = resolveMetaReportLastMonthBaseline(series, { activeMonthKey: activeKey });
 
       return {
         windowAverage,
@@ -9864,7 +9871,7 @@
           hints.lastMonthSpend,
           {
             active: baselineMode === 'last',
-            title: 'Ad spend for the previous calendar month',
+            title: 'Ad spend for the month before the selected month tab',
           },
         ));
       }
