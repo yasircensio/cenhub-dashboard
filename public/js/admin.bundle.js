@@ -928,36 +928,38 @@ Resume the interrupted ${S}?`)&&(l=y.id,c=Number(y.batchOffset)||0)}}if(a?setFbL
     </section>
   `}function renderMetaReportComparisonTables(e){return metaReportsState.comparisonLoading?'<p class="meta-report-comparison-loading">Loading comparison data\u2026</p>':!e||e.insufficientData?'<p class="meta-report-comparison-empty">Select two periods with ad data to compare performance.</p>':e.samePeriod?'<p class="meta-report-comparison-warning">Both periods are the same. Choose different ranges to compare.</p>':`<div class="meta-report-groups-stack">${META_REPORT_COMPARISON_TABLE_GROUPS.filter(a=>!a.bottomlineOnly||e.hasBottomline).map(a=>renderMetaReportComparisonGroupTable(a.title,a.rows,a.accent,e,{highlightLastN:a.highlightLastN||0})).join("")}</div>`}function renderMetaReportComparisonCard(){const e=metaReportsState.clientPayload||metaReportsState.publicPayload,t=metaReportsState.comparisonResult||computeMetaReportComparison(e),{periodA:a,periodB:n}=metaReportComparisonPeriodsFromState(e),s=metaReportsState.comparisonTab||"table";return`
     <section class="meta-report-comparison-card" id="meta-report-comparison-card">
-      <h3 class="meta-report-comparison-title">Period comparison</h3>
-      <div class="meta-report-comparison-presets" id="meta-report-comparison-presets">
-        ${META_REPORT_COMPARISON_PRESETS.map(({id:r,label:o})=>{const i=metaReportComparisonPresetDisabled(r,e),l=i&&r==="mom"?"No previous month available":"";return`
-            <button type="button" class="preset-btn${metaReportsState.comparisonMode===r?" active":""}${i?" is-disabled":""}" data-comparison-preset="${esc(r)}" aria-pressed="${metaReportsState.comparisonMode===r}"${i?" disabled":""}${l?` title="${esc(l)}"`:""}>${esc(o)}</button>
-          `}).join("")}
-      </div>
-      <div id="meta-report-comparison-range-wrap">
-        ${renderMetaReportComparisonPeriodTiles(a,n,e)}
-      </div>
-      <div class="meta-report-comparison-view-card">
-        <div class="meta-report-comparison-view-head">
-          <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
-            <button type="button" class="meta-report-chart-tab${s==="table"?" is-active":""}" data-comparison-tab="table" role="tab" aria-selected="${s==="table"}">Compare table</button>
-            <button type="button" class="meta-report-chart-tab${s==="chart"?" is-active":""}" data-comparison-tab="chart" role="tab" aria-selected="${s==="chart"}">Show in chart</button>
-          </div>
+      <div class="meta-report-comparison-focus">
+        <h3 class="meta-report-comparison-title">Period comparison</h3>
+        <div class="meta-report-comparison-presets" id="meta-report-comparison-presets">
+          ${META_REPORT_COMPARISON_PRESETS.map(({id:r,label:o})=>{const i=metaReportComparisonPresetDisabled(r,e),l=i&&r==="mom"?"No previous month available":"";return`
+              <button type="button" class="preset-btn${metaReportsState.comparisonMode===r?" active":""}${i?" is-disabled":""}" data-comparison-preset="${esc(r)}" aria-pressed="${metaReportsState.comparisonMode===r}"${i?" disabled":""}${l?` title="${esc(l)}"`:""}>${esc(o)}</button>
+            `}).join("")}
         </div>
-        <div class="meta-report-comparison-tab-panel${s==="table"?" is-active":""}" data-comparison-panel="table" role="tabpanel"${s==="table"?"":" hidden"}>
-          <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(t)}</div>
+        <div id="meta-report-comparison-range-wrap">
+          ${renderMetaReportComparisonPeriodTiles(a,n,e)}
         </div>
-        <div class="meta-report-comparison-tab-panel${s==="chart"?" is-active":""}" data-comparison-panel="chart" role="tabpanel"${s==="chart"?"":" hidden"}>
-          <div class="meta-report-comparison-chart-card">
-            <div class="meta-report-comparison-chart-toolbar">
-              <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
-                <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode==="kr"?" is-active":""}" data-mode="kr">Dkr</button>
-                <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode==="x"?" is-active":""}" data-mode="x">Multiplier</button>
-              </div>
+        <div class="meta-report-comparison-view-card">
+          <div class="meta-report-comparison-view-head">
+            <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
+              <button type="button" class="meta-report-chart-tab${s==="table"?" is-active":""}" data-comparison-tab="table" role="tab" aria-selected="${s==="table"}">Compare table</button>
+              <button type="button" class="meta-report-chart-tab${s==="chart"?" is-active":""}" data-comparison-tab="chart" role="tab" aria-selected="${s==="chart"}">Show in chart</button>
             </div>
-            <div class="meta-report-comparison-chart-canvas-wrap">
-              <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
-              <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
+          </div>
+          <div class="meta-report-comparison-tab-panel${s==="table"?" is-active":""}" data-comparison-panel="table" role="tabpanel"${s==="table"?"":" hidden"}>
+            <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(t)}</div>
+          </div>
+          <div class="meta-report-comparison-tab-panel${s==="chart"?" is-active":""}" data-comparison-panel="chart" role="tabpanel"${s==="chart"?"":" hidden"}>
+            <div class="meta-report-comparison-chart-card">
+              <div class="meta-report-comparison-chart-toolbar">
+                <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
+                  <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode==="kr"?" is-active":""}" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode==="x"?" is-active":""}" data-mode="x">Multiplier</button>
+                </div>
+              </div>
+              <div class="meta-report-comparison-chart-canvas-wrap">
+                <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
+                <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
+              </div>
             </div>
           </div>
         </div>
