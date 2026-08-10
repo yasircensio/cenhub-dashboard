@@ -4962,34 +4962,46 @@
 
     .meta-report-comparison-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 14px;
       margin-top: 8px; padding: 18px 20px 20px; width: 100%;
     }
-    .meta-report-comparison-head {
-      align-items: flex-start; display: flex; flex-wrap: wrap; gap: 12px 16px; justify-content: space-between;
-    }
     .meta-report-comparison-title {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0 0 4px;
-    }
-    .meta-report-comparison-copy {
-      color: var(--text-soft); font-size: 13px; line-height: 1.45; margin: 0;
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0;
     }
     .meta-report-comparison-presets {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+      display: flex; flex-wrap: wrap; gap: 8px;
     }
-    .meta-report-comparison-pill {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
-      color: var(--text-soft); cursor: pointer; font-size: 12px; font-weight: 600;
-      line-height: 1.2; padding: 6px 12px; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-      white-space: nowrap;
-    }
-    .meta-report-comparison-pill:hover { border-color: rgba(255, 106, 0, 0.35); color: var(--text); }
-    .meta-report-comparison-pill.is-active {
-      background: rgba(255, 106, 0, 0.12); border-color: rgba(255, 106, 0, 0.45); color: var(--text);
-    }
-    .meta-report-comparison-pill.is-disabled {
+    .meta-report-comparison-presets .preset-btn.is-disabled {
       cursor: not-allowed; opacity: 0.45;
     }
+    .meta-report-comparison-headline {
+      align-items: center; display: flex; flex-wrap: wrap; font-family: 'Poppins', sans-serif;
+      font-size: 18px; font-weight: 700; gap: 8px 12px; line-height: 1.3;
+    }
+    .meta-report-comparison-headline-a { color: #c2410c; }
+    .meta-report-comparison-headline-vs { color: var(--text-muted); font-size: 14px; font-weight: 600; }
+    .meta-report-comparison-headline-b { color: #475569; }
+    .meta-report-comparison-tabs {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .meta-report-comparison-tab-panel {
+      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+    }
+    .meta-report-comparison-tab-panel[hidden] { display: none !important; }
+    .meta-report-comparison-table thead th {
+      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
+      padding: 8px 12px; text-align: right; text-transform: uppercase;
+    }
+    .meta-report-comparison-table thead th:first-child { text-align: left; }
+    .meta-report-comparison-col-a { color: #c2410c; font-weight: 600; text-align: right; }
+    .meta-report-comparison-col-b { color: #475569; text-align: right; }
+    .meta-report-comparison-col-change { text-align: center; white-space: nowrap; }
+    .meta-report-comparison-change {
+      display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; gap: 2px;
+    }
+    .meta-report-comparison-change.is-positive { color: #15803d; }
+    .meta-report-comparison-change.is-negative { color: var(--error); }
+    .meta-report-comparison-change.is-neutral { color: var(--text-muted); }
     .meta-report-comparison-range-row {
       align-items: end; display: grid; gap: 12px 16px;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -5022,67 +5034,12 @@
     }
     .meta-report-comparison-range-fields select { font-size: 12px; min-width: 0; width: 100%; }
     .meta-report-comparison-range-sep { color: var(--text-muted); font-size: 12px; font-weight: 600; }
-    .meta-report-comparison-context {
-      align-items: center; background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
-      color: var(--text-soft); display: flex; flex-wrap: wrap; font-size: 13px; gap: 8px 12px;
-      line-height: 1.45; padding: 10px 12px;
-    }
-    .meta-report-comparison-context strong { color: var(--text); font-weight: 600; }
-    .meta-report-comparison-context-badge {
-      border-radius: 999px; font-size: 11px; font-weight: 700; padding: 4px 10px;
-    }
-    .meta-report-comparison-context-badge.is-a {
-      background: rgba(255, 106, 0, 0.14); color: #c2410c;
-    }
-    .meta-report-comparison-context-badge.is-b {
-      background: rgba(100, 116, 139, 0.12); color: #475569;
-    }
-    .meta-report-comparison-outcomes {
-      display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    }
-    .meta-report-comparison-outcome-card {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
-      display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 14px 14px;
-    }
-    .meta-report-comparison-outcome-label {
-      color: var(--text-soft); font-size: 11px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
-    }
-    .meta-report-comparison-outcome-value {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.15;
-    }
-    .meta-report-comparison-outcome-sub {
-      color: var(--text-muted); font-size: 11px; font-weight: 600;
-    }
-    .meta-report-comparison-outcome-delta {
-      align-self: flex-start; border-radius: 999px; font-size: 12px; font-weight: 700;
-      line-height: 1; margin-top: 2px; padding: 5px 9px;
-    }
-    .meta-report-comparison-outcome-delta.is-positive {
-      background: rgba(22, 163, 74, 0.14); color: #15803d;
-    }
-    .meta-report-comparison-outcome-delta.is-negative {
-      background: rgba(194, 65, 12, 0.12); color: var(--error);
-    }
-    .meta-report-comparison-outcome-delta.is-neutral {
-      background: var(--panel); color: var(--text-soft);
-    }
     .meta-report-comparison-chart-card {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 18px;
       display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px 16px 14px;
     }
     .meta-report-comparison-chart-toolbar {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: space-between;
-    }
-    .meta-report-comparison-view-toggle {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
-      display: inline-flex; gap: 2px; padding: 2px;
-    }
-    .meta-report-comparison-view-toggle-btn {
-      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
-      cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; padding: 5px 10px;
-    }
-    .meta-report-comparison-view-toggle-btn.is-active {
-      background: var(--primary); box-shadow: 0 1px 4px rgba(255, 106, 0, 0.25); color: #fff;
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: flex-end;
     }
     .meta-report-comparison-chart-canvas-wrap {
       height: 320px; min-height: 320px; position: relative; width: 100%;
@@ -5090,19 +5047,6 @@
     .meta-report-comparison-chart-canvas-wrap canvas {
       display: block; height: 100% !important; width: 100% !important;
     }
-    .meta-report-comparison-details {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
-    }
-    .meta-report-comparison-details-head {
-      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px;
-      font-weight: 700; letter-spacing: 0.04em; padding: 10px 14px; text-transform: uppercase;
-    }
-    .meta-report-comparison-details-row {
-      align-items: center; border-bottom: 1px solid rgba(232, 224, 216, 0.7);
-      display: grid; gap: 10px; grid-template-columns: minmax(120px, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) 72px;
-      font-size: 12px; padding: 10px 14px;
-    }
-    .meta-report-comparison-details-row:last-child { border-bottom: 0; }
     .meta-report-comparison-empty,
     .meta-report-comparison-loading,
     .meta-report-comparison-warning {
@@ -5117,9 +5061,7 @@
       font-size: 11px; font-weight: 600; padding: 4px 10px;
     }
     @media (max-width: 960px) {
-      .meta-report-comparison-details-row {
-        grid-template-columns: 1fr; gap: 4px;
-      }
+      .meta-report-comparison-headline { font-size: 16px; }
       .meta-report-comparison-chart-canvas-wrap { height: 260px; min-height: 260px; }
     }
 
@@ -8196,8 +8138,7 @@
       comparisonPeriodA: { startMonthKey: null, endMonthKey: null },
       comparisonPeriodB: { startMonthKey: null, endMonthKey: null },
       comparisonChartMode: 'kr',
-      comparisonView: 'summary',
-      comparisonYtdMetric: 'spend',
+      comparisonTab: 'table',
       comparisonYearCache: {},
       comparisonResult: null,
       comparisonLoading: false,
@@ -10248,10 +10189,60 @@
     }
 
     const META_REPORT_COMPARISON_PRESETS = [
-      { id: 'mom', label: 'vs previous month' },
-      { id: 'yoy_month', label: 'vs same month last year' },
-      { id: 'ytd', label: 'YTD vs prior YTD' },
-      { id: 'custom', label: 'Custom range' },
+      { id: 'mom', label: 'This month vs last month' },
+      { id: 'yoy_month', label: 'Same month last year' },
+      { id: 'ytd', label: 'This year vs last year' },
+      { id: 'custom', label: 'Custom' },
+    ];
+
+    const META_REPORT_COMPARISON_TABLE_GROUPS = [
+      {
+        title: 'Meta ads',
+        accent: 'meta',
+        rows: [
+          { label: 'Total spend', metricId: 'spend', format: 'kr', higherIsBetter: null },
+          { label: 'Cost Pr Mile (CPM)', metricId: 'cpm', format: 'kr', higherIsBetter: false },
+          { label: 'Impressions', metricId: 'impressions', format: 'num', higherIsBetter: true },
+          { label: 'Reach', metricId: 'reach', format: 'num', higherIsBetter: true },
+          { label: 'Click', metricId: 'clicks', format: 'num', higherIsBetter: true },
+          { label: 'CTR', metricId: 'conversionRatePercent', format: 'pct', higherIsBetter: true },
+        ],
+      },
+      {
+        title: 'Topline KPI\'er',
+        accent: 'topline',
+        highlightLastN: 2,
+        rows: [
+          { label: 'Leads', metricId: 'leads', format: 'num', higherIsBetter: true },
+          { label: 'Cost Per Lead (CPL)', metricId: 'cpl', format: 'kr', higherIsBetter: false },
+          { label: 'Won leads', metricId: 'wonLeads', format: 'num', higherIsBetter: true },
+          { label: 'Total Lead Value', metricId: 'totalLeadValue', format: 'kr', higherIsBetter: true },
+          { label: 'Average Lead Value', metricId: 'avgLeadValue', format: 'kr', higherIsBetter: true },
+          { label: 'Client acquisition cost (CAC)', metricId: 'cac', format: 'kr', higherIsBetter: false },
+          { label: 'Return on Ads Spend (ROAS)', metricId: 'roasKr', format: 'kr', higherIsBetter: true },
+          { label: 'Return on Ads Spend % (ROAS)', metricId: 'roasX', format: 'x', higherIsBetter: true },
+        ],
+      },
+      {
+        title: 'Bottomline KPI\'er',
+        accent: 'bottomline',
+        highlightLastN: 2,
+        bottomlineOnly: true,
+        rows: [
+          { label: 'Leads', metricId: 'leads', format: 'num', higherIsBetter: true },
+          { label: 'Won leads', metricId: 'wonLeads', format: 'num', higherIsBetter: true },
+          { label: 'Total Lead Value', metricId: 'totalLeadValue', format: 'kr', higherIsBetter: true },
+          { label: 'Average Lead Value', metricId: 'avgLeadValue', format: 'kr', higherIsBetter: true },
+          { label: 'Client acquisition cost (CAC)', metricId: 'cac', format: 'kr', higherIsBetter: false },
+          { label: 'Avg Total Profit', metricId: 'totalProfit', format: 'kr', higherIsBetter: true },
+          { label: 'Avg Single Profit Order', metricId: 'avgProfitPerWon', format: 'kr', higherIsBetter: true },
+          { label: 'Profit on Ads Spend (POAS)', metricId: 'poasKr', format: 'kr', higherIsBetter: true },
+          { label: 'Profit on Ads Spend % (POAS)', metricId: 'poasX', format: 'x', higherIsBetter: true },
+          { label: 'Censio fee', metricId: 'censioFee', format: 'kr', higherIsBetter: false },
+          { label: 'Profit on Investment (POI)', metricId: 'poiKr', format: 'kr', higherIsBetter: true },
+          { label: 'Profit on Investment % (POI)', metricId: 'poiX', format: 'x', higherIsBetter: true },
+        ],
+      },
     ];
 
     function metaReportComparisonAddMonths(monthKey, offset = 0) {
@@ -10724,23 +10715,73 @@
     function renderMetaReportComparisonRangeGroup(label, badgeClass, period, availableKeys, side) {
       const startKey = period?.startMonthKey || availableKeys[0] || '';
       const endKey = period?.endMonthKey || period?.startMonthKey || availableKeys[availableKeys.length - 1] || '';
-      const disabled = metaReportsState.comparisonMode !== 'custom';
       return `
         <div class="meta-report-comparison-range-group is-period-${side}">
           <div class="meta-report-comparison-range-label">
-            <span class="meta-report-comparison-badge ${badgeClass}">${side === 'a' ? 'Period A' : 'Period B'}</span>
+            <span class="meta-report-comparison-badge ${badgeClass}">${side === 'a' ? 'A' : 'B'}</span>
             ${esc(label)}
           </div>
           <div class="meta-report-comparison-range-fields">
-            <select class="admin-select" data-comparison-range="${side}-start"${disabled ? ' disabled' : ''}>${renderMetaReportComparisonRangeOptions(startKey, availableKeys)}</select>
+            <select class="admin-select" data-comparison-range="${side}-start">${renderMetaReportComparisonRangeOptions(startKey, availableKeys)}</select>
             <span class="meta-report-comparison-range-sep">to</span>
-            <select class="admin-select" data-comparison-range="${side}-end"${disabled ? ' disabled' : ''}>${renderMetaReportComparisonRangeOptions(endKey, availableKeys)}</select>
+            <select class="admin-select" data-comparison-range="${side}-end">${renderMetaReportComparisonRangeOptions(endKey, availableKeys)}</select>
           </div>
         </div>
       `;
     }
 
-    function renderMetaReportComparisonContextStrip(comparison) {
+    function renderMetaReportComparisonChangeCell(deltaPct, higherIsBetter) {
+      const tone = metaReportComparisonDeltaTone(deltaPct, higherIsBetter);
+      if (deltaPct == null || !Number.isFinite(deltaPct)) {
+        return '<span class="meta-report-comparison-change is-neutral">—</span>';
+      }
+      const arrow = deltaPct > 0 ? '↑' : deltaPct < 0 ? '↓' : '—';
+      const pct = metaReportFormatDeltaPct(deltaPct);
+      return `<span class="meta-report-comparison-change is-${tone}">${esc(arrow)} ${esc(pct)}</span>`;
+    }
+
+    function renderMetaReportComparisonGroupTable(title, rowSpecs, accent, comparison, { highlightLastN = 0 } = {}) {
+      if (!comparison || comparison.insufficientData || comparison.samePeriod) return '';
+      const labelA = comparison.periodA.label;
+      const labelB = comparison.periodB.label;
+      const rowsHtml = rowSpecs.map((spec, index) => {
+        const valueA = comparison.periodA.metrics[spec.metricId];
+        const valueB = comparison.periodB.metrics[spec.metricId];
+        const deltaPct = metaReportDeltaPct(valueA, valueB);
+        const isHighlight = highlightLastN > 0 && index >= rowSpecs.length - highlightLastN;
+        return `
+          <tr class="${isHighlight ? `is-highlight accent-${accent}` : ''}">
+            <th scope="row">${esc(spec.label)}</th>
+            <td class="meta-report-comparison-col-a">${esc(metaReportComparisonFmtValue(valueA, spec.format))}</td>
+            <td class="meta-report-comparison-col-change">${renderMetaReportComparisonChangeCell(deltaPct, spec.higherIsBetter)}</td>
+            <td class="meta-report-comparison-col-b">${esc(metaReportComparisonFmtValue(valueB, spec.format))}</td>
+          </tr>
+        `;
+      }).join('');
+      return `
+        <section class="meta-report-group">
+          <div class="meta-report-group-head">
+            <span class="meta-report-group-bar meta-report-group-bar--${accent}" aria-hidden="true"></span>
+            <h3 class="meta-report-group-title">${esc(title)}</h3>
+          </div>
+          <div class="meta-report-group-table-wrap">
+            <table class="meta-report-group-table meta-report-comparison-table">
+              <thead>
+                <tr>
+                  <th scope="col">Metric</th>
+                  <th scope="col" class="meta-report-comparison-col-a">${esc(labelA)}</th>
+                  <th scope="col" class="meta-report-comparison-col-change">Change</th>
+                  <th scope="col" class="meta-report-comparison-col-b">${esc(labelB)}</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderMetaReportComparisonTables(comparison) {
       if (metaReportsState.comparisonLoading) {
         return '<p class="meta-report-comparison-loading">Loading comparison data…</p>';
       }
@@ -10748,60 +10789,40 @@
         return '<p class="meta-report-comparison-empty">Select two periods with ad data to compare performance.</p>';
       }
       if (comparison.samePeriod) {
-        return '<p class="meta-report-comparison-warning">Period A and Period B are the same. Choose different ranges to compare.</p>';
+        return '<p class="meta-report-comparison-warning">Both periods are the same. Choose different ranges to compare.</p>';
+      }
+      const groupsHtml = META_REPORT_COMPARISON_TABLE_GROUPS
+        .filter((group) => !group.bottomlineOnly || comparison.hasBottomline)
+        .map((group) => renderMetaReportComparisonGroupTable(
+          group.title,
+          group.rows,
+          group.accent,
+          comparison,
+          { highlightLastN: group.highlightLastN || 0 },
+        ))
+        .join('');
+      return `<div class="meta-report-groups-stack">${groupsHtml}</div>`;
+    }
+
+    function renderMetaReportComparisonHeadline(comparison) {
+      if (metaReportsState.comparisonLoading) {
+        return '<p class="meta-report-comparison-loading">Loading comparison data…</p>';
+      }
+      if (!comparison || comparison.insufficientData) {
+        return '<p class="meta-report-comparison-empty">Select two periods with ad data to compare.</p>';
+      }
+      if (comparison.samePeriod) {
+        return '<p class="meta-report-comparison-warning">Both periods are the same. Choose different ranges to compare.</p>';
       }
       const partialNote = comparison.periodA?.partialData || comparison.periodB?.partialData
-        ? '<span class="meta-report-comparison-partial-badge">Partial data in one or both ranges</span>'
+        ? '<span class="meta-report-comparison-partial-badge">Partial data</span>'
         : '';
       return `
-        <div class="meta-report-comparison-context" id="meta-report-comparison-context">
-          <span>Comparing</span>
-          <span class="meta-report-comparison-context-badge is-a">${esc(comparison.periodA.label)}</span>
-          <strong>vs</strong>
-          <span class="meta-report-comparison-context-badge is-b">${esc(comparison.periodB.label)}</span>
+        <div class="meta-report-comparison-headline" id="meta-report-comparison-headline">
+          <span class="meta-report-comparison-headline-a">${esc(comparison.periodA.label)}</span>
+          <span class="meta-report-comparison-headline-vs">vs</span>
+          <span class="meta-report-comparison-headline-b">${esc(comparison.periodB.label)}</span>
           ${partialNote}
-        </div>
-      `;
-    }
-
-    function renderMetaReportComparisonHeroCards(comparison) {
-      if (!comparison || comparison.insufficientData || comparison.samePeriod) return '';
-      return `
-        <div class="meta-report-comparison-outcomes" id="meta-report-comparison-outcomes">
-          ${comparison.heroMetrics.map((metric) => {
-            const delta = metaReportFormatDeltaPct(metric.deltaPct);
-            const tone = metaReportComparisonDeltaTone(metric.deltaPct, metric.higherIsBetter);
-            return `
-              <div class="meta-report-comparison-outcome-card">
-                <div class="meta-report-comparison-outcome-label">${esc(metric.label)}</div>
-                <div class="meta-report-comparison-outcome-value">${esc(metaReportComparisonFmtValue(metric.valueA, metric.format))}</div>
-                <div class="meta-report-comparison-outcome-sub">vs ${esc(metaReportComparisonFmtValue(metric.valueB, metric.format))}</div>
-                ${delta ? `<div class="meta-report-comparison-outcome-delta is-${tone}">${esc(delta)}</div>` : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-
-    function renderMetaReportComparisonDetailTable(comparison) {
-      if (!comparison || comparison.insufficientData || comparison.samePeriod) return '';
-      const rows = comparison.detailRows.map((row) => {
-        const delta = metaReportFormatDeltaPct(row.deltaPct);
-        const tone = metaReportComparisonDeltaTone(row.deltaPct, row.higherIsBetter);
-        return `
-          <div class="meta-report-comparison-details-row">
-            <span class="meta-report-scenario-label">${esc(row.label)}</span>
-            <span class="meta-report-scenario-value is-projected">${esc(metaReportComparisonFmtValue(row.valueA, row.format))}</span>
-            <span class="meta-report-scenario-value">${esc(metaReportComparisonFmtValue(row.valueB, row.format))}</span>
-            <span class="meta-report-scenario-delta${tone === 'positive' ? ' is-positive' : tone === 'negative' ? ' is-negative' : ''}">${esc(delta || '—')}</span>
-          </div>
-        `;
-      }).join('');
-      return `
-        <div class="meta-report-comparison-details">
-          <div class="meta-report-comparison-details-head">Detailed comparison</div>
-          ${rows}
         </div>
       `;
     }
@@ -10811,53 +10832,49 @@
       const comparison = metaReportsState.comparisonResult || computeMetaReportComparison(payload);
       const availableKeys = metaReportComparisonAvailableMonthKeys(payload);
       const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
-      const showYtdToggle = metaReportsState.comparisonMode === 'ytd';
+      const activeTab = metaReportsState.comparisonTab || 'table';
+      const showCustomRanges = metaReportsState.comparisonMode === 'custom';
 
       return `
         <section class="meta-report-comparison-card" id="meta-report-comparison-card">
-          <div class="meta-report-comparison-head">
-            <div>
-              <h3 class="meta-report-comparison-title">Period comparison</h3>
-              <p class="meta-report-comparison-copy">Compare ad performance between two time ranges — previous month, same month last year, YTD, or custom ranges.</p>
-            </div>
-          </div>
+          <h3 class="meta-report-comparison-title">Period comparison</h3>
           <div class="meta-report-comparison-presets" id="meta-report-comparison-presets">
             ${META_REPORT_COMPARISON_PRESETS.map(({ id, label }) => {
               const disabled = metaReportComparisonPresetDisabled(id, payload);
               const title = disabled && id === 'yoy_month' ? 'Prior year data is not available on this report' : (disabled && id === 'ytd' ? 'Prior year data is not available on this report' : (disabled && id === 'mom' ? 'No previous month available' : ''));
               return `
-                <button type="button" class="meta-report-comparison-pill${metaReportsState.comparisonMode === id ? ' is-active' : ''}${disabled ? ' is-disabled' : ''}" data-comparison-preset="${esc(id)}" aria-pressed="${metaReportsState.comparisonMode === id}"${disabled ? ' disabled' : ''}${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>
+                <button type="button" class="preset-btn${metaReportsState.comparisonMode === id ? ' active' : ''}${disabled ? ' is-disabled' : ''}" data-comparison-preset="${esc(id)}" aria-pressed="${metaReportsState.comparisonMode === id}"${disabled ? ' disabled' : ''}${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>
               `;
             }).join('')}
           </div>
-          <div class="meta-report-comparison-range-row" id="meta-report-comparison-range-row">
-            ${renderMetaReportComparisonRangeGroup('Current / primary range', 'is-a', periodA, availableKeys, 'a')}
-            ${renderMetaReportComparisonRangeGroup('Comparison range', 'is-b', periodB, availableKeys, 'b')}
+          ${showCustomRanges ? `
+            <div class="meta-report-comparison-range-row" id="meta-report-comparison-range-row">
+              ${renderMetaReportComparisonRangeGroup('Period A', 'is-a', periodA, availableKeys, 'a')}
+              ${renderMetaReportComparisonRangeGroup('Period B', 'is-b', periodB, availableKeys, 'b')}
+            </div>
+          ` : ''}
+          <div id="meta-report-comparison-headline-wrap">${renderMetaReportComparisonHeadline(comparison)}</div>
+          <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
+            <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
+            <button type="button" class="meta-report-chart-tab${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-tab="chart" role="tab" aria-selected="${activeTab === 'chart'}">Show in chart</button>
           </div>
-          <div id="meta-report-comparison-context-wrap">${renderMetaReportComparisonContextStrip(comparison)}</div>
-          <div id="meta-report-comparison-hero-wrap">${renderMetaReportComparisonHeroCards(comparison)}</div>
-          <div class="meta-report-comparison-chart-card">
-            <div class="meta-report-comparison-chart-toolbar">
-              <h3 class="meta-report-chart-title">Side-by-side metrics</h3>
-              <div class="meta-report-comparison-chart-controls">
-                ${showYtdToggle ? `
-                  <div class="meta-report-comparison-view-toggle" id="meta-report-comparison-view-toggle" role="group" aria-label="Comparison chart view">
-                    <button type="button" class="meta-report-comparison-view-toggle-btn${metaReportsState.comparisonView === 'summary' ? ' is-active' : ''}" data-comparison-view="summary">Summary</button>
-                    <button type="button" class="meta-report-comparison-view-toggle-btn${metaReportsState.comparisonView === 'by_month' ? ' is-active' : ''}" data-comparison-view="by_month">By month</button>
-                  </div>
-                ` : ''}
+          <div class="meta-report-comparison-tab-panel${activeTab === 'table' ? ' is-active' : ''}" data-comparison-panel="table" role="tabpanel"${activeTab === 'table' ? '' : ' hidden'}>
+            <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
+          </div>
+          <div class="meta-report-comparison-tab-panel${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-panel="chart" role="tabpanel"${activeTab === 'chart' ? '' : ' hidden'}>
+            <div class="meta-report-comparison-chart-card">
+              <div class="meta-report-comparison-chart-toolbar">
                 <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
                   <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'kr' ? ' is-active' : ''}" data-mode="kr">Dkr</button>
                   <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'x' ? ' is-active' : ''}" data-mode="x">Multiplier</button>
                 </div>
               </div>
-            </div>
-            <div class="meta-report-comparison-chart-canvas-wrap">
-              <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
-              <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
+              <div class="meta-report-comparison-chart-canvas-wrap">
+                <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
+                <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
+              </div>
             </div>
           </div>
-          <div id="meta-report-comparison-details-wrap">${renderMetaReportComparisonDetailTable(comparison)}</div>
         </section>
       `;
     }
@@ -10873,7 +10890,7 @@
       return defs.find((entry) => entry.id === metricId)?.label || metricId;
     }
 
-    function buildMetaReportComparisonChart(canvas, comparison, chartMode = 'kr', view = 'summary') {
+    function buildMetaReportComparisonChart(canvas, comparison, chartMode = 'kr') {
       const emptyEl = document.getElementById('meta-report-comparison-chart-empty');
       if (!comparison || comparison.insufficientData || comparison.samePeriod) {
         if (emptyEl) emptyEl.hidden = false;
@@ -10882,21 +10899,10 @@
       if (emptyEl) emptyEl.hidden = true;
 
       const metricDefs = metaReportComparisonMetricDefs(comparison.hasBottomline);
-      let labels = [];
-      let valuesA = [];
-      let valuesB = [];
-
-      if (view === 'by_month' && comparison.mode === 'ytd' && comparison.ytdByMonth.length) {
-        const metricId = metaReportsState.comparisonYtdMetric || 'spend';
-        labels = comparison.ytdByMonth.map((row) => row.label);
-        valuesA = comparison.ytdByMonth.map((row) => metaReportParseAmount(row.periodA?.[metricId]));
-        valuesB = comparison.ytdByMonth.map((row) => metaReportParseAmount(row.periodB?.[metricId]));
-      } else {
-        const chartIds = metaReportComparisonChartIds(comparison.hasBottomline, chartMode);
-        labels = chartIds.map((id) => metaReportComparisonChartLabel(id, metricDefs));
-        valuesA = chartIds.map((id) => metaReportParseAmount(comparison.periodA.metrics[id]));
-        valuesB = chartIds.map((id) => metaReportParseAmount(comparison.periodB.metrics[id]));
-      }
+      const chartIds = metaReportComparisonChartIds(comparison.hasBottomline, chartMode);
+      const labels = chartIds.map((id) => metaReportComparisonChartLabel(id, metricDefs));
+      const valuesA = chartIds.map((id) => metaReportParseAmount(comparison.periodA.metrics[id]));
+      const valuesB = chartIds.map((id) => metaReportParseAmount(comparison.periodB.metrics[id]));
 
       return new Chart(canvas, {
         type: 'bar',
@@ -10943,12 +10949,7 @@
               callbacks: {
                 label(context) {
                   const value = context.parsed.y;
-                  if (view === 'by_month') {
-                    const metricId = metaReportsState.comparisonYtdMetric || 'spend';
-                    const def = metricDefs.find((entry) => entry.id === metricId);
-                    return `${context.dataset.label}: ${metaReportComparisonFmtValue(value, def?.format || 'num')}`;
-                  }
-                  const metricId = metaReportComparisonChartIds(comparison.hasBottomline, chartMode)[context.dataIndex];
+                  const metricId = chartIds[context.dataIndex];
                   const def = metricDefs.find((entry) => entry.id === metricId);
                   return `${context.dataset.label}: ${metaReportComparisonFmtValue(value, def?.format || 'num')}`;
                 },
@@ -10980,14 +10981,34 @@
 
     function mountMetaReportComparisonChart(comparison) {
       destroyMetaReportComparisonChart();
+      if ((metaReportsState.comparisonTab || 'table') !== 'chart') return;
       const canvas = document.getElementById('meta-report-comparison-chart');
       if (!canvas) return;
       metaReportsState.comparisonChartInstance = buildMetaReportComparisonChart(
         canvas,
         comparison,
         metaReportsState.comparisonChartMode,
-        metaReportsState.comparisonView,
       );
+    }
+
+    function setMetaReportComparisonTab(tab) {
+      metaReportsState.comparisonTab = tab === 'chart' ? 'chart' : 'table';
+      document.querySelectorAll('[data-comparison-tab]').forEach((button) => {
+        const isActive = button.getAttribute('data-comparison-tab') === metaReportsState.comparisonTab;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-selected', isActive);
+      });
+      document.querySelectorAll('[data-comparison-panel]').forEach((panel) => {
+        const isActive = panel.getAttribute('data-comparison-panel') === metaReportsState.comparisonTab;
+        panel.classList.toggle('is-active', isActive);
+        panel.hidden = !isActive;
+      });
+      if (metaReportsState.comparisonTab === 'chart') {
+        const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
+        mountMetaReportComparisonChart(metaReportsState.comparisonResult || computeMetaReportComparison(payload));
+      } else {
+        destroyMetaReportComparisonChart();
+      }
     }
 
     function syncMetaReportComparisonUi(payload, { editable = false } = {}) {
@@ -10997,21 +11018,20 @@
       const comparison = computeMetaReportComparison(payload);
       metaReportsState.comparisonResult = comparison;
 
-      const contextWrap = document.getElementById('meta-report-comparison-context-wrap');
-      if (contextWrap) contextWrap.innerHTML = renderMetaReportComparisonContextStrip(comparison);
+      const headlineWrap = document.getElementById('meta-report-comparison-headline-wrap');
+      if (headlineWrap) headlineWrap.innerHTML = renderMetaReportComparisonHeadline(comparison);
 
-      const heroWrap = document.getElementById('meta-report-comparison-hero-wrap');
-      if (heroWrap) heroWrap.innerHTML = renderMetaReportComparisonHeroCards(comparison);
-
-      const detailsWrap = document.getElementById('meta-report-comparison-details-wrap');
-      if (detailsWrap) detailsWrap.innerHTML = renderMetaReportComparisonDetailTable(comparison);
+      const tableWrap = document.getElementById('meta-report-comparison-table-wrap');
+      if (tableWrap) tableWrap.innerHTML = renderMetaReportComparisonTables(comparison);
 
       const emptyEl = document.getElementById('meta-report-comparison-chart-empty');
       if (emptyEl) {
         emptyEl.hidden = !(comparison.insufficientData || comparison.samePeriod);
       }
 
-      mountMetaReportComparisonChart(comparison);
+      if ((metaReportsState.comparisonTab || 'table') === 'chart') {
+        mountMetaReportComparisonChart(comparison);
+      }
     }
 
     async function refreshMetaReportComparison(payload, { editable = false } = {}) {
@@ -11028,9 +11048,6 @@
             const mode = button.getAttribute('data-comparison-preset');
             if (!mode) return;
             metaReportsState.comparisonMode = mode;
-            if (mode !== 'ytd') metaReportsState.comparisonView = 'summary';
-            const presetsWrap = document.getElementById('meta-report-comparison-presets');
-            const rangeWrap = document.getElementById('meta-report-comparison-range-row');
             const card = document.getElementById('meta-report-comparison-card');
             if (card) {
               card.outerHTML = renderMetaReportComparisonCard();
@@ -11063,18 +11080,26 @@
             if (rangeWrap) {
               const availableKeys = metaReportComparisonAvailableMonthKeys(payload);
               rangeWrap.innerHTML = `
-                ${renderMetaReportComparisonRangeGroup('Current / primary range', 'is-a', metaReportsState.comparisonPeriodA, availableKeys, 'a')}
-                ${renderMetaReportComparisonRangeGroup('Comparison range', 'is-b', metaReportsState.comparisonPeriodB, availableKeys, 'b')}
+                ${renderMetaReportComparisonRangeGroup('Period A', 'is-a', metaReportsState.comparisonPeriodA, availableKeys, 'a')}
+                ${renderMetaReportComparisonRangeGroup('Period B', 'is-b', metaReportsState.comparisonPeriodB, availableKeys, 'b')}
               `;
               bindRangeSelects();
             }
             document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
-              button.classList.toggle('is-active', button.getAttribute('data-comparison-preset') === 'custom');
+              button.classList.toggle('active', button.getAttribute('data-comparison-preset') === 'custom');
               button.setAttribute('aria-pressed', button.getAttribute('data-comparison-preset') === 'custom');
             });
           };
         });
       };
+
+      document.querySelectorAll('[data-comparison-tab]').forEach((button) => {
+        button.onclick = () => {
+          const tab = button.getAttribute('data-comparison-tab');
+          if (!tab) return;
+          setMetaReportComparisonTab(tab);
+        };
+      });
 
       document.querySelectorAll('#meta-report-comparison-chart-mode .meta-report-chart-toggle-btn').forEach((button) => {
         button.onclick = () => {
@@ -11086,18 +11111,9 @@
         };
       });
 
-      document.querySelectorAll('[data-comparison-view]').forEach((button) => {
-        button.onclick = () => {
-          metaReportsState.comparisonView = button.getAttribute('data-comparison-view') || 'summary';
-          document.querySelectorAll('[data-comparison-view]').forEach((entry) => {
-            entry.classList.toggle('is-active', entry === button);
-          });
-          mountMetaReportComparisonChart(metaReportsState.comparisonResult || computeMetaReportComparison(payload));
-        };
-      });
-
       bindPresetButtons();
       bindRangeSelects();
+      setMetaReportComparisonTab(metaReportsState.comparisonTab || 'table');
     }
 
     function mountMetaReportComparison(payload, { editable = false } = {}) {
