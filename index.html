@@ -5028,13 +5028,19 @@
       padding-top: 0; text-transform: uppercase;
     }
     .meta-report-comparison-body {
-      align-items: start; display: grid; gap: 20px 24px;
-      grid-template-columns: minmax(300px, 520px) minmax(0, 1fr); width: 100%;
+      align-items: start; display: grid; gap: 20px 28px;
+      grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr); width: 100%;
     }
-    .meta-report-comparison-table-col { min-width: 0; }
+    .meta-report-comparison-table-col {
+      min-width: 0; position: relative; z-index: 1;
+    }
     .meta-report-comparison-table-inner {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); min-width: 0; padding: 18px 16px 16px;
+      box-shadow: var(--shadow-sm); min-width: 0; overflow-x: auto; padding: 18px 16px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .meta-report-comparison-table-inner .meta-report-group-table-wrap {
+      overflow: visible;
     }
     .meta-report-comparison-table-inner .meta-report-groups-stack { gap: 14px; }
     .meta-report-comparison-table-inner .meta-report-group-head { margin-bottom: 8px; }
@@ -5043,28 +5049,32 @@
     .meta-report-comparison-table-inner .meta-report-group-table td {
       padding: 8px 10px;
     }
+    .meta-report-comparison-table-inner .meta-report-group-table td {
+      overflow: visible; text-overflow: clip; white-space: nowrap;
+    }
     .meta-report-comparison-chart-col {
-      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+      display: flex; flex-direction: column; gap: 12px; isolation: isolate;
+      min-width: 0; overflow: hidden;
     }
     .meta-report-client-page .meta-report-comparison-chart-col,
     .meta-reports-page--public .meta-report-comparison-chart-col {
-      position: sticky; top: 16px;
+      position: static;
     }
     .meta-report-comparison-chart-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
       box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px;
-      min-width: 0; padding: 16px 16px 14px;
+      min-width: 0; overflow: hidden; padding: 16px 16px 14px;
     }
     .meta-report-comparison-chart-toolbar {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: flex-end;
     }
     .meta-report-comparison-chart-canvas-wrap {
-      height: 300px; min-height: 300px; position: relative; width: 100%;
+      height: 300px; min-height: 300px; overflow: hidden; position: relative; width: 100%;
     }
     .meta-report-comparison-chart-canvas-wrap canvas {
       display: block; height: 100% !important; width: 100% !important;
     }
-    .meta-report-comparison-table { table-layout: auto; width: 100%; }
+    .meta-report-comparison-table { min-width: 520px; table-layout: auto; width: 100%; }
     .meta-report-comparison-table thead th {
       color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
       padding: 8px 12px; text-align: right; text-transform: uppercase;
@@ -5079,9 +5089,9 @@
       overflow: visible; text-overflow: clip; white-space: nowrap;
     }
     .meta-report-comparison-table thead th:first-child { text-align: left; }
-    .meta-report-comparison-col-a { color: #c2410c; font-weight: 600; min-width: 72px; text-align: right; }
-    .meta-report-comparison-col-b { color: #475569; min-width: 72px; text-align: right; }
-    .meta-report-comparison-col-change { min-width: 72px; text-align: right; white-space: nowrap; }
+    .meta-report-comparison-col-a { color: #c2410c; font-weight: 600; min-width: 84px; text-align: right; }
+    .meta-report-comparison-col-b { color: #475569; min-width: 84px; text-align: right; }
+    .meta-report-comparison-col-change { min-width: 84px; text-align: right; white-space: nowrap; }
     .meta-report-comparison-custom-panel {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
       display: flex; flex-direction: column; gap: 14px; padding: 16px 18px;
@@ -11368,6 +11378,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { left: 8, right: 12, top: 0, bottom: 0 } },
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: {
@@ -11471,6 +11482,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { left: 8, right: 12, top: 0, bottom: 0 } },
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: {
