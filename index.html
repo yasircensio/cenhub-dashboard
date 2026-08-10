@@ -8905,7 +8905,12 @@
     function metaReportMonthPeriodAligned(monthPayload) {
       if (!monthPayload?.monthKey) return true;
       const bounds = metaReportMonthBounds(monthPayload.monthKey);
-      return monthPayload.periodStart === bounds.start && monthPayload.periodEnd === bounds.end;
+      const start = String(monthPayload.periodStart || '').slice(0, 10);
+      const end = String(monthPayload.periodEnd || '').slice(0, 10);
+      if (start === bounds.start && end === bounds.end) return true;
+      // Trust fetched Meta snapshots when the API already normalized the period.
+      if (monthPayload.metaFetchedAt && Number(monthPayload.meta?.spend) > 0) return true;
+      return false;
     }
 
     function resolveMetaReportActiveMonthPayload(payload = null) {
