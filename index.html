@@ -8890,6 +8890,83 @@
       return META_MONTH_LABELS[month - 1] || monthKey;
     }
 
+    function metaReportMonthBounds(monthKey) {
+      const normalized = String(monthKey || '').trim();
+      if (!/^\d{4}-\d{2}$/.test(normalized)) return { start: '', end: '' };
+      const [year, month] = normalized.split('-').map(Number);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const monthPart = String(month).padStart(2, '0');
+      return {
+        start: `${year}-${monthPart}-01`,
+        end: `${year}-${monthPart}-${String(daysInMonth).padStart(2, '0')}`,
+      };
+    }
+
+    function metaReportMonthPeriodAligned(monthPayload) {
+      if (!monthPayload?.monthKey) return true;
+      const bounds = metaReportMonthBounds(monthPayload.monthKey);
+      return monthPayload.periodStart === bounds.start && monthPayload.periodEnd === bounds.end;
+    }
+
+    function resolveMetaReportActiveMonthPayload(payload = null) {
+      const livePayload = payload || metaReportsState.clientPayload || metaReportsState.publicPayload;
+      const activeKey = metaReportsState.activeMonthKey;
+      if (!livePayload || !activeKey) return null;
+      return livePayload.months?.[activeKey] || null;
+    }
+
+    function switchMetaReportMonthTab(monthKey, { editable = false } = {}) {
+      if (!monthKey) return;
+      metaReportsState.activeMonthKey = monthKey;
+      const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
+      if (!payload) return;
+
+      document.querySelectorAll('[data-meta-month-tab]').forEach((tab) => {
+        tab.classList.toggle('is-active', tab.getAttribute('data-meta-month-tab') === monthKey);
+      });
+
+      const { series } = resolveMetaReportChartSeries(payload);
+      if (series.length) metaReportsState.chartSeries = series;
+
+      void (async () => {
+        const monthPayload = payload.months?.[monthKey];
+        if (
+          editable
+          && payload.clientId
+          && monthPayload
+          && !metaReportMonthPeriodAligned(monthPayload)
+        ) {
+          try {
+            const result = await adminFetch(
+              `/api/meta-reports/clients/${encodeURIComponent(payload.clientId)}/months/${encodeURIComponent(monthKey)}`,
+            );
+            if (result?.monthPayload) {
+              payload.months[monthKey] = result.monthPayload;
+            }
+          } catch (_) {
+            /* keep local payload if refetch fails */
+          }
+        }
+
+        syncMetaReportMonthPanelDom(null, getMetaReportMonthBodyOptions(payload.settings || {}, {
+          editable,
+          yearPayload: payload,
+        }), payload);
+
+        if (editable && payload.clientId) {
+          bindMetaReportsClientEditEvents(payload.clientId, payload);
+        }
+
+        syncMetaReportSettingsControls(payload.settings || {}, resolveMetaReportActiveMonthPayload(payload));
+
+        if (metaReportsState.chartSeries?.length) {
+          const projection = buildMetaReportScenarioProjection(metaReportsState.chartSeries, payload);
+          metaReportsState.chartProjection = projection;
+          syncMetaReportBaselineUi(metaReportsState.chartSeries, projection, payload);
+        }
+      })();
+    }
+
     function metaReportMonthsNeedingBackfill(payload) {
       const monthKeys = payload?.monthKeys || [];
       return monthKeys.filter((key) => !payload.months?.[key]?.metaFetchedAt);
@@ -9113,6 +9190,10 @@
 
     function monthHasChartData(monthPayload) {
       if (!monthPayload || monthPayload.meta?.emptyMonth) return false;
+      if (!metaReportMonthPeriodAligned(monthPayload)) {
+        const leads = Number(monthPayload.topline?.leads) || 0;
+        return leads > 0;
+      }
       const spend = Number(monthPayload.meta?.spend) || 0;
       const leads = Number(monthPayload.topline?.leads) || 0;
       return spend > 0 || leads > 0;
@@ -9530,7 +9611,7 @@
     function metaReportSpendFromMonthKey(series = [], payload = null, monthKey = null) {
       if (!monthKey) return 0;
       const monthPayload = payload?.months?.[monthKey];
-      if (monthPayload && !monthPayload.meta?.emptyMonth) {
+      if (monthPayload && !monthPayload.meta?.emptyMonth && metaReportMonthPeriodAligned(monthPayload)) {
         const spend = metaReportParseAmount(monthPayload.meta?.spend);
         if (spend > 0) return spend;
       }
@@ -11314,9 +11395,7 @@
         || metaReportsState.clientPayload
         || metaReportsState.publicPayload;
       const activeKey = metaReportsState.activeMonthKey;
-      const resolvedMonthPayload = (activeKey && payload?.months?.[activeKey])
-        ? payload.months[activeKey]
-        : monthPayload;
+      const resolvedMonthPayload = resolveMetaReportActiveMonthPayload(payload) || monthPayload;
       const panel = document.getElementById('meta-report-month-panel');
       if (!panel) return;
       panel.innerHTML = renderMetaReportMonthBody(resolvedMonthPayload, {
@@ -11398,14 +11477,16 @@
     }
 
     function renderMetaReportMonthBody(monthPayload, { editable = false, yearPayload = null, activeMonthKey = null } = {}) {
+      const tabMonthKey = activeMonthKey || monthPayload?.monthKey || null;
+      const tabBounds = tabMonthKey ? metaReportMonthBounds(tabMonthKey) : null;
       let editPanelHtml = '';
-      if (editable && monthPayload && !monthPayload.meta?.emptyMonth) {
+      if (editable && monthPayload && !monthPayload.meta?.emptyMonth && tabBounds) {
         editPanelHtml = `
           <div class="meta-report-edit-panel" id="meta-report-edit-panel">
-            <h3>Edit month inputs</h3>
+            <h3>Edit month inputs · ${esc(metaMonthLabel(tabMonthKey))}</h3>
             <div class="meta-report-edit-grid">
-              <label>Period start<input type="date" id="meta-report-period-start" value="${esc(monthPayload.periodStart || '')}" /></label>
-              <label>Period end<input type="date" id="meta-report-period-end" value="${esc(monthPayload.periodEnd || '')}" /></label>
+              <label>Period start<input type="date" id="meta-report-period-start" value="${esc(tabBounds.start)}" /></label>
+              <label>Period end<input type="date" id="meta-report-period-end" value="${esc(tabBounds.end)}" /></label>
               <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
               <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
               <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
@@ -11816,31 +11897,9 @@
     }
 
     function bindMetaReportsClientTabEvents(payload) {
-      const clientId = payload.clientId;
       document.querySelectorAll('[data-meta-month-tab]').forEach((button) => {
         button.onclick = () => {
-          metaReportsState.activeMonthKey = button.getAttribute('data-meta-month-tab');
-          document.querySelectorAll('[data-meta-month-tab]').forEach((tab) => {
-            tab.classList.toggle('is-active', tab.getAttribute('data-meta-month-tab') === metaReportsState.activeMonthKey);
-          });
-          if (metaReportsState.chartSeries?.length) {
-            const projection = buildMetaReportScenarioProjection(metaReportsState.chartSeries, payload);
-            metaReportsState.chartProjection = projection;
-            syncMetaReportBaselineUi(metaReportsState.chartSeries, projection, payload);
-          }
-          const panel = document.getElementById('meta-report-month-panel');
-          if (panel) {
-            syncMetaReportMonthPanelDom(
-              payload.months?.[metaReportsState.activeMonthKey],
-              getMetaReportMonthBodyOptions(payload.settings, { editable: true }),
-              payload,
-            );
-            bindMetaReportsClientEditEvents(clientId, payload);
-          }
-          syncMetaReportSettingsControls(
-            payload.settings || {},
-            payload.months?.[metaReportsState.activeMonthKey] || null,
-          );
+          switchMetaReportMonthTab(button.getAttribute('data-meta-month-tab'), { editable: true });
         };
       });
     }
@@ -12267,18 +12326,7 @@
     function bindPublicMetaReportTabEvents(payload) {
       document.querySelectorAll('[data-meta-month-tab]').forEach((button) => {
         button.onclick = () => {
-          metaReportsState.activeMonthKey = button.getAttribute('data-meta-month-tab');
-          const panel = document.getElementById('meta-report-month-panel');
-          if (panel) {
-            syncMetaReportMonthPanelDom(
-              payload.months?.[metaReportsState.activeMonthKey],
-              getMetaReportMonthBodyOptions(payload.settings, { editable: false }),
-              payload,
-            );
-          }
-          document.querySelectorAll('[data-meta-month-tab]').forEach((tab) => {
-            tab.classList.toggle('is-active', tab.getAttribute('data-meta-month-tab') === metaReportsState.activeMonthKey);
-          });
+          switchMetaReportMonthTab(button.getAttribute('data-meta-month-tab'), { editable: false });
         };
       });
     }
