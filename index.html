@@ -4872,14 +4872,22 @@
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto;
     }
     .meta-report-baseline-strip[hidden] { display: none !important; }
-    .meta-report-baseline-chip {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600;
-      line-height: 1; padding: 6px 11px; white-space: nowrap;
+    .meta-report-baseline-pill {
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 999px; display: inline-flex; gap: 7px; line-height: 1.2;
+      padding: 6px 12px; white-space: nowrap;
     }
-    .meta-report-baseline-chip-label {
-      color: var(--text-soft); font-size: 11px; font-weight: 600; margin-right: 5px;
+    .meta-report-baseline-pill.is-active {
+      background: rgba(255, 106, 0, 0.12); border-color: rgba(255, 106, 0, 0.45);
     }
+    .meta-report-baseline-pill-label {
+      color: var(--text-soft); font-size: 11px; font-weight: 600;
+    }
+    .meta-report-baseline-pill-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 700;
+    }
+    .meta-report-baseline-pill.is-active .meta-report-baseline-pill-label,
+    .meta-report-baseline-pill.is-active .meta-report-baseline-pill-value { color: var(--text); }
     .meta-report-scenario-slider-row {
       align-items: center; display: flex; gap: 12px;
     }
@@ -8862,7 +8870,11 @@
     function metaReportFmtBaselineAmount(value) {
       const amount = Number(value) || 0;
       if (amount <= 0) return '—';
-      return metaFmtNum(amount, 0);
+      return metaFmtKr(amount);
+    }
+
+    function renderMetaReportBaselinePill(label, amount, { active = false, title = '' } = {}) {
+      return `<span class="meta-report-baseline-pill${active ? ' is-active' : ''}"${title ? ` title="${esc(title)}"` : ''}><span class="meta-report-baseline-pill-label">${esc(label)}</span><span class="meta-report-baseline-pill-value">${esc(metaReportFmtBaselineAmount(amount))}</span></span>`;
     }
 
     function metaFmtX(value) {
@@ -9794,24 +9806,34 @@
     function renderMetaReportBaselineStrip(hints = null) {
       if (!hints) return '';
       const parts = [];
+      const baselineMode = metaReportsState.budgetBaseline;
       if (hints.windowAverage > 0) {
-        parts.push(
-          `<span class="meta-report-baseline-chip" title="Window average"><span class="meta-report-baseline-chip-label">Avg</span>${esc(metaReportFmtBaselineAmount(hints.windowAverage))}</span>`,
-        );
+        parts.push(renderMetaReportBaselinePill('Window avg', hints.windowAverage, {
+          active: baselineMode === 'year',
+          title: 'Average ad spend in the history window (completed months)',
+        }));
       }
       if (hints.selectedMonthSpend > 0 && hints.selectedMonthLabel) {
-        parts.push(
-          `<span class="meta-report-baseline-chip" title="Selected month"><span class="meta-report-baseline-chip-label">${esc(hints.selectedMonthLabel)}</span>${esc(metaReportFmtBaselineAmount(hints.selectedMonthSpend))}</span>`,
-        );
+        const isCurrent = hints.activeKey && hints.currentKey && hints.activeKey === hints.currentKey;
+        parts.push(renderMetaReportBaselinePill(
+          isCurrent ? `Selected · ${hints.selectedMonthLabel} (current)` : `Selected · ${hints.selectedMonthLabel}`,
+          hints.selectedMonthSpend,
+          {
+            active: baselineMode === 'month',
+            title: 'Ad spend for the selected month tab',
+          },
+        ));
       }
       if (
         hints.currentMonthSpend > 0
         && hints.currentMonthLabel
         && hints.activeKey !== hints.currentKey
       ) {
-        parts.push(
-          `<span class="meta-report-baseline-chip" title="Current month"><span class="meta-report-baseline-chip-label">${esc(hints.currentMonthLabel)}</span>${esc(metaReportFmtBaselineAmount(hints.currentMonthSpend))}</span>`,
-        );
+        parts.push(renderMetaReportBaselinePill(
+          `Current · ${hints.currentMonthLabel}`,
+          hints.currentMonthSpend,
+          { title: 'Ad spend for the current calendar month' },
+        ));
       }
       return parts.join('');
     }
