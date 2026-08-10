@@ -5,6 +5,7 @@ const {
   aggregateMonthRange,
   buildComparison,
   computeDeltaPct,
+  formatComparisonDisplayLabel,
   formatPeriodLabel,
   mergeMonthsMaps,
   resolveComparisonPresets,
@@ -131,6 +132,8 @@ function testBuildComparisonMom() {
   });
   assert.strictEqual(result.insufficientData, false);
   assert.strictEqual(result.samePeriod, false);
+  assert.strictEqual(result.periodA.label, 'Aug 2026');
+  assert.strictEqual(result.periodB.label, 'Jul 2026');
   approx(result.deltas.spend.pct, 20);
   assert.ok(result.heroMetrics.length >= 5);
   assert.ok(result.detailRows.length > 0);
@@ -150,6 +153,39 @@ function testBuildComparisonMissingPriorYear() {
   assert.strictEqual(result.insufficientData, false);
   assert.strictEqual(result.periodA.hasData, true);
   assert.strictEqual(result.periodB.hasData, false);
+}
+
+function testComparisonDisplayLabels() {
+  assert.strictEqual(
+    formatComparisonDisplayLabel('mom', { startDate: '2026-08-01', endDate: '2026-08-31' }),
+    'Aug 2026',
+  );
+  assert.strictEqual(
+    formatComparisonDisplayLabel('ytd', { startDate: '2026-01-01', endDate: '2026-08-31' }),
+    '2026',
+  );
+  assert.ok(
+    formatComparisonDisplayLabel('custom', { startDate: '2026-08-10', endDate: '2026-08-15' }).includes('Aug'),
+  );
+}
+
+function testYtdByMonthKeepsMissingPriorMonths() {
+  const months2026 = {
+    '2026-01': monthPayload({ monthKey: '2026-01', spend: 9000 }),
+    '2026-02': monthPayload({ monthKey: '2026-02', spend: 10000 }),
+  };
+  const result = buildComparison({
+    monthsMap: months2026,
+    periodA: { startDate: '2026-01-01', endDate: '2026-02-28' },
+    periodB: { startDate: '2025-01-01', endDate: '2025-02-28' },
+    mode: 'ytd',
+  });
+  assert.strictEqual(result.ytdByMonth.length, 2);
+  assert.strictEqual(result.ytdByMonth[0].hasDataA, true);
+  assert.strictEqual(result.ytdByMonth[0].hasDataB, false);
+  assert.strictEqual(result.ytdByMonth[0].periodB, null);
+  assert.strictEqual(result.periodA.label, '2026');
+  assert.strictEqual(result.periodB.label, '2025');
 }
 
 function testSamePeriodValidation() {
@@ -190,6 +226,8 @@ function run() {
   testPartialRange();
   testBuildComparisonMom();
   testBuildComparisonMissingPriorYear();
+  testComparisonDisplayLabels();
+  testYtdByMonthKeepsMissingPriorMonths();
   testSamePeriodValidation();
   testYearsNeeded();
   testFormatPeriodLabel();
