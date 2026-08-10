@@ -157,7 +157,7 @@ function testBudgetScenarioProjection() {
   approx(result.projected.leads, 74, 2);
 }
 
-function testScenarioRampAtTriple() {
+function testScenarioProjectionStepsMatchTargetMultiplier() {
   const series = [{
     spend: 9000,
     leads: 45,
@@ -184,10 +184,19 @@ function testScenarioRampAtTriple() {
 
   const steps = buildScenarioProjectionSteps(projection, { hasBottomline: false });
   assert.strictEqual(steps.length, 4);
-  approx(steps[0].spend, 18000);
-  approx(steps[1].spend, 27000);
-  approx(steps[2].spend, 27000);
-  approx(steps[3].spend, 27000);
+  steps.forEach((step) => {
+    approx(step.spend, 27000);
+    approx(step.spendMultiplier, 3);
+  });
+
+  const atDouble = buildScenarioProjectionSteps(
+    { ...projection, multiplier: 2 },
+    { hasBottomline: false, targetMultiplier: 2 },
+  );
+  atDouble.forEach((step) => {
+    approx(step.spend, 18000);
+    approx(step.spendMultiplier, 2);
+  });
 }
 
 function testShortAdHistoryUsesAvailableMonths() {
@@ -443,7 +452,7 @@ function main() {
   testEmptyMonth();
   testLeadActionParsing();
   testBudgetScenarioProjection();
-  testScenarioRampAtTriple();
+  testScenarioProjectionStepsMatchTargetMultiplier();
   testShortAdHistoryUsesAvailableMonths();
   testIncompleteMonthExcluded();
   testDownwardTrendLowersProjection();

@@ -9635,17 +9635,18 @@
       months = META_REPORT_SCENARIO_PROJECTED_MONTHS,
       hasBottomline = false,
       asOfDate = new Date(),
+      targetMultiplier = null,
     } = {}) {
       if (!projection || projection.insufficientData) return [];
       const baseSpend = metaReportParseAmount(projection.baselineSpend);
-      const targetMult = metaReportParseAmount(projection.multiplier) || 1;
+      const targetMult = metaReportParseAmount(targetMultiplier ?? projection.multiplier) || 1;
       const efficiency = projection.efficiency;
       const elasticity = projection.elasticity || 0.75;
       const trendRate = projection.trendRate || 0;
       const projectionMonthKeys = metaReportBuildScenarioProjectionMonthKeys(months, asOfDate);
       const steps = [];
       for (let step = 1; step <= months; step += 1) {
-        const stepMult = Math.min(targetMult, 1 + step);
+        const stepMult = targetMult;
         const spend = metaReportRoundMoney(baseSpend * stepMult);
         const trendAdj = Math.exp(trendRate * step);
         const metrics = metaReportProjectBudgetAtSpend({
@@ -10395,7 +10396,10 @@
       );
       const baselineSpend = resolveMetaReportSpendChartBaseline(chartSeries, projection);
       const useMultiplier = mode === 'x' && baselineSpend > 0;
-      const projectionSteps = buildMetaReportScenarioProjectionSteps(projection, { hasBottomline });
+      const projectionSteps = buildMetaReportScenarioProjectionSteps(projection, {
+        hasBottomline,
+        targetMultiplier: metaReportsState.budgetMultiplier,
+      });
       const normalizedType = normalizeMetaReportSpendChartType(chartType);
       const labels = chartSeries.map((point) => point.label);
       const spendValues = chartSeries.map((point) => (
@@ -10409,7 +10413,11 @@
 
       for (const step of projectionSteps) {
         labels.push(step.label);
-        spendValues.push(useMultiplier ? step.spendMultiplier : step.spend);
+        spendValues.push(
+          useMultiplier
+            ? metaReportSpendMultiplierValue(step.spend, baselineSpend)
+            : step.spend,
+        );
         returnValues.push(metaReportParseAmount(step[mode === 'x' ? xKey : krKey]));
       }
 
