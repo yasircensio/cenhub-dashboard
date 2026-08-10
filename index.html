@@ -4863,6 +4863,12 @@
     .meta-report-scenario-field > span {
       color: var(--text-soft); font-size: 12px; font-weight: 600;
     }
+    .meta-report-scenario-baseline-hint {
+      color: var(--text-soft); font-size: 11px; line-height: 1.45; margin: 0;
+    }
+    .meta-report-scenario-baseline-hint.is-empty { font-style: italic; }
+    .meta-report-scenario-baseline-ref.is-active { color: var(--text); font-weight: 600; }
+    .meta-report-scenario-baseline-sep { color: var(--border-strong, rgba(26, 18, 8, 0.18)); }
     .meta-report-scenario-slider-row {
       align-items: center; display: flex; gap: 12px;
     }
@@ -9508,15 +9514,11 @@
       const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, { blendHistory, includeTrend, cautionStrongMonths });
       let resolvedBaselineSpend = metaReportParseAmount(baselineSpend);
       if (!resolvedBaselineSpend) {
-        if (baselineMode === 'month' && activeMonthKey) {
-          const month = prepared.months.find((point) => point.monthKey === activeMonthKey)
-            || series.find((point) => point.monthKey === activeMonthKey);
-          if (month && metaReportParseAmount(month.spend) > 0) resolvedBaselineSpend = metaReportParseAmount(month.spend);
-        }
-        if (!resolvedBaselineSpend && prepared.months.length > 0) {
-          const total = prepared.months.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
-          resolvedBaselineSpend = metaReportRoundMoney(total / prepared.months.length);
-        }
+        resolvedBaselineSpend = resolveMetaReportScenarioBaselineSpend(series, prepared, {
+          baselineMode,
+          activeMonthKey,
+          asOfDate,
+        });
       }
       const mult = metaReportParseAmount(multiplier) || 1;
       const { efficiency, elasticity, trendRate } = efficiencyResult;
@@ -9713,6 +9715,83 @@
       return trimMetaReportScenarioSeries(filtered);
     }
 
+    function resolveMetaReportScenarioBaselineHints(series = [], projection = null) {
+      const pills = getMetaReportScenarioPillsFromState();
+      const prepared = projection?.prepared || metaReportPrepareScenarioSeries(series, {
+        windowMonths: metaReportsState.scenarioMonthWindow,
+        smoothOutliers: pills.smoothUneven,
+      });
+      let windowAverage = 0;
+      const windowMonthCount = prepared.monthsUsed || prepared.months.length || 0;
+      if (prepared.months.length > 0) {
+        const total = prepared.months.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
+        windowAverage = metaReportRoundMoney(total / prepared.months.length);
+      }
+
+      const activeKey = metaReportsState.activeMonthKey;
+      const currentKey = metaReportMonthKeyFromDate(new Date());
+      const selectedMonth = activeKey ? series.find((point) => point.monthKey === activeKey) : null;
+      const currentMonth = currentKey ? series.find((point) => point.monthKey === currentKey) : null;
+
+      return {
+        windowAverage,
+        windowMonthCount,
+        selectedMonthSpend: selectedMonth ? metaReportParseAmount(selectedMonth.spend) : 0,
+        selectedMonthLabel: activeKey ? metaMonthLabel(activeKey) : '',
+        activeKey,
+        currentMonthSpend: currentMonth ? metaReportParseAmount(currentMonth.spend) : 0,
+        currentMonthLabel: currentKey ? metaMonthLabel(currentKey) : '',
+        currentKey,
+      };
+    }
+
+    function renderMetaReportScenarioBaselineHint(hints = null) {
+      if (!hints) {
+        return '<p class="meta-report-scenario-baseline-hint is-empty" id="meta-report-scenario-baseline-hint">Add ad spend history to set a baseline.</p>';
+      }
+
+      const parts = [];
+      const windowOption = META_REPORT_SCENARIO_MONTH_WINDOW_OPTIONS.find(
+        (entry) => entry.value === metaReportsState.scenarioMonthWindow,
+      );
+      const windowLabel = windowOption?.label?.toLowerCase() || 'history window';
+
+      if (hints.windowAverage > 0) {
+        const monthNote = hints.windowMonthCount > 0
+          ? ` · ${hints.windowMonthCount} completed ad month${hints.windowMonthCount === 1 ? '' : 's'}`
+          : '';
+        const activeClass = metaReportsState.budgetBaseline === 'year' ? ' is-active' : '';
+        parts.push(
+          `<span class="meta-report-scenario-baseline-ref${activeClass}">Window avg (${esc(windowLabel)}${esc(monthNote)}): ${esc(metaFmtKr(hints.windowAverage))}</span>`,
+        );
+      }
+
+      if (hints.selectedMonthSpend > 0 && hints.selectedMonthLabel) {
+        const isCurrent = hints.activeKey && hints.currentKey && hints.activeKey === hints.currentKey;
+        const monthTag = isCurrent ? ' · current month' : '';
+        const activeClass = metaReportsState.budgetBaseline === 'month' ? ' is-active' : '';
+        parts.push(
+          `<span class="meta-report-scenario-baseline-ref${activeClass}">${esc(hints.selectedMonthLabel)}${esc(monthTag)}: ${esc(metaFmtKr(hints.selectedMonthSpend))}</span>`,
+        );
+      }
+
+      if (
+        hints.currentMonthSpend > 0
+        && hints.currentMonthLabel
+        && hints.activeKey !== hints.currentKey
+      ) {
+        parts.push(
+          `<span class="meta-report-scenario-baseline-ref">${esc(hints.currentMonthLabel)} (current month): ${esc(metaFmtKr(hints.currentMonthSpend))}</span>`,
+        );
+      }
+
+      if (!parts.length) {
+        return '<p class="meta-report-scenario-baseline-hint is-empty" id="meta-report-scenario-baseline-hint">Add ad spend history to set a baseline.</p>';
+      }
+
+      return `<p class="meta-report-scenario-baseline-hint" id="meta-report-scenario-baseline-hint">${parts.join('<span class="meta-report-scenario-baseline-sep"> · </span>')}</p>`;
+    }
+
     function renderMetaReportScenarioContextStrip(projection) {
       if (!projection || projection.insufficientData) {
         return '<p class="meta-report-scenario-context" id="meta-report-scenario-context">Add at least two completed ad months to model a budget scenario.</p>';
@@ -9841,6 +9920,7 @@
                 <option value="year"${metaReportsState.budgetBaseline === 'year' ? ' selected' : ''}>Window average</option>
                 <option value="month"${metaReportsState.budgetBaseline === 'month' ? ' selected' : ''}>Selected month</option>
               </select>
+              <p class="meta-report-scenario-baseline-hint is-empty" id="meta-report-scenario-baseline-hint">Baseline amounts appear after ad history loads.</p>
             </label>
             <label class="meta-report-scenario-field">
               <span>History window</span>
@@ -11033,6 +11113,13 @@
 
       const contextWrap = document.getElementById('meta-report-scenario-context-wrap');
       if (contextWrap) contextWrap.innerHTML = renderMetaReportScenarioContextStrip(projection);
+
+      const baselineHint = document.getElementById('meta-report-scenario-baseline-hint');
+      if (baselineHint) {
+        baselineHint.outerHTML = renderMetaReportScenarioBaselineHint(
+          resolveMetaReportScenarioBaselineHints(series, projection),
+        );
+      }
 
       const grid = document.getElementById('meta-report-scenario-grid');
       if (grid) grid.innerHTML = renderMetaReportScenarioMetrics(projection);

@@ -4854,6 +4854,12 @@
     .meta-report-scenario-field > span {
       color: var(--text-soft); font-size: 12px; font-weight: 600;
     }
+    .meta-report-scenario-baseline-hint {
+      color: var(--text-soft); font-size: 11px; line-height: 1.45; margin: 0;
+    }
+    .meta-report-scenario-baseline-hint.is-empty { font-style: italic; }
+    .meta-report-scenario-baseline-ref.is-active { color: var(--text); font-weight: 600; }
+    .meta-report-scenario-baseline-sep { color: var(--border-strong, rgba(26, 18, 8, 0.18)); }
     .meta-report-scenario-slider-row {
       align-items: center; display: flex; gap: 12px;
     }
