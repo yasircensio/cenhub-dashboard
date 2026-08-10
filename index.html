@@ -4672,7 +4672,8 @@
       .meta-report-control-bar { align-items: stretch; }
       .meta-report-control-bar-actions { margin-left: 0; width: 100%; }
     }
-    .meta-report-client-page .meta-report-tabs { margin: 0 0 20px; }
+    .meta-report-client-page .meta-report-tabs-row { margin: 0 0 20px; }
+    .meta-report-client-page .meta-report-tabs { margin: 0; }
     .meta-report-client-page .meta-report-month-panel {
       background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
       gap: 32px; padding: 0;
@@ -4863,12 +4864,22 @@
     .meta-report-scenario-field > span {
       color: var(--text-soft); font-size: 12px; font-weight: 600;
     }
-    .meta-report-scenario-baseline-hint {
-      color: var(--text-soft); font-size: 11px; line-height: 1.45; margin: 0;
+    .meta-report-tabs-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 0 0 20px;
     }
-    .meta-report-scenario-baseline-hint.is-empty { font-style: italic; }
-    .meta-report-scenario-baseline-ref.is-active { color: var(--text); font-weight: 600; }
-    .meta-report-scenario-baseline-sep { color: var(--border-strong, rgba(26, 18, 8, 0.18)); }
+    .meta-report-tabs-row .meta-report-tabs { margin: 0; }
+    .meta-report-baseline-strip {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto;
+    }
+    .meta-report-baseline-strip[hidden] { display: none !important; }
+    .meta-report-baseline-chip {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600;
+      line-height: 1; padding: 6px 11px; white-space: nowrap;
+    }
+    .meta-report-baseline-chip-label {
+      color: var(--text-soft); font-size: 11px; font-weight: 600; margin-right: 5px;
+    }
     .meta-report-scenario-slider-row {
       align-items: center; display: flex; gap: 12px;
     }
@@ -8848,6 +8859,12 @@
       return amount.toLocaleString('da-DK', { minimumFractionDigits: digits, maximumFractionDigits: digits });
     }
 
+    function metaReportFmtBaselineAmount(value) {
+      const amount = Number(value) || 0;
+      if (amount <= 0) return '—';
+      return metaFmtNum(amount, 0);
+    }
+
     function metaFmtX(value) {
       const amount = Number(value);
       if (!Number.isFinite(amount)) return '—';
@@ -9542,7 +9559,6 @@
         resolvedBaselineSpend = resolveMetaReportScenarioBaselineSpend(series, prepared, {
           baselineMode,
           activeMonthKey,
-          asOfDate,
         });
       }
       const mult = metaReportParseAmount(multiplier) || 1;
@@ -9765,51 +9781,55 @@
       };
     }
 
-    function renderMetaReportScenarioBaselineHint(hints = null) {
-      if (!hints) {
-        return '<p class="meta-report-scenario-baseline-hint is-empty" id="meta-report-scenario-baseline-hint">Add ad spend history to set a baseline.</p>';
-      }
+    function renderMetaReportBaselineSelectOptions(hints = null, selectedMode = 'year') {
+      const windowValue = hints?.windowAverage > 0 ? metaReportFmtBaselineAmount(hints.windowAverage) : '—';
+      const monthValue = hints?.selectedMonthSpend > 0 ? metaReportFmtBaselineAmount(hints.selectedMonthSpend) : '—';
+      const normalized = normalizeMetaReportBudgetBaseline(selectedMode);
+      return `
+        <option value="year"${normalized === 'year' ? ' selected' : ''}>Window average · ${esc(windowValue)}</option>
+        <option value="month"${normalized === 'month' ? ' selected' : ''}>Selected month · ${esc(monthValue)}</option>
+      `;
+    }
 
+    function renderMetaReportBaselineStrip(hints = null) {
+      if (!hints) return '';
       const parts = [];
-      const windowOption = META_REPORT_SCENARIO_MONTH_WINDOW_OPTIONS.find(
-        (entry) => entry.value === metaReportsState.scenarioMonthWindow,
-      );
-      const windowLabel = windowOption?.label?.toLowerCase() || 'history window';
-
       if (hints.windowAverage > 0) {
-        const monthNote = hints.windowMonthCount > 0
-          ? ` · ${hints.windowMonthCount} completed ad month${hints.windowMonthCount === 1 ? '' : 's'}`
-          : '';
-        const activeClass = metaReportsState.budgetBaseline === 'year' ? ' is-active' : '';
         parts.push(
-          `<span class="meta-report-scenario-baseline-ref${activeClass}">Window avg (${esc(windowLabel)}${esc(monthNote)}): ${esc(metaFmtKr(hints.windowAverage))}</span>`,
+          `<span class="meta-report-baseline-chip" title="Window average"><span class="meta-report-baseline-chip-label">Avg</span>${esc(metaReportFmtBaselineAmount(hints.windowAverage))}</span>`,
         );
       }
-
       if (hints.selectedMonthSpend > 0 && hints.selectedMonthLabel) {
-        const isCurrent = hints.activeKey && hints.currentKey && hints.activeKey === hints.currentKey;
-        const monthTag = isCurrent ? ' · current month' : '';
-        const activeClass = metaReportsState.budgetBaseline === 'month' ? ' is-active' : '';
         parts.push(
-          `<span class="meta-report-scenario-baseline-ref${activeClass}">${esc(hints.selectedMonthLabel)}${esc(monthTag)}: ${esc(metaFmtKr(hints.selectedMonthSpend))}</span>`,
+          `<span class="meta-report-baseline-chip" title="Selected month"><span class="meta-report-baseline-chip-label">${esc(hints.selectedMonthLabel)}</span>${esc(metaReportFmtBaselineAmount(hints.selectedMonthSpend))}</span>`,
         );
       }
-
       if (
         hints.currentMonthSpend > 0
         && hints.currentMonthLabel
         && hints.activeKey !== hints.currentKey
       ) {
         parts.push(
-          `<span class="meta-report-scenario-baseline-ref">${esc(hints.currentMonthLabel)} (current month): ${esc(metaFmtKr(hints.currentMonthSpend))}</span>`,
+          `<span class="meta-report-baseline-chip" title="Current month"><span class="meta-report-baseline-chip-label">${esc(hints.currentMonthLabel)}</span>${esc(metaReportFmtBaselineAmount(hints.currentMonthSpend))}</span>`,
         );
       }
+      return parts.join('');
+    }
 
-      if (!parts.length) {
-        return '<p class="meta-report-scenario-baseline-hint is-empty" id="meta-report-scenario-baseline-hint">Add ad spend history to set a baseline.</p>';
+    function syncMetaReportBaselineUi(series = [], projection = null) {
+      const hints = resolveMetaReportScenarioBaselineHints(series, projection);
+      const strip = document.getElementById('meta-report-baseline-strip');
+      if (strip) {
+        const markup = renderMetaReportBaselineStrip(hints);
+        strip.innerHTML = markup;
+        strip.hidden = !markup;
       }
-
-      return `<p class="meta-report-scenario-baseline-hint" id="meta-report-scenario-baseline-hint">${parts.join('<span class="meta-report-scenario-baseline-sep"> · </span>')}</p>`;
+      const baselineSelect = document.getElementById('meta-report-budget-baseline');
+      if (baselineSelect) {
+        const selected = baselineSelect.value || metaReportsState.budgetBaseline;
+        baselineSelect.innerHTML = renderMetaReportBaselineSelectOptions(hints, selected);
+        baselineSelect.value = normalizeMetaReportBudgetBaseline(selected);
+      }
     }
 
     function renderMetaReportScenarioContextStrip(projection) {
@@ -9937,10 +9957,11 @@
             <label class="meta-report-scenario-field">
               <span>Baseline spend</span>
               <select id="meta-report-budget-baseline" class="admin-select">
-                <option value="year"${metaReportsState.budgetBaseline === 'year' ? ' selected' : ''}>Window average</option>
-                <option value="month"${metaReportsState.budgetBaseline === 'month' ? ' selected' : ''}>Selected month</option>
+                ${renderMetaReportBaselineSelectOptions(
+                  resolveMetaReportScenarioBaselineHints(metaReportsState.chartSeries || [], metaReportsState.chartProjection),
+                  metaReportsState.budgetBaseline,
+                )}
               </select>
-              <p class="meta-report-scenario-baseline-hint is-empty" id="meta-report-scenario-baseline-hint">Baseline amounts appear after ad history loads.</p>
             </label>
             <label class="meta-report-scenario-field">
               <span>History window</span>
@@ -11112,8 +11133,6 @@
     }
 
     function syncMetaReportScenario(payload) {
-      const scenarioCard = document.getElementById('meta-report-scenario-card');
-      if (!scenarioCard) return;
       const series = metaReportsState.chartSeries || [];
       const hasBottomline = payloadHasMetaReportBottomline(payload);
       const pills = getMetaReportScenarioPillsFromState();
@@ -11130,16 +11149,13 @@
         smoothOutliers: pills.smoothUneven,
       });
       metaReportsState.chartProjection = projection;
+      syncMetaReportBaselineUi(series, projection);
+
+      const scenarioCard = document.getElementById('meta-report-scenario-card');
+      if (!scenarioCard) return;
 
       const contextWrap = document.getElementById('meta-report-scenario-context-wrap');
       if (contextWrap) contextWrap.innerHTML = renderMetaReportScenarioContextStrip(projection);
-
-      const baselineHint = document.getElementById('meta-report-scenario-baseline-hint');
-      if (baselineHint) {
-        baselineHint.outerHTML = renderMetaReportScenarioBaselineHint(
-          resolveMetaReportScenarioBaselineHints(series, projection),
-        );
-      }
 
       const grid = document.getElementById('meta-report-scenario-grid');
       if (grid) grid.innerHTML = renderMetaReportScenarioMetrics(projection);
@@ -11374,7 +11390,10 @@
         </div>
         <div class="sync-history-page meta-reports-page meta-report-client-page">
           ${renderMetaReportClientControlPanel(payload)}
-          <div class="meta-report-tabs" role="tablist">${tabs}</div>
+          <div class="meta-report-tabs-row">
+            <div class="meta-report-tabs" role="tablist">${tabs}</div>
+            <div class="meta-report-baseline-strip" id="meta-report-baseline-strip" hidden></div>
+          </div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
             ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(settings, { editable: true, yearPayload: payload }))}
           </div>

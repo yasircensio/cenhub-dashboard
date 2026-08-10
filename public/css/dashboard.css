@@ -4663,7 +4663,8 @@
       .meta-report-control-bar { align-items: stretch; }
       .meta-report-control-bar-actions { margin-left: 0; width: 100%; }
     }
-    .meta-report-client-page .meta-report-tabs { margin: 0 0 20px; }
+    .meta-report-client-page .meta-report-tabs-row { margin: 0 0 20px; }
+    .meta-report-client-page .meta-report-tabs { margin: 0; }
     .meta-report-client-page .meta-report-month-panel {
       background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
       gap: 32px; padding: 0;
@@ -4854,12 +4855,22 @@
     .meta-report-scenario-field > span {
       color: var(--text-soft); font-size: 12px; font-weight: 600;
     }
-    .meta-report-scenario-baseline-hint {
-      color: var(--text-soft); font-size: 11px; line-height: 1.45; margin: 0;
+    .meta-report-tabs-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 0 0 20px;
     }
-    .meta-report-scenario-baseline-hint.is-empty { font-style: italic; }
-    .meta-report-scenario-baseline-ref.is-active { color: var(--text); font-weight: 600; }
-    .meta-report-scenario-baseline-sep { color: var(--border-strong, rgba(26, 18, 8, 0.18)); }
+    .meta-report-tabs-row .meta-report-tabs { margin: 0; }
+    .meta-report-baseline-strip {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto;
+    }
+    .meta-report-baseline-strip[hidden] { display: none !important; }
+    .meta-report-baseline-chip {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600;
+      line-height: 1; padding: 6px 11px; white-space: nowrap;
+    }
+    .meta-report-baseline-chip-label {
+      color: var(--text-soft); font-size: 11px; font-weight: 600; margin-right: 5px;
+    }
     .meta-report-scenario-slider-row {
       align-items: center; display: flex; gap: 12px;
     }
