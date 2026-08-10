@@ -260,8 +260,6 @@ function testDownwardTrendLowersProjection() {
 }
 
 function testPillsAreIndependent() {
-  // Cap hot streak alone must NOT silently activate blending -- each pill should
-  // only affect what its own label promises.
   const series = [
     { spend: 8000, leads: 40, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-11-30' },
     { spend: 12000, leads: 55, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-12-31' },
@@ -274,33 +272,11 @@ function testPillsAreIndependent() {
   });
 
   const plain = computeScenarioEfficiency(prepared.months, {});
-  const cautionOnly = computeScenarioEfficiency(prepared.months, { cautionStrongMonths: true });
   const blendOnly = computeScenarioEfficiency(prepared.months, { blendHistory: true });
+  const trendOnly = computeScenarioEfficiency(prepared.months, { includeTrend: true });
 
-  assert.strictEqual(cautionOnly.efficiency.avgCpl, plain.efficiency.avgCpl);
   assert.notStrictEqual(blendOnly.efficiency.avgCpl, plain.efficiency.avgCpl);
-}
-
-function testHotStreakDampeningRequiresBothPills() {
-  const series = [
-    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-09-30' },
-    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-10-31' },
-    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-11-30' },
-    { spend: 10000, leads: 50, wonLeads: 1.5, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-12-31' },
-    { spend: 10000, leads: 50, wonLeads: 1.6, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2025-01-31' },
-    { spend: 10000, leads: 50, wonLeads: 1.7, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2025-02-28' },
-  ];
-
-  const prepared = prepareScenarioSeries(series, {
-    windowMonths: 'all',
-    asOfDate: new Date('2025-03-01T12:00:00.000Z'),
-  });
-
-  const withoutCaution = computeScenarioEfficiency(prepared.months, { includeTrend: true, cautionStrongMonths: false });
-  const withCaution = computeScenarioEfficiency(prepared.months, { includeTrend: true, cautionStrongMonths: true });
-
-  assert.ok(withoutCaution.trendRate > 0);
-  approx(withCaution.trendRate, withoutCaution.trendRate * 0.5, 0.0001);
+  assert.strictEqual(trendOnly.efficiency.avgCpl, plain.efficiency.avgCpl);
 }
 
 function testConservativeOptimisticBandCollapsesWithoutTrend() {
@@ -567,7 +543,6 @@ function main() {
   testIncompleteMonthExcluded();
   testDownwardTrendLowersProjection();
   testPillsAreIndependent();
-  testHotStreakDampeningRequiresBothPills();
   testConservativeOptimisticBandCollapsesWithoutTrend();
   testResolveScenarioConfidence();
   testScenarioProjectionMonthLabels();

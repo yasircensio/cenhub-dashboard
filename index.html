@@ -8029,7 +8029,6 @@
       scenarioSmoothUneven: true,
       scenarioBlendHistory: false,
       scenarioIncludeTrend: false,
-      scenarioCautionStrongMonths: false,
       customValues: {
         mounted: false,
         overview: null,
@@ -9055,7 +9054,6 @@
       { id: 'scenarioSmoothUneven', label: 'Remove uneven months', defaultOn: true },
       { id: 'scenarioBlendHistory', label: 'Balance recent months', defaultOn: false },
       { id: 'scenarioIncludeTrend', label: 'Follow trend', defaultOn: false },
-      { id: 'scenarioCautionStrongMonths', label: 'Cap hot streak', defaultOn: false, requires: 'scenarioIncludeTrend' },
     ];
 
     function normalizeMetaReportSpendChartType(value) {
@@ -9104,7 +9102,6 @@
         smoothUneven: Boolean(metaReportsState.scenarioSmoothUneven),
         blendHistory: Boolean(metaReportsState.scenarioBlendHistory),
         includeTrend: Boolean(metaReportsState.scenarioIncludeTrend),
-        cautionStrongMonths: Boolean(metaReportsState.scenarioCautionStrongMonths),
       };
     }
 
@@ -9112,12 +9109,11 @@
       metaReportsState.scenarioSmoothUneven = Boolean(pills.smoothUneven);
       metaReportsState.scenarioBlendHistory = Boolean(pills.blendHistory);
       metaReportsState.scenarioIncludeTrend = Boolean(pills.includeTrend);
-      metaReportsState.scenarioCautionStrongMonths = Boolean(pills.cautionStrongMonths);
     }
 
     function describeActiveMetaReportScenarioPills() {
       return META_REPORT_SCENARIO_MODEL_PILLS
-        .filter((pill) => Boolean(metaReportsState[pill.id]) && (!pill.requires || Boolean(metaReportsState[pill.requires])))
+        .filter((pill) => Boolean(metaReportsState[pill.id]))
         .map((pill) => pill.label);
     }
 
@@ -9130,7 +9126,6 @@
         smoothUneven: normalizeMetaReportScenarioPill(settings.metaReportScenarioSmoothUneven, true),
         blendHistory: normalizeMetaReportScenarioPill(settings.metaReportScenarioBlendHistory, false),
         includeTrend: normalizeMetaReportScenarioPill(settings.metaReportScenarioIncludeTrend, false),
-        cautionStrongMonths: normalizeMetaReportScenarioPill(settings.metaReportScenarioCautionStrongMonths, false),
       });
     }
 
@@ -9138,12 +9133,10 @@
       return `
         <div class="meta-report-scenario-pill-section" id="meta-report-scenario-pills-wrap">
           <div class="meta-report-scenario-pill-row" role="group" aria-label="Forecast options">
-            ${META_REPORT_SCENARIO_MODEL_PILLS.map(({ id, label, requires }) => {
+            ${META_REPORT_SCENARIO_MODEL_PILLS.map(({ id, label }) => {
               const active = Boolean(metaReportsState[id]);
-              const disabled = requires ? !metaReportsState[requires] : false;
-              const title = disabled ? `Turn on "Follow trend" first` : '';
               return `
-                <button type="button" class="meta-report-scenario-pill${active && !disabled ? ' is-active' : ''}${disabled ? ' is-disabled' : ''}" data-scenario-pill="${esc(id)}" aria-pressed="${active && !disabled}"${disabled ? ' disabled' : ''}${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>
+                <button type="button" class="meta-report-scenario-pill${active ? ' is-active' : ''}" data-scenario-pill="${esc(id)}" aria-pressed="${active}">${esc(label)}</button>
               `;
             }).join('')}
           </div>
@@ -9618,7 +9611,6 @@
         hasBottomline: payloadHasMetaReportBottomline(payload),
         blendHistory: pills.blendHistory,
         includeTrend: pills.includeTrend,
-        cautionStrongMonths: pills.includeTrend && pills.cautionStrongMonths,
         monthWindow: metaReportsState.scenarioMonthWindow,
         baselineMode: metaReportsState.budgetBaseline,
         activeMonthKey: metaReportsState.activeMonthKey,
@@ -11223,7 +11215,6 @@
           metaReportScenarioSmoothUneven: metaReportsState.scenarioSmoothUneven,
           metaReportScenarioBlendHistory: metaReportsState.scenarioBlendHistory,
           metaReportScenarioIncludeTrend: metaReportsState.scenarioIncludeTrend,
-          metaReportScenarioCautionStrongMonths: metaReportsState.scenarioCautionStrongMonths,
         }, { fast: true }).catch(() => {});
       }, 350);
     }
