@@ -445,6 +445,28 @@ function testLinearRegression() {
   approx(line.r, 1);
 }
 
+function testLastMonthBaselineMode() {
+  const asOfDate = new Date('2026-08-10T12:00:00.000Z');
+  const series = [
+    { monthKey: '2026-05', spend: 12000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-05-31' },
+    { monthKey: '2026-06', spend: 13000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-06-30' },
+    { monthKey: '2026-07', spend: 14000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-07-31' },
+    { monthKey: '2026-08', spend: 9609, leads: 40, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-08-31' },
+  ];
+
+  const result = projectScenario({
+    series,
+    baselineMode: 'last',
+    multiplier: 2,
+    monthWindow: '6',
+    asOfDate,
+  });
+
+  assert.strictEqual(result.insufficientData, false);
+  approx(result.baselineSpend, 14000);
+  approx(result.projected.spend, 28000);
+}
+
 function main() {
   testSheetExample();
   testFeeNotNegativeOnLoss();
@@ -465,6 +487,7 @@ function main() {
   testScenarioProjectionMonthLabelsYearRollover();
   testOutlierWinsorization();
   testBudgetScenarioInsufficientData();
+  testLastMonthBaselineMode();
   testEfficiencyInsight();
   testLinearRegression();
   console.log('Meta report calculator tests passed.');

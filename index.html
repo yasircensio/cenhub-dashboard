@@ -9031,7 +9031,8 @@
 
     function normalizeMetaReportBudgetBaseline(value) {
       const normalized = String(value || 'year').trim().toLowerCase();
-      return normalized === 'month' ? 'month' : 'year';
+      if (normalized === 'month' || normalized === 'last') return normalized;
+      return 'year';
     }
 
     function normalizeMetaReportBudgetMultiplier(value) {
@@ -9525,9 +9526,39 @@
       return { spend: amount, leads, wonLeads, totalLeadValue, roasKr, roasX, poasKr, poasX };
     }
 
+    function resolveMetaReportLastMonthBaseline(series = [], asOfDate = new Date()) {
+      const currentKey = metaReportMonthKeyFromDate(asOfDate);
+      const previousKey = currentKey ? metaReportAddMonthsToMonthKey(currentKey, -1) : null;
+
+      if (previousKey) {
+        const previous = series.find((point) => point.monthKey === previousKey);
+        if (previous && metaReportParseAmount(previous.spend) > 0) {
+          return {
+            monthKey: previousKey,
+            label: metaMonthLabel(previousKey),
+            spend: metaReportParseAmount(previous.spend),
+          };
+        }
+      }
+
+      const priorMonths = series
+        .filter((point) => metaReportParseAmount(point.spend) > 0 && (!currentKey || point.monthKey < currentKey))
+        .sort((left, right) => String(left.monthKey).localeCompare(String(right.monthKey)));
+
+      if (!priorMonths.length) return null;
+
+      const last = priorMonths[priorMonths.length - 1];
+      return {
+        monthKey: last.monthKey,
+        label: last.label || metaMonthLabel(last.monthKey),
+        spend: metaReportParseAmount(last.spend),
+      };
+    }
+
     function resolveMetaReportScenarioBaselineSpend(series, prepared, {
       baselineMode = 'year',
       activeMonthKey = null,
+      asOfDate = new Date(),
     } = {}) {
       const preparedMonths = prepared?.months || [];
 
@@ -9540,9 +9571,15 @@
         if (month && metaReportParseAmount(month.spend) > 0) {
           return metaReportParseAmount(month.spend);
         }
+        return 0;
       }
 
-      if (preparedMonths.length > 0) {
+      if (baselineMode === 'last') {
+        const lastMonth = resolveMetaReportLastMonthBaseline(series, asOfDate);
+        return lastMonth?.spend > 0 ? lastMonth.spend : 0;
+      }
+
+      if (baselineMode === 'year' && preparedMonths.length > 0) {
         const total = preparedMonths.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
         return metaReportRoundMoney(total / preparedMonths.length);
       }
@@ -9571,6 +9608,7 @@
         resolvedBaselineSpend = resolveMetaReportScenarioBaselineSpend(series, prepared, {
           baselineMode,
           activeMonthKey,
+          asOfDate,
         });
       }
       const mult = metaReportParseAmount(multiplier) || 1;
@@ -9780,6 +9818,7 @@
       const currentKey = metaReportMonthKeyFromDate(new Date());
       const selectedMonth = activeKey ? series.find((point) => point.monthKey === activeKey) : null;
       const currentMonth = currentKey ? series.find((point) => point.monthKey === currentKey) : null;
+      const lastMonth = resolveMetaReportLastMonthBaseline(series);
 
       return {
         windowAverage,
@@ -9790,15 +9829,21 @@
         currentMonthSpend: currentMonth ? metaReportParseAmount(currentMonth.spend) : 0,
         currentMonthLabel: currentKey ? metaMonthLabel(currentKey) : '',
         currentKey,
+        lastMonthSpend: lastMonth?.spend || 0,
+        lastMonthLabel: lastMonth?.label || '',
+        lastMonthKey: lastMonth?.monthKey || null,
       };
     }
 
     function renderMetaReportBaselineSelectOptions(hints = null, selectedMode = 'year') {
       const windowValue = hints?.windowAverage > 0 ? metaReportFmtBaselineAmount(hints.windowAverage) : '—';
+      const lastValue = hints?.lastMonthSpend > 0 ? metaReportFmtBaselineAmount(hints.lastMonthSpend) : '—';
       const monthValue = hints?.selectedMonthSpend > 0 ? metaReportFmtBaselineAmount(hints.selectedMonthSpend) : '—';
       const normalized = normalizeMetaReportBudgetBaseline(selectedMode);
+      const lastLabel = hints?.lastMonthLabel ? `Last month · ${hints.lastMonthLabel}` : 'Last month';
       return `
         <option value="year"${normalized === 'year' ? ' selected' : ''}>Window average · ${esc(windowValue)}</option>
+        <option value="last"${normalized === 'last' ? ' selected' : ''}>${esc(lastLabel)} · ${esc(lastValue)}</option>
         <option value="month"${normalized === 'month' ? ' selected' : ''}>Selected month · ${esc(monthValue)}</option>
       `;
     }
@@ -9812,6 +9857,16 @@
           active: baselineMode === 'year',
           title: 'Average ad spend in the history window (completed months)',
         }));
+      }
+      if (hints.lastMonthSpend > 0 && hints.lastMonthLabel) {
+        parts.push(renderMetaReportBaselinePill(
+          `Last month · ${hints.lastMonthLabel}`,
+          hints.lastMonthSpend,
+          {
+            active: baselineMode === 'last',
+            title: 'Ad spend for the previous calendar month',
+          },
+        ));
       }
       if (hints.selectedMonthSpend > 0 && hints.selectedMonthLabel) {
         const isCurrent = hints.activeKey && hints.currentKey && hints.activeKey === hints.currentKey;
