@@ -4844,6 +4844,10 @@
     .meta-report-scenario-pill.is-active {
       background: rgba(255, 106, 0, 0.12); border-color: rgba(255, 106, 0, 0.45); color: var(--text);
     }
+    .meta-report-scenario-pill.is-disabled {
+      cursor: not-allowed; opacity: 0.45;
+    }
+    .meta-report-scenario-pill.is-disabled:hover { border-color: var(--border); color: var(--text-soft); }
     .meta-report-scenario-field {
       display: flex; flex-direction: column; gap: 8px; min-width: 0;
     }

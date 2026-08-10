@@ -4853,6 +4853,10 @@
     .meta-report-scenario-pill.is-active {
       background: rgba(255, 106, 0, 0.12); border-color: rgba(255, 106, 0, 0.45); color: var(--text);
     }
+    .meta-report-scenario-pill.is-disabled {
+      cursor: not-allowed; opacity: 0.45;
+    }
+    .meta-report-scenario-pill.is-disabled:hover { border-color: var(--border); color: var(--text-soft); }
     .meta-report-scenario-field {
       display: flex; flex-direction: column; gap: 8px; min-width: 0;
     }
@@ -8021,7 +8025,6 @@
       scenarioChartInstances: { roas: null, poas: null },
       budgetMultiplier: 2,
       budgetBaseline: 'year',
-      scenarioTrendMethod: 'recency_weighted',
       scenarioMonthWindow: '6',
       scenarioSmoothUneven: true,
       scenarioBlendHistory: false,
@@ -8944,12 +8947,6 @@
       { value: 'bar', label: 'Bar' },
     ];
 
-    const META_REPORT_SCENARIO_TREND_METHOD_OPTIONS = [
-      { value: 'recency_weighted', label: 'Recency-weighted' },
-      { value: 'robust_trend', label: 'Robust trend-adjusted' },
-      { value: 'conservative_blend', label: 'Conservative blend' },
-    ];
-
     const META_REPORT_SCENARIO_MONTH_WINDOW_OPTIONS = [
       { value: '3', label: 'Last 3 ad months' },
       { value: '6', label: 'Last 6 ad months' },
@@ -8959,12 +8956,13 @@
     ];
 
     const META_REPORT_SCENARIO_FIXED_ELASTICITY = 0.80;
+    const META_SCENARIO_TREND_R_THRESHOLD = 0.35;
 
     const META_REPORT_SCENARIO_MODEL_PILLS = [
       { id: 'scenarioSmoothUneven', label: 'Remove uneven months', defaultOn: true },
-      { id: 'scenarioBlendHistory', label: 'Blend full history', defaultOn: false },
+      { id: 'scenarioBlendHistory', label: 'Balance recent months', defaultOn: false },
       { id: 'scenarioIncludeTrend', label: 'Follow trend', defaultOn: false },
-      { id: 'scenarioCautionStrongMonths', label: 'Cap hot streak', defaultOn: false },
+      { id: 'scenarioCautionStrongMonths', label: 'Cap hot streak', defaultOn: false, requires: 'scenarioIncludeTrend' },
     ];
 
     function normalizeMetaReportSpendChartType(value) {
@@ -8980,11 +8978,13 @@
       );
     }
 
-    function normalizeMetaReportScenarioTrendMethod(value) {
-      const normalized = String(value || 'recency_weighted').trim().toLowerCase();
-      return META_REPORT_SCENARIO_TREND_METHOD_OPTIONS.some((entry) => entry.value === normalized)
-        ? normalized
-        : 'recency_weighted';
+    function normalizeMetaReportScenarioPill(value, fallback = false) {
+      if (typeof value === 'boolean') return value;
+      if (value == null) return fallback;
+      const normalized = String(value).trim().toLowerCase();
+      if (normalized === 'true' || normalized === '1') return true;
+      if (normalized === 'false' || normalized === '0') return false;
+      return fallback;
     }
 
     function normalizeMetaReportScenarioMonthWindow(value) {
@@ -9014,41 +9014,16 @@
       };
     }
 
-    function deriveMetaReportScenarioPillsFromTrendMethod(trendMethod) {
-      const method = normalizeMetaReportScenarioTrendMethod(trendMethod);
-      const pills = {
-        smoothUneven: true,
-        blendHistory: false,
-        includeTrend: false,
-        cautionStrongMonths: false,
-      };
-      if (method === 'robust_trend') {
-        pills.includeTrend = true;
-      } else if (method === 'conservative_blend') {
-        pills.blendHistory = true;
-        pills.cautionStrongMonths = true;
-        pills.includeTrend = true;
-      }
-      return pills;
-    }
-
-    function resolveMetaReportTrendMethodFromPills(pills = {}) {
-      if (pills.blendHistory || pills.cautionStrongMonths) return 'conservative_blend';
-      if (pills.includeTrend) return 'robust_trend';
-      return 'recency_weighted';
-    }
-
     function applyMetaReportScenarioPillsToState(pills = {}) {
       metaReportsState.scenarioSmoothUneven = Boolean(pills.smoothUneven);
       metaReportsState.scenarioBlendHistory = Boolean(pills.blendHistory);
       metaReportsState.scenarioIncludeTrend = Boolean(pills.includeTrend);
       metaReportsState.scenarioCautionStrongMonths = Boolean(pills.cautionStrongMonths);
-      metaReportsState.scenarioTrendMethod = resolveMetaReportTrendMethodFromPills(pills);
     }
 
     function describeActiveMetaReportScenarioPills() {
       return META_REPORT_SCENARIO_MODEL_PILLS
-        .filter((pill) => Boolean(metaReportsState[pill.id]))
+        .filter((pill) => Boolean(metaReportsState[pill.id]) && (!pill.requires || Boolean(metaReportsState[pill.requires])))
         .map((pill) => pill.label);
     }
 
@@ -9057,19 +9032,24 @@
       metaReportsState.budgetMultiplier = normalizeMetaReportBudgetMultiplier(settings.metaReportBudgetMultiplier);
       metaReportsState.budgetBaseline = normalizeMetaReportBudgetBaseline(settings.metaReportBudgetBaseline);
       metaReportsState.scenarioMonthWindow = normalizeMetaReportScenarioMonthWindow(settings.metaReportScenarioMonthWindow);
-      applyMetaReportScenarioPillsToState(
-        deriveMetaReportScenarioPillsFromTrendMethod(settings.metaReportScenarioTrendMethod),
-      );
+      applyMetaReportScenarioPillsToState({
+        smoothUneven: normalizeMetaReportScenarioPill(settings.metaReportScenarioSmoothUneven, true),
+        blendHistory: normalizeMetaReportScenarioPill(settings.metaReportScenarioBlendHistory, false),
+        includeTrend: normalizeMetaReportScenarioPill(settings.metaReportScenarioIncludeTrend, false),
+        cautionStrongMonths: normalizeMetaReportScenarioPill(settings.metaReportScenarioCautionStrongMonths, false),
+      });
     }
 
     function renderMetaReportScenarioModelPills() {
       return `
-        <div class="meta-report-scenario-pill-section">
+        <div class="meta-report-scenario-pill-section" id="meta-report-scenario-pills-wrap">
           <div class="meta-report-scenario-pill-row" role="group" aria-label="Forecast options">
-            ${META_REPORT_SCENARIO_MODEL_PILLS.map(({ id, label }) => {
+            ${META_REPORT_SCENARIO_MODEL_PILLS.map(({ id, label, requires }) => {
               const active = Boolean(metaReportsState[id]);
+              const disabled = requires ? !metaReportsState[requires] : false;
+              const title = disabled ? `Turn on "Follow trend" first` : '';
               return `
-                <button type="button" class="meta-report-scenario-pill${active ? ' is-active' : ''}" data-scenario-pill="${esc(id)}" aria-pressed="${active}">${esc(label)}</button>
+                <button type="button" class="meta-report-scenario-pill${active && !disabled ? ' is-active' : ''}${disabled ? ' is-disabled' : ''}" data-scenario-pill="${esc(id)}" aria-pressed="${active && !disabled}"${disabled ? ' disabled' : ''}${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>
               `;
             }).join('')}
           </div>
@@ -9371,7 +9351,13 @@
           return next;
         });
       }
-      return { months, monthsAvailable, monthsUsed: months.length, outliersAdjusted };
+      return {
+        months,
+        monthsAvailable,
+        monthsUsed: months.length,
+        outliersAdjusted,
+        confidence: metaReportResolveScenarioConfidence(months.length),
+      };
     }
 
     function metaReportScenarioRecencyEfficiency(months = []) {
@@ -9412,7 +9398,7 @@
       };
     }
 
-    function metaReportScenarioMonthlyTrend(months = [], elasticity = 0.75) {
+    function metaReportScenarioMonthlyTrend(months = [], elasticity = 0.75, { dampenHotStreak = false } = {}) {
       if (months.length < META_SCENARIO_MIN_TREND_MONTHS) {
         return { trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0 };
       }
@@ -9430,10 +9416,12 @@
       });
       const { slope, r } = metaReportScenarioLinearRegression(residuals);
       let trendRate = Math.max(-META_SCENARIO_MAX_MONTHLY_TREND, Math.min(META_SCENARIO_MAX_MONTHLY_TREND, slope));
-      const efficiencyValues = months.map((point) => metaReportParseAmount(point.efficiencyIndex)).filter((value) => value > 0);
-      const fullMedian = metaReportScenarioMedian(efficiencyValues);
-      const recentAvg = months.slice(-3).reduce((sum, point) => sum + metaReportParseAmount(point.efficiencyIndex), 0) / Math.min(3, months.length);
-      if (fullMedian > 0 && recentAvg > fullMedian * 1.15 && trendRate > 0) trendRate *= 0.5;
+      if (dampenHotStreak) {
+        const efficiencyValues = months.map((point) => metaReportParseAmount(point.efficiencyIndex)).filter((value) => value > 0);
+        const fullMedian = metaReportScenarioMedian(efficiencyValues);
+        const recentAvg = months.slice(-3).reduce((sum, point) => sum + metaReportParseAmount(point.efficiencyIndex), 0) / Math.min(3, months.length);
+        if (fullMedian > 0 && recentAvg > fullMedian * 1.15 && trendRate > 0) trendRate *= 0.5;
+      }
       let trendDirection = 'flat';
       if (Math.abs(trendRate) >= 0.005) trendDirection = trendRate > 0 ? 'up' : 'down';
       return { trendRate, trendDirection, trendRatePct: metaReportRoundRatio(trendRate * 100), trendR: metaReportRoundRatio(r) };
@@ -9443,25 +9431,32 @@
       return META_REPORT_SCENARIO_FIXED_ELASTICITY;
     }
 
-    function metaReportComputeScenarioEfficiency(months = [], { trendMethod = 'recency_weighted' } = {}) {
-      const method = normalizeMetaReportScenarioTrendMethod(trendMethod);
+    function metaReportResolveScenarioConfidence(monthsUsed = 0) {
+      const count = Number.parseInt(monthsUsed, 10) || 0;
+      if (count < 4) return 'low';
+      if (count < 7) return 'medium';
+      return 'high';
+    }
+
+    function metaReportComputeScenarioEfficiency(months = [], {
+      blendHistory = false,
+      includeTrend = false,
+      cautionStrongMonths = false,
+    } = {}) {
       const presetElasticity = META_REPORT_SCENARIO_FIXED_ELASTICITY;
       const elasticity = metaReportScenarioCalibrateElasticity();
       const recencyWeighted = metaReportScenarioRecencyEfficiency(months);
       const pooled = metaReportScenarioPooledEfficiency(months);
       if (!recencyWeighted || recencyWeighted.avgCpl <= 0) {
-        return { efficiency: null, elasticity, presetElasticity, trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0, trendMethod: method };
+        return { efficiency: null, elasticity, presetElasticity, trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0 };
       }
-      let efficiency = recencyWeighted;
+      const efficiency = blendHistory ? metaReportScenarioBlendEfficiency(pooled, recencyWeighted, 0.5) : recencyWeighted;
       let trendInfo = { trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0 };
-      if (method === 'robust_trend') {
-        trendInfo = metaReportScenarioMonthlyTrend(months, elasticity);
-      } else if (method === 'conservative_blend') {
-        efficiency = metaReportScenarioBlendEfficiency(pooled, recencyWeighted, 0.5);
-        const fullTrend = metaReportScenarioMonthlyTrend(months, elasticity);
-        if (Math.abs(fullTrend.trendR) >= 0.35) trendInfo = fullTrend;
+      if (includeTrend) {
+        const computedTrend = metaReportScenarioMonthlyTrend(months, elasticity, { dampenHotStreak: cautionStrongMonths });
+        if (Math.abs(computedTrend.trendR) >= META_SCENARIO_TREND_R_THRESHOLD) trendInfo = computedTrend;
       }
-      return { efficiency, elasticity, presetElasticity, ...trendInfo, trendMethod: method };
+      return { efficiency, elasticity, presetElasticity, ...trendInfo };
     }
 
     function metaReportProjectBudgetAtSpend({
@@ -9500,16 +9495,17 @@
       baselineSpend,
       multiplier = 1,
       hasBottomline = false,
-      trendMethod = 'recency_weighted',
+      blendHistory = false,
+      includeTrend = false,
+      cautionStrongMonths = false,
       monthWindow = '6',
-      elasticityPreset = 'optimistic',
       baselineMode = 'year',
       activeMonthKey = null,
       asOfDate = new Date(),
       smoothOutliers = true,
     } = {}) {
       const prepared = metaReportPrepareScenarioSeries(series, { windowMonths: monthWindow, asOfDate, smoothOutliers });
-      const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, { trendMethod });
+      const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, { blendHistory, includeTrend, cautionStrongMonths });
       let resolvedBaselineSpend = metaReportParseAmount(baselineSpend);
       if (!resolvedBaselineSpend) {
         if (baselineMode === 'month' && activeMonthKey) {
@@ -9559,7 +9555,7 @@
         baselineSpend: resolvedBaselineSpend,
         spend: metaReportRoundMoney(resolvedBaselineSpend * mult),
         efficiency,
-        elasticity: Math.max(0.65, elasticity - 0.05),
+        elasticity,
         trendAdj: Math.exp(Math.min(trendRate, 0) * 1),
         hasBottomline,
       });
@@ -9567,7 +9563,7 @@
         baselineSpend: resolvedBaselineSpend,
         spend: metaReportRoundMoney(resolvedBaselineSpend * mult),
         efficiency,
-        elasticity: Math.min(0.80, elasticity + 0.05),
+        elasticity,
         trendAdj: Math.exp(Math.max(trendRate, 0) * 1),
         hasBottomline,
       });
@@ -9706,7 +9702,10 @@
       const outlierNote = projection.prepared?.outliersAdjusted
         ? ` · ${projection.prepared.outliersAdjusted} uneven month${projection.prepared.outliersAdjusted === 1 ? '' : 's'} removed`
         : '';
-      return `<p class="meta-report-scenario-context" id="meta-report-scenario-context"><strong>Active:</strong> ${esc(pillSummary)} · last ${projection.prepared?.monthsUsed || 0} ad months · ${esc(trendLabel)}${esc(outlierNote)}</p>`;
+      const confidenceLabels = { low: 'Low confidence', medium: 'Medium confidence', high: 'High confidence' };
+      const confidenceLabel = confidenceLabels[projection.prepared?.confidence] || '';
+      const confidenceNote = confidenceLabel ? ` · ${confidenceLabel} (${projection.prepared?.monthsUsed || 0} mo data)` : '';
+      return `<p class="meta-report-scenario-context" id="meta-report-scenario-context"><strong>Active:</strong> ${esc(pillSummary)} · last ${projection.prepared?.monthsUsed || 0} ad months · ${esc(trendLabel)}${esc(outlierNote)}${esc(confidenceNote)}</p>`;
     }
 
     function payloadHasMetaReportBottomline(payload) {
@@ -9919,6 +9918,7 @@
         metaReportDeltaPct(projection.projected.roasKr, projection.baseline.roasKr),
       );
       const revenueBand = projection.projectedConservative && projection.projectedOptimistic
+        && projection.projectedConservative.totalLeadValue !== projection.projectedOptimistic.totalLeadValue
         ? `${metaFmtKr(projection.projectedConservative.totalLeadValue)} – ${metaFmtKr(projection.projectedOptimistic.totalLeadValue)}`
         : '';
 
@@ -10913,16 +10913,16 @@
 
     function scheduleMetaReportScenarioSettingsPersist(clientId) {
       if (!clientId) return;
-      const pills = getMetaReportScenarioPillsFromState();
-      metaReportsState.scenarioTrendMethod = resolveMetaReportTrendMethodFromPills(pills);
       clearTimeout(metaReportsState._scenarioSettingsTimer);
       metaReportsState._scenarioSettingsTimer = setTimeout(() => {
         patchMetaReportSettings(clientId, {
           metaReportBudgetMultiplier: metaReportsState.budgetMultiplier,
           metaReportBudgetBaseline: metaReportsState.budgetBaseline,
-          metaReportScenarioTrendMethod: metaReportsState.scenarioTrendMethod,
           metaReportScenarioMonthWindow: metaReportsState.scenarioMonthWindow,
-          metaReportScenarioElasticity: 'optimistic',
+          metaReportScenarioSmoothUneven: metaReportsState.scenarioSmoothUneven,
+          metaReportScenarioBlendHistory: metaReportsState.scenarioBlendHistory,
+          metaReportScenarioIncludeTrend: metaReportsState.scenarioIncludeTrend,
+          metaReportScenarioCautionStrongMonths: metaReportsState.scenarioCautionStrongMonths,
         }, { fast: true }).catch(() => {});
       }, 350);
     }
@@ -10960,22 +10960,24 @@
         };
       }
 
-      document.querySelectorAll('[data-scenario-pill]').forEach((button) => {
-        button.onclick = () => {
-          const key = button.getAttribute('data-scenario-pill');
-          if (!key) return;
-          metaReportsState[key] = !metaReportsState[key];
-          applyMetaReportScenarioPillsToState(getMetaReportScenarioPillsFromState());
-          document.querySelectorAll('[data-scenario-pill]').forEach((entry) => {
-            const pillKey = entry.getAttribute('data-scenario-pill');
-            const active = Boolean(metaReportsState[pillKey]);
-            entry.classList.toggle('is-active', active);
-            entry.setAttribute('aria-pressed', String(active));
-          });
-          refresh();
-          persist();
-        };
-      });
+      const bindScenarioPillButtons = () => {
+        document.querySelectorAll('[data-scenario-pill]').forEach((button) => {
+          button.onclick = () => {
+            const key = button.getAttribute('data-scenario-pill');
+            if (!key || button.disabled) return;
+            metaReportsState[key] = !metaReportsState[key];
+            applyMetaReportScenarioPillsToState(getMetaReportScenarioPillsFromState());
+            const pillsWrap = document.getElementById('meta-report-scenario-pills-wrap');
+            if (pillsWrap) {
+              pillsWrap.outerHTML = renderMetaReportScenarioModelPills();
+              bindScenarioPillButtons();
+            }
+            refresh();
+            persist();
+          };
+        });
+      };
+      bindScenarioPillButtons();
     }
 
     function syncMetaReportScenario(payload) {
@@ -10984,13 +10986,13 @@
       const series = metaReportsState.chartSeries || [];
       const hasBottomline = payloadHasMetaReportBottomline(payload);
       const pills = getMetaReportScenarioPillsFromState();
-      const trendMethod = resolveMetaReportTrendMethodFromPills(pills);
-      metaReportsState.scenarioTrendMethod = trendMethod;
       const projection = metaReportProjectBudgetScenario({
         series,
         multiplier: metaReportsState.budgetMultiplier,
         hasBottomline,
-        trendMethod,
+        blendHistory: pills.blendHistory,
+        includeTrend: pills.includeTrend,
+        cautionStrongMonths: pills.includeTrend && pills.cautionStrongMonths,
         monthWindow: metaReportsState.scenarioMonthWindow,
         baselineMode: metaReportsState.budgetBaseline,
         activeMonthKey: metaReportsState.activeMonthKey,

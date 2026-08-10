@@ -3,12 +3,14 @@ const {
   buildScenarioProjectionSteps,
   computeMetaReportMetrics,
   computeMetaReportEfficiencyInsight,
+  computeScenarioEfficiency,
   isLeadActionType,
   linearRegression,
   parseAmount,
   prepareScenarioSeries,
   projectMetaReportBudgetScenario,
   projectScenario,
+  resolveScenarioConfidence,
 } = require('../lib/meta-report-calculator');
 const { parseLeadCountFromActions } = require('../lib/meta-insights');
 
@@ -232,19 +234,107 @@ function testDownwardTrendLowersProjection() {
     series,
     baselineSpend: 10000,
     multiplier: 2,
-    trendMethod: 'recency_weighted',
+    includeTrend: false,
     asOfDate: new Date('2025-02-01T12:00:00.000Z'),
   });
   const trending = projectScenario({
     series,
     baselineSpend: 10000,
     multiplier: 2,
-    trendMethod: 'robust_trend',
+    includeTrend: true,
     asOfDate: new Date('2025-02-01T12:00:00.000Z'),
   });
 
   assert.ok(trending.projected.leads <= flat.projected.leads);
   assert.strictEqual(trending.trendDirection, 'down');
+}
+
+function testPillsAreIndependent() {
+  // Cap hot streak alone must NOT silently activate blending -- each pill should
+  // only affect what its own label promises.
+  const series = [
+    { spend: 8000, leads: 40, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-11-30' },
+    { spend: 12000, leads: 55, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-12-31' },
+    { spend: 16000, leads: 65, wonLeads: 6, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-01-31' },
+  ];
+
+  const prepared = prepareScenarioSeries(series, {
+    windowMonths: 'all',
+    asOfDate: new Date('2025-02-01T12:00:00.000Z'),
+  });
+
+  const plain = computeScenarioEfficiency(prepared.months, {});
+  const cautionOnly = computeScenarioEfficiency(prepared.months, { cautionStrongMonths: true });
+  const blendOnly = computeScenarioEfficiency(prepared.months, { blendHistory: true });
+
+  assert.strictEqual(cautionOnly.efficiency.avgCpl, plain.efficiency.avgCpl);
+  assert.notStrictEqual(blendOnly.efficiency.avgCpl, plain.efficiency.avgCpl);
+}
+
+function testHotStreakDampeningRequiresBothPills() {
+  const series = [
+    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-09-30' },
+    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-10-31' },
+    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-11-30' },
+    { spend: 10000, leads: 50, wonLeads: 1.5, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-12-31' },
+    { spend: 10000, leads: 50, wonLeads: 1.6, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2025-01-31' },
+    { spend: 10000, leads: 50, wonLeads: 1.7, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2025-02-28' },
+  ];
+
+  const prepared = prepareScenarioSeries(series, {
+    windowMonths: 'all',
+    asOfDate: new Date('2025-03-01T12:00:00.000Z'),
+  });
+
+  const withoutCaution = computeScenarioEfficiency(prepared.months, { includeTrend: true, cautionStrongMonths: false });
+  const withCaution = computeScenarioEfficiency(prepared.months, { includeTrend: true, cautionStrongMonths: true });
+
+  assert.ok(withoutCaution.trendRate > 0);
+  approx(withCaution.trendRate, withoutCaution.trendRate * 0.5, 0.0001);
+}
+
+function testConservativeOptimisticBandCollapsesWithoutTrend() {
+  const series = [
+    { spend: 10000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-01-31' },
+    { spend: 10000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-02-28' },
+  ];
+
+  const flat = projectMetaReportBudgetScenario({
+    series,
+    baselineSpend: 10000,
+    multiplier: 2,
+    includeTrend: false,
+  });
+
+  assert.strictEqual(flat.projectedConservative.totalLeadValue, flat.projectedOptimistic.totalLeadValue);
+
+  const trendingSeries = [
+    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-09-30' },
+    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-10-31' },
+    { spend: 10000, leads: 50, wonLeads: 1.0, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-11-30' },
+    { spend: 10000, leads: 50, wonLeads: 1.5, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2024-12-31' },
+    { spend: 10000, leads: 50, wonLeads: 1.6, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2025-01-31' },
+    { spend: 10000, leads: 50, wonLeads: 1.7, avgLeadValue: 10000, avgProfitPerWon: 5000, periodEnd: '2025-02-28' },
+  ];
+  const trending = projectMetaReportBudgetScenario({
+    series: trendingSeries,
+    baselineSpend: 10000,
+    multiplier: 2,
+    includeTrend: true,
+    monthWindow: 'all',
+    asOfDate: new Date('2025-03-01T12:00:00.000Z'),
+  });
+
+  assert.notStrictEqual(trending.projectedConservative.leads, trending.projectedOptimistic.leads);
+}
+
+function testResolveScenarioConfidence() {
+  assert.strictEqual(resolveScenarioConfidence(0), 'low');
+  assert.strictEqual(resolveScenarioConfidence(3), 'low');
+  assert.strictEqual(resolveScenarioConfidence(4), 'medium');
+  assert.strictEqual(resolveScenarioConfidence(6), 'medium');
+  assert.strictEqual(resolveScenarioConfidence(7), 'high');
+  assert.strictEqual(resolveScenarioConfidence(24), 'high');
 }
 
 function testOutlierWinsorization() {
@@ -311,6 +401,10 @@ function main() {
   testShortAdHistoryUsesAvailableMonths();
   testIncompleteMonthExcluded();
   testDownwardTrendLowersProjection();
+  testPillsAreIndependent();
+  testHotStreakDampeningRequiresBothPills();
+  testConservativeOptimisticBandCollapsesWithoutTrend();
+  testResolveScenarioConfidence();
   testOutlierWinsorization();
   testBudgetScenarioInsufficientData();
   testEfficiencyInsight();

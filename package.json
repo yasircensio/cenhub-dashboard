@@ -18,6 +18,7 @@
     "migrate:meta-report-slug": "node scripts/migrate-meta-report-slug.js",
     "migrate:meta-report-spend-chart-type": "node scripts/migrate-meta-report-spend-chart-type.js",
     "migrate:meta-report-scenario-settings": "node scripts/migrate-meta-report-scenario-settings.js",
+    "migrate:meta-report-scenario-pills": "node scripts/migrate-meta-report-scenario-pills.js",
     "test:fb-lead-sync-e2e": "node scripts/test-fb-lead-sync-e2e.js",
     "create-admin": "node scripts/create-admin.js",
     "sync:all-ghl": "node scripts/run-ghl-sync-all.js",
