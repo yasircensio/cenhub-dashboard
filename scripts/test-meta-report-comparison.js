@@ -1,6 +1,7 @@
 const assert = require('assert');
 const {
   addMonthsToMonthKey,
+  aggregateDateRange,
   aggregateMonthRange,
   buildComparison,
   computeDeltaPct,
@@ -59,12 +60,24 @@ function testMomPreset() {
   const presets = resolveComparisonPresets({ activeMonthKey: '2026-08', mode: 'mom' });
   assert.strictEqual(presets.periodA.startMonthKey, '2026-08');
   assert.strictEqual(presets.periodB.startMonthKey, '2026-07');
+  assert.strictEqual(presets.periodA.startDate, '2026-08-01');
+  assert.strictEqual(presets.periodA.endDate, '2026-08-31');
 }
 
-function testYoyPreset() {
-  const presets = resolveComparisonPresets({ activeMonthKey: '2026-08', mode: 'yoy_month' });
-  assert.strictEqual(presets.periodA.startMonthKey, '2026-08');
-  assert.strictEqual(presets.periodB.startMonthKey, '2025-08');
+function testPartialDateRange() {
+  const months = {
+    '2026-08': monthPayload({
+      monthKey: '2026-08',
+      spend: 31000,
+      leads: 31,
+      wonLeads: 3,
+    }),
+  };
+  months['2026-08'].periodStart = '2026-08-01';
+  months['2026-08'].periodEnd = '2026-08-31';
+  const agg = aggregateDateRange(months, '2026-08-10', '2026-08-15');
+  assert.strictEqual(agg.hasData, true);
+  approx(agg.metrics.spend, 6000, 50);
 }
 
 function testYtdPreset() {
@@ -111,10 +124,9 @@ function testBuildComparisonMom() {
     '2026-08': monthPayload({ monthKey: '2026-08', spend: 12000, leads: 60, wonLeads: 6 }),
   };
   const result = buildComparison({
-    monthsMapA: months2026,
-    monthsMapB: months2026,
-    periodA: { startMonthKey: '2026-08', endMonthKey: '2026-08' },
-    periodB: { startMonthKey: '2026-07', endMonthKey: '2026-07' },
+    monthsMap: months2026,
+    periodA: { startDate: '2026-08-01', endDate: '2026-08-31' },
+    periodB: { startDate: '2026-07-01', endDate: '2026-07-31' },
     mode: 'mom',
   });
   assert.strictEqual(result.insufficientData, false);
@@ -124,33 +136,28 @@ function testBuildComparisonMom() {
   assert.ok(result.detailRows.length > 0);
 }
 
-function testBuildComparisonYtdByMonth() {
+function testBuildComparisonMissingPriorYear() {
   const months2026 = {
     '2026-01': monthPayload({ monthKey: '2026-01', spend: 9000 }),
     '2026-02': monthPayload({ monthKey: '2026-02', spend: 10000 }),
   };
-  const months2025 = {
-    '2025-01': monthPayload({ monthKey: '2025-01', spend: 8000 }),
-    '2025-02': monthPayload({ monthKey: '2025-02', spend: 8500 }),
-  };
   const result = buildComparison({
-    monthsMapA: months2026,
-    monthsMapB: months2025,
-    periodA: { startMonthKey: '2026-01', endMonthKey: '2026-02' },
-    periodB: { startMonthKey: '2025-01', endMonthKey: '2025-02' },
+    monthsMap: months2026,
+    periodA: { startDate: '2026-01-01', endDate: '2026-02-28' },
+    periodB: { startDate: '2025-01-01', endDate: '2025-02-28' },
     mode: 'ytd',
   });
-  assert.strictEqual(result.ytdByMonth.length, 2);
-  assert.strictEqual(result.ytdByMonth[0].label, 'Jan');
+  assert.strictEqual(result.insufficientData, false);
+  assert.strictEqual(result.periodA.hasData, true);
+  assert.strictEqual(result.periodB.hasData, false);
 }
 
 function testSamePeriodValidation() {
   const months = { '2026-08': monthPayload({ monthKey: '2026-08' }) };
   const result = buildComparison({
-    monthsMapA: months,
-    monthsMapB: months,
-    periodA: { startMonthKey: '2026-08', endMonthKey: '2026-08' },
-    periodB: { startMonthKey: '2026-08', endMonthKey: '2026-08' },
+    monthsMap: months,
+    periodA: { startDate: '2026-08-01', endDate: '2026-08-31' },
+    periodB: { startDate: '2026-08-01', endDate: '2026-08-31' },
     mode: 'custom',
   });
   assert.strictEqual(result.samePeriod, true);
@@ -158,8 +165,8 @@ function testSamePeriodValidation() {
 
 function testYearsNeeded() {
   const years = yearsNeededForComparison(
-    { startMonthKey: '2026-01', endMonthKey: '2026-08' },
-    { startMonthKey: '2025-01', endMonthKey: '2025-08' },
+    { startDate: '2026-01-10', endDate: '2026-08-15' },
+    { startDate: '2025-01-01', endDate: '2025-08-31' },
   );
   assert.deepStrictEqual(years.sort(), ['2025', '2026']);
 }
@@ -176,13 +183,13 @@ function testDeltaPct() {
 
 function run() {
   testMomPreset();
-  testYoyPreset();
+  testPartialDateRange();
   testYtdPreset();
   testAggregateSingleMonth();
   testAggregateRangeSums();
   testPartialRange();
   testBuildComparisonMom();
-  testBuildComparisonYtdByMonth();
+  testBuildComparisonMissingPriorYear();
   testSamePeriodValidation();
   testYearsNeeded();
   testFormatPeriodLabel();

@@ -4961,33 +4961,85 @@
     }
 
     .meta-report-comparison-card {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 14px;
-      margin-top: 8px; padding: 18px 20px 20px; width: 100%;
+      display: flex; flex-direction: column; gap: 12px; margin-top: 8px; width: 100%;
     }
     .meta-report-comparison-title {
       color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0;
     }
     .meta-report-comparison-presets {
-      display: flex; flex-wrap: wrap; gap: 8px;
+      background: #1a1208; border-radius: 999px; display: inline-flex; flex-wrap: wrap;
+      gap: 2px; padding: 3px; width: fit-content;
+    }
+    .meta-report-comparison-presets .preset-btn {
+      background: transparent; border: 0; border-radius: 999px; color: rgba(255, 255, 255, 0.68);
+      font-size: 12px; font-weight: 600; padding: 8px 14px;
+    }
+    .meta-report-comparison-presets .preset-btn:hover {
+      color: #fff;
+    }
+    .meta-report-comparison-presets .preset-btn.active {
+      background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); color: #1a1208;
     }
     .meta-report-comparison-presets .preset-btn.is-disabled {
-      cursor: not-allowed; opacity: 0.45;
+      cursor: not-allowed; opacity: 0.4;
     }
-    .meta-report-comparison-headline {
-      align-items: center; display: flex; flex-wrap: wrap; font-family: 'Poppins', sans-serif;
-      font-size: 18px; font-weight: 700; gap: 8px 12px; line-height: 1.3;
+    .meta-report-comparison-range-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      padding: 10px 12px;
     }
-    .meta-report-comparison-headline-a { color: #c2410c; }
-    .meta-report-comparison-headline-vs { color: var(--text-muted); font-size: 14px; font-weight: 600; }
-    .meta-report-comparison-headline-b { color: #475569; }
+    .meta-report-comparison-range-grid {
+      align-items: center; display: grid; gap: 8px 10px;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+    .meta-report-comparison-range-block {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 6px 8px; min-width: 0;
+    }
+    .meta-report-comparison-range-block.is-a { --comparison-accent: #c2410c; }
+    .meta-report-comparison-range-block.is-b { --comparison-accent: #475569; }
+    .meta-report-comparison-range-label {
+      color: var(--comparison-accent); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap;
+    }
+    .meta-report-comparison-range-dates {
+      display: inline-flex; flex-wrap: wrap; gap: 6px; min-width: 0;
+    }
+    .meta-report-comparison-range-dates input[type="date"] {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font: inherit; font-size: 12px; min-width: 0; padding: 6px 8px; width: 132px;
+    }
+    .meta-report-comparison-range-vs {
+      color: var(--text-muted); font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .meta-report-comparison-view-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 600px; overflow: hidden;
+      padding: 18px 20px 20px; width: 100%;
+    }
+    .meta-report-comparison-view-head {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
+      margin-bottom: 14px;
+    }
     .meta-report-comparison-tabs {
-      display: flex; flex-wrap: wrap; gap: 6px;
+      background: #1a1208; border-radius: 999px; display: inline-flex; gap: 2px; padding: 3px;
+    }
+    .meta-report-comparison-tabs .meta-report-chart-tab {
+      background: transparent; border: 0; border-radius: 999px; color: rgba(255, 255, 255, 0.68);
+      cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; padding: 7px 12px;
+    }
+    .meta-report-comparison-tabs .meta-report-chart-tab.is-active {
+      background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); color: #1a1208;
     }
     .meta-report-comparison-tab-panel {
-      display: flex; flex-direction: column; gap: 12px; min-width: 0;
+      display: flex; flex-direction: column; gap: 10px; min-width: 0;
     }
     .meta-report-comparison-tab-panel[hidden] { display: none !important; }
+    .meta-report-comparison-tab-panel .meta-report-groups-stack { gap: 14px; }
+    .meta-report-comparison-tab-panel .meta-report-group-head { margin-bottom: 8px; }
+    .meta-report-comparison-tab-panel .meta-report-group-title { font-size: 14px; }
+    .meta-report-comparison-tab-panel .meta-report-group-table th,
+    .meta-report-comparison-tab-panel .meta-report-group-table td {
+      padding: 8px 10px;
+    }
     .meta-report-comparison-table thead th {
       color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
       padding: 8px 12px; text-align: right; text-transform: uppercase;
@@ -5103,8 +5155,14 @@
       background: rgba(217, 119, 6, 0.1); border-radius: 999px; color: #b45309;
       font-size: 11px; font-weight: 600; padding: 4px 10px;
     }
+    @media (max-width: 720px) {
+      .meta-report-comparison-range-grid {
+        grid-template-columns: 1fr;
+      }
+      .meta-report-comparison-range-vs { text-align: center; }
+      .meta-report-comparison-view-card { max-width: none; }
+    }
     @media (max-width: 960px) {
-      .meta-report-comparison-headline { font-size: 16px; }
       .meta-report-comparison-chart-canvas-wrap { height: 260px; min-height: 260px; }
     }
 
@@ -8178,8 +8236,8 @@
       scenarioBlendHistory: false,
       scenarioIncludeTrend: false,
       comparisonMode: 'mom',
-      comparisonPeriodA: { startMonthKey: null, endMonthKey: null },
-      comparisonPeriodB: { startMonthKey: null, endMonthKey: null },
+      comparisonPeriodA: { startDate: null, endDate: null },
+      comparisonPeriodB: { startDate: null, endDate: null },
       comparisonChartMode: 'kr',
       comparisonTab: 'table',
       comparisonYearCache: {},
@@ -10234,7 +10292,6 @@
     const META_REPORT_COMPARISON_PRESETS = [
       { id: 'mom', label: 'This month vs last month' },
       { id: 'custom', label: 'Custom' },
-      { id: 'yoy_month', label: 'Same month last year' },
       { id: 'ytd', label: 'This year vs last year' },
     ];
 
@@ -10307,6 +10364,117 @@
         cursor = metaReportComparisonAddMonths(cursor, 1);
       }
       return keys;
+    }
+
+    function metaReportComparisonParseDate(value) {
+      const normalized = String(value || '').trim().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null;
+      const [year, month, day] = normalized.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+      return normalized;
+    }
+
+    function metaReportComparisonDaysInclusive(startDate, endDate) {
+      const start = metaReportComparisonParseDate(startDate);
+      const end = metaReportComparisonParseDate(endDate);
+      if (!start || !end || start > end) return 0;
+      const [sy, sm, sd] = start.split('-').map(Number);
+      const [ey, em, ed] = end.split('-').map(Number);
+      const startMs = Date.UTC(sy, sm - 1, sd);
+      const endMs = Date.UTC(ey, em - 1, ed);
+      return Math.floor((endMs - startMs) / 86400000) + 1;
+    }
+
+    function metaReportComparisonOverlapDays(rangeAStart, rangeAEnd, rangeBStart, rangeBEnd) {
+      const start = rangeAStart > rangeBStart ? rangeAStart : rangeBStart;
+      const end = rangeAEnd < rangeBEnd ? rangeAEnd : rangeBEnd;
+      if (!start || !end || start > end) return 0;
+      return metaReportComparisonDaysInclusive(start, end);
+    }
+
+    function metaReportComparisonMonthKeyFromDate(dateValue) {
+      const parsed = metaReportComparisonParseDate(dateValue);
+      return parsed ? parsed.slice(0, 7) : null;
+    }
+
+    function metaReportComparisonMonthKeysOverlappingDates(startDate, endDate) {
+      const start = metaReportComparisonParseDate(startDate);
+      const end = metaReportComparisonParseDate(endDate);
+      if (!start || !end) return [];
+      const [rangeStart, rangeEnd] = start <= end ? [start, end] : [end, start];
+      const keys = [];
+      let cursor = metaReportComparisonMonthKeyFromDate(rangeStart);
+      const endKey = metaReportComparisonMonthKeyFromDate(rangeEnd);
+      while (cursor && cursor <= endKey) {
+        keys.push(cursor);
+        if (cursor === endKey) break;
+        cursor = metaReportComparisonAddMonths(cursor, 1);
+      }
+      return keys;
+    }
+
+    function metaReportComparisonMonthEffectivePeriod(monthPayload, monthKey) {
+      const bounds = metaReportMonthBounds(monthKey || monthPayload?.monthKey);
+      const start = metaReportComparisonParseDate(monthPayload?.periodStart) || bounds.start;
+      const end = metaReportComparisonParseDate(monthPayload?.periodEnd) || bounds.end;
+      if (start && end && start <= end) return { start, end };
+      return bounds;
+    }
+
+    function metaReportComparisonFormatDateLabel(dateValue) {
+      const parsed = metaReportComparisonParseDate(dateValue);
+      if (!parsed) return '—';
+      const [year, month, day] = parsed.split('-').map(Number);
+      return `${day} ${META_MONTH_LABELS[month - 1] || month} ${year}`;
+    }
+
+    function metaReportComparisonFormatDateRangeLabel(startDate, endDate) {
+      const start = metaReportComparisonParseDate(startDate);
+      const end = metaReportComparisonParseDate(endDate);
+      if (!start || !end) return '—';
+      if (start === end) return metaReportComparisonFormatDateLabel(start);
+      const startYear = start.slice(0, 4);
+      const endYear = end.slice(0, 4);
+      const startMonth = start.slice(5, 7);
+      const endMonth = end.slice(5, 7);
+      if (startYear === endYear && startMonth === endMonth) {
+        const [, sm, sd] = start.split('-').map(Number);
+        const [, , ed] = end.split('-').map(Number);
+        return `${sd}–${ed} ${META_MONTH_LABELS[sm - 1] || sm} ${startYear}`;
+      }
+      if (startYear === endYear) {
+        return `${metaReportComparisonFormatDateLabel(start).replace(` ${startYear}`, '')}–${metaReportComparisonFormatDateLabel(end)}`;
+      }
+      return `${metaReportComparisonFormatDateLabel(start)} – ${metaReportComparisonFormatDateLabel(end)}`;
+    }
+
+    function metaReportComparisonMonthPayloadDates(monthPayload, monthKey) {
+      const period = metaReportComparisonMonthEffectivePeriod(monthPayload, monthKey);
+      return {
+        startDate: period.start,
+        endDate: period.end,
+        startMonthKey: monthKey,
+        endMonthKey: monthKey,
+      };
+    }
+
+    function metaReportComparisonNormalizePeriod(period = null) {
+      if (!period) return null;
+      const startDate = metaReportComparisonParseDate(period.startDate)
+        || (period.startMonthKey ? metaReportMonthBounds(period.startMonthKey).start : null);
+      const endDate = metaReportComparisonParseDate(period.endDate)
+        || (period.endMonthKey ? metaReportMonthBounds(period.endMonthKey).end : null);
+      if (!startDate || !endDate) return null;
+      const [normalizedStart, normalizedEnd] = startDate <= endDate
+        ? [startDate, endDate]
+        : [endDate, startDate];
+      return {
+        startDate: normalizedStart,
+        endDate: normalizedEnd,
+        startMonthKey: metaReportComparisonMonthKeyFromDate(normalizedStart),
+        endMonthKey: metaReportComparisonMonthKeyFromDate(normalizedEnd),
+      };
     }
 
     function metaReportComparisonPeriodLabel(startKey, endKey) {
@@ -10405,6 +10573,7 @@
         monthCount: included.length,
         expectedMonthCount: rangeKeys.length,
         partialData: included.length > 0 && included.length < rangeKeys.length,
+        hasData: included.length > 0,
         hasBottomline,
         metrics: {
           spend,
@@ -10432,52 +10601,211 @@
       };
     }
 
-    function metaReportResolveComparisonPresets({
-      activeMonthKey = null,
-      mode = 'mom',
-    } = {}) {
-      const anchorKey = activeMonthKey || null;
+    function metaReportComparisonAggregateDateRange(monthsMap = {}, startDate, endDate) {
+      const start = metaReportComparisonParseDate(startDate);
+      const end = metaReportComparisonParseDate(endDate);
+      if (!start || !end) {
+        return {
+          startDate: startDate || null,
+          endDate: endDate || null,
+          label: '—',
+          monthKeys: [],
+          monthCount: 0,
+          expectedMonthCount: 0,
+          partialData: false,
+          hasData: false,
+          hasBottomline: false,
+          metrics: metaReportAggregateComparisonRange({}, '0000-00', '0000-00').metrics,
+        };
+      }
+
+      const [rangeStart, rangeEnd] = start <= end ? [start, end] : [end, start];
+      const rangeKeys = metaReportComparisonMonthKeysOverlappingDates(rangeStart, rangeEnd);
+      const included = [];
+      let hasBottomline = false;
+      let expectedOverlapDays = 0;
+      let coveredOverlapDays = 0;
+
+      let spend = 0;
+      let impressions = 0;
+      let reach = 0;
+      let clicks = 0;
+      let leads = 0;
+      let wonLeads = 0;
+      let totalLeadValue = 0;
+      let totalProfit = 0;
+      let censioFeeSum = 0;
+      let weightedLeadValue = 0;
+      let weightedProfitPerWon = 0;
+      let weightedCpm = 0;
+      let cpmWeight = 0;
+
+      for (const key of rangeKeys) {
+        const month = monthsMap[key];
+        const effective = metaReportComparisonMonthEffectivePeriod(month, key);
+        const overlap = metaReportComparisonOverlapDays(rangeStart, rangeEnd, effective.start, effective.end);
+        if (overlap <= 0) continue;
+        expectedOverlapDays += overlap;
+
+        if (!metaReportMonthHasComparisonData(month)) continue;
+        included.push(key);
+        coveredOverlapDays += overlap;
+        if (month.bottomline) hasBottomline = true;
+
+        const totalDays = metaReportComparisonDaysInclusive(effective.start, effective.end);
+        const fraction = totalDays > 0 ? overlap / totalDays : 0;
+
+        const monthSpend = metaReportParseAmount(month.meta?.spend) * fraction;
+        const monthImpressions = metaReportParseAmount(month.meta?.impressions) * fraction;
+        const monthLeads = metaReportParseAmount(month.topline?.leads) * fraction;
+        const monthWon = metaReportParseAmount(month.topline?.wonLeads) * fraction;
+
+        spend += monthSpend;
+        impressions += monthImpressions;
+        reach += metaReportParseAmount(month.meta?.reach) * fraction;
+        clicks += metaReportParseAmount(month.meta?.clicks) * fraction;
+        leads += monthLeads;
+        wonLeads += monthWon;
+        totalLeadValue += metaReportParseAmount(month.topline?.totalLeadValue) * fraction;
+
+        if (monthWon > 0) {
+          weightedLeadValue += metaReportParseAmount(month.topline?.avgLeadValue) * monthWon;
+          if (month.bottomline) {
+            weightedProfitPerWon += metaReportParseAmount(month.bottomline.avgProfitPerWon) * monthWon;
+          }
+        }
+
+        if (monthImpressions > 0) {
+          weightedCpm += metaReportParseAmount(month.meta?.cpm) * monthImpressions;
+          cpmWeight += monthImpressions;
+        }
+
+        if (month.bottomline) {
+          totalProfit += metaReportParseAmount(month.bottomline.totalProfit) * fraction;
+          censioFeeSum += metaReportParseAmount(month.bottomline.censioFee) * fraction;
+        }
+      }
+
+      const cpl = leads > 0 ? Math.round((spend / leads) * 100) / 100 : 0;
+      const cac = wonLeads > 0 ? Math.round((spend / wonLeads) * 100) / 100 : 0;
+      const avgLeadValue = wonLeads > 0 ? Math.round((weightedLeadValue / wonLeads) * 100) / 100 : 0;
+      const avgProfitPerWon = wonLeads > 0 ? Math.round((weightedProfitPerWon / wonLeads) * 100) / 100 : 0;
+      const cpm = cpmWeight > 0 ? Math.round((weightedCpm / cpmWeight) * 100) / 100 : 0;
+      const conversionRatePercent = impressions > 0 ? Math.round(((clicks / impressions) * 100) * 100000000) / 100000000 : 0;
+      const roasKr = Math.round((totalLeadValue - spend) * 100) / 100;
+      const roasX = spend > 0 ? Math.round((roasKr / spend) * 100000000) / 100000000 : 0;
+      const poasKr = Math.round((totalProfit - spend) * 100) / 100;
+      const poasX = spend > 0 ? Math.round((poasKr / spend) * 100000000) / 100000000 : 0;
+      const poiKr = hasBottomline ? Math.round((poasKr - censioFeeSum) * 100) / 100 : 0;
+      const poiX = spend > 0 && hasBottomline ? Math.round((poiKr / spend) * 100000000) / 100000000 : 0;
+
+      return {
+        startDate: rangeStart,
+        endDate: rangeEnd,
+        label: metaReportComparisonFormatDateRangeLabel(rangeStart, rangeEnd),
+        monthKeys: included,
+        monthCount: included.length,
+        expectedMonthCount: rangeKeys.length,
+        partialData: expectedOverlapDays > 0 && coveredOverlapDays < expectedOverlapDays,
+        hasData: included.length > 0,
+        hasBottomline,
+        metrics: {
+          spend,
+          cpm,
+          impressions,
+          reach,
+          clicks,
+          conversionRatePercent,
+          leads,
+          cpl,
+          wonLeads,
+          totalLeadValue,
+          avgLeadValue,
+          cac,
+          roasKr,
+          roasX,
+          totalProfit,
+          avgProfitPerWon,
+          poasKr,
+          poasX,
+          censioFee: censioFeeSum,
+          poiKr,
+          poiX,
+        },
+      };
+    }
+
+    function metaReportComparisonMergedMonthsMap(payload, periodA, periodB) {
+      const years = metaReportComparisonYearsNeeded(periodA, periodB);
+      const merged = { ...(payload?.months || {}) };
+      years.forEach((year) => {
+        if (Number(payload?.year) !== Number(year)) {
+          Object.assign(merged, metaReportComparisonMonthsForYear(payload, year));
+        }
+      });
+      return merged;
+    }
+
+    function metaReportResolveComparisonPresetDates(payload, mode = 'mom') {
+      const anchorKey = metaReportsState.activeMonthKey || null;
+      const monthsMap = metaReportComparisonMergedMonthsMap(payload, null, null);
       if (mode === 'custom') {
-        const periodA = metaReportsState.comparisonPeriodA?.startMonthKey && metaReportsState.comparisonPeriodA?.endMonthKey
-          ? { ...metaReportsState.comparisonPeriodA }
-          : null;
-        const periodB = metaReportsState.comparisonPeriodB?.startMonthKey && metaReportsState.comparisonPeriodB?.endMonthKey
-          ? { ...metaReportsState.comparisonPeriodB }
-          : null;
-        return { mode, periodA, periodB };
+        return {
+          mode,
+          periodA: metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodA),
+          periodB: metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodB),
+        };
       }
       if (!anchorKey) return { mode, periodA: null, periodB: null };
 
+      const anchorMonth = monthsMap[anchorKey] || null;
       if (mode === 'mom') {
         const previousKey = metaReportComparisonAddMonths(anchorKey, -1);
+        const previousMonth = previousKey ? monthsMap[previousKey] || null : null;
         return {
           mode,
-          periodA: { startMonthKey: anchorKey, endMonthKey: anchorKey },
-          periodB: previousKey ? { startMonthKey: previousKey, endMonthKey: previousKey } : null,
+          periodA: metaReportComparisonMonthPayloadDates(anchorMonth, anchorKey),
+          periodB: previousKey ? metaReportComparisonMonthPayloadDates(previousMonth, previousKey) : null,
         };
       }
-
-      if (mode === 'yoy_month') {
-        const priorKey = metaReportComparisonAddMonths(anchorKey, -12);
-        return {
-          mode,
-          periodA: { startMonthKey: anchorKey, endMonthKey: anchorKey },
-          periodB: priorKey ? { startMonthKey: priorKey, endMonthKey: priorKey } : null,
-        };
-      }
-
       if (mode === 'ytd') {
         const year = String(anchorKey).slice(0, 4);
         const month = String(anchorKey).slice(5, 7);
         const priorYear = String(Number(year) - 1);
+        const anchorDates = metaReportComparisonMonthPayloadDates(anchorMonth, anchorKey);
+        const priorMonth = monthsMap[`${priorYear}-${month}`] || null;
         return {
           mode,
-          periodA: { startMonthKey: `${year}-01`, endMonthKey: anchorKey },
-          periodB: { startMonthKey: `${priorYear}-01`, endMonthKey: `${priorYear}-${month}` },
+          periodA: {
+            startDate: `${year}-01-01`,
+            endDate: anchorDates.endDate,
+            startMonthKey: `${year}-01`,
+            endMonthKey: anchorKey,
+          },
+          periodB: {
+            startDate: `${priorYear}-01-01`,
+            endDate: metaReportComparisonMonthPayloadDates(priorMonth, `${priorYear}-${month}`).endDate,
+            startMonthKey: `${priorYear}-01`,
+            endMonthKey: `${priorYear}-${month}`,
+          },
         };
       }
-
       return { mode, periodA: null, periodB: null };
+    }
+
+    function metaReportApplyComparisonPresetDefaults(payload, mode = metaReportsState.comparisonMode) {
+      const resolved = metaReportResolveComparisonPresetDates(payload, mode);
+      if (resolved.periodA) metaReportsState.comparisonPeriodA = { ...resolved.periodA };
+      if (resolved.periodB) metaReportsState.comparisonPeriodB = { ...resolved.periodB };
+      return resolved;
+    }
+
+    function metaReportResolveComparisonPresets({
+      activeMonthKey = null,
+      mode = 'mom',
+    } = {}) {
+      const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
+      return metaReportResolveComparisonPresetDates(payload, mode);
     }
 
     function metaReportComparisonMetricDefs(hasBottomline = false) {
@@ -10544,13 +10872,18 @@
     }
 
     function metaReportBuildComparison({
-      monthsMapA = {},
-      monthsMapB = {},
+      monthsMap = {},
+      monthsMapA = null,
+      monthsMapB = null,
       periodA = null,
       periodB = null,
       mode = 'mom',
     } = {}) {
-      if (!periodA?.startMonthKey || !periodA?.endMonthKey || !periodB?.startMonthKey || !periodB?.endMonthKey) {
+      const map = monthsMapA || monthsMapB || monthsMap;
+      const normalizedA = metaReportComparisonNormalizePeriod(periodA);
+      const normalizedB = metaReportComparisonNormalizePeriod(periodB);
+
+      if (!normalizedA?.startDate || !normalizedA?.endDate || !normalizedB?.startDate || !normalizedB?.endDate) {
         return {
           mode,
           insufficientData: true,
@@ -10565,12 +10898,12 @@
         };
       }
 
-      const samePeriod = periodA.startMonthKey === periodB.startMonthKey
-        && periodA.endMonthKey === periodB.endMonthKey;
-      const aggA = metaReportAggregateComparisonRange(monthsMapA, periodA.startMonthKey, periodA.endMonthKey);
-      const aggB = metaReportAggregateComparisonRange(monthsMapB, periodB.startMonthKey, periodB.endMonthKey);
+      const samePeriod = normalizedA.startDate === normalizedB.startDate
+        && normalizedA.endDate === normalizedB.endDate;
+      const aggA = metaReportComparisonAggregateDateRange(map, normalizedA.startDate, normalizedA.endDate);
+      const aggB = metaReportComparisonAggregateDateRange(map, normalizedB.startDate, normalizedB.endDate);
       const hasBottomline = aggA.hasBottomline || aggB.hasBottomline;
-      const insufficientData = aggA.monthCount === 0 && aggB.monthCount === 0;
+      const insufficientData = !aggA.hasData && !aggB.hasData;
       const metricDefs = metaReportComparisonMetricDefs(hasBottomline);
       const deltas = {};
       const detailRows = metricDefs.map((def) => {
@@ -10593,7 +10926,7 @@
         };
       });
       const ytdByMonth = mode === 'ytd'
-        ? metaReportBuildYtdByMonthComparison(monthsMapA, monthsMapB, periodA, periodB)
+        ? metaReportBuildYtdByMonthComparison(map, map, normalizedA, normalizedB)
         : [];
 
       return {
@@ -10613,9 +10946,10 @@
     function metaReportComparisonYearsNeeded(periodA, periodB) {
       const years = new Set();
       for (const period of [periodA, periodB]) {
-        if (!period?.startMonthKey) continue;
-        years.add(String(period.startMonthKey).slice(0, 4));
-        years.add(String(period.endMonthKey).slice(0, 4));
+        const normalized = metaReportComparisonNormalizePeriod(period);
+        if (!normalized) continue;
+        if (normalized.startDate) years.add(normalized.startDate.slice(0, 4));
+        if (normalized.endDate) years.add(normalized.endDate.slice(0, 4));
       }
       return [...years].filter(Boolean);
     }
@@ -10647,17 +10981,11 @@
       if (presetId === 'mom') {
         return !metaReportComparisonAddMonths(activeKey, -1);
       }
-      if (presetId === 'yoy_month' || presetId === 'ytd') {
-        const priorYear = Number(String(activeKey).slice(0, 4)) - 1;
-        const yearMeta = (payload?.years || []).find((entry) => Number(entry.year) === priorYear);
-        if (yearMeta && yearMeta.available === false) return true;
-        if (payload?.previousYearHasData === false) return true;
-        return false;
-      }
       return false;
     }
 
-    function metaReportComparisonFmtValue(value, format = 'num') {
+    function metaReportComparisonFmtValue(value, format = 'num', hasData = true) {
+      if (!hasData) return '—';
       if (format === 'kr') return metaFmtKr(value);
       if (format === 'x') return metaFmtX(value);
       if (format === 'pct') return `${metaFmtNum(value, 2)}%`;
@@ -10676,31 +11004,19 @@
     }
 
     function metaReportComparisonPeriodsFromState(payload) {
-      const resolved = metaReportResolveComparisonPresets({
-        activeMonthKey: metaReportsState.activeMonthKey,
-        mode: metaReportsState.comparisonMode,
-      });
-      if (metaReportsState.comparisonMode !== 'custom') {
-        metaReportsState.comparisonPeriodA = resolved.periodA;
-        metaReportsState.comparisonPeriodB = resolved.periodB;
+      let periodA = metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodA);
+      let periodB = metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodB);
+      if (!periodA || !periodB) {
+        const resolved = metaReportApplyComparisonPresetDefaults(payload, metaReportsState.comparisonMode);
+        periodA = resolved.periodA;
+        periodB = resolved.periodB;
       }
-      return resolved;
+      return { periodA, periodB, mode: metaReportsState.comparisonMode };
     }
 
     function metaReportComparisonMaps(payload, periodA, periodB) {
-      const years = metaReportComparisonYearsNeeded(periodA, periodB);
-      const maps = {};
-      years.forEach((year) => {
-        maps[year] = metaReportComparisonMonthsForYear(payload, year);
-      });
-      const pickMap = (period) => {
-        const year = String(period?.startMonthKey || '').slice(0, 4);
-        return maps[year] || payload?.months || {};
-      };
-      return {
-        monthsMapA: pickMap(periodA),
-        monthsMapB: pickMap(periodB),
-      };
+      const monthsMap = metaReportComparisonMergedMonthsMap(payload, periodA, periodB);
+      return { monthsMapA: monthsMap, monthsMapB: monthsMap };
     }
 
     async function ensureMetaReportComparisonYears(payload, { editable = false } = {}) {
@@ -10739,61 +11055,54 @@
 
     function computeMetaReportComparison(payload) {
       const { periodA, periodB, mode } = metaReportComparisonPeriodsFromState(payload);
-      const { monthsMapA, monthsMapB } = metaReportComparisonMaps(payload, periodA, periodB);
+      const monthsMap = metaReportComparisonMergedMonthsMap(payload, periodA, periodB);
       return metaReportBuildComparison({
-        monthsMapA,
-        monthsMapB,
+        monthsMap,
         periodA,
         periodB,
         mode,
       });
     }
 
-    function metaReportComparisonMonthInputBounds(availableKeys = []) {
-      if (!availableKeys.length) return { min: '', max: '' };
-      return { min: availableKeys[0], max: availableKeys[availableKeys.length - 1] };
+    function metaReportComparisonDateInputBounds(payload) {
+      const keys = metaReportComparisonAvailableMonthKeys(payload);
+      if (!keys.length) return { min: '', max: '' };
+      const monthsMap = metaReportComparisonMergedMonthsMap(payload, null, null);
+      let min = '';
+      let max = '';
+      keys.forEach((key) => {
+        const period = metaReportComparisonMonthEffectivePeriod(monthsMap[key], key);
+        if (!min || period.start < min) min = period.start;
+        if (!max || period.end > max) max = period.end;
+      });
+      return { min, max };
     }
 
-    function renderMetaReportComparisonCustomPanel(periodA, periodB, availableKeys) {
-      const bounds = metaReportComparisonMonthInputBounds(availableKeys);
-      const startA = periodA?.startMonthKey || availableKeys[availableKeys.length - 1] || '';
-      const endA = periodA?.endMonthKey || startA;
-      const startB = periodB?.startMonthKey || (availableKeys.length > 1 ? availableKeys[availableKeys.length - 2] : startA);
-      const endB = periodB?.endMonthKey || startB;
+    function renderMetaReportComparisonRangePanel(periodA, periodB, payload) {
+      const bounds = metaReportComparisonDateInputBounds(payload);
+      const startA = periodA?.startDate || bounds.min || '';
+      const endA = periodA?.endDate || startA;
+      const startB = periodB?.startDate || bounds.min || '';
+      const endB = periodB?.endDate || startB;
       const minAttr = bounds.min ? ` min="${esc(bounds.min)}"` : '';
       const maxAttr = bounds.max ? ` max="${esc(bounds.max)}"` : '';
 
       return `
-        <div class="meta-report-comparison-custom-panel" id="meta-report-comparison-custom-panel">
-          <p class="meta-report-comparison-custom-copy">Choose a start and end month for each period. Comparisons use full calendar months with ad data.</p>
-          <div class="meta-report-comparison-custom-grid">
-            <div class="meta-report-comparison-custom-period is-a">
-              <div class="meta-report-comparison-custom-period-head">
-                <span class="meta-report-comparison-badge is-a">A</span>
-                <span>${esc(metaReportComparisonPeriodLabel(startA, endA))}</span>
-              </div>
-              <div class="meta-report-comparison-custom-fields">
-                <label>From month
-                  <input type="month" class="admin-select" data-comparison-range="a-start" value="${esc(startA)}"${minAttr}${maxAttr} />
-                </label>
-                <label>To month
-                  <input type="month" class="admin-select" data-comparison-range="a-end" value="${esc(endA)}"${minAttr}${maxAttr} />
-                </label>
+        <div class="meta-report-comparison-range-panel" id="meta-report-comparison-range-panel">
+          <div class="meta-report-comparison-range-grid">
+            <div class="meta-report-comparison-range-block is-a">
+              <span class="meta-report-comparison-range-label">Period A</span>
+              <div class="meta-report-comparison-range-dates">
+                <input type="date" class="admin-select" data-comparison-date="a-start" value="${esc(startA)}" aria-label="Period A start date"${minAttr}${maxAttr} />
+                <input type="date" class="admin-select" data-comparison-date="a-end" value="${esc(endA)}" aria-label="Period A end date"${minAttr}${maxAttr} />
               </div>
             </div>
-            <div class="meta-report-comparison-custom-vs" aria-hidden="true">vs</div>
-            <div class="meta-report-comparison-custom-period is-b">
-              <div class="meta-report-comparison-custom-period-head">
-                <span class="meta-report-comparison-badge is-b">B</span>
-                <span>${esc(metaReportComparisonPeriodLabel(startB, endB))}</span>
-              </div>
-              <div class="meta-report-comparison-custom-fields">
-                <label>From month
-                  <input type="month" class="admin-select" data-comparison-range="b-start" value="${esc(startB)}"${minAttr}${maxAttr} />
-                </label>
-                <label>To month
-                  <input type="month" class="admin-select" data-comparison-range="b-end" value="${esc(endB)}"${minAttr}${maxAttr} />
-                </label>
+            <div class="meta-report-comparison-range-vs" aria-hidden="true">vs</div>
+            <div class="meta-report-comparison-range-block is-b">
+              <span class="meta-report-comparison-range-label">Period B</span>
+              <div class="meta-report-comparison-range-dates">
+                <input type="date" class="admin-select" data-comparison-date="b-start" value="${esc(startB)}" aria-label="Period B start date"${minAttr}${maxAttr} />
+                <input type="date" class="admin-select" data-comparison-date="b-end" value="${esc(endB)}" aria-label="Period B end date"${minAttr}${maxAttr} />
               </div>
             </div>
           </div>
@@ -10801,8 +11110,14 @@
       `;
     }
 
-    function renderMetaReportComparisonChangeCell(deltaPct, higherIsBetter) {
+    function renderMetaReportComparisonChangeCell(deltaPct, higherIsBetter, hasDataA = true, hasDataB = true) {
       const tone = metaReportComparisonDeltaTone(deltaPct, higherIsBetter);
+      if (!hasDataA && !hasDataB) {
+        return '<span class="meta-report-comparison-change is-neutral">—</span>';
+      }
+      if (!hasDataA || !hasDataB) {
+        return '<span class="meta-report-comparison-change is-neutral">—</span>';
+      }
       if (deltaPct == null || !Number.isFinite(deltaPct)) {
         return '<span class="meta-report-comparison-change is-neutral">—</span>';
       }
@@ -10815,17 +11130,19 @@
       if (!comparison || comparison.insufficientData || comparison.samePeriod) return '';
       const labelA = comparison.periodA.label;
       const labelB = comparison.periodB.label;
+      const hasDataA = comparison.periodA.hasData !== false;
+      const hasDataB = comparison.periodB.hasData !== false;
       const rowsHtml = rowSpecs.map((spec, index) => {
         const valueA = comparison.periodA.metrics[spec.metricId];
         const valueB = comparison.periodB.metrics[spec.metricId];
-        const deltaPct = metaReportDeltaPct(valueA, valueB);
+        const deltaPct = hasDataA && hasDataB ? metaReportDeltaPct(valueA, valueB) : null;
         const isHighlight = highlightLastN > 0 && index >= rowSpecs.length - highlightLastN;
         return `
           <tr class="${isHighlight ? `is-highlight accent-${accent}` : ''}">
             <th scope="row">${esc(spec.label)}</th>
-            <td class="meta-report-comparison-col-a">${esc(metaReportComparisonFmtValue(valueA, spec.format))}</td>
-            <td class="meta-report-comparison-col-b">${esc(metaReportComparisonFmtValue(valueB, spec.format))}</td>
-            <td class="meta-report-comparison-col-change">${renderMetaReportComparisonChangeCell(deltaPct, spec.higherIsBetter)}</td>
+            <td class="meta-report-comparison-col-a">${esc(metaReportComparisonFmtValue(valueA, spec.format, hasDataA))}</td>
+            <td class="meta-report-comparison-col-b">${esc(metaReportComparisonFmtValue(valueB, spec.format, hasDataB))}</td>
+            <td class="meta-report-comparison-col-change">${renderMetaReportComparisonChangeCell(deltaPct, spec.higherIsBetter, hasDataA, hasDataB)}</td>
           </tr>
         `;
       }).join('');
@@ -10875,36 +11192,11 @@
       return `<div class="meta-report-groups-stack">${groupsHtml}</div>`;
     }
 
-    function renderMetaReportComparisonHeadline(comparison) {
-      if (metaReportsState.comparisonLoading) {
-        return '<p class="meta-report-comparison-loading">Loading comparison data…</p>';
-      }
-      if (!comparison || comparison.insufficientData) {
-        return '<p class="meta-report-comparison-empty">Select two periods with ad data to compare.</p>';
-      }
-      if (comparison.samePeriod) {
-        return '<p class="meta-report-comparison-warning">Both periods are the same. Choose different ranges to compare.</p>';
-      }
-      const partialNote = comparison.periodA?.partialData || comparison.periodB?.partialData
-        ? '<span class="meta-report-comparison-partial-badge">Partial data</span>'
-        : '';
-      return `
-        <div class="meta-report-comparison-headline" id="meta-report-comparison-headline">
-          <span class="meta-report-comparison-headline-a">${esc(comparison.periodA.label)}</span>
-          <span class="meta-report-comparison-headline-vs">vs</span>
-          <span class="meta-report-comparison-headline-b">${esc(comparison.periodB.label)}</span>
-          ${partialNote}
-        </div>
-      `;
-    }
-
     function renderMetaReportComparisonCard() {
       const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
       const comparison = metaReportsState.comparisonResult || computeMetaReportComparison(payload);
-      const availableKeys = metaReportComparisonAvailableMonthKeys(payload);
       const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
       const activeTab = metaReportsState.comparisonTab || 'table';
-      const showCustomRanges = metaReportsState.comparisonMode === 'custom';
 
       return `
         <section class="meta-report-comparison-card" id="meta-report-comparison-card">
@@ -10912,36 +11204,37 @@
           <div class="meta-report-comparison-presets" id="meta-report-comparison-presets">
             ${META_REPORT_COMPARISON_PRESETS.map(({ id, label }) => {
               const disabled = metaReportComparisonPresetDisabled(id, payload);
-              const title = disabled && id === 'yoy_month' ? 'Prior year data is not available on this report' : (disabled && id === 'ytd' ? 'Prior year data is not available on this report' : (disabled && id === 'mom' ? 'No previous month available' : ''));
+              const title = disabled && id === 'mom' ? 'No previous month available' : '';
               return `
                 <button type="button" class="preset-btn${metaReportsState.comparisonMode === id ? ' active' : ''}${disabled ? ' is-disabled' : ''}" data-comparison-preset="${esc(id)}" aria-pressed="${metaReportsState.comparisonMode === id}"${disabled ? ' disabled' : ''}${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>
               `;
             }).join('')}
           </div>
-          ${showCustomRanges ? `
-            <div id="meta-report-comparison-custom-wrap">
-              ${renderMetaReportComparisonCustomPanel(periodA, periodB, availableKeys)}
-            </div>
-          ` : ''}
-          <div id="meta-report-comparison-headline-wrap">${renderMetaReportComparisonHeadline(comparison)}</div>
-          <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
-            <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
-            <button type="button" class="meta-report-chart-tab${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-tab="chart" role="tab" aria-selected="${activeTab === 'chart'}">Show in chart</button>
+          <div id="meta-report-comparison-range-wrap">
+            ${renderMetaReportComparisonRangePanel(periodA, periodB, payload)}
           </div>
-          <div class="meta-report-comparison-tab-panel${activeTab === 'table' ? ' is-active' : ''}" data-comparison-panel="table" role="tabpanel"${activeTab === 'table' ? '' : ' hidden'}>
-            <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
-          </div>
-          <div class="meta-report-comparison-tab-panel${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-panel="chart" role="tabpanel"${activeTab === 'chart' ? '' : ' hidden'}>
-            <div class="meta-report-comparison-chart-card">
-              <div class="meta-report-comparison-chart-toolbar">
-                <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
-                  <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'kr' ? ' is-active' : ''}" data-mode="kr">Dkr</button>
-                  <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'x' ? ' is-active' : ''}" data-mode="x">Multiplier</button>
-                </div>
+          <div class="meta-report-comparison-view-card">
+            <div class="meta-report-comparison-view-head">
+              <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
+                <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
+                <button type="button" class="meta-report-chart-tab${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-tab="chart" role="tab" aria-selected="${activeTab === 'chart'}">Show in chart</button>
               </div>
-              <div class="meta-report-comparison-chart-canvas-wrap">
-                <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
-                <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
+            </div>
+            <div class="meta-report-comparison-tab-panel${activeTab === 'table' ? ' is-active' : ''}" data-comparison-panel="table" role="tabpanel"${activeTab === 'table' ? '' : ' hidden'}>
+              <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
+            </div>
+            <div class="meta-report-comparison-tab-panel${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-panel="chart" role="tabpanel"${activeTab === 'chart' ? '' : ' hidden'}>
+              <div class="meta-report-comparison-chart-card">
+                <div class="meta-report-comparison-chart-toolbar">
+                  <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
+                    <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'kr' ? ' is-active' : ''}" data-mode="kr">Dkr</button>
+                    <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'x' ? ' is-active' : ''}" data-mode="x">Multiplier</button>
+                  </div>
+                </div>
+                <div class="meta-report-comparison-chart-canvas-wrap">
+                  <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
+                  <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -10972,7 +11265,8 @@
       const chartIds = metaReportComparisonChartIds(comparison.hasBottomline, chartMode);
       const labels = chartIds.map((id) => metaReportComparisonChartLabel(id, metricDefs));
       const valuesA = chartIds.map((id) => metaReportParseAmount(comparison.periodA.metrics[id]));
-      const valuesB = chartIds.map((id) => metaReportParseAmount(comparison.periodB.metrics[id]));
+      const hasDataB = comparison.periodB.hasData !== false;
+      const valuesB = chartIds.map((id) => (hasDataB ? metaReportParseAmount(comparison.periodB.metrics[id]) : null));
 
       return new Chart(canvas, {
         type: 'bar',
@@ -11089,7 +11383,7 @@
       metaReportsState.comparisonResult = comparison;
 
       const headlineWrap = document.getElementById('meta-report-comparison-headline-wrap');
-      if (headlineWrap) headlineWrap.innerHTML = renderMetaReportComparisonHeadline(comparison);
+      if (headlineWrap) headlineWrap.remove();
 
       const tableWrap = document.getElementById('meta-report-comparison-table-wrap');
       if (tableWrap) tableWrap.innerHTML = renderMetaReportComparisonTables(comparison);
@@ -11118,18 +11412,7 @@
             const mode = button.getAttribute('data-comparison-preset');
             if (!mode) return;
             metaReportsState.comparisonMode = mode;
-            if (mode === 'custom') {
-              const hasCustomA = metaReportsState.comparisonPeriodA?.startMonthKey && metaReportsState.comparisonPeriodA?.endMonthKey;
-              const hasCustomB = metaReportsState.comparisonPeriodB?.startMonthKey && metaReportsState.comparisonPeriodB?.endMonthKey;
-              if (!hasCustomA || !hasCustomB) {
-                const fallback = metaReportResolveComparisonPresets({
-                  activeMonthKey: metaReportsState.activeMonthKey,
-                  mode: 'mom',
-                });
-                if (!hasCustomA && fallback.periodA) metaReportsState.comparisonPeriodA = { ...fallback.periodA };
-                if (!hasCustomB && fallback.periodB) metaReportsState.comparisonPeriodB = { ...fallback.periodB };
-              }
-            }
+            metaReportApplyComparisonPresetDefaults(payload, mode);
             const card = document.getElementById('meta-report-comparison-card');
             if (card) {
               card.outerHTML = renderMetaReportComparisonCard();
@@ -11140,34 +11423,30 @@
         });
       };
 
-      const bindCustomRangeInputs = () => {
-        document.querySelectorAll('[data-comparison-range]').forEach((input) => {
+      const bindComparisonDateInputs = () => {
+        document.querySelectorAll('[data-comparison-date]').forEach((input) => {
           input.onchange = async () => {
-            const key = input.getAttribute('data-comparison-range');
+            const key = input.getAttribute('data-comparison-date');
             if (!key || !input.value) return;
             const [side, bound] = key.split('-');
             const stateKey = `comparisonPeriod${side.toUpperCase()}`;
             if (!metaReportsState[stateKey]) {
-              metaReportsState[stateKey] = { startMonthKey: null, endMonthKey: null };
+              metaReportsState[stateKey] = { startDate: null, endDate: null };
             }
             const period = metaReportsState[stateKey];
-            period[`${bound}MonthKey`] = input.value;
-            if (period.startMonthKey && period.endMonthKey && period.startMonthKey > period.endMonthKey) {
-              const tmp = period.startMonthKey;
-              period.startMonthKey = period.endMonthKey;
-              period.endMonthKey = tmp;
+            period[`${bound}Date`] = input.value;
+            if (period.startDate && period.endDate && period.startDate > period.endDate) {
+              const tmp = period.startDate;
+              period.startDate = period.endDate;
+              period.endDate = tmp;
             }
             metaReportsState.comparisonMode = 'custom';
             await refreshMetaReportComparison(payload, { editable });
-            const customWrap = document.getElementById('meta-report-comparison-custom-wrap');
-            if (customWrap) {
-              const availableKeys = metaReportComparisonAvailableMonthKeys(payload);
-              customWrap.innerHTML = renderMetaReportComparisonCustomPanel(
-                metaReportsState.comparisonPeriodA,
-                metaReportsState.comparisonPeriodB,
-                availableKeys,
-              );
-              bindCustomRangeInputs();
+            const rangeWrap = document.getElementById('meta-report-comparison-range-wrap');
+            if (rangeWrap) {
+              const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
+              rangeWrap.innerHTML = renderMetaReportComparisonRangePanel(periodA, periodB, payload);
+              bindComparisonDateInputs();
             }
             document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
               button.classList.toggle('active', button.getAttribute('data-comparison-preset') === 'custom');
@@ -11196,7 +11475,7 @@
       });
 
       bindPresetButtons();
-      bindCustomRangeInputs();
+      bindComparisonDateInputs();
       setMetaReportComparisonTab(metaReportsState.comparisonTab || 'table');
     }
 
