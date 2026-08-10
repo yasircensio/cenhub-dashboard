@@ -9630,17 +9630,6 @@
       return keys;
     }
 
-    function metaReportMonthKeysBetweenExclusive(startKey, endKey) {
-      if (!startKey || !endKey || startKey >= endKey) return [];
-      const keys = [];
-      let cursor = metaReportAddMonthsToMonthKey(startKey, 1);
-      while (cursor && cursor < endKey) {
-        keys.push(cursor);
-        cursor = metaReportAddMonthsToMonthKey(cursor, 1);
-      }
-      return keys;
-    }
-
     function buildMetaReportScenarioProjectionSteps(projection, {
       months = META_REPORT_SCENARIO_PROJECTED_MONTHS,
       hasBottomline = false,
@@ -9712,19 +9701,14 @@
       return metaReportAggregateSeriesEfficiency(series).avgMonthlySpend;
     }
 
-    function resolveMetaReportScenarioChartSeries(series, projection) {
-      if (projection?.prepared?.months?.length) {
-        const byKey = new Map(series.map((point) => [point.monthKey, point]));
-        return projection.prepared.months.map((point) => {
-          const original = byKey.get(point.monthKey) || {};
-          return {
-            ...original,
-            ...point,
-            label: original.label || metaMonthLabel(point.monthKey),
-          };
-        });
-      }
-      return trimMetaReportScenarioSeries(series.filter((point) => metaReportParseAmount(point.spend) > 0));
+    function resolveMetaReportScenarioChartSeries(series) {
+      const currentKey = metaReportMonthKeyFromDate(new Date());
+      const filtered = series.filter((point) => {
+        if (metaReportParseAmount(point.spend) <= 0) return false;
+        if (currentKey && point.monthKey && point.monthKey > currentKey) return false;
+        return true;
+      });
+      return trimMetaReportScenarioSeries(filtered);
     }
 
     function renderMetaReportScenarioContextStrip(projection) {
@@ -10407,7 +10391,6 @@
         kind === 'poas'
           ? series.filter((point) => point.poasKr != null && point.poasX != null)
           : series,
-        projection,
       );
       const baselineSpend = resolveMetaReportSpendChartBaseline(chartSeries, projection);
       const useMultiplier = mode === 'x' && baselineSpend > 0;
@@ -10421,17 +10404,6 @@
       ));
       const returnValues = chartSeries.map((point) => metaReportChartValue(point, mode, krKey, xKey));
       const lastHistoricalIndex = chartSeries.length - 1;
-      const lastHistoricalMonthKey = chartSeries[lastHistoricalIndex]?.monthKey || null;
-      const firstProjectionMonthKey = projectionSteps[0]?.monthKey || null;
-
-      if (lastHistoricalMonthKey && firstProjectionMonthKey) {
-        for (const gapKey of metaReportMonthKeysBetweenExclusive(lastHistoricalMonthKey, firstProjectionMonthKey)) {
-          labels.push(metaMonthLabel(gapKey));
-          spendValues.push(null);
-          returnValues.push(null);
-        }
-      }
-
       const firstProjectedIndex = labels.length;
 
       for (const step of projectionSteps) {
@@ -10718,7 +10690,7 @@
       const chartSeries = kind === 'poas'
         ? series.filter((point) => point.poasKr != null && point.poasX != null)
         : series.filter((point) => metaReportParseAmount(point.spend) > 0);
-      const trimmedSeries = resolveMetaReportScenarioChartSeries(chartSeries, projection);
+      const trimmedSeries = resolveMetaReportScenarioChartSeries(chartSeries);
 
       if (metaReportsState.scenarioChartInstances[kind]) {
         metaReportsState.scenarioChartInstances[kind].destroy();
