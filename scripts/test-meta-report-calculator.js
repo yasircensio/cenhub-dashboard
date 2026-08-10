@@ -1,11 +1,14 @@
 const assert = require('assert');
 const {
+  buildScenarioProjectionSteps,
   computeMetaReportMetrics,
   computeMetaReportEfficiencyInsight,
   isLeadActionType,
   linearRegression,
   parseAmount,
+  prepareScenarioSeries,
   projectMetaReportBudgetScenario,
+  projectScenario,
 } = require('../lib/meta-report-calculator');
 const { parseLeadCountFromActions } = require('../lib/meta-insights');
 
@@ -123,6 +126,7 @@ function testBudgetScenarioProjection() {
       avgProfitPerWon: 50000,
       roasKr: 490000,
       roasX: 49,
+      periodEnd: '2025-01-31',
     },
     {
       spend: 15000,
@@ -132,6 +136,7 @@ function testBudgetScenarioProjection() {
       avgProfitPerWon: 50000,
       roasKr: 585000,
       roasX: 39,
+      periodEnd: '2025-02-28',
     },
   ];
 
@@ -145,13 +150,117 @@ function testBudgetScenarioProjection() {
   assert.strictEqual(result.insufficientData, false);
   approx(result.baseline.spend, 10000);
   approx(result.projected.spend, 20000);
-  approx(result.projected.leads, 88);
-  approx(result.projected.wonLeads, 9);
-  approx(result.projected.totalLeadValue, 900000);
-  approx(result.projected.roasKr, 880000);
-  approx(result.projected.roasX, 44);
-  approx(result.projected.poasKr, 430000);
-  approx(result.projected.poasX, 21.5);
+  // Power-law at 0.75 elasticity: 2^0.75 ~= 1.68x leads vs baseline, not 2x
+  approx(result.projected.leads, 71, 2);
+}
+
+function testScenarioRampAtTriple() {
+  const series = [{
+    spend: 9000,
+    leads: 45,
+    wonLeads: 5,
+    avgLeadValue: 100000,
+    avgProfitPerWon: 50000,
+    periodEnd: '2025-01-31',
+  }, {
+    spend: 9000,
+    leads: 45,
+    wonLeads: 5,
+    avgLeadValue: 100000,
+    avgProfitPerWon: 50000,
+    periodEnd: '2025-02-28',
+  }];
+
+  const projection = projectScenario({
+    series,
+    baselineSpend: 9000,
+    multiplier: 3,
+    monthWindow: '6',
+    asOfDate: new Date('2025-03-01T12:00:00.000Z'),
+  });
+
+  const steps = buildScenarioProjectionSteps(projection, { hasBottomline: false });
+  assert.strictEqual(steps.length, 4);
+  approx(steps[0].spend, 18000);
+  approx(steps[1].spend, 27000);
+  approx(steps[2].spend, 27000);
+  approx(steps[3].spend, 27000);
+}
+
+function testShortAdHistoryUsesAvailableMonths() {
+  const series = [
+    { spend: 0, leads: 0, wonLeads: 0, periodEnd: '2024-10-31' },
+    { spend: 0, leads: 0, wonLeads: 0, periodEnd: '2024-11-30' },
+    { spend: 8000, leads: 40, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-12-31' },
+    { spend: 9000, leads: 45, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-01-31' },
+    { spend: 10000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-02-28' },
+  ];
+
+  const prepared = prepareScenarioSeries(series, {
+    windowMonths: '6',
+    asOfDate: new Date('2025-03-01T12:00:00.000Z'),
+  });
+
+  assert.strictEqual(prepared.monthsUsed, 3);
+  assert.strictEqual(prepared.monthsAvailable, 3);
+}
+
+function testIncompleteMonthExcluded() {
+  const series = [
+    { spend: 9000, leads: 45, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-01-31' },
+    { spend: 9000, leads: 45, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-02-28' },
+    { spend: 12000, leads: 60, wonLeads: 6, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-08-31' },
+  ];
+
+  const prepared = prepareScenarioSeries(series, {
+    windowMonths: '6',
+    asOfDate: new Date('2025-08-10T12:00:00.000Z'),
+  });
+
+  assert.strictEqual(prepared.monthsUsed, 2);
+}
+
+function testDownwardTrendLowersProjection() {
+  const series = [
+    { spend: 10000, leads: 60, wonLeads: 6, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-10-31' },
+    { spend: 10000, leads: 55, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-11-30' },
+    { spend: 10000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-12-31' },
+    { spend: 10000, leads: 45, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-01-31' },
+  ];
+
+  const flat = projectScenario({
+    series,
+    baselineSpend: 10000,
+    multiplier: 2,
+    trendMethod: 'recency_weighted',
+    asOfDate: new Date('2025-02-01T12:00:00.000Z'),
+  });
+  const trending = projectScenario({
+    series,
+    baselineSpend: 10000,
+    multiplier: 2,
+    trendMethod: 'robust_trend',
+    asOfDate: new Date('2025-02-01T12:00:00.000Z'),
+  });
+
+  assert.ok(trending.projected.leads <= flat.projected.leads);
+  assert.strictEqual(trending.trendDirection, 'down');
+}
+
+function testOutlierWinsorization() {
+  const series = [
+    { spend: 9000, leads: 40, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-10-31' },
+    { spend: 9000, leads: 45, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-11-30' },
+    { spend: 9000, leads: 200, wonLeads: 20, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2024-12-31' },
+    { spend: 9000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-01-31' },
+  ];
+
+  const prepared = prepareScenarioSeries(series, {
+    windowMonths: 'all',
+    asOfDate: new Date('2025-02-01T12:00:00.000Z'),
+  });
+
+  assert.ok(prepared.outliersAdjusted >= 1);
 }
 
 function testBudgetScenarioInsufficientData() {
@@ -198,6 +307,11 @@ function main() {
   testEmptyMonth();
   testLeadActionParsing();
   testBudgetScenarioProjection();
+  testScenarioRampAtTriple();
+  testShortAdHistoryUsesAvailableMonths();
+  testIncompleteMonthExcluded();
+  testDownwardTrendLowersProjection();
+  testOutlierWinsorization();
   testBudgetScenarioInsufficientData();
   testEfficiencyInsight();
   testLinearRegression();

@@ -4823,7 +4823,11 @@
     }
     .meta-report-scenario-controls {
       align-items: end; display: grid; gap: 14px 18px;
-      grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.8fr);
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .meta-report-scenario-context {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text-soft); font-size: 12px; line-height: 1.5; margin-top: 12px; padding: 10px 12px;
     }
     .meta-report-scenario-field {
       display: flex; flex-direction: column; gap: 8px; min-width: 0;

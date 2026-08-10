@@ -4832,7 +4832,11 @@
     }
     .meta-report-scenario-controls {
       align-items: end; display: grid; gap: 14px 18px;
-      grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.8fr);
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .meta-report-scenario-context {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text-soft); font-size: 12px; line-height: 1.5; margin-top: 12px; padding: 10px 12px;
     }
     .meta-report-scenario-field {
       display: flex; flex-direction: column; gap: 8px; min-width: 0;
@@ -8002,6 +8006,9 @@
       scenarioChartInstances: { roas: null, poas: null },
       budgetMultiplier: 2,
       budgetBaseline: 'year',
+      scenarioTrendMethod: 'recency_weighted',
+      scenarioMonthWindow: '6',
+      scenarioElasticity: 'balanced',
       customValues: {
         mounted: false,
         overview: null,
@@ -8919,6 +8926,32 @@
       { value: 'bar', label: 'Bar' },
     ];
 
+    const META_REPORT_SCENARIO_TREND_METHOD_OPTIONS = [
+      { value: 'recency_weighted', label: 'Recency-weighted' },
+      { value: 'robust_trend', label: 'Robust trend-adjusted' },
+      { value: 'conservative_blend', label: 'Conservative blend' },
+    ];
+
+    const META_REPORT_SCENARIO_MONTH_WINDOW_OPTIONS = [
+      { value: '3', label: 'Last 3 ad months' },
+      { value: '6', label: 'Last 6 ad months' },
+      { value: '9', label: 'Last 9 ad months' },
+      { value: '12', label: 'Last 12 ad months' },
+      { value: 'all', label: 'All ad-active months' },
+    ];
+
+    const META_REPORT_SCENARIO_ELASTICITY_OPTIONS = [
+      { value: 'conservative', label: 'Conservative (0.70)' },
+      { value: 'balanced', label: 'Balanced (0.75)' },
+      { value: 'optimistic', label: 'Optimistic (0.80)' },
+    ];
+
+    const META_REPORT_SCENARIO_ELASTICITY_VALUES = {
+      conservative: 0.70,
+      balanced: 0.75,
+      optimistic: 0.80,
+    };
+
     function normalizeMetaReportSpendChartType(value) {
       const normalized = String(value || 'area').trim().toLowerCase();
       return META_REPORT_SPEND_CHART_TYPE_OPTIONS.some((entry) => entry.value === normalized)
@@ -8930,6 +8963,47 @@
       metaReportsState.spendChartType = normalizeMetaReportSpendChartType(
         payload?.settings?.metaReportSpendChartType,
       );
+    }
+
+    function normalizeMetaReportScenarioTrendMethod(value) {
+      const normalized = String(value || 'recency_weighted').trim().toLowerCase();
+      return META_REPORT_SCENARIO_TREND_METHOD_OPTIONS.some((entry) => entry.value === normalized)
+        ? normalized
+        : 'recency_weighted';
+    }
+
+    function normalizeMetaReportScenarioMonthWindow(value) {
+      const normalized = String(value || '6').trim().toLowerCase();
+      return META_REPORT_SCENARIO_MONTH_WINDOW_OPTIONS.some((entry) => entry.value === normalized)
+        ? normalized
+        : '6';
+    }
+
+    function normalizeMetaReportScenarioElasticity(value) {
+      const normalized = String(value || 'balanced').trim().toLowerCase();
+      return META_REPORT_SCENARIO_ELASTICITY_OPTIONS.some((entry) => entry.value === normalized)
+        ? normalized
+        : 'balanced';
+    }
+
+    function normalizeMetaReportBudgetBaseline(value) {
+      const normalized = String(value || 'year').trim().toLowerCase();
+      return normalized === 'month' ? 'month' : 'year';
+    }
+
+    function normalizeMetaReportBudgetMultiplier(value) {
+      const parsed = Number.parseFloat(value);
+      if (!Number.isFinite(parsed)) return 2;
+      return Math.min(3, Math.max(0.5, Math.round(parsed * 10) / 10));
+    }
+
+    function hydrateMetaReportScenarioSettings(payload) {
+      const settings = payload?.settings || {};
+      metaReportsState.budgetMultiplier = normalizeMetaReportBudgetMultiplier(settings.metaReportBudgetMultiplier);
+      metaReportsState.budgetBaseline = normalizeMetaReportBudgetBaseline(settings.metaReportBudgetBaseline);
+      metaReportsState.scenarioTrendMethod = normalizeMetaReportScenarioTrendMethod(settings.metaReportScenarioTrendMethod);
+      metaReportsState.scenarioMonthWindow = normalizeMetaReportScenarioMonthWindow(settings.metaReportScenarioMonthWindow);
+      metaReportsState.scenarioElasticity = normalizeMetaReportScenarioElasticity(settings.metaReportScenarioElasticity);
     }
 
     function renderMetaReportSpendChartTypePicker({ editable = false } = {}) {
@@ -8975,6 +9049,7 @@
         series.push({
           monthKey,
           label: metaMonthLabel(monthKey),
+          periodEnd: monthPayload.periodEnd || null,
           roasKr,
           roasX,
           poasKr,
@@ -9102,15 +9177,246 @@
       };
     }
 
-    function metaReportProjectBudgetAtSpend(spend, efficiency, hasBottomline = false) {
-      const amount = metaReportParseAmount(spend);
-      if (amount <= 0 || efficiency.avgCpl <= 0) {
-        return {
-          spend: 0, leads: 0, wonLeads: 0, totalLeadValue: 0,
-          roasKr: 0, roasX: 0, poasKr: null, poasX: null,
-        };
+    const META_SCENARIO_MIN_EFFICIENCY_MONTHS = 2;
+    const META_SCENARIO_MIN_TREND_MONTHS = 4;
+    const META_SCENARIO_MAD_MULTIPLIER = 2.5;
+    const META_SCENARIO_MAX_MONTHLY_TREND = 0.03;
+
+    function metaReportScenarioParseDate(value) {
+      if (!value) return null;
+      const text = String(value).slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null;
+      const date = new Date(`${text}T12:00:00.000Z`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function metaReportScenarioIsIncompleteMonth(point, asOfDate = new Date()) {
+      const periodEnd = metaReportScenarioParseDate(point.periodEnd);
+      if (!periodEnd) return true;
+      const today = asOfDate.toISOString().slice(0, 10);
+      return String(point.periodEnd).slice(0, 10) >= today;
+    }
+
+    function metaReportScenarioIsAdActive(point) {
+      return metaReportParseAmount(point.spend) > 0 && metaReportParseAmount(point.leads) > 0;
+    }
+
+    function metaReportScenarioMedian(values = []) {
+      const sorted = values.filter((value) => Number.isFinite(value)).slice().sort((a, b) => a - b);
+      if (!sorted.length) return 0;
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+    }
+
+    function metaReportScenarioMad(values = []) {
+      const med = metaReportScenarioMedian(values);
+      return metaReportScenarioMedian(values.map((value) => Math.abs(value - med)));
+    }
+
+    function metaReportScenarioLinearRegression(points = []) {
+      const n = points.length;
+      if (n < 2) return { slope: 0, intercept: 0, r: 0 };
+      let sumX = 0; let sumY = 0; let sumXY = 0; let sumXX = 0; let sumYY = 0;
+      for (const point of points) {
+        const x = metaReportParseAmount(point.x);
+        const y = metaReportParseAmount(point.y);
+        sumX += x; sumY += y; sumXY += x * y; sumXX += x * x; sumYY += y * y;
       }
-      const leads = Math.round(amount / efficiency.avgCpl);
+      const denom = (n * sumXX) - (sumX * sumX);
+      if (denom === 0) return { slope: 0, intercept: sumY / n, r: 0 };
+      const slope = ((n * sumXY) - (sumX * sumY)) / denom;
+      const intercept = (sumY - (slope * sumX)) / n;
+      const rDenom = Math.sqrt(((n * sumXX) - (sumX * sumX)) * ((n * sumYY) - (sumY * sumY)));
+      const r = rDenom > 0 ? ((n * sumXY) - (sumX * sumY)) / rDenom : 0;
+      return { slope, intercept, r };
+    }
+
+    function metaReportScenarioEnrichMonth(point) {
+      const spend = metaReportParseAmount(point.spend);
+      const leads = metaReportParseAmount(point.leads);
+      const wonLeads = metaReportParseAmount(point.wonLeads);
+      const avgLeadValue = metaReportParseAmount(point.avgLeadValue);
+      const avgProfitPerWon = metaReportParseAmount(point.avgProfitPerWon);
+      const totalLeadValue = metaReportRoundMoney(wonLeads * avgLeadValue);
+      return {
+        ...point,
+        spend,
+        leads,
+        wonLeads,
+        avgLeadValue,
+        avgProfitPerWon,
+        cpl: leads > 0 ? metaReportRoundMoney(spend / leads) : 0,
+        totalLeadValue,
+        efficiencyIndex: spend > 0 ? totalLeadValue / spend : 0,
+      };
+    }
+
+    function metaReportPrepareScenarioSeries(series = [], { windowMonths = '6', asOfDate = new Date() } = {}) {
+      const windowLimit = normalizeMetaReportScenarioMonthWindow(windowMonths) === 'all'
+        ? Infinity
+        : Number.parseInt(normalizeMetaReportScenarioMonthWindow(windowMonths), 10) || 6;
+      const adActive = series
+        .filter(metaReportScenarioIsAdActive)
+        .filter((point) => !metaReportScenarioIsIncompleteMonth(point, asOfDate))
+        .map(metaReportScenarioEnrichMonth);
+      const monthsAvailable = adActive.length;
+      const windowed = windowLimit === Infinity ? adActive : adActive.slice(-windowLimit);
+      let outliersAdjusted = 0;
+      let months = windowed;
+      if (windowed.length >= 3) {
+        const cplValues = windowed.map((point) => metaReportParseAmount(point.cpl));
+        const leadValues = windowed.map((point) => metaReportParseAmount(point.leads));
+        const cplMed = metaReportScenarioMedian(cplValues);
+        const leadMed = metaReportScenarioMedian(leadValues);
+        const cplMad = metaReportScenarioMad(cplValues);
+        const leadMad = metaReportScenarioMad(leadValues);
+        months = windowed.map((point) => {
+          const next = { ...point };
+          let changed = false;
+          if (cplMad > 0) {
+            const lower = cplMed - (META_SCENARIO_MAD_MULTIPLIER * cplMad);
+            const upper = cplMed + (META_SCENARIO_MAD_MULTIPLIER * cplMad);
+            const cappedCpl = Math.min(upper, Math.max(lower, metaReportParseAmount(point.cpl)));
+            if (cappedCpl !== metaReportParseAmount(point.cpl)) {
+              next.cpl = metaReportRoundMoney(cappedCpl);
+              next.leads = Math.max(1, Math.round(metaReportParseAmount(point.spend) / cappedCpl));
+              changed = true;
+            }
+          }
+          if (leadMad > 0) {
+            const lower = leadMed - (META_SCENARIO_MAD_MULTIPLIER * leadMad);
+            const upper = leadMed + (META_SCENARIO_MAD_MULTIPLIER * leadMad);
+            const cappedLeads = Math.min(upper, Math.max(lower, metaReportParseAmount(point.leads)));
+            if (Math.round(cappedLeads) !== Math.round(metaReportParseAmount(point.leads))) {
+              next.leads = Math.max(1, Math.round(cappedLeads));
+              changed = true;
+            }
+          }
+          if (changed) outliersAdjusted += 1;
+          return next;
+        });
+      }
+      return { months, monthsAvailable, monthsUsed: months.length, outliersAdjusted };
+    }
+
+    function metaReportScenarioRecencyEfficiency(months = []) {
+      if (months.length < META_SCENARIO_MIN_EFFICIENCY_MONTHS) return null;
+      let weightedSpend = 0; let weightedLeads = 0; let weightedWon = 0;
+      let weightedLeadValue = 0; let weightedProfit = 0; let totalSpend = 0;
+      months.forEach((point, index) => {
+        const weight = index + 1;
+        weightedSpend += metaReportParseAmount(point.spend) * weight;
+        weightedLeads += metaReportParseAmount(point.leads) * weight;
+        weightedWon += metaReportParseAmount(point.wonLeads) * weight;
+        weightedLeadValue += metaReportParseAmount(point.wonLeads) * metaReportParseAmount(point.avgLeadValue) * weight;
+        weightedProfit += metaReportParseAmount(point.wonLeads) * metaReportParseAmount(point.avgProfitPerWon) * weight;
+        totalSpend += metaReportParseAmount(point.spend);
+      });
+      return {
+        avgCpl: weightedLeads > 0 ? metaReportRoundMoney(weightedSpend / weightedLeads) : 0,
+        winRate: weightedLeads > 0 ? metaReportRoundRatio(weightedWon / weightedLeads) : 0,
+        avgLeadValue: weightedWon > 0 ? metaReportRoundMoney(weightedLeadValue / weightedWon) : 0,
+        avgProfitPerWon: weightedWon > 0 ? metaReportRoundMoney(weightedProfit / weightedWon) : 0,
+        avgMonthlySpend: months.length > 0 ? metaReportRoundMoney(totalSpend / months.length) : 0,
+      };
+    }
+
+    function metaReportScenarioPooledEfficiency(months = []) {
+      return metaReportAggregateSeriesEfficiency(months);
+    }
+
+    function metaReportScenarioBlendEfficiency(left, right, leftWeight = 0.5) {
+      if (!left || !right) return left || right;
+      const rightWeight = 1 - leftWeight;
+      return {
+        avgCpl: metaReportRoundMoney((left.avgCpl * leftWeight) + (right.avgCpl * rightWeight)),
+        winRate: metaReportRoundRatio((left.winRate * leftWeight) + (right.winRate * rightWeight)),
+        avgLeadValue: metaReportRoundMoney((left.avgLeadValue * leftWeight) + (right.avgLeadValue * rightWeight)),
+        avgProfitPerWon: metaReportRoundMoney((left.avgProfitPerWon * leftWeight) + (right.avgProfitPerWon * rightWeight)),
+        avgMonthlySpend: metaReportRoundMoney((left.avgMonthlySpend * leftWeight) + (right.avgMonthlySpend * rightWeight)),
+      };
+    }
+
+    function metaReportScenarioMonthlyTrend(months = [], elasticity = 0.75) {
+      if (months.length < META_SCENARIO_MIN_TREND_MONTHS) {
+        return { trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0 };
+      }
+      const spends = months.map((point) => metaReportParseAmount(point.spend)).filter((value) => value > 0);
+      const medianSpend = metaReportScenarioMedian(spends) || 1;
+      const residuals = months.map((point, index) => {
+        const spend = metaReportParseAmount(point.spend);
+        const efficiencyIndex = metaReportParseAmount(point.efficiencyIndex);
+        const safeEfficiency = efficiencyIndex > 0 ? efficiencyIndex : 0.000001;
+        const safeSpend = spend > 0 ? spend : medianSpend;
+        return {
+          x: index,
+          y: Math.log(safeEfficiency) - (elasticity * Math.log(safeSpend / medianSpend)),
+        };
+      });
+      const { slope, r } = metaReportScenarioLinearRegression(residuals);
+      let trendRate = Math.max(-META_SCENARIO_MAX_MONTHLY_TREND, Math.min(META_SCENARIO_MAX_MONTHLY_TREND, slope));
+      const efficiencyValues = months.map((point) => metaReportParseAmount(point.efficiencyIndex)).filter((value) => value > 0);
+      const fullMedian = metaReportScenarioMedian(efficiencyValues);
+      const recentAvg = months.slice(-3).reduce((sum, point) => sum + metaReportParseAmount(point.efficiencyIndex), 0) / Math.min(3, months.length);
+      if (fullMedian > 0 && recentAvg > fullMedian * 1.15 && trendRate > 0) trendRate *= 0.5;
+      let trendDirection = 'flat';
+      if (Math.abs(trendRate) >= 0.005) trendDirection = trendRate > 0 ? 'up' : 'down';
+      return { trendRate, trendDirection, trendRatePct: metaReportRoundRatio(trendRate * 100), trendR: metaReportRoundRatio(r) };
+    }
+
+    function metaReportScenarioCalibrateElasticity(months = [], presetElasticity = 0.75) {
+      if (months.length < META_SCENARIO_MIN_TREND_MONTHS) return presetElasticity;
+      const spends = months.map((point) => metaReportParseAmount(point.spend));
+      const minSpend = Math.min(...spends);
+      const maxSpend = Math.max(...spends);
+      if (minSpend <= 0 || maxSpend <= 0 || ((maxSpend - minSpend) / minSpend) < 0.25) return presetElasticity;
+      const points = months
+        .filter((point) => metaReportParseAmount(point.spend) > 0 && metaReportParseAmount(point.leads) > 0)
+        .map((point) => ({ x: Math.log(metaReportParseAmount(point.spend)), y: Math.log(metaReportParseAmount(point.leads)) }));
+      if (points.length < META_SCENARIO_MIN_TREND_MONTHS) return presetElasticity;
+      const { slope, r } = metaReportScenarioLinearRegression(points);
+      if (Math.abs(r) < 0.25) return presetElasticity;
+      return metaReportRoundRatio(Math.max(0.65, Math.min(0.80, slope)));
+    }
+
+    function metaReportComputeScenarioEfficiency(months = [], { trendMethod = 'recency_weighted', elasticityPreset = 'balanced' } = {}) {
+      const method = normalizeMetaReportScenarioTrendMethod(trendMethod);
+      const presetElasticity = META_REPORT_SCENARIO_ELASTICITY_VALUES[normalizeMetaReportScenarioElasticity(elasticityPreset)] || 0.75;
+      const elasticity = metaReportScenarioCalibrateElasticity(months, presetElasticity);
+      const recencyWeighted = metaReportScenarioRecencyEfficiency(months);
+      const pooled = metaReportScenarioPooledEfficiency(months);
+      if (!recencyWeighted || recencyWeighted.avgCpl <= 0) {
+        return { efficiency: null, elasticity, presetElasticity, trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0, trendMethod: method };
+      }
+      let efficiency = recencyWeighted;
+      let trendInfo = { trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0 };
+      if (method === 'robust_trend') {
+        trendInfo = metaReportScenarioMonthlyTrend(months, elasticity);
+      } else if (method === 'conservative_blend') {
+        efficiency = metaReportScenarioBlendEfficiency(pooled, recencyWeighted, 0.5);
+        const fullTrend = metaReportScenarioMonthlyTrend(months, elasticity);
+        if (Math.abs(fullTrend.trendR) >= 0.35) trendInfo = fullTrend;
+      }
+      return { efficiency, elasticity, presetElasticity, ...trendInfo, trendMethod: method };
+    }
+
+    function metaReportProjectBudgetAtSpend({
+      baselineSpend,
+      spend,
+      efficiency,
+      elasticity = 0.75,
+      trendAdj = 1,
+      hasBottomline = false,
+    } = {}) {
+      const baseSpend = metaReportParseAmount(baselineSpend);
+      const amount = metaReportParseAmount(spend);
+      if (amount <= 0 || baseSpend <= 0 || !efficiency || efficiency.avgCpl <= 0) {
+        return { spend: 0, leads: 0, wonLeads: 0, totalLeadValue: 0, roasKr: 0, roasX: 0, poasKr: null, poasX: null };
+      }
+      const baselineLeads = baseSpend / efficiency.avgCpl;
+      const spendMultiplier = amount / baseSpend;
+      const adjustedTrend = metaReportParseAmount(trendAdj) > 0 ? metaReportParseAmount(trendAdj) : 1;
+      const leads = Math.max(0, Math.round(baselineLeads * (spendMultiplier ** elasticity) * adjustedTrend));
       const wonLeads = Math.round(leads * efficiency.winRate);
       const totalLeadValue = metaReportRoundMoney(wonLeads * efficiency.avgLeadValue);
       const roasKr = metaReportRoundMoney(totalLeadValue - amount);
@@ -9125,20 +9431,92 @@
       return { spend: amount, leads, wonLeads, totalLeadValue, roasKr, roasX, poasKr, poasX };
     }
 
-    function metaReportProjectBudgetScenario({ series = [], baselineSpend, multiplier = 1, hasBottomline = false } = {}) {
-      const efficiency = metaReportAggregateSeriesEfficiency(series);
-      const baseSpend = metaReportParseAmount(baselineSpend);
+    function metaReportProjectBudgetScenario({
+      series = [],
+      baselineSpend,
+      multiplier = 1,
+      hasBottomline = false,
+      trendMethod = 'recency_weighted',
+      monthWindow = '6',
+      elasticityPreset = 'balanced',
+      baselineMode = 'year',
+      activeMonthKey = null,
+      asOfDate = new Date(),
+    } = {}) {
+      const prepared = metaReportPrepareScenarioSeries(series, { windowMonths: monthWindow, asOfDate });
+      const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, { trendMethod, elasticityPreset });
+      let resolvedBaselineSpend = metaReportParseAmount(baselineSpend);
+      if (!resolvedBaselineSpend) {
+        if (baselineMode === 'month' && activeMonthKey) {
+          const month = prepared.months.find((point) => point.monthKey === activeMonthKey)
+            || series.find((point) => point.monthKey === activeMonthKey);
+          if (month && metaReportParseAmount(month.spend) > 0) resolvedBaselineSpend = metaReportParseAmount(month.spend);
+        }
+        if (!resolvedBaselineSpend && prepared.months.length > 0) {
+          const total = prepared.months.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
+          resolvedBaselineSpend = metaReportRoundMoney(total / prepared.months.length);
+        }
+      }
       const mult = metaReportParseAmount(multiplier) || 1;
-      const baseline = metaReportProjectBudgetAtSpend(baseSpend, efficiency, hasBottomline);
-      const projected = metaReportProjectBudgetAtSpend(metaReportRoundMoney(baseSpend * mult), efficiency, hasBottomline);
-      return {
+      const { efficiency, elasticity, trendRate } = efficiencyResult;
+      if (!efficiency || efficiency.avgCpl <= 0 || resolvedBaselineSpend <= 0 || prepared.monthsUsed < META_SCENARIO_MIN_EFFICIENCY_MONTHS) {
+        return {
+          ...efficiencyResult,
+          prepared,
+          baseline: metaReportProjectBudgetAtSpend({ baselineSpend: 0, spend: 0, efficiency }),
+          projected: metaReportProjectBudgetAtSpend({ baselineSpend: 0, spend: 0, efficiency }),
+          projectedConservative: null,
+          projectedOptimistic: null,
+          multiplier: mult,
+          baselineSpend: resolvedBaselineSpend,
+          hasBottomline,
+          insufficientData: true,
+        };
+      }
+      const trendAdj = Math.exp(trendRate * 1);
+      const baseline = metaReportProjectBudgetAtSpend({
+        baselineSpend: resolvedBaselineSpend,
+        spend: resolvedBaselineSpend,
         efficiency,
+        elasticity,
+        trendAdj: 1,
+        hasBottomline,
+      });
+      const projected = metaReportProjectBudgetAtSpend({
+        baselineSpend: resolvedBaselineSpend,
+        spend: metaReportRoundMoney(resolvedBaselineSpend * mult),
+        efficiency,
+        elasticity,
+        trendAdj,
+        hasBottomline,
+      });
+      const projectedConservative = metaReportProjectBudgetAtSpend({
+        baselineSpend: resolvedBaselineSpend,
+        spend: metaReportRoundMoney(resolvedBaselineSpend * mult),
+        efficiency,
+        elasticity: Math.max(0.65, elasticity - 0.05),
+        trendAdj: Math.exp(Math.min(trendRate, 0) * 1),
+        hasBottomline,
+      });
+      const projectedOptimistic = metaReportProjectBudgetAtSpend({
+        baselineSpend: resolvedBaselineSpend,
+        spend: metaReportRoundMoney(resolvedBaselineSpend * mult),
+        efficiency,
+        elasticity: Math.min(0.80, elasticity + 0.05),
+        trendAdj: Math.exp(Math.max(trendRate, 0) * 1),
+        hasBottomline,
+      });
+      return {
+        ...efficiencyResult,
+        prepared,
         baseline,
         projected,
+        projectedConservative,
+        projectedOptimistic,
         multiplier: mult,
-        baselineSpend: baseSpend,
+        baselineSpend: resolvedBaselineSpend,
         hasBottomline,
-        insufficientData: efficiency.avgCpl <= 0 || baseSpend <= 0,
+        insufficientData: false,
       };
     }
 
@@ -9175,15 +9553,28 @@
       const baseSpend = metaReportParseAmount(projection.baselineSpend);
       const targetMult = metaReportParseAmount(projection.multiplier) || 1;
       const efficiency = projection.efficiency;
+      const elasticity = projection.elasticity || 0.75;
+      const trendRate = projection.trendRate || 0;
       const steps = [];
       for (let step = 1; step <= months; step += 1) {
-        const stepMult = metaReportRoundRatio(1 + ((targetMult - 1) * step) / months);
+        const stepMult = Math.min(targetMult, 1 + step);
         const spend = metaReportRoundMoney(baseSpend * stepMult);
-        const metrics = metaReportProjectBudgetAtSpend(spend, efficiency, hasBottomline);
+        const trendAdj = Math.exp(trendRate * step);
+        const metrics = metaReportProjectBudgetAtSpend({
+          baselineSpend: baseSpend,
+          spend,
+          efficiency,
+          elasticity,
+          trendAdj,
+          hasBottomline,
+        });
         steps.push({
           label: `+${step} mo`,
-          spendMultiplier: stepMult,
+          spendMultiplier: metaReportRoundRatio(stepMult),
           spend: metrics.spend,
+          leads: metrics.leads,
+          wonLeads: metrics.wonLeads,
+          totalLeadValue: metrics.totalLeadValue,
           roasKr: metrics.roasKr,
           roasX: metrics.roasX,
           poasKr: metrics.poasKr,
@@ -9206,13 +9597,51 @@
       return `${sign}${value.toFixed(0)}%`;
     }
 
-    function metaReportResolveBaselineSpend(payload, series) {
+    function metaReportResolveBaselineSpend(payload, series, projection = null) {
+      if (projection?.baselineSpend > 0) return metaReportParseAmount(projection.baselineSpend);
       if (metaReportsState.budgetBaseline === 'month' && metaReportsState.activeMonthKey) {
         const month = series.find((point) => point.monthKey === metaReportsState.activeMonthKey);
         if (month && metaReportParseAmount(month.spend) > 0) return metaReportParseAmount(month.spend);
       }
-      const efficiency = metaReportAggregateSeriesEfficiency(series);
-      return efficiency.avgMonthlySpend;
+      const prepared = projection?.prepared
+        || metaReportPrepareScenarioSeries(series, { windowMonths: metaReportsState.scenarioMonthWindow });
+      if (prepared.months.length > 0) {
+        const total = prepared.months.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
+        return metaReportRoundMoney(total / prepared.months.length);
+      }
+      return metaReportAggregateSeriesEfficiency(series).avgMonthlySpend;
+    }
+
+    function resolveMetaReportScenarioChartSeries(series, projection) {
+      if (projection?.prepared?.months?.length) {
+        const byKey = new Map(series.map((point) => [point.monthKey, point]));
+        return projection.prepared.months.map((point) => {
+          const original = byKey.get(point.monthKey) || {};
+          return {
+            ...original,
+            ...point,
+            label: original.label || metaMonthLabel(point.monthKey),
+          };
+        });
+      }
+      return trimMetaReportScenarioSeries(series.filter((point) => metaReportParseAmount(point.spend) > 0));
+    }
+
+    function renderMetaReportScenarioContextStrip(projection) {
+      if (!projection || projection.insufficientData) {
+        return '<p class="meta-report-scenario-context" id="meta-report-scenario-context">Add at least two completed ad months to model a budget scenario.</p>';
+      }
+      const methodLabel = META_REPORT_SCENARIO_TREND_METHOD_OPTIONS.find((entry) => entry.value === projection.trendMethod)?.label
+        || projection.trendMethod;
+      const trendLabel = projection.trendDirection === 'up'
+        ? `trend up ${Math.abs(projection.trendRatePct || 0).toFixed(1)}%/mo`
+        : projection.trendDirection === 'down'
+          ? `trend down ${Math.abs(projection.trendRatePct || 0).toFixed(1)}%/mo`
+          : 'trend flat';
+      const outlierNote = projection.prepared?.outliersAdjusted
+        ? ` · ${projection.prepared.outliersAdjusted} month${projection.prepared.outliersAdjusted === 1 ? '' : 's'} adjusted for outlier CPL`
+        : '';
+      return `<p class="meta-report-scenario-context" id="meta-report-scenario-context">${esc(methodLabel)} · last ${projection.prepared?.monthsUsed || 0} ad months · ${esc(trendLabel)} · elasticity ${(projection.elasticity || 0.75).toFixed(2)}${esc(outlierNote)}</p>`;
     }
 
     function payloadHasMetaReportBottomline(payload) {
@@ -9306,7 +9735,7 @@
           <div class="meta-report-scenario-head">
             <div>
               <h3 class="meta-report-scenario-title">Budget scenario</h3>
-              <p class="meta-report-scenario-copy">Estimate what happens if ad spend scales while funnel efficiency stays constant.</p>
+              <p class="meta-report-scenario-copy">Estimate based on recent ad performance and diminishing returns—not a guarantee.</p>
             </div>
           </div>
           <div class="meta-report-scenario-controls">
@@ -9320,11 +9749,36 @@
             <label class="meta-report-scenario-field">
               <span>Baseline spend</span>
               <select id="meta-report-budget-baseline" class="admin-select">
-                <option value="year"${metaReportsState.budgetBaseline === 'year' ? ' selected' : ''}>Year average</option>
+                <option value="year"${metaReportsState.budgetBaseline === 'year' ? ' selected' : ''}>Window average</option>
                 <option value="month"${metaReportsState.budgetBaseline === 'month' ? ' selected' : ''}>Selected month</option>
               </select>
             </label>
+            <label class="meta-report-scenario-field">
+              <span>Trend method</span>
+              <select id="meta-report-scenario-trend-method" class="admin-select">
+                ${META_REPORT_SCENARIO_TREND_METHOD_OPTIONS.map(({ value, label }) => `
+                  <option value="${esc(value)}"${metaReportsState.scenarioTrendMethod === value ? ' selected' : ''}>${esc(label)}</option>
+                `).join('')}
+              </select>
+            </label>
+            <label class="meta-report-scenario-field">
+              <span>History window</span>
+              <select id="meta-report-scenario-month-window" class="admin-select">
+                ${META_REPORT_SCENARIO_MONTH_WINDOW_OPTIONS.map(({ value, label }) => `
+                  <option value="${esc(value)}"${metaReportsState.scenarioMonthWindow === value ? ' selected' : ''}>${esc(label)}</option>
+                `).join('')}
+              </select>
+            </label>
+            <label class="meta-report-scenario-field">
+              <span>Spend response</span>
+              <select id="meta-report-scenario-elasticity" class="admin-select">
+                ${META_REPORT_SCENARIO_ELASTICITY_OPTIONS.map(({ value, label }) => `
+                  <option value="${esc(value)}"${metaReportsState.scenarioElasticity === value ? ' selected' : ''}>${esc(label)}</option>
+                `).join('')}
+              </select>
+            </label>
           </div>
+          <div id="meta-report-scenario-context-wrap">${renderMetaReportScenarioContextStrip(metaReportsState.chartProjection)}</div>
           <div class="meta-report-scenario-grid" id="meta-report-scenario-grid"></div>
           <div class="meta-report-scenario-charts" id="meta-report-scenario-charts">
             <div class="meta-report-scenario-chart-card">
@@ -9354,7 +9808,7 @@
               </div>
             </div>
           </div>
-          <p class="meta-report-scenario-disclaimer">Estimate assumes current funnel efficiency (CPL, win rate, lead value) stays constant.</p>
+          <p class="meta-report-scenario-disclaimer">Projections use ad-active months only, exclude incomplete months, and apply diminishing returns when spend scales.</p>
         </section>
       `;
     }
@@ -9414,11 +9868,15 @@
       const roasDelta = metaReportFormatDeltaPct(
         metaReportDeltaPct(projection.projected.roasKr, projection.baseline.roasKr),
       );
+      const revenueBand = projection.projectedConservative && projection.projectedOptimistic
+        ? `${metaFmtKr(projection.projectedConservative.totalLeadValue)} – ${metaFmtKr(projection.projectedOptimistic.totalLeadValue)}`
+        : '';
 
       const outcomeCards = [
         renderMetaReportScenarioOutcomeCard({
           label: 'Projected revenue',
           projectedValue: metaFmtKr(projection.projected.totalLeadValue),
+          projectedSub: revenueBand,
           baselineValue: metaFmtKr(projection.baseline.totalLeadValue),
           delta: revenueDelta,
         }),
@@ -9856,10 +10314,11 @@
       const krKey = kind === 'roas' ? 'roasKr' : 'poasKr';
       const xKey = kind === 'roas' ? 'roasX' : 'poasX';
       const returnLabel = kind === 'roas' ? 'ROAS' : 'POAS';
-      const chartSeries = trimMetaReportScenarioSeries(
+      const chartSeries = resolveMetaReportScenarioChartSeries(
         kind === 'poas'
           ? series.filter((point) => point.poasKr != null && point.poasX != null)
           : series,
+        projection,
       );
       const baselineSpend = resolveMetaReportSpendChartBaseline(chartSeries, projection);
       const useMultiplier = mode === 'x' && baselineSpend > 0;
@@ -10159,7 +10618,7 @@
       const chartSeries = kind === 'poas'
         ? series.filter((point) => point.poasKr != null && point.poasX != null)
         : series.filter((point) => metaReportParseAmount(point.spend) > 0);
-      const trimmedSeries = trimMetaReportScenarioSeries(chartSeries);
+      const trimmedSeries = resolveMetaReportScenarioChartSeries(chartSeries, projection);
 
       if (metaReportsState.scenarioChartInstances[kind]) {
         metaReportsState.scenarioChartInstances[kind].destroy();
@@ -10402,36 +10861,89 @@
       });
     }
 
-    function bindMetaReportScenarioControls(payload) {
+    function scheduleMetaReportScenarioSettingsPersist(clientId) {
+      if (!clientId) return;
+      clearTimeout(metaReportsState._scenarioSettingsTimer);
+      metaReportsState._scenarioSettingsTimer = setTimeout(() => {
+        patchMetaReportSettings(clientId, {
+          metaReportBudgetMultiplier: metaReportsState.budgetMultiplier,
+          metaReportBudgetBaseline: metaReportsState.budgetBaseline,
+          metaReportScenarioTrendMethod: metaReportsState.scenarioTrendMethod,
+          metaReportScenarioMonthWindow: metaReportsState.scenarioMonthWindow,
+          metaReportScenarioElasticity: metaReportsState.scenarioElasticity,
+        }, { fast: true }).catch(() => {});
+      }, 350);
+    }
+
+    function bindMetaReportScenarioControls(payload, { editable = false } = {}) {
+      if (!editable) return;
+      const clientId = payload?.clientId || null;
       const slider = document.getElementById('meta-report-budget-multiplier');
       const output = document.getElementById('meta-report-budget-multiplier-value');
       const baselineSelect = document.getElementById('meta-report-budget-baseline');
+      const trendSelect = document.getElementById('meta-report-scenario-trend-method');
+      const windowSelect = document.getElementById('meta-report-scenario-month-window');
+      const elasticitySelect = document.getElementById('meta-report-scenario-elasticity');
+      const persist = () => scheduleMetaReportScenarioSettingsPersist(clientId);
+      const refresh = () => syncMetaReportScenario(payload);
+
       if (slider) {
         slider.oninput = () => {
-          metaReportsState.budgetMultiplier = Number(slider.value) || 1;
+          metaReportsState.budgetMultiplier = normalizeMetaReportBudgetMultiplier(slider.value);
           if (output) output.textContent = `${metaReportsState.budgetMultiplier.toFixed(1)}×`;
-          syncMetaReportScenario(payload);
+          refresh();
+          persist();
         };
       }
       if (baselineSelect) {
         baselineSelect.onchange = () => {
-          metaReportsState.budgetBaseline = baselineSelect.value === 'month' ? 'month' : 'year';
-          syncMetaReportScenario(payload);
+          metaReportsState.budgetBaseline = normalizeMetaReportBudgetBaseline(baselineSelect.value);
+          refresh();
+          persist();
+        };
+      }
+      if (trendSelect) {
+        trendSelect.onchange = () => {
+          metaReportsState.scenarioTrendMethod = normalizeMetaReportScenarioTrendMethod(trendSelect.value);
+          refresh();
+          persist();
+        };
+      }
+      if (windowSelect) {
+        windowSelect.onchange = () => {
+          metaReportsState.scenarioMonthWindow = normalizeMetaReportScenarioMonthWindow(windowSelect.value);
+          refresh();
+          persist();
+        };
+      }
+      if (elasticitySelect) {
+        elasticitySelect.onchange = () => {
+          metaReportsState.scenarioElasticity = normalizeMetaReportScenarioElasticity(elasticitySelect.value);
+          refresh();
+          persist();
         };
       }
     }
 
     function syncMetaReportScenario(payload) {
+      const scenarioCard = document.getElementById('meta-report-scenario-card');
+      if (!scenarioCard) return;
       const series = metaReportsState.chartSeries || [];
       const hasBottomline = payloadHasMetaReportBottomline(payload);
-      const baselineSpend = metaReportResolveBaselineSpend(payload, series);
       const projection = metaReportProjectBudgetScenario({
         series,
-        baselineSpend,
         multiplier: metaReportsState.budgetMultiplier,
         hasBottomline,
+        trendMethod: metaReportsState.scenarioTrendMethod,
+        monthWindow: metaReportsState.scenarioMonthWindow,
+        elasticityPreset: metaReportsState.scenarioElasticity,
+        baselineMode: metaReportsState.budgetBaseline,
+        activeMonthKey: metaReportsState.activeMonthKey,
       });
       metaReportsState.chartProjection = projection;
+
+      const contextWrap = document.getElementById('meta-report-scenario-context-wrap');
+      if (contextWrap) contextWrap.innerHTML = renderMetaReportScenarioContextStrip(projection);
 
       const grid = document.getElementById('meta-report-scenario-grid');
       if (grid) grid.innerHTML = renderMetaReportScenarioMetrics(projection);
@@ -10444,6 +10956,7 @@
       if (!payload || !document.getElementById('meta-report-charts-panel')) return;
 
       hydrateMetaReportSpendChartType(payload);
+      hydrateMetaReportScenarioSettings(payload);
       const { series, demo } = resolveMetaReportChartSeries(payload);
       metaReportsState.chartSeries = series;
       metaReportsState.chartDemo = demo;
@@ -10453,8 +10966,8 @@
 
       bindMetaReportChartTabs();
       bindMetaReportChartToggles();
-      bindMetaReportScenarioControls(payload);
       if (editable) {
+        bindMetaReportScenarioControls(payload, { editable: true });
         bindMetaReportSpendChartTypePicker(clientId, payload);
       }
       syncMetaReportChartToggleUi();
@@ -10463,7 +10976,7 @@
         button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === metaReportsState.spendChartType);
       });
       setMetaReportChartTab(metaReportsState.chartTab || 'trend');
-      syncMetaReportScenario(payload);
+      if (editable) syncMetaReportScenario(payload);
     }
 
     function syncMetaReportMonthPanelDom(monthPayload, options = {}, yearPayload = null) {
@@ -10581,7 +11094,7 @@
       const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable });
       const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
       const chartsPanel = showYearVisuals ? renderMetaReportChartsPanel({ editable }) : '';
-      const scenarioCard = showYearVisuals ? renderMetaReportScenarioCard() : '';
+      const scenarioCard = editable && showYearVisuals ? renderMetaReportScenarioCard() : '';
 
       const bodyHtml = showYearVisuals ? `
         <div class="meta-report-content-layout">
