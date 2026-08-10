@@ -353,6 +353,38 @@ function testOutlierWinsorization() {
   assert.ok(prepared.outliersAdjusted >= 1);
 }
 
+function testScenarioProjectionMonthLabels() {
+  const asOfDate = new Date('2026-08-10T12:00:00.000Z');
+  const series = [{
+    spend: 9000,
+    leads: 45,
+    wonLeads: 5,
+    avgLeadValue: 100000,
+    avgProfitPerWon: 50000,
+    periodEnd: '2025-01-31',
+  }, {
+    spend: 9000,
+    leads: 45,
+    wonLeads: 5,
+    avgLeadValue: 100000,
+    avgProfitPerWon: 50000,
+    periodEnd: '2025-02-28',
+  }];
+
+  const projection = projectScenario({
+    series,
+    baselineSpend: 9000,
+    multiplier: 3,
+    monthWindow: '6',
+    asOfDate,
+  });
+
+  const steps = buildScenarioProjectionSteps(projection, { hasBottomline: false, asOfDate });
+  assert.strictEqual(steps.length, 4);
+  assert.deepStrictEqual(steps.map((step) => step.label), ['Sep', 'Oct', 'Nov', 'Dec']);
+  assert.deepStrictEqual(steps.map((step) => step.monthKey), ['2026-09', '2026-10', '2026-11', '2026-12']);
+}
+
 function testBudgetScenarioInsufficientData() {
   const result = projectMetaReportBudgetScenario({
     series: [{ spend: 0, leads: 0, wonLeads: 0 }],
@@ -405,6 +437,7 @@ function main() {
   testHotStreakDampeningRequiresBothPills();
   testConservativeOptimisticBandCollapsesWithoutTrend();
   testResolveScenarioConfidence();
+  testScenarioProjectionMonthLabels();
   testOutlierWinsorization();
   testBudgetScenarioInsufficientData();
   testEfficiencyInsight();
