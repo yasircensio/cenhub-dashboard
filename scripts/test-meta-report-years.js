@@ -25,6 +25,11 @@ function main() {
   assert.ok(currentKeys.length >= 1);
   assert.ok(currentKeys.every((key) => key.startsWith(`${allowed[0]}-`)));
 
+  const { monthBoundsIso } = require('../lib/marketing-metrics');
+  const julyBounds = monthBoundsIso('2026-07');
+  assert.strictEqual(julyBounds.start, '2026-07-01');
+  assert.strictEqual(julyBounds.end, '2026-07-31');
+
   console.log('Meta report year limits tests passed.');
 }
 
