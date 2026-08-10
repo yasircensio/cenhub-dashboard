@@ -9496,6 +9496,31 @@
       return { spend: amount, leads, wonLeads, totalLeadValue, roasKr, roasX, poasKr, poasX };
     }
 
+    function resolveMetaReportScenarioBaselineSpend(series, prepared, {
+      baselineMode = 'year',
+      activeMonthKey = null,
+    } = {}) {
+      const preparedMonths = prepared?.months || [];
+
+      if (baselineMode === 'month' && activeMonthKey) {
+        const fromSeries = series.find((point) => point.monthKey === activeMonthKey);
+        if (fromSeries && metaReportParseAmount(fromSeries.spend) > 0) {
+          return metaReportParseAmount(fromSeries.spend);
+        }
+        const month = preparedMonths.find((point) => point.monthKey === activeMonthKey);
+        if (month && metaReportParseAmount(month.spend) > 0) {
+          return metaReportParseAmount(month.spend);
+        }
+      }
+
+      if (preparedMonths.length > 0) {
+        const total = preparedMonths.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
+        return metaReportRoundMoney(total / preparedMonths.length);
+      }
+
+      return metaReportAggregateSeriesEfficiency(series).avgMonthlySpend;
+    }
+
     function metaReportProjectBudgetScenario({
       series = [],
       baselineSpend,
@@ -9692,17 +9717,12 @@
 
     function metaReportResolveBaselineSpend(payload, series, projection = null) {
       if (projection?.baselineSpend > 0) return metaReportParseAmount(projection.baselineSpend);
-      if (metaReportsState.budgetBaseline === 'month' && metaReportsState.activeMonthKey) {
-        const month = series.find((point) => point.monthKey === metaReportsState.activeMonthKey);
-        if (month && metaReportParseAmount(month.spend) > 0) return metaReportParseAmount(month.spend);
-      }
       const prepared = projection?.prepared
         || metaReportPrepareScenarioSeries(series, { windowMonths: metaReportsState.scenarioMonthWindow });
-      if (prepared.months.length > 0) {
-        const total = prepared.months.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
-        return metaReportRoundMoney(total / prepared.months.length);
-      }
-      return metaReportAggregateSeriesEfficiency(series).avgMonthlySpend;
+      return resolveMetaReportScenarioBaselineSpend(series, prepared, {
+        baselineMode: metaReportsState.budgetBaseline,
+        activeMonthKey: metaReportsState.activeMonthKey,
+      });
     }
 
     function resolveMetaReportScenarioChartSeries(series) {
