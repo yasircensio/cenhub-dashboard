@@ -361,6 +361,37 @@ function testOutlierWinsorization() {
   });
 
   assert.ok(prepared.outliersAdjusted >= 1);
+  const outlierMonth = prepared.months.find((point) => point.periodEnd === '2024-12-31');
+  assert.ok(outlierMonth);
+  assert.ok(outlierMonth.leads < 200);
+  approx(outlierMonth.wonLeads, Math.round(outlierMonth.leads * (20 / 200)), 1);
+}
+
+function testBlendSmoothKeepsProjectedRevenueInSyncWithBaseline() {
+  const series = [
+    { spend: 7000, leads: 14, wonLeads: 2, avgLeadValue: 50000, avgProfitPerWon: 25000, periodEnd: '2025-01-31' },
+    { spend: 8500, leads: 17, wonLeads: 2, avgLeadValue: 50000, avgProfitPerWon: 25000, periodEnd: '2025-02-28' },
+    { spend: 12000, leads: 120, wonLeads: 3, avgLeadValue: 50000, avgProfitPerWon: 25000, periodEnd: '2025-03-31' },
+    { spend: 9000, leads: 18, wonLeads: 2, avgLeadValue: 50000, avgProfitPerWon: 25000, periodEnd: '2025-04-30' },
+    { spend: 9500, leads: 19, wonLeads: 2, avgLeadValue: 50000, avgProfitPerWon: 25000, periodEnd: '2025-05-31' },
+    { spend: 9764, leads: 20, wonLeads: 2, avgLeadValue: 50000, avgProfitPerWon: 25000, periodEnd: '2025-06-30' },
+    { spend: 10000, leads: 21, wonLeads: 2, avgLeadValue: 50000, avgProfitPerWon: 25000, periodEnd: '2025-07-31' },
+  ];
+  const common = {
+    series,
+    baselineSpend: 9764,
+    multiplier: 2,
+    blendHistory: true,
+    monthWindow: 'all',
+    asOfDate: new Date('2025-08-01T12:00:00.000Z'),
+  };
+  const smoothOn = projectMetaReportBudgetScenario({ ...common, smoothOutliers: true });
+  const smoothOff = projectMetaReportBudgetScenario({ ...common, smoothOutliers: false });
+
+  assert.ok(smoothOn.prepared.outliersAdjusted >= 1);
+  if (smoothOn.baseline.totalLeadValue !== smoothOff.baseline.totalLeadValue) {
+    assert.notStrictEqual(smoothOn.projected.totalLeadValue, smoothOff.projected.totalLeadValue);
+  }
 }
 
 function testScenarioProjectionMonthLabels() {
@@ -543,6 +574,7 @@ function main() {
   testScenarioProjectionMonthLabelsFromJanuary();
   testScenarioProjectionMonthLabelsYearRollover();
   testOutlierWinsorization();
+  testBlendSmoothKeepsProjectedRevenueInSyncWithBaseline();
   testBudgetScenarioInsufficientData();
   testLastMonthBaselineMode();
   testLastMonthBaselineRequiresExactPreviousMonth();

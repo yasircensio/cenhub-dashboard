@@ -9426,6 +9426,7 @@
         months = windowed.map((point) => {
           const next = { ...point };
           let changed = false;
+          const originalLeads = metaReportParseAmount(point.leads);
           if (cplMad > 0) {
             const lower = cplMed - (META_SCENARIO_MAD_MULTIPLIER * cplMad);
             const upper = cplMed + (META_SCENARIO_MAD_MULTIPLIER * cplMad);
@@ -9440,12 +9441,22 @@
             const lower = leadMed - (META_SCENARIO_MAD_MULTIPLIER * leadMad);
             const upper = leadMed + (META_SCENARIO_MAD_MULTIPLIER * leadMad);
             const cappedLeads = Math.min(upper, Math.max(lower, metaReportParseAmount(point.leads)));
-            if (Math.round(cappedLeads) !== Math.round(metaReportParseAmount(point.leads))) {
+            if (Math.round(cappedLeads) !== Math.round(originalLeads)) {
               next.leads = Math.max(1, Math.round(cappedLeads));
               changed = true;
             }
           }
-          if (changed) outliersAdjusted += 1;
+          if (changed) {
+            outliersAdjusted += 1;
+            const monthWinRate = originalLeads > 0
+              ? metaReportParseAmount(point.wonLeads) / originalLeads
+              : 0;
+            const rescaledLeads = metaReportParseAmount(next.leads);
+            next.wonLeads = Math.max(0, Math.round(rescaledLeads * monthWinRate));
+            next.totalLeadValue = metaReportRoundMoney(next.wonLeads * metaReportParseAmount(point.avgLeadValue));
+            const spend = metaReportParseAmount(next.spend);
+            next.efficiencyIndex = spend > 0 ? next.totalLeadValue / spend : 0;
+          }
           return next;
         });
       }
@@ -9618,7 +9629,7 @@
         smoothOutliers: pills.smoothUneven,
       });
       // #region agent log
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'A,C,E',location:'index.html:buildMetaReportScenarioProjection',message:'projection built',data:{pills,baselineMode:metaReportsState.budgetBaseline,multiplier:metaReportsState.budgetMultiplier,baselineSpend:projection?.baselineSpend,avgCpl:projection?.efficiency?.avgCpl,baselineRevenue:projection?.baseline?.totalLeadValue,projectedRevenue:projection?.projected?.totalLeadValue,baselineLeads:projection?.baseline?.leads,projectedLeads:projection?.projected?.leads,outliersAdjusted:projection?.prepared?.outliersAdjusted,trendRatePct:projection?.trendRatePct},timestamp:Date.now()})}).catch(()=>{});
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix',hypothesisId:'A,C,E',location:'index.html:buildMetaReportScenarioProjection',message:'projection built',data:{pills,baselineMode:metaReportsState.budgetBaseline,multiplier:metaReportsState.budgetMultiplier,baselineSpend:projection?.baselineSpend,avgCpl:projection?.efficiency?.avgCpl,baselineRevenue:projection?.baseline?.totalLeadValue,projectedRevenue:projection?.projected?.totalLeadValue,baselineLeads:projection?.baseline?.leads,projectedLeads:projection?.projected?.leads,outliersAdjusted:projection?.prepared?.outliersAdjusted,trendRatePct:projection?.trendRatePct,revenueDeltaRaw:projection?.baseline?.totalLeadValue>0?Math.round(((projection.projected.totalLeadValue-projection.baseline.totalLeadValue)/Math.abs(projection.baseline.totalLeadValue))*100):null},timestamp:Date.now()})}).catch(()=>{});
       // #endregion
       return projection;
     }
