@@ -478,6 +478,52 @@ function testLastMonthBaselineMode() {
   approx(juneResult.baselineSpend, 12000);
 }
 
+function testLastMonthBaselineRequiresExactPreviousMonth() {
+  const asOfDate = new Date('2026-08-10T12:00:00.000Z');
+  const series = [
+    { monthKey: '2026-06', spend: 12000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-06-30' },
+    { monthKey: '2026-08', spend: 9609, leads: 40, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-08-31' },
+  ];
+
+  const result = projectScenario({
+    series,
+    baselineMode: 'last',
+    activeMonthKey: '2026-08',
+    multiplier: 2,
+    monthWindow: '6',
+    asOfDate,
+  });
+
+  assert.strictEqual(result.baselineSpend, 0);
+  assert.strictEqual(result.insufficientData, true);
+}
+
+function testBaselineModesMatchProjectionSpend() {
+  const asOfDate = new Date('2026-08-10T12:00:00.000Z');
+  const series = [
+    { monthKey: '2026-06', spend: 12000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-06-30' },
+    { monthKey: '2026-07', spend: 14000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-07-31' },
+    { monthKey: '2026-08', spend: 9609, leads: 40, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-08-31' },
+  ];
+
+  const { resolveScenarioBaselineSpend, prepareScenarioSeries } = require('../lib/meta-report-scenario-projection');
+  const prepared = prepareScenarioSeries(series, { windowMonths: '6', asOfDate });
+
+  const lastSpend = resolveScenarioBaselineSpend(series, prepared.months, {
+    baselineMode: 'last',
+    activeMonthKey: '2026-08',
+    asOfDate,
+  });
+  const monthSpend = resolveScenarioBaselineSpend(series, prepared.months, {
+    baselineMode: 'month',
+    activeMonthKey: '2026-08',
+    asOfDate,
+  });
+
+  approx(lastSpend, 14000);
+  approx(monthSpend, 9609);
+}
+
 function main() {
   testSheetExample();
   testFeeNotNegativeOnLoss();
@@ -499,6 +545,8 @@ function main() {
   testOutlierWinsorization();
   testBudgetScenarioInsufficientData();
   testLastMonthBaselineMode();
+  testLastMonthBaselineRequiresExactPreviousMonth();
+  testBaselineModesMatchProjectionSpend();
   testEfficiencyInsight();
   testLinearRegression();
   console.log('Meta report calculator tests passed.');
