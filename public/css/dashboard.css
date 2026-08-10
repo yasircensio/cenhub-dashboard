@@ -4829,6 +4829,37 @@
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
       color: var(--text-soft); font-size: 12px; line-height: 1.5; margin-top: 12px; padding: 10px 12px;
     }
+    .meta-report-scenario-context strong { color: var(--text); font-weight: 600; }
+    .meta-report-scenario-field--wide { grid-column: 1 / -1; }
+    .meta-report-scenario-field-label {
+      color: var(--text); display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px;
+    }
+    .meta-report-scenario-pill-lead {
+      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 10px;
+    }
+    .meta-report-scenario-pill-section { margin-top: 14px; }
+    .meta-report-scenario-pill-grid {
+      display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .meta-report-scenario-pill-grid--compact {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .meta-report-scenario-pill {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+      padding: 12px 14px; text-align: left; transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .meta-report-scenario-pill:hover { border-color: rgba(255, 106, 0, 0.35); }
+    .meta-report-scenario-pill.is-active {
+      background: linear-gradient(145deg, rgba(255, 106, 0, 0.1), rgba(255, 106, 0, 0.03));
+      border-color: rgba(255, 106, 0, 0.45);
+    }
+    .meta-report-scenario-pill-label {
+      color: var(--text); font-size: 13px; font-weight: 700; line-height: 1.3;
+    }
+    .meta-report-scenario-pill-desc {
+      color: var(--text-soft); font-size: 11px; line-height: 1.45;
+    }
     .meta-report-scenario-field {
       display: flex; flex-direction: column; gap: 8px; min-width: 0;
     }
