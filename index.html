@@ -4960,6 +4960,169 @@
       .meta-report-scenario-outcomes { grid-template-columns: 1fr; }
     }
 
+    .meta-report-comparison-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px;
+      margin-top: 8px; padding: 18px 20px 20px; width: 100%;
+    }
+    .meta-report-comparison-head {
+      align-items: flex-start; display: flex; flex-wrap: wrap; gap: 12px 16px; justify-content: space-between;
+    }
+    .meta-report-comparison-title {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0 0 4px;
+    }
+    .meta-report-comparison-copy {
+      color: var(--text-soft); font-size: 13px; line-height: 1.45; margin: 0;
+    }
+    .meta-report-comparison-presets {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+    }
+    .meta-report-comparison-pill {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text-soft); cursor: pointer; font-size: 12px; font-weight: 600;
+      line-height: 1.2; padding: 6px 12px; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+    .meta-report-comparison-pill:hover { border-color: rgba(255, 106, 0, 0.35); color: var(--text); }
+    .meta-report-comparison-pill.is-active {
+      background: rgba(255, 106, 0, 0.12); border-color: rgba(255, 106, 0, 0.45); color: var(--text);
+    }
+    .meta-report-comparison-pill.is-disabled {
+      cursor: not-allowed; opacity: 0.45;
+    }
+    .meta-report-comparison-range-row {
+      align-items: end; display: grid; gap: 12px 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .meta-report-comparison-range-group {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 12px 14px;
+    }
+    .meta-report-comparison-range-group.is-period-a {
+      border-color: rgba(255, 106, 0, 0.35);
+    }
+    .meta-report-comparison-range-group.is-period-b {
+      border-color: rgba(100, 116, 139, 0.35);
+    }
+    .meta-report-comparison-range-label {
+      align-items: center; display: flex; gap: 8px;
+      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .meta-report-comparison-badge {
+      border-radius: 999px; font-size: 10px; font-weight: 700; line-height: 1; padding: 4px 8px;
+    }
+    .meta-report-comparison-badge.is-a {
+      background: rgba(255, 106, 0, 0.14); color: #c2410c;
+    }
+    .meta-report-comparison-badge.is-b {
+      background: rgba(100, 116, 139, 0.12); color: #475569;
+    }
+    .meta-report-comparison-range-fields {
+      align-items: center; display: grid; gap: 8px; grid-template-columns: 1fr auto 1fr;
+    }
+    .meta-report-comparison-range-fields select { font-size: 12px; min-width: 0; width: 100%; }
+    .meta-report-comparison-range-sep { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+    .meta-report-comparison-context {
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      color: var(--text-soft); display: flex; flex-wrap: wrap; font-size: 13px; gap: 8px 12px;
+      line-height: 1.45; padding: 10px 12px;
+    }
+    .meta-report-comparison-context strong { color: var(--text); font-weight: 600; }
+    .meta-report-comparison-context-badge {
+      border-radius: 999px; font-size: 11px; font-weight: 700; padding: 4px 10px;
+    }
+    .meta-report-comparison-context-badge.is-a {
+      background: rgba(255, 106, 0, 0.14); color: #c2410c;
+    }
+    .meta-report-comparison-context-badge.is-b {
+      background: rgba(100, 116, 139, 0.12); color: #475569;
+    }
+    .meta-report-comparison-outcomes {
+      display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .meta-report-comparison-outcome-card {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
+      display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 14px 14px;
+    }
+    .meta-report-comparison-outcome-label {
+      color: var(--text-soft); font-size: 11px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+    }
+    .meta-report-comparison-outcome-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.15;
+    }
+    .meta-report-comparison-outcome-sub {
+      color: var(--text-muted); font-size: 11px; font-weight: 600;
+    }
+    .meta-report-comparison-outcome-delta {
+      align-self: flex-start; border-radius: 999px; font-size: 12px; font-weight: 700;
+      line-height: 1; margin-top: 2px; padding: 5px 9px;
+    }
+    .meta-report-comparison-outcome-delta.is-positive {
+      background: rgba(22, 163, 74, 0.14); color: #15803d;
+    }
+    .meta-report-comparison-outcome-delta.is-negative {
+      background: rgba(194, 65, 12, 0.12); color: var(--error);
+    }
+    .meta-report-comparison-outcome-delta.is-neutral {
+      background: var(--panel); color: var(--text-soft);
+    }
+    .meta-report-comparison-chart-card {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 18px;
+      display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px 16px 14px;
+    }
+    .meta-report-comparison-chart-toolbar {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: space-between;
+    }
+    .meta-report-comparison-view-toggle {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+      display: inline-flex; gap: 2px; padding: 2px;
+    }
+    .meta-report-comparison-view-toggle-btn {
+      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
+      cursor: pointer; font: inherit; font-size: 11px; font-weight: 600; padding: 5px 10px;
+    }
+    .meta-report-comparison-view-toggle-btn.is-active {
+      background: var(--primary); box-shadow: 0 1px 4px rgba(255, 106, 0, 0.25); color: #fff;
+    }
+    .meta-report-comparison-chart-canvas-wrap {
+      height: 320px; min-height: 320px; position: relative; width: 100%;
+    }
+    .meta-report-comparison-chart-canvas-wrap canvas {
+      display: block; height: 100% !important; width: 100% !important;
+    }
+    .meta-report-comparison-details {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    }
+    .meta-report-comparison-details-head {
+      border-bottom: 1px solid var(--border); color: var(--text-soft); font-size: 11px;
+      font-weight: 700; letter-spacing: 0.04em; padding: 10px 14px; text-transform: uppercase;
+    }
+    .meta-report-comparison-details-row {
+      align-items: center; border-bottom: 1px solid rgba(232, 224, 216, 0.7);
+      display: grid; gap: 10px; grid-template-columns: minmax(120px, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) 72px;
+      font-size: 12px; padding: 10px 14px;
+    }
+    .meta-report-comparison-details-row:last-child { border-bottom: 0; }
+    .meta-report-comparison-empty,
+    .meta-report-comparison-loading,
+    .meta-report-comparison-warning {
+      color: var(--text-soft); font-size: 13px; line-height: 1.5; margin: 0;
+    }
+    .meta-report-comparison-warning {
+      background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.2); border-radius: 10px;
+      color: #b45309; padding: 8px 12px;
+    }
+    .meta-report-comparison-partial-badge {
+      background: rgba(217, 119, 6, 0.1); border-radius: 999px; color: #b45309;
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+    }
+    @media (max-width: 960px) {
+      .meta-report-comparison-details-row {
+        grid-template-columns: 1fr; gap: 4px;
+      }
+      .meta-report-comparison-chart-canvas-wrap { height: 260px; min-height: 260px; }
+    }
+
     .meta-cv-layout {
       display: grid; gap: 16px; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.9fr);
     }
@@ -8029,6 +8192,16 @@
       scenarioSmoothUneven: true,
       scenarioBlendHistory: false,
       scenarioIncludeTrend: false,
+      comparisonMode: 'mom',
+      comparisonPeriodA: { startMonthKey: null, endMonthKey: null },
+      comparisonPeriodB: { startMonthKey: null, endMonthKey: null },
+      comparisonChartMode: 'kr',
+      comparisonView: 'summary',
+      comparisonYtdMetric: 'spend',
+      comparisonYearCache: {},
+      comparisonResult: null,
+      comparisonLoading: false,
+      comparisonChartInstance: null,
       customValues: {
         mounted: false,
         overview: null,
@@ -10074,6 +10247,865 @@
       `;
     }
 
+    const META_REPORT_COMPARISON_PRESETS = [
+      { id: 'mom', label: 'vs previous month' },
+      { id: 'yoy_month', label: 'vs same month last year' },
+      { id: 'ytd', label: 'YTD vs prior YTD' },
+      { id: 'custom', label: 'Custom range' },
+    ];
+
+    function metaReportComparisonAddMonths(monthKey, offset = 0) {
+      const normalized = String(monthKey || '').trim();
+      if (!/^\d{4}-\d{2}$/.test(normalized)) return null;
+      const [year, month] = normalized.split('-').map(Number);
+      const date = new Date(year, (month - 1) + offset, 1);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function metaReportComparisonMonthKeysInRange(startKey, endKey) {
+      if (!startKey || !endKey) return [];
+      const [start, end] = startKey <= endKey ? [startKey, endKey] : [endKey, startKey];
+      const keys = [];
+      let cursor = start;
+      while (cursor && cursor <= end) {
+        keys.push(cursor);
+        if (cursor === end) break;
+        cursor = metaReportComparisonAddMonths(cursor, 1);
+      }
+      return keys;
+    }
+
+    function metaReportComparisonPeriodLabel(startKey, endKey) {
+      if (!startKey || !endKey) return '—';
+      if (startKey === endKey) {
+        return `${metaMonthLabel(startKey)} ${String(startKey).slice(0, 4)}`;
+      }
+      const startYear = String(startKey).slice(0, 4);
+      const endYear = String(endKey).slice(0, 4);
+      if (startYear === endYear) {
+        return `${metaMonthLabel(startKey)}–${metaMonthLabel(endKey)} ${startYear}`;
+      }
+      return `${metaMonthLabel(startKey)} ${startYear}–${metaMonthLabel(endKey)} ${endYear}`;
+    }
+
+    function metaReportMonthHasComparisonData(monthPayload) {
+      if (!monthPayload || monthPayload.meta?.emptyMonth) return false;
+      return metaReportParseAmount(monthPayload.meta?.spend) > 0
+        || metaReportParseAmount(monthPayload.topline?.leads) > 0;
+    }
+
+    function metaReportAggregateComparisonRange(monthsMap = {}, startKey, endKey) {
+      const rangeKeys = metaReportComparisonMonthKeysInRange(startKey, endKey);
+      const included = [];
+      let hasBottomline = false;
+
+      let spend = 0;
+      let impressions = 0;
+      let reach = 0;
+      let clicks = 0;
+      let leads = 0;
+      let wonLeads = 0;
+      let totalLeadValue = 0;
+      let totalProfit = 0;
+      let censioFeeSum = 0;
+      let weightedLeadValue = 0;
+      let weightedProfitPerWon = 0;
+      let weightedCpm = 0;
+      let cpmWeight = 0;
+
+      for (const key of rangeKeys) {
+        const month = monthsMap[key];
+        if (!metaReportMonthHasComparisonData(month)) continue;
+        included.push(key);
+        if (month.bottomline) hasBottomline = true;
+
+        const monthSpend = metaReportParseAmount(month.meta?.spend);
+        const monthImpressions = metaReportParseAmount(month.meta?.impressions);
+        const monthLeads = metaReportParseAmount(month.topline?.leads);
+        const monthWon = metaReportParseAmount(month.topline?.wonLeads);
+
+        spend += monthSpend;
+        impressions += monthImpressions;
+        reach += metaReportParseAmount(month.meta?.reach);
+        clicks += metaReportParseAmount(month.meta?.clicks);
+        leads += monthLeads;
+        wonLeads += monthWon;
+        totalLeadValue += metaReportParseAmount(month.topline?.totalLeadValue);
+
+        if (monthWon > 0) {
+          weightedLeadValue += metaReportParseAmount(month.topline?.avgLeadValue) * monthWon;
+          if (month.bottomline) {
+            weightedProfitPerWon += metaReportParseAmount(month.bottomline.avgProfitPerWon) * monthWon;
+          }
+        }
+
+        if (monthImpressions > 0) {
+          weightedCpm += metaReportParseAmount(month.meta?.cpm) * monthImpressions;
+          cpmWeight += monthImpressions;
+        }
+
+        if (month.bottomline) {
+          totalProfit += metaReportParseAmount(month.bottomline.totalProfit);
+          censioFeeSum += metaReportParseAmount(month.bottomline.censioFee);
+        }
+      }
+
+      const cpl = leads > 0 ? Math.round((spend / leads) * 100) / 100 : 0;
+      const cac = wonLeads > 0 ? Math.round((spend / wonLeads) * 100) / 100 : 0;
+      const avgLeadValue = wonLeads > 0 ? Math.round((weightedLeadValue / wonLeads) * 100) / 100 : 0;
+      const avgProfitPerWon = wonLeads > 0 ? Math.round((weightedProfitPerWon / wonLeads) * 100) / 100 : 0;
+      const cpm = cpmWeight > 0 ? Math.round((weightedCpm / cpmWeight) * 100) / 100 : 0;
+      const conversionRatePercent = impressions > 0 ? Math.round(((clicks / impressions) * 100) * 100000000) / 100000000 : 0;
+      const roasKr = Math.round((totalLeadValue - spend) * 100) / 100;
+      const roasX = spend > 0 ? Math.round((roasKr / spend) * 100000000) / 100000000 : 0;
+      const poasKr = Math.round((totalProfit - spend) * 100) / 100;
+      const poasX = spend > 0 ? Math.round((poasKr / spend) * 100000000) / 100000000 : 0;
+      const poiKr = hasBottomline ? Math.round((poasKr - censioFeeSum) * 100) / 100 : 0;
+      const poiX = spend > 0 && hasBottomline ? Math.round((poiKr / spend) * 100000000) / 100000000 : 0;
+
+      return {
+        startKey,
+        endKey,
+        label: metaReportComparisonPeriodLabel(startKey, endKey),
+        monthKeys: included,
+        monthCount: included.length,
+        expectedMonthCount: rangeKeys.length,
+        partialData: included.length > 0 && included.length < rangeKeys.length,
+        hasBottomline,
+        metrics: {
+          spend,
+          cpm,
+          impressions,
+          reach,
+          clicks,
+          conversionRatePercent,
+          leads,
+          cpl,
+          wonLeads,
+          totalLeadValue,
+          avgLeadValue,
+          cac,
+          roasKr,
+          roasX,
+          totalProfit,
+          avgProfitPerWon,
+          poasKr,
+          poasX,
+          censioFee: censioFeeSum,
+          poiKr,
+          poiX,
+        },
+      };
+    }
+
+    function metaReportResolveComparisonPresets({
+      activeMonthKey = null,
+      mode = 'mom',
+    } = {}) {
+      const anchorKey = activeMonthKey || null;
+      if (mode === 'custom') {
+        const periodA = metaReportsState.comparisonPeriodA?.startMonthKey && metaReportsState.comparisonPeriodA?.endMonthKey
+          ? { ...metaReportsState.comparisonPeriodA }
+          : null;
+        const periodB = metaReportsState.comparisonPeriodB?.startMonthKey && metaReportsState.comparisonPeriodB?.endMonthKey
+          ? { ...metaReportsState.comparisonPeriodB }
+          : null;
+        return { mode, periodA, periodB };
+      }
+      if (!anchorKey) return { mode, periodA: null, periodB: null };
+
+      if (mode === 'mom') {
+        const previousKey = metaReportComparisonAddMonths(anchorKey, -1);
+        return {
+          mode,
+          periodA: { startMonthKey: anchorKey, endMonthKey: anchorKey },
+          periodB: previousKey ? { startMonthKey: previousKey, endMonthKey: previousKey } : null,
+        };
+      }
+
+      if (mode === 'yoy_month') {
+        const priorKey = metaReportComparisonAddMonths(anchorKey, -12);
+        return {
+          mode,
+          periodA: { startMonthKey: anchorKey, endMonthKey: anchorKey },
+          periodB: priorKey ? { startMonthKey: priorKey, endMonthKey: priorKey } : null,
+        };
+      }
+
+      if (mode === 'ytd') {
+        const year = String(anchorKey).slice(0, 4);
+        const month = String(anchorKey).slice(5, 7);
+        const priorYear = String(Number(year) - 1);
+        return {
+          mode,
+          periodA: { startMonthKey: `${year}-01`, endMonthKey: anchorKey },
+          periodB: { startMonthKey: `${priorYear}-01`, endMonthKey: `${priorYear}-${month}` },
+        };
+      }
+
+      return { mode, periodA: null, periodB: null };
+    }
+
+    function metaReportComparisonMetricDefs(hasBottomline = false) {
+      const defs = [
+        { id: 'spend', label: 'Ad spend', group: 'meta', format: 'kr', higherIsBetter: null },
+        { id: 'cpm', label: 'CPM', group: 'meta', format: 'kr', higherIsBetter: false },
+        { id: 'impressions', label: 'Impressions', group: 'meta', format: 'num', higherIsBetter: true },
+        { id: 'reach', label: 'Reach', group: 'meta', format: 'num', higherIsBetter: true },
+        { id: 'clicks', label: 'Clicks', group: 'meta', format: 'num', higherIsBetter: true },
+        { id: 'conversionRatePercent', label: 'CTR', group: 'meta', format: 'pct', higherIsBetter: true },
+        { id: 'leads', label: 'Leads', group: 'topline', format: 'num', higherIsBetter: true },
+        { id: 'cpl', label: 'CPL', group: 'topline', format: 'kr', higherIsBetter: false },
+        { id: 'wonLeads', label: 'Won leads', group: 'topline', format: 'num', higherIsBetter: true },
+        { id: 'totalLeadValue', label: 'Total lead value', group: 'topline', format: 'kr', higherIsBetter: true },
+        { id: 'avgLeadValue', label: 'Average lead value', group: 'topline', format: 'kr', higherIsBetter: true },
+        { id: 'cac', label: 'CAC', group: 'topline', format: 'kr', higherIsBetter: false },
+        { id: 'roasKr', label: 'ROAS', group: 'topline', format: 'kr', higherIsBetter: true },
+        { id: 'roasX', label: 'ROAS %', group: 'topline', format: 'x', higherIsBetter: true },
+      ];
+      if (hasBottomline) {
+        defs.push(
+          { id: 'totalProfit', label: 'Total profit', group: 'bottomline', format: 'kr', higherIsBetter: true },
+          { id: 'avgProfitPerWon', label: 'Avg profit per won', group: 'bottomline', format: 'kr', higherIsBetter: true },
+          { id: 'poasKr', label: 'POAS', group: 'bottomline', format: 'kr', higherIsBetter: true },
+          { id: 'poasX', label: 'POAS %', group: 'bottomline', format: 'x', higherIsBetter: true },
+          { id: 'poiKr', label: 'POI', group: 'bottomline', format: 'kr', higherIsBetter: true },
+          { id: 'poiX', label: 'POI %', group: 'bottomline', format: 'x', higherIsBetter: true },
+        );
+      }
+      return defs;
+    }
+
+    function metaReportComparisonHeroIds(hasBottomline = false) {
+      if (hasBottomline) return ['spend', 'leads', 'wonLeads', 'roasKr', 'totalLeadValue', 'poasKr'];
+      return ['spend', 'leads', 'wonLeads', 'roasKr', 'totalLeadValue'];
+    }
+
+    function metaReportComparisonChartIds(hasBottomline = false, chartMode = 'kr') {
+      const base = ['spend', 'leads', 'totalLeadValue'];
+      if (chartMode === 'x') {
+        return [...base, 'roasX', ...(hasBottomline ? ['poasX'] : [])];
+      }
+      return [...base, 'roasKr', ...(hasBottomline ? ['poasKr'] : [])];
+    }
+
+    function metaReportBuildYtdByMonthComparison(monthsMapA, monthsMapB, periodA, periodB) {
+      if (!periodA || !periodB) return [];
+      const keysA = metaReportComparisonMonthKeysInRange(periodA.startMonthKey, periodA.endMonthKey);
+      const priorYear = String(periodB.startMonthKey || '').slice(0, 4);
+      return keysA.map((keyA) => {
+        const monthPart = String(keyA).slice(5, 7);
+        const keyB = `${priorYear}-${monthPart}`;
+        const aggA = metaReportAggregateComparisonRange(monthsMapA, keyA, keyA);
+        const aggB = metaReportAggregateComparisonRange(monthsMapB, keyB, keyB);
+        return {
+          monthKey: keyA,
+          label: metaMonthLabel(keyA),
+          periodA: aggA.metrics,
+          periodB: aggB.metrics,
+          hasDataA: aggA.monthCount > 0,
+          hasDataB: aggB.monthCount > 0,
+        };
+      }).filter((row) => row.hasDataA || row.hasDataB);
+    }
+
+    function metaReportBuildComparison({
+      monthsMapA = {},
+      monthsMapB = {},
+      periodA = null,
+      periodB = null,
+      mode = 'mom',
+    } = {}) {
+      if (!periodA?.startMonthKey || !periodA?.endMonthKey || !periodB?.startMonthKey || !periodB?.endMonthKey) {
+        return {
+          mode,
+          insufficientData: true,
+          samePeriod: false,
+          periodA: null,
+          periodB: null,
+          deltas: {},
+          heroMetrics: [],
+          detailRows: [],
+          ytdByMonth: [],
+          hasBottomline: false,
+        };
+      }
+
+      const samePeriod = periodA.startMonthKey === periodB.startMonthKey
+        && periodA.endMonthKey === periodB.endMonthKey;
+      const aggA = metaReportAggregateComparisonRange(monthsMapA, periodA.startMonthKey, periodA.endMonthKey);
+      const aggB = metaReportAggregateComparisonRange(monthsMapB, periodB.startMonthKey, periodB.endMonthKey);
+      const hasBottomline = aggA.hasBottomline || aggB.hasBottomline;
+      const insufficientData = aggA.monthCount === 0 && aggB.monthCount === 0;
+      const metricDefs = metaReportComparisonMetricDefs(hasBottomline);
+      const deltas = {};
+      const detailRows = metricDefs.map((def) => {
+        const valueA = aggA.metrics[def.id];
+        const valueB = aggB.metrics[def.id];
+        const pct = metaReportDeltaPct(valueA, valueB);
+        deltas[def.id] = { pct, abs: Math.round((metaReportParseAmount(valueA) - metaReportParseAmount(valueB)) * 100) / 100 };
+        return { ...def, valueA, valueB, deltaPct: pct };
+      });
+      const heroMetrics = metaReportComparisonHeroIds(hasBottomline).map((id) => {
+        const def = metricDefs.find((entry) => entry.id === id);
+        return {
+          id,
+          label: def?.label || id,
+          valueA: aggA.metrics[id],
+          valueB: aggB.metrics[id],
+          deltaPct: deltas[id]?.pct ?? null,
+          format: def?.format || 'num',
+          higherIsBetter: def?.higherIsBetter ?? null,
+        };
+      });
+      const ytdByMonth = mode === 'ytd'
+        ? metaReportBuildYtdByMonthComparison(monthsMapA, monthsMapB, periodA, periodB)
+        : [];
+
+      return {
+        mode,
+        insufficientData,
+        samePeriod,
+        hasBottomline,
+        periodA: aggA,
+        periodB: aggB,
+        deltas,
+        heroMetrics,
+        detailRows,
+        ytdByMonth,
+      };
+    }
+
+    function metaReportComparisonYearsNeeded(periodA, periodB) {
+      const years = new Set();
+      for (const period of [periodA, periodB]) {
+        if (!period?.startMonthKey) continue;
+        years.add(String(period.startMonthKey).slice(0, 4));
+        years.add(String(period.endMonthKey).slice(0, 4));
+      }
+      return [...years].filter(Boolean);
+    }
+
+    function metaReportComparisonMonthsForYear(payload, year) {
+      if (!payload || Number(payload.year) === Number(year)) {
+        return payload?.months || {};
+      }
+      const cached = metaReportsState.comparisonYearCache?.[year];
+      return cached?.months || {};
+    }
+
+    function metaReportComparisonAvailableMonthKeys(payload) {
+      const keys = new Set();
+      const addFromPayload = (source) => {
+        if (!source) return;
+        Object.entries(source.months || {}).forEach(([key, month]) => {
+          if (metaReportMonthHasComparisonData(month)) keys.add(key);
+        });
+      };
+      addFromPayload(payload);
+      Object.values(metaReportsState.comparisonYearCache || {}).forEach(addFromPayload);
+      return [...keys].sort();
+    }
+
+    function metaReportComparisonPresetDisabled(presetId, payload) {
+      const activeKey = metaReportsState.activeMonthKey;
+      if (!activeKey) return true;
+      if (presetId === 'mom') {
+        return !metaReportComparisonAddMonths(activeKey, -1);
+      }
+      if (presetId === 'yoy_month' || presetId === 'ytd') {
+        const priorYear = Number(String(activeKey).slice(0, 4)) - 1;
+        const yearMeta = (payload?.years || []).find((entry) => Number(entry.year) === priorYear);
+        if (yearMeta && yearMeta.available === false) return true;
+        if (payload?.previousYearHasData === false) return true;
+        return false;
+      }
+      return false;
+    }
+
+    function metaReportComparisonFmtValue(value, format = 'num') {
+      if (format === 'kr') return metaFmtKr(value);
+      if (format === 'x') return metaFmtX(value);
+      if (format === 'pct') return `${metaFmtNum(value, 2)}%`;
+      return metaFmtNum(value);
+    }
+
+    function metaReportComparisonDeltaTone(deltaPct, higherIsBetter = null) {
+      if (deltaPct == null || !Number.isFinite(deltaPct) || deltaPct === 0) return 'neutral';
+      if (higherIsBetter === false) {
+        return deltaPct < 0 ? 'positive' : 'negative';
+      }
+      if (higherIsBetter === true) {
+        return deltaPct > 0 ? 'positive' : 'negative';
+      }
+      return deltaPct > 0 ? 'positive' : 'negative';
+    }
+
+    function metaReportComparisonPeriodsFromState(payload) {
+      const resolved = metaReportResolveComparisonPresets({
+        activeMonthKey: metaReportsState.activeMonthKey,
+        mode: metaReportsState.comparisonMode,
+      });
+      if (metaReportsState.comparisonMode !== 'custom') {
+        metaReportsState.comparisonPeriodA = resolved.periodA;
+        metaReportsState.comparisonPeriodB = resolved.periodB;
+      }
+      return resolved;
+    }
+
+    function metaReportComparisonMaps(payload, periodA, periodB) {
+      const years = metaReportComparisonYearsNeeded(periodA, periodB);
+      const maps = {};
+      years.forEach((year) => {
+        maps[year] = metaReportComparisonMonthsForYear(payload, year);
+      });
+      const pickMap = (period) => {
+        const year = String(period?.startMonthKey || '').slice(0, 4);
+        return maps[year] || payload?.months || {};
+      };
+      return {
+        monthsMapA: pickMap(periodA),
+        monthsMapB: pickMap(periodB),
+      };
+    }
+
+    async function ensureMetaReportComparisonYears(payload, { editable = false } = {}) {
+      const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
+      const years = metaReportComparisonYearsNeeded(periodA, periodB);
+      const currentYear = String(payload?.year || metaReportsState.selectedYear);
+      const missingYears = years.filter((year) => year !== currentYear && !metaReportsState.comparisonYearCache[year]);
+      if (!missingYears.length) return;
+
+      metaReportsState.comparisonLoading = true;
+      syncMetaReportComparisonUi(payload, { editable });
+
+      for (const year of missingYears) {
+        try {
+          let fetched;
+          if (editable && payload?.clientId) {
+            fetched = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(payload.clientId)}?year=${encodeURIComponent(year)}`);
+          } else if (REPORT_TOKEN) {
+            fetched = await fetch(`/api/meta-reports/public/${encodeURIComponent(REPORT_TOKEN)}?year=${encodeURIComponent(year)}`)
+              .then(async (response) => {
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Report not found');
+                return data;
+              });
+          }
+          if (fetched) {
+            metaReportsState.comparisonYearCache[year] = fetched;
+          }
+        } catch (_) {
+          /* leave cache empty for unavailable years */
+        }
+      }
+
+      metaReportsState.comparisonLoading = false;
+    }
+
+    function computeMetaReportComparison(payload) {
+      const { periodA, periodB, mode } = metaReportComparisonPeriodsFromState(payload);
+      const { monthsMapA, monthsMapB } = metaReportComparisonMaps(payload, periodA, periodB);
+      return metaReportBuildComparison({
+        monthsMapA,
+        monthsMapB,
+        periodA,
+        periodB,
+        mode,
+      });
+    }
+
+    function renderMetaReportComparisonRangeOptions(selectedKey, availableKeys) {
+      return availableKeys.map((key) => `
+        <option value="${esc(key)}"${key === selectedKey ? ' selected' : ''}>${esc(metaMonthLabel(key))} ${esc(String(key).slice(0, 4))}</option>
+      `).join('');
+    }
+
+    function renderMetaReportComparisonRangeGroup(label, badgeClass, period, availableKeys, side) {
+      const startKey = period?.startMonthKey || availableKeys[0] || '';
+      const endKey = period?.endMonthKey || period?.startMonthKey || availableKeys[availableKeys.length - 1] || '';
+      const disabled = metaReportsState.comparisonMode !== 'custom';
+      return `
+        <div class="meta-report-comparison-range-group is-period-${side}">
+          <div class="meta-report-comparison-range-label">
+            <span class="meta-report-comparison-badge ${badgeClass}">${side === 'a' ? 'Period A' : 'Period B'}</span>
+            ${esc(label)}
+          </div>
+          <div class="meta-report-comparison-range-fields">
+            <select class="admin-select" data-comparison-range="${side}-start"${disabled ? ' disabled' : ''}>${renderMetaReportComparisonRangeOptions(startKey, availableKeys)}</select>
+            <span class="meta-report-comparison-range-sep">to</span>
+            <select class="admin-select" data-comparison-range="${side}-end"${disabled ? ' disabled' : ''}>${renderMetaReportComparisonRangeOptions(endKey, availableKeys)}</select>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMetaReportComparisonContextStrip(comparison) {
+      if (metaReportsState.comparisonLoading) {
+        return '<p class="meta-report-comparison-loading">Loading comparison data…</p>';
+      }
+      if (!comparison || comparison.insufficientData) {
+        return '<p class="meta-report-comparison-empty">Select two periods with ad data to compare performance.</p>';
+      }
+      if (comparison.samePeriod) {
+        return '<p class="meta-report-comparison-warning">Period A and Period B are the same. Choose different ranges to compare.</p>';
+      }
+      const partialNote = comparison.periodA?.partialData || comparison.periodB?.partialData
+        ? '<span class="meta-report-comparison-partial-badge">Partial data in one or both ranges</span>'
+        : '';
+      return `
+        <div class="meta-report-comparison-context" id="meta-report-comparison-context">
+          <span>Comparing</span>
+          <span class="meta-report-comparison-context-badge is-a">${esc(comparison.periodA.label)}</span>
+          <strong>vs</strong>
+          <span class="meta-report-comparison-context-badge is-b">${esc(comparison.periodB.label)}</span>
+          ${partialNote}
+        </div>
+      `;
+    }
+
+    function renderMetaReportComparisonHeroCards(comparison) {
+      if (!comparison || comparison.insufficientData || comparison.samePeriod) return '';
+      return `
+        <div class="meta-report-comparison-outcomes" id="meta-report-comparison-outcomes">
+          ${comparison.heroMetrics.map((metric) => {
+            const delta = metaReportFormatDeltaPct(metric.deltaPct);
+            const tone = metaReportComparisonDeltaTone(metric.deltaPct, metric.higherIsBetter);
+            return `
+              <div class="meta-report-comparison-outcome-card">
+                <div class="meta-report-comparison-outcome-label">${esc(metric.label)}</div>
+                <div class="meta-report-comparison-outcome-value">${esc(metaReportComparisonFmtValue(metric.valueA, metric.format))}</div>
+                <div class="meta-report-comparison-outcome-sub">vs ${esc(metaReportComparisonFmtValue(metric.valueB, metric.format))}</div>
+                ${delta ? `<div class="meta-report-comparison-outcome-delta is-${tone}">${esc(delta)}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderMetaReportComparisonDetailTable(comparison) {
+      if (!comparison || comparison.insufficientData || comparison.samePeriod) return '';
+      const rows = comparison.detailRows.map((row) => {
+        const delta = metaReportFormatDeltaPct(row.deltaPct);
+        const tone = metaReportComparisonDeltaTone(row.deltaPct, row.higherIsBetter);
+        return `
+          <div class="meta-report-comparison-details-row">
+            <span class="meta-report-scenario-label">${esc(row.label)}</span>
+            <span class="meta-report-scenario-value is-projected">${esc(metaReportComparisonFmtValue(row.valueA, row.format))}</span>
+            <span class="meta-report-scenario-value">${esc(metaReportComparisonFmtValue(row.valueB, row.format))}</span>
+            <span class="meta-report-scenario-delta${tone === 'positive' ? ' is-positive' : tone === 'negative' ? ' is-negative' : ''}">${esc(delta || '—')}</span>
+          </div>
+        `;
+      }).join('');
+      return `
+        <div class="meta-report-comparison-details">
+          <div class="meta-report-comparison-details-head">Detailed comparison</div>
+          ${rows}
+        </div>
+      `;
+    }
+
+    function renderMetaReportComparisonCard() {
+      const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
+      const comparison = metaReportsState.comparisonResult || computeMetaReportComparison(payload);
+      const availableKeys = metaReportComparisonAvailableMonthKeys(payload);
+      const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
+      const showYtdToggle = metaReportsState.comparisonMode === 'ytd';
+
+      return `
+        <section class="meta-report-comparison-card" id="meta-report-comparison-card">
+          <div class="meta-report-comparison-head">
+            <div>
+              <h3 class="meta-report-comparison-title">Period comparison</h3>
+              <p class="meta-report-comparison-copy">Compare ad performance between two time ranges — previous month, same month last year, YTD, or custom ranges.</p>
+            </div>
+          </div>
+          <div class="meta-report-comparison-presets" id="meta-report-comparison-presets">
+            ${META_REPORT_COMPARISON_PRESETS.map(({ id, label }) => {
+              const disabled = metaReportComparisonPresetDisabled(id, payload);
+              const title = disabled && id === 'yoy_month' ? 'Prior year data is not available on this report' : (disabled && id === 'ytd' ? 'Prior year data is not available on this report' : (disabled && id === 'mom' ? 'No previous month available' : ''));
+              return `
+                <button type="button" class="meta-report-comparison-pill${metaReportsState.comparisonMode === id ? ' is-active' : ''}${disabled ? ' is-disabled' : ''}" data-comparison-preset="${esc(id)}" aria-pressed="${metaReportsState.comparisonMode === id}"${disabled ? ' disabled' : ''}${title ? ` title="${esc(title)}"` : ''}>${esc(label)}</button>
+              `;
+            }).join('')}
+          </div>
+          <div class="meta-report-comparison-range-row" id="meta-report-comparison-range-row">
+            ${renderMetaReportComparisonRangeGroup('Current / primary range', 'is-a', periodA, availableKeys, 'a')}
+            ${renderMetaReportComparisonRangeGroup('Comparison range', 'is-b', periodB, availableKeys, 'b')}
+          </div>
+          <div id="meta-report-comparison-context-wrap">${renderMetaReportComparisonContextStrip(comparison)}</div>
+          <div id="meta-report-comparison-hero-wrap">${renderMetaReportComparisonHeroCards(comparison)}</div>
+          <div class="meta-report-comparison-chart-card">
+            <div class="meta-report-comparison-chart-toolbar">
+              <h3 class="meta-report-chart-title">Side-by-side metrics</h3>
+              <div class="meta-report-comparison-chart-controls">
+                ${showYtdToggle ? `
+                  <div class="meta-report-comparison-view-toggle" id="meta-report-comparison-view-toggle" role="group" aria-label="Comparison chart view">
+                    <button type="button" class="meta-report-comparison-view-toggle-btn${metaReportsState.comparisonView === 'summary' ? ' is-active' : ''}" data-comparison-view="summary">Summary</button>
+                    <button type="button" class="meta-report-comparison-view-toggle-btn${metaReportsState.comparisonView === 'by_month' ? ' is-active' : ''}" data-comparison-view="by_month">By month</button>
+                  </div>
+                ` : ''}
+                <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
+                  <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'kr' ? ' is-active' : ''}" data-mode="kr">Dkr</button>
+                  <button type="button" class="meta-report-chart-toggle-btn${metaReportsState.comparisonChartMode === 'x' ? ' is-active' : ''}" data-mode="x">Multiplier</button>
+                </div>
+              </div>
+            </div>
+            <div class="meta-report-comparison-chart-canvas-wrap">
+              <canvas id="meta-report-comparison-chart" aria-label="Period comparison chart"></canvas>
+              <p class="meta-report-chart-empty" id="meta-report-comparison-chart-empty" hidden>Not enough data to chart this comparison yet.</p>
+            </div>
+          </div>
+          <div id="meta-report-comparison-details-wrap">${renderMetaReportComparisonDetailTable(comparison)}</div>
+        </section>
+      `;
+    }
+
+    function destroyMetaReportComparisonChart() {
+      if (metaReportsState.comparisonChartInstance) {
+        metaReportsState.comparisonChartInstance.destroy();
+        metaReportsState.comparisonChartInstance = null;
+      }
+    }
+
+    function metaReportComparisonChartLabel(metricId, defs) {
+      return defs.find((entry) => entry.id === metricId)?.label || metricId;
+    }
+
+    function buildMetaReportComparisonChart(canvas, comparison, chartMode = 'kr', view = 'summary') {
+      const emptyEl = document.getElementById('meta-report-comparison-chart-empty');
+      if (!comparison || comparison.insufficientData || comparison.samePeriod) {
+        if (emptyEl) emptyEl.hidden = false;
+        return null;
+      }
+      if (emptyEl) emptyEl.hidden = true;
+
+      const metricDefs = metaReportComparisonMetricDefs(comparison.hasBottomline);
+      let labels = [];
+      let valuesA = [];
+      let valuesB = [];
+
+      if (view === 'by_month' && comparison.mode === 'ytd' && comparison.ytdByMonth.length) {
+        const metricId = metaReportsState.comparisonYtdMetric || 'spend';
+        labels = comparison.ytdByMonth.map((row) => row.label);
+        valuesA = comparison.ytdByMonth.map((row) => metaReportParseAmount(row.periodA?.[metricId]));
+        valuesB = comparison.ytdByMonth.map((row) => metaReportParseAmount(row.periodB?.[metricId]));
+      } else {
+        const chartIds = metaReportComparisonChartIds(comparison.hasBottomline, chartMode);
+        labels = chartIds.map((id) => metaReportComparisonChartLabel(id, metricDefs));
+        valuesA = chartIds.map((id) => metaReportParseAmount(comparison.periodA.metrics[id]));
+        valuesB = chartIds.map((id) => metaReportParseAmount(comparison.periodB.metrics[id]));
+      }
+
+      return new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: comparison.periodA.label,
+              data: valuesA,
+              backgroundColor: 'rgba(255, 106, 0, 0.82)',
+              borderColor: '#ff6a00',
+              borderWidth: 1,
+              borderRadius: 6,
+              maxBarThickness: 42,
+            },
+            {
+              label: comparison.periodB.label,
+              data: valuesB,
+              backgroundColor: 'rgba(148, 163, 184, 0.82)',
+              borderColor: '#94a3b8',
+              borderWidth: 1,
+              borderRadius: 6,
+              maxBarThickness: 42,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: { boxWidth: 12, font: { size: 11 } },
+            },
+            tooltip: {
+              backgroundColor: '#ffffff',
+              borderColor: '#e8e0d8',
+              borderWidth: 1,
+              titleColor: '#1a1208',
+              bodyColor: '#1a1208',
+              padding: 10,
+              callbacks: {
+                label(context) {
+                  const value = context.parsed.y;
+                  if (view === 'by_month') {
+                    const metricId = metaReportsState.comparisonYtdMetric || 'spend';
+                    const def = metricDefs.find((entry) => entry.id === metricId);
+                    return `${context.dataset.label}: ${metaReportComparisonFmtValue(value, def?.format || 'num')}`;
+                  }
+                  const metricId = metaReportComparisonChartIds(comparison.hasBottomline, chartMode)[context.dataIndex];
+                  const def = metricDefs.find((entry) => entry.id === metricId);
+                  return `${context.dataset.label}: ${metaReportComparisonFmtValue(value, def?.format || 'num')}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#6b5348', font: { size: 11 }, maxRotation: 45, minRotation: 0 },
+            },
+            y: {
+              grid: { color: 'rgba(26, 18, 8, 0.08)' },
+              ticks: {
+                color: '#6b5348',
+                font: { size: 11 },
+                callback: (value) => {
+                  const amount = Number(value) || 0;
+                  if (Math.abs(amount) >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+                  if (Math.abs(amount) >= 1000) return `${Math.round(amount / 1000)}K`;
+                  return amount;
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    function mountMetaReportComparisonChart(comparison) {
+      destroyMetaReportComparisonChart();
+      const canvas = document.getElementById('meta-report-comparison-chart');
+      if (!canvas) return;
+      metaReportsState.comparisonChartInstance = buildMetaReportComparisonChart(
+        canvas,
+        comparison,
+        metaReportsState.comparisonChartMode,
+        metaReportsState.comparisonView,
+      );
+    }
+
+    function syncMetaReportComparisonUi(payload, { editable = false } = {}) {
+      const card = document.getElementById('meta-report-comparison-card');
+      if (!card) return;
+
+      const comparison = computeMetaReportComparison(payload);
+      metaReportsState.comparisonResult = comparison;
+
+      const contextWrap = document.getElementById('meta-report-comparison-context-wrap');
+      if (contextWrap) contextWrap.innerHTML = renderMetaReportComparisonContextStrip(comparison);
+
+      const heroWrap = document.getElementById('meta-report-comparison-hero-wrap');
+      if (heroWrap) heroWrap.innerHTML = renderMetaReportComparisonHeroCards(comparison);
+
+      const detailsWrap = document.getElementById('meta-report-comparison-details-wrap');
+      if (detailsWrap) detailsWrap.innerHTML = renderMetaReportComparisonDetailTable(comparison);
+
+      const emptyEl = document.getElementById('meta-report-comparison-chart-empty');
+      if (emptyEl) {
+        emptyEl.hidden = !(comparison.insufficientData || comparison.samePeriod);
+      }
+
+      mountMetaReportComparisonChart(comparison);
+    }
+
+    async function refreshMetaReportComparison(payload, { editable = false } = {}) {
+      if (!payload || !document.getElementById('meta-report-comparison-card')) return;
+      await ensureMetaReportComparisonYears(payload, { editable });
+      syncMetaReportComparisonUi(payload, { editable });
+    }
+
+    function bindMetaReportComparisonControls(payload, { editable = false } = {}) {
+      const bindPresetButtons = () => {
+        document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
+          button.onclick = async () => {
+            if (button.disabled) return;
+            const mode = button.getAttribute('data-comparison-preset');
+            if (!mode) return;
+            metaReportsState.comparisonMode = mode;
+            if (mode !== 'ytd') metaReportsState.comparisonView = 'summary';
+            const presetsWrap = document.getElementById('meta-report-comparison-presets');
+            const rangeWrap = document.getElementById('meta-report-comparison-range-row');
+            const card = document.getElementById('meta-report-comparison-card');
+            if (card) {
+              card.outerHTML = renderMetaReportComparisonCard();
+              bindMetaReportComparisonControls(payload, { editable });
+            }
+            await refreshMetaReportComparison(payload, { editable });
+          };
+        });
+      };
+
+      const bindRangeSelects = () => {
+        document.querySelectorAll('[data-comparison-range]').forEach((select) => {
+          select.onchange = async () => {
+            const key = select.getAttribute('data-comparison-range');
+            if (!key) return;
+            const [side, bound] = key.split('-');
+            if (!metaReportsState[`comparisonPeriod${side.toUpperCase()}`]) {
+              metaReportsState[`comparisonPeriod${side.toUpperCase()}`] = { startMonthKey: null, endMonthKey: null };
+            }
+            const period = metaReportsState[`comparisonPeriod${side.toUpperCase()}`];
+            period[`${bound}MonthKey`] = select.value;
+            if (period.startMonthKey && period.endMonthKey && period.startMonthKey > period.endMonthKey) {
+              const tmp = period.startMonthKey;
+              period.startMonthKey = period.endMonthKey;
+              period.endMonthKey = tmp;
+            }
+            metaReportsState.comparisonMode = 'custom';
+            await refreshMetaReportComparison(payload, { editable });
+            const rangeWrap = document.getElementById('meta-report-comparison-range-row');
+            if (rangeWrap) {
+              const availableKeys = metaReportComparisonAvailableMonthKeys(payload);
+              rangeWrap.innerHTML = `
+                ${renderMetaReportComparisonRangeGroup('Current / primary range', 'is-a', metaReportsState.comparisonPeriodA, availableKeys, 'a')}
+                ${renderMetaReportComparisonRangeGroup('Comparison range', 'is-b', metaReportsState.comparisonPeriodB, availableKeys, 'b')}
+              `;
+              bindRangeSelects();
+            }
+            document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
+              button.classList.toggle('is-active', button.getAttribute('data-comparison-preset') === 'custom');
+              button.setAttribute('aria-pressed', button.getAttribute('data-comparison-preset') === 'custom');
+            });
+          };
+        });
+      };
+
+      document.querySelectorAll('#meta-report-comparison-chart-mode .meta-report-chart-toggle-btn').forEach((button) => {
+        button.onclick = () => {
+          metaReportsState.comparisonChartMode = button.getAttribute('data-mode') || 'kr';
+          document.querySelectorAll('#meta-report-comparison-chart-mode .meta-report-chart-toggle-btn').forEach((entry) => {
+            entry.classList.toggle('is-active', entry === button);
+          });
+          mountMetaReportComparisonChart(metaReportsState.comparisonResult || computeMetaReportComparison(payload));
+        };
+      });
+
+      document.querySelectorAll('[data-comparison-view]').forEach((button) => {
+        button.onclick = () => {
+          metaReportsState.comparisonView = button.getAttribute('data-comparison-view') || 'summary';
+          document.querySelectorAll('[data-comparison-view]').forEach((entry) => {
+            entry.classList.toggle('is-active', entry === button);
+          });
+          mountMetaReportComparisonChart(metaReportsState.comparisonResult || computeMetaReportComparison(payload));
+        };
+      });
+
+      bindPresetButtons();
+      bindRangeSelects();
+    }
+
+    function mountMetaReportComparison(payload, { editable = false } = {}) {
+      if (!document.getElementById('meta-report-comparison-card')) return;
+      bindMetaReportComparisonControls(payload, { editable });
+      void refreshMetaReportComparison(payload, { editable });
+    }
+
     function renderMetaReportScenarioCard() {
       return `
         <section class="meta-report-scenario-card" id="meta-report-scenario-card">
@@ -10295,6 +11327,7 @@
           metaReportsState.scenarioChartInstances[kind] = null;
         }
       });
+      destroyMetaReportComparisonChart();
     }
 
     function destroyMetaReportScenarioCharts() {
@@ -11292,30 +12325,36 @@
 
     function mountMetaReportCharts(payload, { editable = false, clientId = null } = {}) {
       destroyMetaReportCharts();
-      if (!payload || !document.getElementById('meta-report-charts-panel')) return;
+      const chartsPanel = document.getElementById('meta-report-charts-panel');
+      const comparisonCard = document.getElementById('meta-report-comparison-card');
+      if (!payload || (!chartsPanel && !comparisonCard)) return;
 
-      hydrateMetaReportSpendChartType(payload);
-      hydrateMetaReportScenarioSettings(payload);
-      const { series, demo } = resolveMetaReportChartSeries(payload);
-      metaReportsState.chartSeries = series;
-      metaReportsState.chartDemo = demo;
+      if (chartsPanel) {
+        hydrateMetaReportSpendChartType(payload);
+        hydrateMetaReportScenarioSettings(payload);
+        const { series, demo } = resolveMetaReportChartSeries(payload);
+        metaReportsState.chartSeries = series;
+        metaReportsState.chartDemo = demo;
 
-      const demoBadge = document.getElementById('meta-report-chart-demo-badge');
-      if (demoBadge) demoBadge.hidden = !(demo && editable);
+        const demoBadge = document.getElementById('meta-report-chart-demo-badge');
+        if (demoBadge) demoBadge.hidden = !(demo && editable);
 
-      bindMetaReportChartTabs();
-      bindMetaReportChartToggles();
-      if (editable) {
-        bindMetaReportScenarioControls(payload, { editable: true });
-        bindMetaReportSpendChartTypePicker(clientId, payload);
+        bindMetaReportChartTabs();
+        bindMetaReportChartToggles();
+        if (editable) {
+          bindMetaReportScenarioControls(payload, { editable: true });
+          bindMetaReportSpendChartTypePicker(clientId, payload);
+        }
+        syncMetaReportChartToggleUi();
+        syncMetaReportSpendChartTypeToolbar(metaReportsState.chartTab || 'trend');
+        document.querySelectorAll('[data-spend-chart-type]').forEach((button) => {
+          button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === metaReportsState.spendChartType);
+        });
+        setMetaReportChartTab(metaReportsState.chartTab || 'trend');
+        if (editable) syncMetaReportScenario(payload);
       }
-      syncMetaReportChartToggleUi();
-      syncMetaReportSpendChartTypeToolbar(metaReportsState.chartTab || 'trend');
-      document.querySelectorAll('[data-spend-chart-type]').forEach((button) => {
-        button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === metaReportsState.spendChartType);
-      });
-      setMetaReportChartTab(metaReportsState.chartTab || 'trend');
-      if (editable) syncMetaReportScenario(payload);
+
+      mountMetaReportComparison(payload, { editable });
     }
 
     function syncMetaReportMonthPanelDom(monthPayload, options = {}, yearPayload = null) {
@@ -11441,6 +12480,7 @@
       const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable });
       const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
       const chartsPanel = showYearVisuals ? renderMetaReportChartsPanel({ editable }) : '';
+      const comparisonCard = showYearVisuals ? renderMetaReportComparisonCard() : '';
       const scenarioCard = editable && showYearVisuals ? renderMetaReportScenarioCard() : '';
 
       const bodyHtml = showYearVisuals ? `
@@ -11448,6 +12488,7 @@
           <div class="meta-report-content-main">${tablesHtml}</div>
           ${chartsPanel}
         </div>
+        ${comparisonCard}
         ${scenarioCard}
       ` : `
         <div class="meta-report-content-main">${tablesHtml}</div>
@@ -12177,6 +13218,7 @@
           if (newYear === previousYear) return;
           metaReportsState.selectedYear = newYear;
           metaReportsState.activeMonthKey = null;
+          metaReportsState.comparisonYearCache = {};
           setMetaReportClientYearLoading(newYear, true);
           try {
             await loadMetaReportsClientPage({ silent: true });
@@ -12274,6 +13316,7 @@
           if (newYear === previousYear) return;
           metaReportsState.selectedYear = newYear;
           metaReportsState.activeMonthKey = null;
+          metaReportsState.comparisonYearCache = {};
           setMetaReportPublicYearLoading(newYear, true);
           try {
             await loadPublicMetaReportPage({ silent: true });
