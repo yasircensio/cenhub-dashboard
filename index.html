@@ -9554,7 +9554,11 @@
         const computedTrend = metaReportScenarioMonthlyTrend(months, elasticity, { dampenHotStreak: cautionStrongMonths });
         if (Math.abs(computedTrend.trendR) >= META_SCENARIO_TREND_R_THRESHOLD) trendInfo = computedTrend;
       }
-      return { efficiency, elasticity, presetElasticity, ...trendInfo };
+      const result = { efficiency, elasticity, presetElasticity, ...trendInfo };
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'C,E',location:'index.html:metaReportComputeScenarioEfficiency',message:'efficiency computed',data:{blendHistory,monthCount:months.length,recencyCpl:recencyWeighted?.avgCpl,pooledCpl:pooled?.avgCpl,blendedCpl:efficiency?.avgCpl,trendRatePct:result.trendRatePct},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return result;
     }
 
     function metaReportProjectBudgetAtSpend({
@@ -9601,7 +9605,7 @@
 
     function buildMetaReportScenarioProjection(series, payload) {
       const pills = getMetaReportScenarioPillsFromState();
-      return metaReportProjectBudgetScenario({
+      const projection = metaReportProjectBudgetScenario({
         series,
         multiplier: metaReportsState.budgetMultiplier,
         hasBottomline: payloadHasMetaReportBottomline(payload),
@@ -9613,6 +9617,10 @@
         activeMonthKey: metaReportsState.activeMonthKey,
         smoothOutliers: pills.smoothUneven,
       });
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'A,C,E',location:'index.html:buildMetaReportScenarioProjection',message:'projection built',data:{pills,baselineMode:metaReportsState.budgetBaseline,multiplier:metaReportsState.budgetMultiplier,baselineSpend:projection?.baselineSpend,avgCpl:projection?.efficiency?.avgCpl,baselineRevenue:projection?.baseline?.totalLeadValue,projectedRevenue:projection?.projected?.totalLeadValue,baselineLeads:projection?.baseline?.leads,projectedLeads:projection?.projected?.leads,outliersAdjusted:projection?.prepared?.outliersAdjusted,trendRatePct:projection?.trendRatePct},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return projection;
     }
 
     function resolveMetaReportLastMonthBaseline(series = [], {
@@ -10191,12 +10199,14 @@
         return '<p class="meta-report-scenario-empty">Add months with ad spend and leads to model a budget scenario.</p>';
       }
 
-      const revenueDelta = metaReportFormatDeltaPct(
-        metaReportDeltaPct(projection.projected.totalLeadValue, projection.baseline.totalLeadValue),
-      );
+      const revenueDeltaRaw = metaReportDeltaPct(projection.projected.totalLeadValue, projection.baseline.totalLeadValue);
+      const revenueDelta = metaReportFormatDeltaPct(revenueDeltaRaw);
       const roasDelta = metaReportFormatDeltaPct(
         metaReportDeltaPct(projection.projected.roasKr, projection.baseline.roasKr),
       );
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'A,B,D',location:'index.html:renderMetaReportScenarioMetrics',message:'grid metrics render',data:{displayedProjectedRevenue:metaFmtKr(projection.projected.totalLeadValue),displayedBaselineRevenue:metaFmtKr(projection.baseline.totalLeadValue),rawProjectedRevenue:projection.projected.totalLeadValue,rawBaselineRevenue:projection.baseline.totalLeadValue,revenueDeltaRaw,revenueDeltaFormatted:revenueDelta,projectedSpend:projection.projected.spend,baselineSpend:projection.baseline.spend,spendDeltaRaw:metaReportDeltaPct(projection.projected.spend,projection.baseline.spend)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       const revenueBand = projection.projectedConservative && projection.projectedOptimistic
         && projection.projectedConservative.totalLeadValue !== projection.projectedOptimistic.totalLeadValue
         ? `${metaFmtKr(projection.projectedConservative.totalLeadValue)} – ${metaFmtKr(projection.projectedOptimistic.totalLeadValue)}`
@@ -11257,6 +11267,10 @@
             if (!key || button.disabled) return;
             metaReportsState[key] = !metaReportsState[key];
             applyMetaReportScenarioPillsToState(getMetaReportScenarioPillsFromState());
+            const pillsAfter = getMetaReportScenarioPillsFromState();
+            // #region agent log
+            fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',hypothesisId:'D',location:'index.html:scenarioPillClick',message:'pill toggled',data:{toggledKey:key,pills:pillsAfter,multiplier:metaReportsState.budgetMultiplier,baselineMode:metaReportsState.budgetBaseline},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
             const pillsWrap = document.getElementById('meta-report-scenario-pills-wrap');
             if (pillsWrap) {
               pillsWrap.outerHTML = renderMetaReportScenarioModelPills();
