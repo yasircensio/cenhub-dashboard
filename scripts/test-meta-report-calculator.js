@@ -150,8 +150,8 @@ function testBudgetScenarioProjection() {
   assert.strictEqual(result.insufficientData, false);
   approx(result.baseline.spend, 10000);
   approx(result.projected.spend, 20000);
-  // Power-law at 0.75 elasticity: 2^0.75 ~= 1.68x leads vs baseline, not 2x
-  approx(result.projected.leads, 71, 2);
+  // Power-law at 0.80 elasticity: 2^0.80 ~= 1.74x leads vs baseline, not 2x
+  approx(result.projected.leads, 74, 2);
 }
 
 function testScenarioRampAtTriple() {

@@ -4839,35 +4839,19 @@
       color: var(--text-soft); font-size: 12px; line-height: 1.5; margin-top: 12px; padding: 10px 12px;
     }
     .meta-report-scenario-context strong { color: var(--text); font-weight: 600; }
-    .meta-report-scenario-field--wide { grid-column: 1 / -1; }
-    .meta-report-scenario-field-label {
-      color: var(--text); display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px;
-    }
-    .meta-report-scenario-pill-lead {
-      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 10px;
-    }
-    .meta-report-scenario-pill-section { margin-top: 14px; }
-    .meta-report-scenario-pill-grid {
-      display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    }
-    .meta-report-scenario-pill-grid--compact {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    .meta-report-scenario-pill-section { margin-top: 10px; }
+    .meta-report-scenario-pill-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
     }
     .meta-report-scenario-pill {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
-      cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
-      padding: 12px 14px; text-align: left; transition: border-color 0.15s ease, background 0.15s ease;
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text-soft); cursor: pointer; font-size: 12px; font-weight: 600;
+      line-height: 1.2; padding: 6px 12px; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
     }
-    .meta-report-scenario-pill:hover { border-color: rgba(255, 106, 0, 0.35); }
+    .meta-report-scenario-pill:hover { border-color: rgba(255, 106, 0, 0.35); color: var(--text); }
     .meta-report-scenario-pill.is-active {
-      background: linear-gradient(145deg, rgba(255, 106, 0, 0.1), rgba(255, 106, 0, 0.03));
-      border-color: rgba(255, 106, 0, 0.45);
-    }
-    .meta-report-scenario-pill-label {
-      color: var(--text); font-size: 13px; font-weight: 700; line-height: 1.3;
-    }
-    .meta-report-scenario-pill-desc {
-      color: var(--text-soft); font-size: 11px; line-height: 1.45;
+      background: rgba(255, 106, 0, 0.12); border-color: rgba(255, 106, 0, 0.45); color: var(--text);
     }
     .meta-report-scenario-field {
       display: flex; flex-direction: column; gap: 8px; min-width: 0;
@@ -8039,7 +8023,6 @@
       budgetBaseline: 'year',
       scenarioTrendMethod: 'recency_weighted',
       scenarioMonthWindow: '6',
-      scenarioElasticity: 'balanced',
       scenarioSmoothUneven: true,
       scenarioBlendHistory: false,
       scenarioIncludeTrend: false,
@@ -8975,44 +8958,14 @@
       { value: 'all', label: 'All ad-active months' },
     ];
 
-    const META_REPORT_SCENARIO_ELASTICITY_OPTIONS = [
-      { value: 'conservative', label: 'Conservative scaling', description: 'Stronger diminishing returns when spend increases (0.70).' },
-      { value: 'balanced', label: 'Balanced scaling', description: 'Default saturation curve for most clients (0.75).' },
-      { value: 'optimistic', label: 'Optimistic scaling', description: 'Milder diminishing returns — capped for realism (0.80).' },
-    ];
+    const META_REPORT_SCENARIO_FIXED_ELASTICITY = 0.80;
 
     const META_REPORT_SCENARIO_MODEL_PILLS = [
-      {
-        id: 'scenarioSmoothUneven',
-        label: 'Smooth uneven months',
-        description: 'Softens months with unusual CPL or lead spikes so one bad tracking month does not skew the forecast.',
-        defaultOn: true,
-      },
-      {
-        id: 'scenarioBlendHistory',
-        label: 'Blend with full history',
-        description: 'Mixes recent months with the full window average instead of only weighting the latest streak.',
-        defaultOn: false,
-      },
-      {
-        id: 'scenarioIncludeTrend',
-        label: 'Include trend direction',
-        description: 'Adds a small up or down adjustment when efficiency has been moving consistently over time.',
-        defaultOn: false,
-      },
-      {
-        id: 'scenarioCautionStrongMonths',
-        label: 'Caution after strong months',
-        description: 'Pulls projections back when the last 3 months look much better than the full period.',
-        defaultOn: false,
-      },
+      { id: 'scenarioSmoothUneven', label: 'Remove uneven months', defaultOn: true },
+      { id: 'scenarioBlendHistory', label: 'Blend full history', defaultOn: false },
+      { id: 'scenarioIncludeTrend', label: 'Follow trend', defaultOn: false },
+      { id: 'scenarioCautionStrongMonths', label: 'Cap hot streak', defaultOn: false },
     ];
-
-    const META_REPORT_SCENARIO_ELASTICITY_VALUES = {
-      conservative: 0.70,
-      balanced: 0.75,
-      optimistic: 0.80,
-    };
 
     function normalizeMetaReportSpendChartType(value) {
       const normalized = String(value || 'area').trim().toLowerCase();
@@ -9039,13 +8992,6 @@
       return META_REPORT_SCENARIO_MONTH_WINDOW_OPTIONS.some((entry) => entry.value === normalized)
         ? normalized
         : '6';
-    }
-
-    function normalizeMetaReportScenarioElasticity(value) {
-      const normalized = String(value || 'balanced').trim().toLowerCase();
-      return META_REPORT_SCENARIO_ELASTICITY_OPTIONS.some((entry) => entry.value === normalized)
-        ? normalized
-        : 'balanced';
     }
 
     function normalizeMetaReportBudgetBaseline(value) {
@@ -9111,7 +9057,6 @@
       metaReportsState.budgetMultiplier = normalizeMetaReportBudgetMultiplier(settings.metaReportBudgetMultiplier);
       metaReportsState.budgetBaseline = normalizeMetaReportBudgetBaseline(settings.metaReportBudgetBaseline);
       metaReportsState.scenarioMonthWindow = normalizeMetaReportScenarioMonthWindow(settings.metaReportScenarioMonthWindow);
-      metaReportsState.scenarioElasticity = normalizeMetaReportScenarioElasticity(settings.metaReportScenarioElasticity);
       applyMetaReportScenarioPillsToState(
         deriveMetaReportScenarioPillsFromTrendMethod(settings.metaReportScenarioTrendMethod),
       );
@@ -9119,37 +9064,14 @@
 
     function renderMetaReportScenarioModelPills() {
       return `
-        <div class="meta-report-scenario-pill-section meta-report-scenario-field--wide">
-          <span class="meta-report-scenario-field-label">Forecast adjustments</span>
-          <p class="meta-report-scenario-pill-lead">Choose how history is interpreted. These replace the old abstract trend method names.</p>
-          <div class="meta-report-scenario-pill-grid" role="group" aria-label="Forecast adjustments">
-            ${META_REPORT_SCENARIO_MODEL_PILLS.map(({ id, label, description }) => {
+        <div class="meta-report-scenario-pill-section">
+          <div class="meta-report-scenario-pill-row" role="group" aria-label="Forecast options">
+            ${META_REPORT_SCENARIO_MODEL_PILLS.map(({ id, label }) => {
               const active = Boolean(metaReportsState[id]);
               return `
-                <button type="button" class="meta-report-scenario-pill${active ? ' is-active' : ''}" data-scenario-pill="${esc(id)}" aria-pressed="${active}">
-                  <span class="meta-report-scenario-pill-label">${esc(label)}</span>
-                  <span class="meta-report-scenario-pill-desc">${esc(description)}</span>
-                </button>
+                <button type="button" class="meta-report-scenario-pill${active ? ' is-active' : ''}" data-scenario-pill="${esc(id)}" aria-pressed="${active}">${esc(label)}</button>
               `;
             }).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderMetaReportScenarioElasticityPills() {
-      const current = metaReportsState.scenarioElasticity || 'balanced';
-      return `
-        <div class="meta-report-scenario-pill-section meta-report-scenario-field--wide">
-          <span class="meta-report-scenario-field-label">Spend scaling</span>
-          <p class="meta-report-scenario-pill-lead">How aggressively results grow when ad spend increases.</p>
-          <div class="meta-report-scenario-pill-grid meta-report-scenario-pill-grid--compact" role="group" aria-label="Spend scaling">
-            ${META_REPORT_SCENARIO_ELASTICITY_OPTIONS.map(({ value, label, description }) => `
-              <button type="button" class="meta-report-scenario-pill meta-report-scenario-pill--select${value === current ? ' is-active' : ''}" data-scenario-elasticity="${esc(value)}" aria-pressed="${value === current}">
-                <span class="meta-report-scenario-pill-label">${esc(label)}</span>
-                <span class="meta-report-scenario-pill-desc">${esc(description)}</span>
-              </button>
-            `).join('')}
           </div>
         </div>
       `;
@@ -9517,25 +9439,14 @@
       return { trendRate, trendDirection, trendRatePct: metaReportRoundRatio(trendRate * 100), trendR: metaReportRoundRatio(r) };
     }
 
-    function metaReportScenarioCalibrateElasticity(months = [], presetElasticity = 0.75) {
-      if (months.length < META_SCENARIO_MIN_TREND_MONTHS) return presetElasticity;
-      const spends = months.map((point) => metaReportParseAmount(point.spend));
-      const minSpend = Math.min(...spends);
-      const maxSpend = Math.max(...spends);
-      if (minSpend <= 0 || maxSpend <= 0 || ((maxSpend - minSpend) / minSpend) < 0.25) return presetElasticity;
-      const points = months
-        .filter((point) => metaReportParseAmount(point.spend) > 0 && metaReportParseAmount(point.leads) > 0)
-        .map((point) => ({ x: Math.log(metaReportParseAmount(point.spend)), y: Math.log(metaReportParseAmount(point.leads)) }));
-      if (points.length < META_SCENARIO_MIN_TREND_MONTHS) return presetElasticity;
-      const { slope, r } = metaReportScenarioLinearRegression(points);
-      if (Math.abs(r) < 0.25) return presetElasticity;
-      return metaReportRoundRatio(Math.max(0.65, Math.min(0.80, slope)));
+    function metaReportScenarioCalibrateElasticity() {
+      return META_REPORT_SCENARIO_FIXED_ELASTICITY;
     }
 
-    function metaReportComputeScenarioEfficiency(months = [], { trendMethod = 'recency_weighted', elasticityPreset = 'balanced' } = {}) {
+    function metaReportComputeScenarioEfficiency(months = [], { trendMethod = 'recency_weighted' } = {}) {
       const method = normalizeMetaReportScenarioTrendMethod(trendMethod);
-      const presetElasticity = META_REPORT_SCENARIO_ELASTICITY_VALUES[normalizeMetaReportScenarioElasticity(elasticityPreset)] || 0.75;
-      const elasticity = metaReportScenarioCalibrateElasticity(months, presetElasticity);
+      const presetElasticity = META_REPORT_SCENARIO_FIXED_ELASTICITY;
+      const elasticity = metaReportScenarioCalibrateElasticity();
       const recencyWeighted = metaReportScenarioRecencyEfficiency(months);
       const pooled = metaReportScenarioPooledEfficiency(months);
       if (!recencyWeighted || recencyWeighted.avgCpl <= 0) {
@@ -9591,14 +9502,14 @@
       hasBottomline = false,
       trendMethod = 'recency_weighted',
       monthWindow = '6',
-      elasticityPreset = 'balanced',
+      elasticityPreset = 'optimistic',
       baselineMode = 'year',
       activeMonthKey = null,
       asOfDate = new Date(),
       smoothOutliers = true,
     } = {}) {
       const prepared = metaReportPrepareScenarioSeries(series, { windowMonths: monthWindow, asOfDate, smoothOutliers });
-      const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, { trendMethod, elasticityPreset });
+      const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, { trendMethod });
       let resolvedBaselineSpend = metaReportParseAmount(baselineSpend);
       if (!resolvedBaselineSpend) {
         if (baselineMode === 'month' && activeMonthKey) {
@@ -9792,12 +9703,10 @@
         : projection.trendDirection === 'down'
           ? `trend down ${Math.abs(projection.trendRatePct || 0).toFixed(1)}%/mo`
           : 'trend flat';
-      const scalingLabel = META_REPORT_SCENARIO_ELASTICITY_OPTIONS.find((entry) => entry.value === metaReportsState.scenarioElasticity)?.label
-        || 'Balanced scaling';
       const outlierNote = projection.prepared?.outliersAdjusted
-        ? ` · ${projection.prepared.outliersAdjusted} uneven month${projection.prepared.outliersAdjusted === 1 ? '' : 's'} smoothed`
+        ? ` · ${projection.prepared.outliersAdjusted} uneven month${projection.prepared.outliersAdjusted === 1 ? '' : 's'} removed`
         : '';
-      return `<p class="meta-report-scenario-context" id="meta-report-scenario-context"><strong>Active:</strong> ${esc(pillSummary)} · last ${projection.prepared?.monthsUsed || 0} ad months · ${esc(trendLabel)} · ${esc(scalingLabel)}${esc(outlierNote)}</p>`;
+      return `<p class="meta-report-scenario-context" id="meta-report-scenario-context"><strong>Active:</strong> ${esc(pillSummary)} · last ${projection.prepared?.monthsUsed || 0} ad months · ${esc(trendLabel)}${esc(outlierNote)}</p>`;
     }
 
     function payloadHasMetaReportBottomline(payload) {
@@ -9919,7 +9828,6 @@
             </label>
           </div>
           ${renderMetaReportScenarioModelPills()}
-          ${renderMetaReportScenarioElasticityPills()}
           <div id="meta-report-scenario-context-wrap">${renderMetaReportScenarioContextStrip(metaReportsState.chartProjection)}</div>
           <div class="meta-report-scenario-grid" id="meta-report-scenario-grid"></div>
           <div class="meta-report-scenario-charts" id="meta-report-scenario-charts">
@@ -11014,7 +10922,7 @@
           metaReportBudgetBaseline: metaReportsState.budgetBaseline,
           metaReportScenarioTrendMethod: metaReportsState.scenarioTrendMethod,
           metaReportScenarioMonthWindow: metaReportsState.scenarioMonthWindow,
-          metaReportScenarioElasticity: metaReportsState.scenarioElasticity,
+          metaReportScenarioElasticity: 'optimistic',
         }, { fast: true }).catch(() => {});
       }, 350);
     }
@@ -11068,21 +10976,6 @@
           persist();
         };
       });
-
-      document.querySelectorAll('[data-scenario-elasticity]').forEach((button) => {
-        button.onclick = () => {
-          const value = normalizeMetaReportScenarioElasticity(button.getAttribute('data-scenario-elasticity'));
-          metaReportsState.scenarioElasticity = value;
-          document.querySelectorAll('[data-scenario-elasticity]').forEach((entry) => {
-            const entryValue = entry.getAttribute('data-scenario-elasticity');
-            const active = entryValue === value;
-            entry.classList.toggle('is-active', active);
-            entry.setAttribute('aria-pressed', String(active));
-          });
-          refresh();
-          persist();
-        };
-      });
     }
 
     function syncMetaReportScenario(payload) {
@@ -11099,7 +10992,6 @@
         hasBottomline,
         trendMethod,
         monthWindow: metaReportsState.scenarioMonthWindow,
-        elasticityPreset: metaReportsState.scenarioElasticity,
         baselineMode: metaReportsState.budgetBaseline,
         activeMonthKey: metaReportsState.activeMonthKey,
         smoothOutliers: pills.smoothUneven,
