@@ -9621,6 +9621,7 @@
     }
 
     function metaReportBuildScenarioProjectionMonthKeys(count = META_REPORT_SCENARIO_PROJECTED_MONTHS, asOfDate = new Date()) {
+      // Always the next N calendar months after today's month (e.g. Jan → Feb–May).
       const currentKey = metaReportMonthKeyFromDate(asOfDate);
       if (!currentKey || count <= 0) return [];
       const keys = [];

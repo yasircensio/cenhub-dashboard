@@ -1,6 +1,7 @@
 const assert = require('assert');
 const {
   buildScenarioProjectionSteps,
+  buildScenarioProjectionMonthKeys,
   computeMetaReportMetrics,
   computeMetaReportEfficiencyInsight,
   computeScenarioEfficiency,
@@ -354,6 +355,7 @@ function testOutlierWinsorization() {
 }
 
 function testScenarioProjectionMonthLabels() {
+  // Labels are derived from asOfDate — not hardcoded. August → Sep–Dec.
   const asOfDate = new Date('2026-08-10T12:00:00.000Z');
   const series = [{
     spend: 9000,
@@ -383,6 +385,18 @@ function testScenarioProjectionMonthLabels() {
   assert.strictEqual(steps.length, 4);
   assert.deepStrictEqual(steps.map((step) => step.label), ['Sep', 'Oct', 'Nov', 'Dec']);
   assert.deepStrictEqual(steps.map((step) => step.monthKey), ['2026-09', '2026-10', '2026-11', '2026-12']);
+}
+
+function testScenarioProjectionMonthLabelsFromJanuary() {
+  const asOfDate = new Date('2026-01-15T12:00:00.000Z');
+  const keys = buildScenarioProjectionMonthKeys(4, asOfDate);
+  assert.deepStrictEqual(keys, ['2026-02', '2026-03', '2026-04', '2026-05']);
+}
+
+function testScenarioProjectionMonthLabelsYearRollover() {
+  const asOfDate = new Date('2026-12-10T12:00:00.000Z');
+  const keys = buildScenarioProjectionMonthKeys(4, asOfDate);
+  assert.deepStrictEqual(keys, ['2027-01', '2027-02', '2027-03', '2027-04']);
 }
 
 function testBudgetScenarioInsufficientData() {
@@ -438,6 +452,8 @@ function main() {
   testConservativeOptimisticBandCollapsesWithoutTrend();
   testResolveScenarioConfidence();
   testScenarioProjectionMonthLabels();
+  testScenarioProjectionMonthLabelsFromJanuary();
+  testScenarioProjectionMonthLabelsYearRollover();
   testOutlierWinsorization();
   testBudgetScenarioInsufficientData();
   testEfficiencyInsight();
