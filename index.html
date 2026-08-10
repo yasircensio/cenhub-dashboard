@@ -4995,7 +4995,50 @@
     .meta-report-comparison-table thead th:first-child { text-align: left; }
     .meta-report-comparison-col-a { color: #c2410c; font-weight: 600; text-align: right; }
     .meta-report-comparison-col-b { color: #475569; text-align: right; }
-    .meta-report-comparison-col-change { text-align: center; white-space: nowrap; }
+    .meta-report-comparison-col-change { text-align: right; white-space: nowrap; }
+    .meta-report-comparison-custom-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
+      display: flex; flex-direction: column; gap: 14px; padding: 16px 18px;
+    }
+    .meta-report-comparison-custom-copy {
+      color: var(--text-soft); font-size: 13px; line-height: 1.45; margin: 0;
+    }
+    .meta-report-comparison-custom-grid {
+      align-items: stretch; display: grid; gap: 12px 16px;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+    .meta-report-comparison-custom-vs {
+      align-self: center; color: var(--text-muted); font-size: 13px; font-weight: 700;
+      padding-top: 28px; text-transform: uppercase;
+    }
+    .meta-report-comparison-custom-period {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 14px 16px;
+    }
+    .meta-report-comparison-custom-period.is-a { border-color: rgba(255, 106, 0, 0.35); }
+    .meta-report-comparison-custom-period.is-b { border-color: rgba(100, 116, 139, 0.35); }
+    .meta-report-comparison-custom-period-head {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px;
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-comparison-custom-fields {
+      display: grid; gap: 10px; grid-template-columns: 1fr 1fr;
+    }
+    .meta-report-comparison-custom-fields label {
+      color: var(--text-soft); display: flex; flex-direction: column; font-size: 11px;
+      font-weight: 700; gap: 6px; letter-spacing: 0.03em; text-transform: uppercase;
+    }
+    .meta-report-comparison-custom-fields input[type="month"] {
+      font: inherit; font-size: 14px; font-weight: 500; min-width: 0; padding: 8px 10px;
+      text-transform: none; width: 100%;
+    }
+    @media (max-width: 720px) {
+      .meta-report-comparison-custom-grid {
+        grid-template-columns: 1fr;
+      }
+      .meta-report-comparison-custom-vs { padding-top: 0; text-align: center; }
+      .meta-report-comparison-custom-fields { grid-template-columns: 1fr; }
+    }
     .meta-report-comparison-change {
       display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; gap: 2px;
     }
@@ -10190,9 +10233,9 @@
 
     const META_REPORT_COMPARISON_PRESETS = [
       { id: 'mom', label: 'This month vs last month' },
+      { id: 'custom', label: 'Custom' },
       { id: 'yoy_month', label: 'Same month last year' },
       { id: 'ytd', label: 'This year vs last year' },
-      { id: 'custom', label: 'Custom' },
     ];
 
     const META_REPORT_COMPARISON_TABLE_GROUPS = [
@@ -10706,25 +10749,53 @@
       });
     }
 
-    function renderMetaReportComparisonRangeOptions(selectedKey, availableKeys) {
-      return availableKeys.map((key) => `
-        <option value="${esc(key)}"${key === selectedKey ? ' selected' : ''}>${esc(metaMonthLabel(key))} ${esc(String(key).slice(0, 4))}</option>
-      `).join('');
+    function metaReportComparisonMonthInputBounds(availableKeys = []) {
+      if (!availableKeys.length) return { min: '', max: '' };
+      return { min: availableKeys[0], max: availableKeys[availableKeys.length - 1] };
     }
 
-    function renderMetaReportComparisonRangeGroup(label, badgeClass, period, availableKeys, side) {
-      const startKey = period?.startMonthKey || availableKeys[0] || '';
-      const endKey = period?.endMonthKey || period?.startMonthKey || availableKeys[availableKeys.length - 1] || '';
+    function renderMetaReportComparisonCustomPanel(periodA, periodB, availableKeys) {
+      const bounds = metaReportComparisonMonthInputBounds(availableKeys);
+      const startA = periodA?.startMonthKey || availableKeys[availableKeys.length - 1] || '';
+      const endA = periodA?.endMonthKey || startA;
+      const startB = periodB?.startMonthKey || (availableKeys.length > 1 ? availableKeys[availableKeys.length - 2] : startA);
+      const endB = periodB?.endMonthKey || startB;
+      const minAttr = bounds.min ? ` min="${esc(bounds.min)}"` : '';
+      const maxAttr = bounds.max ? ` max="${esc(bounds.max)}"` : '';
+
       return `
-        <div class="meta-report-comparison-range-group is-period-${side}">
-          <div class="meta-report-comparison-range-label">
-            <span class="meta-report-comparison-badge ${badgeClass}">${side === 'a' ? 'A' : 'B'}</span>
-            ${esc(label)}
-          </div>
-          <div class="meta-report-comparison-range-fields">
-            <select class="admin-select" data-comparison-range="${side}-start">${renderMetaReportComparisonRangeOptions(startKey, availableKeys)}</select>
-            <span class="meta-report-comparison-range-sep">to</span>
-            <select class="admin-select" data-comparison-range="${side}-end">${renderMetaReportComparisonRangeOptions(endKey, availableKeys)}</select>
+        <div class="meta-report-comparison-custom-panel" id="meta-report-comparison-custom-panel">
+          <p class="meta-report-comparison-custom-copy">Choose a start and end month for each period. Comparisons use full calendar months with ad data.</p>
+          <div class="meta-report-comparison-custom-grid">
+            <div class="meta-report-comparison-custom-period is-a">
+              <div class="meta-report-comparison-custom-period-head">
+                <span class="meta-report-comparison-badge is-a">A</span>
+                <span>${esc(metaReportComparisonPeriodLabel(startA, endA))}</span>
+              </div>
+              <div class="meta-report-comparison-custom-fields">
+                <label>From month
+                  <input type="month" class="admin-select" data-comparison-range="a-start" value="${esc(startA)}"${minAttr}${maxAttr} />
+                </label>
+                <label>To month
+                  <input type="month" class="admin-select" data-comparison-range="a-end" value="${esc(endA)}"${minAttr}${maxAttr} />
+                </label>
+              </div>
+            </div>
+            <div class="meta-report-comparison-custom-vs" aria-hidden="true">vs</div>
+            <div class="meta-report-comparison-custom-period is-b">
+              <div class="meta-report-comparison-custom-period-head">
+                <span class="meta-report-comparison-badge is-b">B</span>
+                <span>${esc(metaReportComparisonPeriodLabel(startB, endB))}</span>
+              </div>
+              <div class="meta-report-comparison-custom-fields">
+                <label>From month
+                  <input type="month" class="admin-select" data-comparison-range="b-start" value="${esc(startB)}"${minAttr}${maxAttr} />
+                </label>
+                <label>To month
+                  <input type="month" class="admin-select" data-comparison-range="b-end" value="${esc(endB)}"${minAttr}${maxAttr} />
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -10753,8 +10824,8 @@
           <tr class="${isHighlight ? `is-highlight accent-${accent}` : ''}">
             <th scope="row">${esc(spec.label)}</th>
             <td class="meta-report-comparison-col-a">${esc(metaReportComparisonFmtValue(valueA, spec.format))}</td>
-            <td class="meta-report-comparison-col-change">${renderMetaReportComparisonChangeCell(deltaPct, spec.higherIsBetter)}</td>
             <td class="meta-report-comparison-col-b">${esc(metaReportComparisonFmtValue(valueB, spec.format))}</td>
+            <td class="meta-report-comparison-col-change">${renderMetaReportComparisonChangeCell(deltaPct, spec.higherIsBetter)}</td>
           </tr>
         `;
       }).join('');
@@ -10770,8 +10841,8 @@
                 <tr>
                   <th scope="col">Metric</th>
                   <th scope="col" class="meta-report-comparison-col-a">${esc(labelA)}</th>
-                  <th scope="col" class="meta-report-comparison-col-change">Change</th>
                   <th scope="col" class="meta-report-comparison-col-b">${esc(labelB)}</th>
+                  <th scope="col" class="meta-report-comparison-col-change">Change</th>
                 </tr>
               </thead>
               <tbody>${rowsHtml}</tbody>
@@ -10848,9 +10919,8 @@
             }).join('')}
           </div>
           ${showCustomRanges ? `
-            <div class="meta-report-comparison-range-row" id="meta-report-comparison-range-row">
-              ${renderMetaReportComparisonRangeGroup('Period A', 'is-a', periodA, availableKeys, 'a')}
-              ${renderMetaReportComparisonRangeGroup('Period B', 'is-b', periodB, availableKeys, 'b')}
+            <div id="meta-report-comparison-custom-wrap">
+              ${renderMetaReportComparisonCustomPanel(periodA, periodB, availableKeys)}
             </div>
           ` : ''}
           <div id="meta-report-comparison-headline-wrap">${renderMetaReportComparisonHeadline(comparison)}</div>
@@ -11048,6 +11118,18 @@
             const mode = button.getAttribute('data-comparison-preset');
             if (!mode) return;
             metaReportsState.comparisonMode = mode;
+            if (mode === 'custom') {
+              const hasCustomA = metaReportsState.comparisonPeriodA?.startMonthKey && metaReportsState.comparisonPeriodA?.endMonthKey;
+              const hasCustomB = metaReportsState.comparisonPeriodB?.startMonthKey && metaReportsState.comparisonPeriodB?.endMonthKey;
+              if (!hasCustomA || !hasCustomB) {
+                const fallback = metaReportResolveComparisonPresets({
+                  activeMonthKey: metaReportsState.activeMonthKey,
+                  mode: 'mom',
+                });
+                if (!hasCustomA && fallback.periodA) metaReportsState.comparisonPeriodA = { ...fallback.periodA };
+                if (!hasCustomB && fallback.periodB) metaReportsState.comparisonPeriodB = { ...fallback.periodB };
+              }
+            }
             const card = document.getElementById('meta-report-comparison-card');
             if (card) {
               card.outerHTML = renderMetaReportComparisonCard();
@@ -11058,17 +11140,18 @@
         });
       };
 
-      const bindRangeSelects = () => {
-        document.querySelectorAll('[data-comparison-range]').forEach((select) => {
-          select.onchange = async () => {
-            const key = select.getAttribute('data-comparison-range');
-            if (!key) return;
+      const bindCustomRangeInputs = () => {
+        document.querySelectorAll('[data-comparison-range]').forEach((input) => {
+          input.onchange = async () => {
+            const key = input.getAttribute('data-comparison-range');
+            if (!key || !input.value) return;
             const [side, bound] = key.split('-');
-            if (!metaReportsState[`comparisonPeriod${side.toUpperCase()}`]) {
-              metaReportsState[`comparisonPeriod${side.toUpperCase()}`] = { startMonthKey: null, endMonthKey: null };
+            const stateKey = `comparisonPeriod${side.toUpperCase()}`;
+            if (!metaReportsState[stateKey]) {
+              metaReportsState[stateKey] = { startMonthKey: null, endMonthKey: null };
             }
-            const period = metaReportsState[`comparisonPeriod${side.toUpperCase()}`];
-            period[`${bound}MonthKey`] = select.value;
+            const period = metaReportsState[stateKey];
+            period[`${bound}MonthKey`] = input.value;
             if (period.startMonthKey && period.endMonthKey && period.startMonthKey > period.endMonthKey) {
               const tmp = period.startMonthKey;
               period.startMonthKey = period.endMonthKey;
@@ -11076,14 +11159,15 @@
             }
             metaReportsState.comparisonMode = 'custom';
             await refreshMetaReportComparison(payload, { editable });
-            const rangeWrap = document.getElementById('meta-report-comparison-range-row');
-            if (rangeWrap) {
+            const customWrap = document.getElementById('meta-report-comparison-custom-wrap');
+            if (customWrap) {
               const availableKeys = metaReportComparisonAvailableMonthKeys(payload);
-              rangeWrap.innerHTML = `
-                ${renderMetaReportComparisonRangeGroup('Period A', 'is-a', metaReportsState.comparisonPeriodA, availableKeys, 'a')}
-                ${renderMetaReportComparisonRangeGroup('Period B', 'is-b', metaReportsState.comparisonPeriodB, availableKeys, 'b')}
-              `;
-              bindRangeSelects();
+              customWrap.innerHTML = renderMetaReportComparisonCustomPanel(
+                metaReportsState.comparisonPeriodA,
+                metaReportsState.comparisonPeriodB,
+                availableKeys,
+              );
+              bindCustomRangeInputs();
             }
             document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
               button.classList.toggle('active', button.getAttribute('data-comparison-preset') === 'custom');
@@ -11112,7 +11196,7 @@
       });
 
       bindPresetButtons();
-      bindRangeSelects();
+      bindCustomRangeInputs();
       setMetaReportComparisonTab(metaReportsState.comparisonTab || 'table');
     }
 
