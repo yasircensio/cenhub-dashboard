@@ -4963,6 +4963,10 @@
     .meta-report-comparison-card {
       display: flex; flex-direction: column; gap: 12px; margin-top: 8px; width: 100%;
     }
+    .meta-report-comparison-focus {
+      display: flex; flex-direction: column; gap: 12px; margin: 0 auto;
+      max-width: 600px; width: 100%;
+    }
     .meta-report-comparison-title {
       color: var(--text); font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; margin: 0;
     }
@@ -5029,7 +5033,8 @@
     }
     .meta-report-comparison-view-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); overflow: hidden; padding: 18px 20px 20px; width: 100%;
+      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 600px; overflow: hidden;
+      padding: 18px 20px 20px; width: 100%;
     }
     .meta-report-comparison-view-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
@@ -5078,7 +5083,7 @@
     .meta-report-comparison-chart-canvas-wrap canvas {
       display: block; height: 100% !important; width: 100% !important;
     }
-    .meta-report-comparison-table { min-width: 520px; table-layout: auto; width: 100%; }
+    .meta-report-comparison-table { table-layout: auto; width: 100%; }
     .meta-report-comparison-table thead th {
       color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
       padding: 8px 12px; text-align: right; text-transform: uppercase;
