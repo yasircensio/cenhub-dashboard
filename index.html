@@ -5039,7 +5039,7 @@
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
       box-shadow: var(--shadow-sm); padding: 12px 16px; width: 100%;
     }
-    .meta-report-comparison-period-card.is-custom { padding: 16px 18px; }
+    .meta-report-comparison-period-card.is-custom { padding: 10px 12px; }
     .meta-report-comparison-duel {
       align-items: stretch; border: 1px solid var(--border); border-radius: 16px;
       display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -5070,50 +5070,52 @@
       color: #b45309; content: '*'; font-size: 14px; margin-left: 2px; vertical-align: super;
     }
     .meta-report-comparison-custom-dates {
-      align-items: start; display: grid; gap: 10px 14px;
+      align-items: center; display: grid; gap: 8px 10px;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     }
-    .meta-report-comparison-custom-period { display: flex; flex-direction: column; gap: 8px; min-width: 0; position: relative; z-index: 1; }
+    .meta-report-comparison-custom-period { min-width: 0; position: relative; z-index: 1; }
+    .meta-report-comparison-custom-period-row {
+      align-items: center; display: flex; gap: 8px; min-width: 0;
+    }
     .meta-report-comparison-custom-period-tag {
-      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-      text-transform: uppercase;
+      flex-shrink: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      line-height: 1; text-align: center; width: 16px;
     }
     .meta-report-comparison-custom-period.is-a .meta-report-comparison-custom-period-tag { color: #c2410c; }
     .meta-report-comparison-custom-period.is-b .meta-report-comparison-custom-period-tag { color: #64748b; }
     .meta-report-comparison-custom-period-dates {
-      display: grid; gap: 10px 14px; grid-template-columns: 1fr 1fr;
+      display: flex; flex: 1 1 auto; gap: 8px; min-width: 0;
     }
     .meta-report-comparison-custom-dates-vs {
       align-self: center; color: var(--text-muted); font-size: 10px; font-weight: 700;
-      letter-spacing: 0.06em; margin-top: 14px; pointer-events: none; position: relative;
+      letter-spacing: 0.06em; pointer-events: none; position: relative;
       text-transform: lowercase; z-index: 0;
     }
     .meta-report-comparison-date-field {
-      cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+      cursor: pointer; display: flex; flex: 1 1 0; flex-direction: column; gap: 3px; min-width: 0;
     }
     .meta-report-comparison-date-field-label {
-      color: var(--text-soft); font-size: 10px; font-weight: 700;
-      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--text-soft); font-size: 9px; font-weight: 700;
+      letter-spacing: 0.05em; line-height: 1; text-transform: uppercase;
     }
     .meta-report-comparison-custom-period.is-a .meta-report-comparison-date-field-label { color: #c2410c; }
     .meta-report-comparison-custom-period.is-b .meta-report-comparison-date-field-label { color: #64748b; }
     .meta-report-comparison-date-input-wrap {
-      align-items: center; background: transparent; border: 0;
-      border-bottom: 1.5px solid rgba(26, 18, 8, 0.14); border-radius: 0;
-      cursor: pointer; display: flex; gap: 6px; min-height: 36px;
-      padding: 0 2px 4px; transition: border-color 0.15s ease;
+      align-items: center; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer; display: flex; gap: 6px;
+      min-height: 32px; padding: 0 8px; transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .meta-report-comparison-date-input-wrap:hover {
-      border-bottom-color: rgba(255, 106, 0, 0.5);
+      border-color: rgba(255, 106, 0, 0.45);
     }
     .meta-report-comparison-date-input-wrap:focus-within {
-      border-bottom-color: var(--primary); box-shadow: none;
+      border-color: var(--primary); box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.1);
     }
     .meta-report-comparison-date-input-wrap .flatpickr-input,
     .meta-report-comparison-date-input {
       background: transparent; border: 0 !important; box-shadow: none !important;
       color: var(--text); cursor: pointer; flex: 1 1 auto; font: inherit;
-      font-size: 13px; font-weight: 600; min-width: 0; padding: 8px 0; width: 100%;
+      font-size: 12px; font-weight: 600; min-width: 0; padding: 6px 0; width: 100%;
     }
     .meta-report-comparison-date-input-wrap .flatpickr-input:focus,
     .meta-report-comparison-date-input:focus { outline: none; }
@@ -5130,7 +5132,7 @@
       .meta-report-comparison-duel-value { font-size: 18px; }
     }
     @media (max-width: 560px) {
-      .meta-report-comparison-custom-period-dates { grid-template-columns: 1fr; }
+      .meta-report-comparison-custom-period-dates { flex-direction: column; }
     }
     .meta-report-comparison-view-card.is-loading {
       min-height: 460px;
@@ -5257,12 +5259,6 @@
       align-self: center; color: var(--text-muted); font-size: 13px; font-weight: 700;
       padding-top: 28px; text-transform: uppercase;
     }
-    .meta-report-comparison-custom-period {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-      display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 14px 16px;
-    }
-    .meta-report-comparison-custom-period.is-a { border-color: rgba(255, 106, 0, 0.35); }
-    .meta-report-comparison-custom-period.is-b { border-color: rgba(100, 116, 139, 0.35); }
     .meta-report-comparison-custom-period-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px;
       color: var(--text); font-size: 13px; font-weight: 600;
@@ -11558,18 +11554,22 @@
       return `
         <div class="meta-report-comparison-custom-dates" id="meta-report-comparison-range-panel">
           <div class="meta-report-comparison-custom-period is-a">
-            <span class="meta-report-comparison-custom-period-tag">A</span>
-            <div class="meta-report-comparison-custom-period-dates">
-              ${renderMetaReportComparisonDateField('a', 'start', startA, bounds, 'From')}
-              ${renderMetaReportComparisonDateField('a', 'end', endA, bounds, 'To')}
+            <div class="meta-report-comparison-custom-period-row">
+              <span class="meta-report-comparison-custom-period-tag">A</span>
+              <div class="meta-report-comparison-custom-period-dates">
+                ${renderMetaReportComparisonDateField('a', 'start', startA, bounds, 'From')}
+                ${renderMetaReportComparisonDateField('a', 'end', endA, bounds, 'To')}
+              </div>
             </div>
           </div>
           <div class="meta-report-comparison-custom-dates-vs" aria-hidden="true">vs</div>
           <div class="meta-report-comparison-custom-period is-b">
-            <span class="meta-report-comparison-custom-period-tag">B</span>
-            <div class="meta-report-comparison-custom-period-dates">
-              ${renderMetaReportComparisonDateField('b', 'start', startB, bounds, 'From')}
-              ${renderMetaReportComparisonDateField('b', 'end', endB, bounds, 'To')}
+            <div class="meta-report-comparison-custom-period-row">
+              <span class="meta-report-comparison-custom-period-tag">B</span>
+              <div class="meta-report-comparison-custom-period-dates">
+                ${renderMetaReportComparisonDateField('b', 'start', startB, bounds, 'From')}
+                ${renderMetaReportComparisonDateField('b', 'end', endB, bounds, 'To')}
+              </div>
             </div>
           </div>
         </div>

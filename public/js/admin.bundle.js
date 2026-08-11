@@ -893,18 +893,22 @@ Resume the interrupted ${S}?`)&&(l=w.id,c=Number(w.batchOffset)||0)}}if(a?setFbL
   `}function renderMetaReportComparisonCustomDatesPanel(e,t,a){const n=metaReportComparisonDateInputBounds(a),s=e?.startDate||n.min||"",o=e?.endDate||s,r=t?.startDate||n.min||"",i=t?.endDate||r;return`
     <div class="meta-report-comparison-custom-dates" id="meta-report-comparison-range-panel">
       <div class="meta-report-comparison-custom-period is-a">
-        <span class="meta-report-comparison-custom-period-tag">A</span>
-        <div class="meta-report-comparison-custom-period-dates">
-          ${renderMetaReportComparisonDateField("a","start",s,n,"From")}
-          ${renderMetaReportComparisonDateField("a","end",o,n,"To")}
+        <div class="meta-report-comparison-custom-period-row">
+          <span class="meta-report-comparison-custom-period-tag">A</span>
+          <div class="meta-report-comparison-custom-period-dates">
+            ${renderMetaReportComparisonDateField("a","start",s,n,"From")}
+            ${renderMetaReportComparisonDateField("a","end",o,n,"To")}
+          </div>
         </div>
       </div>
       <div class="meta-report-comparison-custom-dates-vs" aria-hidden="true">vs</div>
       <div class="meta-report-comparison-custom-period is-b">
-        <span class="meta-report-comparison-custom-period-tag">B</span>
-        <div class="meta-report-comparison-custom-period-dates">
-          ${renderMetaReportComparisonDateField("b","start",r,n,"From")}
-          ${renderMetaReportComparisonDateField("b","end",i,n,"To")}
+        <div class="meta-report-comparison-custom-period-row">
+          <span class="meta-report-comparison-custom-period-tag">B</span>
+          <div class="meta-report-comparison-custom-period-dates">
+            ${renderMetaReportComparisonDateField("b","start",r,n,"From")}
+            ${renderMetaReportComparisonDateField("b","end",i,n,"To")}
+          </div>
         </div>
       </div>
     </div>
