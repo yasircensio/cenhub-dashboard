@@ -4983,6 +4983,58 @@
       box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 680px; overflow: hidden;
       padding: 18px 20px 20px; width: 100%;
     }
+    .meta-report-comparison-view-card.is-table-split { max-width: 980px; }
+    .meta-report-comparison-split {
+      align-items: start; display: grid; gap: 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 272px);
+    }
+    .meta-report-comparison-summary {
+      display: flex; flex-direction: column; gap: 10px; min-width: 0;
+      position: sticky; top: 12px;
+    }
+    .meta-report-comparison-summary-heading {
+      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      margin: 0; text-transform: uppercase;
+    }
+    .meta-report-comparison-summary-stack {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .meta-report-comparison-summary-item {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      min-width: 0; padding: 14px 14px 12px;
+    }
+    .meta-report-comparison-summary-label {
+      color: var(--text-muted); font-size: 12px; font-weight: 500; line-height: 1.3; margin: 0 0 6px;
+    }
+    .meta-report-comparison-summary-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700;
+      line-height: 1.2; overflow-wrap: anywhere;
+    }
+    .meta-report-comparison-summary-change {
+      color: var(--text-muted); font-size: 12px; font-weight: 600; line-height: 1.3; margin-top: 6px;
+    }
+    .meta-report-comparison-summary-item.is-positive {
+      background: rgba(22, 163, 74, 0.06); border-color: rgba(22, 163, 74, 0.18);
+    }
+    .meta-report-comparison-summary-item.is-negative {
+      background: rgba(194, 65, 12, 0.06); border-color: rgba(194, 65, 12, 0.18);
+    }
+    .meta-report-comparison-summary-item.is-positive .meta-report-comparison-summary-change { color: #15803d; }
+    .meta-report-comparison-summary-item.is-negative .meta-report-comparison-summary-change { color: var(--error); }
+    .meta-report-comparison-summary-skeleton-item {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; gap: 8px; min-height: 88px; padding: 14px;
+    }
+    @media (max-width: 860px) {
+      .meta-report-comparison-split { grid-template-columns: 1fr; }
+      .meta-report-comparison-summary { position: static; }
+      .meta-report-comparison-summary-stack {
+        display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 520px) {
+      .meta-report-comparison-summary-stack { grid-template-columns: 1fr; }
+    }
     .meta-report-comparison-view-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
       margin-bottom: 14px;
@@ -12004,6 +12056,72 @@
       return `<div class="meta-report-groups-stack">${groupsHtml}</div>`;
     }
 
+    const META_REPORT_COMPARISON_SUMMARY_LABELS = {
+      spend: 'Ad spend',
+      leads: 'Leads',
+      wonLeads: 'Won leads',
+      roasKr: 'Return on ad spend',
+      totalLeadValue: 'Total lead value',
+      poasKr: 'Profit on ad spend',
+    };
+
+    function renderMetaReportComparisonSummarySkeleton() {
+      const items = Array.from({ length: 5 }).map(() => `
+        <div class="meta-report-comparison-summary-skeleton-item" aria-hidden="true">
+          <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+          <div class="meta-cv-skeleton-line meta-cv-skeleton-line--lg"></div>
+          <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+        </div>
+      `).join('');
+      return `
+        <aside class="meta-report-comparison-summary" aria-label="Comparison summary" aria-busy="true">
+          <h3 class="meta-report-comparison-summary-heading">Key changes</h3>
+          <div class="meta-report-comparison-summary-stack">${items}</div>
+        </aside>
+      `;
+    }
+
+    function renderMetaReportComparisonSummaryBoxes(comparison) {
+      if (metaReportsState.comparisonLoading) {
+        return renderMetaReportComparisonSummarySkeleton();
+      }
+      if (!comparison || comparison.insufficientData || comparison.samePeriod) {
+        return '';
+      }
+      const periodLabelA = comparison.periodA?.label || 'Period A';
+      const periodLabelB = comparison.periodB?.label || 'Period B';
+      const hasDataA = comparison.periodA?.hasData !== false;
+      const hasDataB = comparison.periodB?.hasData !== false;
+      const heroMetrics = comparison.heroMetrics || [];
+
+      const items = heroMetrics.map((metric) => {
+        const label = META_REPORT_COMPARISON_SUMMARY_LABELS[metric.id] || metric.label || metric.id;
+        const tone = metaReportComparisonDeltaTone(metric.deltaPct, metric.higherIsBetter);
+        const valueHtml = esc(metaReportComparisonFmtValue(metric.valueA, metric.format, hasDataA));
+        let changeHtml = '—';
+        if (hasDataA && hasDataB && metric.deltaPct != null && Number.isFinite(metric.deltaPct)) {
+          const arrow = metric.deltaPct > 0 ? '↑' : metric.deltaPct < 0 ? '↓' : '—';
+          changeHtml = `${arrow} ${esc(metaReportFormatDeltaPct(metric.deltaPct))} vs ${esc(periodLabelB)}`;
+        }
+        return `
+          <div class="meta-report-comparison-summary-item${tone !== 'neutral' ? ` is-${tone}` : ''}">
+            <div class="meta-report-comparison-summary-label">${esc(label)}</div>
+            <div class="meta-report-comparison-summary-value">${valueHtml}</div>
+            <div class="meta-report-comparison-summary-change">${changeHtml}</div>
+          </div>
+        `;
+      }).join('');
+
+      if (!items) return '';
+
+      return `
+        <aside class="meta-report-comparison-summary" aria-label="Comparison summary">
+          <h3 class="meta-report-comparison-summary-heading">Key changes · ${esc(periodLabelA)}</h3>
+          <div class="meta-report-comparison-summary-stack">${items}</div>
+        </aside>
+      `;
+    }
+
     function renderMetaReportViewModeTabs() {
       const viewMode = metaReportsState.reportViewMode || 'monthly';
       return `
@@ -12039,7 +12157,7 @@
               </div>
             </div>
           </div>
-          <div class="meta-report-comparison-view-card${isLoading ? ' is-loading' : ''}">
+          <div class="meta-report-comparison-view-card${isLoading ? ' is-loading' : ''}${activeTab === 'table' ? ' is-table-split' : ''}">
             <div class="meta-report-comparison-view-head">
               <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
                 <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
@@ -12047,7 +12165,10 @@
               </div>
             </div>
             <div class="meta-report-comparison-tab-panel${activeTab === 'table' ? ' is-active' : ''}" data-comparison-panel="table" role="tabpanel"${activeTab === 'table' ? '' : ' hidden'}>
-              <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
+              <div class="meta-report-comparison-split">
+                <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
+                <div id="meta-report-comparison-summary-wrap">${renderMetaReportComparisonSummaryBoxes(comparison)}</div>
+              </div>
             </div>
             <div class="meta-report-comparison-tab-panel${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-panel="chart" role="tabpanel"${activeTab === 'chart' ? '' : ' hidden'}>
               <div class="meta-report-comparison-chart-card">
@@ -12316,6 +12437,10 @@
         panel.classList.toggle('is-active', isActive);
         panel.hidden = !isActive;
       });
+      const viewCard = document.querySelector('.meta-report-comparison-view-card');
+      if (viewCard) {
+        viewCard.classList.toggle('is-table-split', metaReportsState.comparisonTab === 'table');
+      }
       if (metaReportsState.comparisonTab === 'chart') {
         const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
         mountMetaReportComparisonChart(metaReportsState.comparisonResult || computeMetaReportComparison(payload));
@@ -12376,10 +12501,16 @@
       if (headlineWrap) headlineWrap.remove();
 
       const viewCard = view.querySelector('.meta-report-comparison-view-card');
-      if (viewCard) viewCard.classList.toggle('is-loading', Boolean(metaReportsState.comparisonLoading));
+      if (viewCard) {
+        viewCard.classList.toggle('is-loading', Boolean(metaReportsState.comparisonLoading));
+        viewCard.classList.toggle('is-table-split', (metaReportsState.comparisonTab || 'table') === 'table');
+      }
 
       const tableWrap = document.getElementById('meta-report-comparison-table-wrap');
       if (tableWrap) tableWrap.innerHTML = renderMetaReportComparisonTables(comparison);
+
+      const summaryWrap = document.getElementById('meta-report-comparison-summary-wrap');
+      if (summaryWrap) summaryWrap.innerHTML = renderMetaReportComparisonSummaryBoxes(comparison);
 
       const emptyEl = document.getElementById('meta-report-comparison-chart-empty');
       if (emptyEl) {

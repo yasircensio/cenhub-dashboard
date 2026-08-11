@@ -4974,6 +4974,58 @@
       box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 680px; overflow: hidden;
       padding: 18px 20px 20px; width: 100%;
     }
+    .meta-report-comparison-view-card.is-table-split { max-width: 980px; }
+    .meta-report-comparison-split {
+      align-items: start; display: grid; gap: 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 272px);
+    }
+    .meta-report-comparison-summary {
+      display: flex; flex-direction: column; gap: 10px; min-width: 0;
+      position: sticky; top: 12px;
+    }
+    .meta-report-comparison-summary-heading {
+      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      margin: 0; text-transform: uppercase;
+    }
+    .meta-report-comparison-summary-stack {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .meta-report-comparison-summary-item {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      min-width: 0; padding: 14px 14px 12px;
+    }
+    .meta-report-comparison-summary-label {
+      color: var(--text-muted); font-size: 12px; font-weight: 500; line-height: 1.3; margin: 0 0 6px;
+    }
+    .meta-report-comparison-summary-value {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700;
+      line-height: 1.2; overflow-wrap: anywhere;
+    }
+    .meta-report-comparison-summary-change {
+      color: var(--text-muted); font-size: 12px; font-weight: 600; line-height: 1.3; margin-top: 6px;
+    }
+    .meta-report-comparison-summary-item.is-positive {
+      background: rgba(22, 163, 74, 0.06); border-color: rgba(22, 163, 74, 0.18);
+    }
+    .meta-report-comparison-summary-item.is-negative {
+      background: rgba(194, 65, 12, 0.06); border-color: rgba(194, 65, 12, 0.18);
+    }
+    .meta-report-comparison-summary-item.is-positive .meta-report-comparison-summary-change { color: #15803d; }
+    .meta-report-comparison-summary-item.is-negative .meta-report-comparison-summary-change { color: var(--error); }
+    .meta-report-comparison-summary-skeleton-item {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; gap: 8px; min-height: 88px; padding: 14px;
+    }
+    @media (max-width: 860px) {
+      .meta-report-comparison-split { grid-template-columns: 1fr; }
+      .meta-report-comparison-summary { position: static; }
+      .meta-report-comparison-summary-stack {
+        display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 520px) {
+      .meta-report-comparison-summary-stack { grid-template-columns: 1fr; }
+    }
     .meta-report-comparison-view-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
       margin-bottom: 14px;
