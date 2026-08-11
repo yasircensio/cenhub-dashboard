@@ -174,23 +174,16 @@ function testScenarioProjectionStepsMatchTargetMultiplier() {
     periodEnd: '2025-02-28',
   }];
 
-  const asOfDate = new Date('2025-03-01T12:00:00.000Z');
   const projection = projectScenario({
     series,
     baselineSpend: 9000,
     multiplier: 3,
     monthWindow: '6',
-    asOfDate,
+    asOfDate: new Date('2025-03-01T12:00:00.000Z'),
   });
 
-  const steps = buildScenarioProjectionSteps(projection, {
-    hasBottomline: false,
-    asOfDate,
-    targetMonthKey: '2025-03',
-    projectionAllowed: true,
-    stepOffset: 1,
-  });
-  assert.strictEqual(steps.length, 1);
+  const steps = buildScenarioProjectionSteps(projection, { hasBottomline: false });
+  assert.strictEqual(steps.length, 4);
   steps.forEach((step) => {
     approx(step.spend, 27000);
     approx(step.spendMultiplier, 3);
@@ -198,14 +191,7 @@ function testScenarioProjectionStepsMatchTargetMultiplier() {
 
   const atDouble = buildScenarioProjectionSteps(
     { ...projection, multiplier: 2 },
-    {
-      hasBottomline: false,
-      targetMultiplier: 2,
-      asOfDate,
-      targetMonthKey: '2025-03',
-      projectionAllowed: true,
-      stepOffset: 1,
-    },
+    { hasBottomline: false, targetMultiplier: 2 },
   );
   atDouble.forEach((step) => {
     approx(step.spend, 18000);
@@ -385,6 +371,7 @@ function testBlendSmoothKeepsProjectedRevenueInSyncWithBaseline() {
 }
 
 function testScenarioProjectionMonthLabels() {
+  // Labels are derived from asOfDate — not hardcoded. August → Sep–Dec.
   const asOfDate = new Date('2026-08-10T12:00:00.000Z');
   const series = [{
     spend: 9000,
@@ -410,59 +397,22 @@ function testScenarioProjectionMonthLabels() {
     asOfDate,
   });
 
-  const steps = buildScenarioProjectionSteps(projection, {
-    hasBottomline: false,
-    asOfDate,
-    targetMonthKey: '2026-08',
-    projectionAllowed: true,
-    stepOffset: 1,
-  });
-  assert.strictEqual(steps.length, 1);
-  assert.deepStrictEqual(steps.map((step) => step.label), ['Aug']);
-  assert.deepStrictEqual(steps.map((step) => step.monthKey), ['2026-08']);
+  const steps = buildScenarioProjectionSteps(projection, { hasBottomline: false, asOfDate });
+  assert.strictEqual(steps.length, 4);
+  assert.deepStrictEqual(steps.map((step) => step.label), ['Sep', 'Oct', 'Nov', 'Dec']);
+  assert.deepStrictEqual(steps.map((step) => step.monthKey), ['2026-09', '2026-10', '2026-11', '2026-12']);
 }
 
 function testScenarioProjectionMonthLabelsFromJanuary() {
-  const keys = buildScenarioProjectionMonthKeys('2026-01', { allowed: true });
-  assert.deepStrictEqual(keys, ['2026-01']);
+  const asOfDate = new Date('2026-01-15T12:00:00.000Z');
+  const keys = buildScenarioProjectionMonthKeys(4, asOfDate);
+  assert.deepStrictEqual(keys, ['2026-02', '2026-03', '2026-04', '2026-05']);
 }
 
 function testScenarioProjectionMonthLabelsYearRollover() {
-  const keys = buildScenarioProjectionMonthKeys('2027-01', { allowed: true });
-  assert.deepStrictEqual(keys, ['2027-01']);
-}
-
-function testScenarioProjectionPastMonthDisabled() {
-  const asOfDate = new Date('2026-08-10T12:00:00.000Z');
-  const projection = projectScenario({
-    series: [{
-      spend: 9000,
-      leads: 45,
-      wonLeads: 5,
-      avgLeadValue: 100000,
-      avgProfitPerWon: 50000,
-      periodEnd: '2026-06-30',
-    }, {
-      spend: 9000,
-      leads: 45,
-      wonLeads: 5,
-      avgLeadValue: 100000,
-      avgProfitPerWon: 50000,
-      periodEnd: '2026-07-31',
-    }],
-    baselineSpend: 9000,
-    multiplier: 2,
-    monthWindow: '6',
-    asOfDate,
-  });
-
-  const steps = buildScenarioProjectionSteps(projection, {
-    hasBottomline: false,
-    asOfDate,
-    targetMonthKey: '2025-12',
-    projectionAllowed: false,
-  });
-  assert.strictEqual(steps.length, 0);
+  const asOfDate = new Date('2026-12-10T12:00:00.000Z');
+  const keys = buildScenarioProjectionMonthKeys(4, asOfDate);
+  assert.deepStrictEqual(keys, ['2027-01', '2027-02', '2027-03', '2027-04']);
 }
 
 function testBudgetScenarioInsufficientData() {
@@ -598,7 +548,6 @@ function main() {
   testScenarioProjectionMonthLabels();
   testScenarioProjectionMonthLabelsFromJanuary();
   testScenarioProjectionMonthLabelsYearRollover();
-  testScenarioProjectionPastMonthDisabled();
   testOutlierWinsorization();
   testBlendSmoothKeepsProjectedRevenueInSyncWithBaseline();
   testBudgetScenarioInsufficientData();
