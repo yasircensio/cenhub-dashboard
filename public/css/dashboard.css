@@ -5032,8 +5032,9 @@
     }
     .meta-report-comparison-view-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
-      margin: 0 auto 14px; max-width: 980px; width: 100%;
+      margin: 0 0 14px; width: 100%;
     }
+    .meta-report-comparison-table-card .meta-report-comparison-view-head { margin-bottom: 16px; }
     .meta-report-comparison-tabs {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
       display: inline-flex; gap: 2px; padding: 2px;
