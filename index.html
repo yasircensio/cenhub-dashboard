@@ -5038,11 +5038,10 @@
     .meta-report-comparison-period-card { min-width: 0; width: 100%; }
     .meta-report-comparison-duel {
       align-items: stretch; border: 1px solid var(--border); border-radius: 16px;
-      display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      min-height: 48px; overflow: hidden; width: 100%;
+      display: flex; min-height: 48px; overflow: hidden; position: relative; width: 100%;
     }
     .meta-report-comparison-duel-side {
-      align-items: center; display: flex; flex-direction: column; gap: 2px;
+      align-items: center; display: flex; flex: 1 1 0; flex-direction: column; gap: 2px;
       justify-content: center; min-width: 0; padding: 10px 14px; text-align: center;
     }
     .meta-report-comparison-duel-side.is-a { background: rgba(255, 106, 0, 0.07); }
@@ -5057,10 +5056,11 @@
       color: var(--text-muted); font-size: 11px; font-weight: 600; line-height: 1.2;
     }
     .meta-report-comparison-duel-divider {
-      align-self: center; background: var(--panel); border: 1px solid var(--border);
-      border-radius: 999px; color: var(--text-muted); font-size: 10px; font-weight: 700;
-      letter-spacing: 0.06em; line-height: 1; margin: 0 -12px; padding: 5px 9px;
-      text-transform: lowercase; z-index: 1;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text-muted); font-size: 10px; font-weight: 700; left: 50%;
+      letter-spacing: 0.06em; line-height: 1; padding: 4px 8px; pointer-events: none;
+      position: absolute; text-transform: lowercase; top: 50%; transform: translate(-50%, -50%);
+      z-index: 2;
     }
     .meta-report-comparison-duel-side.is-partial .meta-report-comparison-duel-value::after {
       color: #b45309; content: '*'; font-size: 14px; margin-left: 2px; vertical-align: super;
@@ -5072,25 +5072,27 @@
       padding: 8px 12px;
     }
     .meta-report-comparison-month-picker {
-      align-items: center; display: flex; justify-content: center; min-width: 0; width: 100%;
+      align-items: center; display: inline-flex; gap: 6px; justify-content: center; min-width: 0;
     }
-    .meta-report-comparison-month-input {
+    .meta-report-comparison-month-select-wrap {
+      display: inline-flex; position: relative;
+    }
+    .meta-report-comparison-month-select {
       appearance: none; -webkit-appearance: none; background: transparent; border: 0;
       color: inherit; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 16px;
-      font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; min-width: 0; padding: 0;
-      text-align: center; width: auto;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; min-width: 0; padding: 0 16px 0 0;
     }
-    .meta-report-comparison-duel-side.is-a .meta-report-comparison-month-input { color: #c2410c; }
-    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-input { color: #334155; }
-    .meta-report-comparison-month-input:focus {
+    .meta-report-comparison-month-select-wrap::after {
+      color: currentColor; content: '▾'; font-size: 10px; opacity: 0.55; pointer-events: none;
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    }
+    .meta-report-comparison-month-select:focus {
       outline: 2px solid rgba(255, 106, 0, 0.25); outline-offset: 2px;
     }
-    .meta-report-comparison-month-input::-webkit-calendar-picker-indicator {
-      cursor: pointer; margin-left: 4px; opacity: 0.55;
-    }
-    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-input::-webkit-calendar-picker-indicator {
-      opacity: 0.45;
-    }
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-month-select { color: #c2410c; }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-select { color: #334155; }
+    .meta-report-comparison-month-select[data-comparison-month-part="month"] { min-width: 3.2em; text-align: left; }
+    .meta-report-comparison-month-select[data-comparison-month-part="year"] { min-width: 3.4em; text-align: left; }
     .meta-report-comparison-custom-range {
       align-items: center; display: inline-flex; gap: 5px; justify-content: center;
       max-width: 100%; min-width: 0;
@@ -5133,12 +5135,15 @@
     .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-icon { color: #c2410c; }
     .meta-report-comparison-duel-side.is-b .meta-report-comparison-date-icon { color: #64748b; }
     @media (max-width: 720px) {
-      .meta-report-comparison-duel { grid-template-columns: 1fr; min-height: 0; }
+      .meta-report-comparison-duel { flex-direction: column; min-height: 0; }
+      .meta-report-comparison-duel-divider {
+        left: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%);
+      }
       .meta-report-comparison-duel-side { padding: 10px 12px; }
-      .meta-report-comparison-duel-divider { margin: 0; padding: 2px 0; text-align: center; }
       .meta-report-comparison-duel-value { font-size: 17px; }
       .meta-report-comparison-date-input-wrap .flatpickr-input,
       .meta-report-comparison-date-input { font-size: 15px; }
+      .meta-report-comparison-month-select { font-size: 15px; }
       .meta-report-comparison-custom-range { flex-wrap: wrap; row-gap: 2px; }
     }
     .meta-report-comparison-view-card.is-loading {
@@ -11345,22 +11350,62 @@
       return { min: `${sorted[0]}-01`, max: `${sorted[sorted.length - 1]}-12` };
     }
 
-    function renderMetaReportComparisonMonthInput(side, monthKey, bounds) {
-      const minAttr = bounds.min ? ` min="${esc(bounds.min)}"` : '';
-      const maxAttr = bounds.max ? ` max="${esc(bounds.max)}"` : '';
-      const label = side === 'b' ? 'Comparison month' : 'Current month';
+    function metaReportComparisonMonthPickerYears(payload) {
+      const bounds = metaReportComparisonMonthInputBounds(payload);
+      const startYear = Number(bounds.min.slice(0, 4));
+      const endYear = Number(bounds.max.slice(0, 4));
+      if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
+        return [String(new Date().getFullYear())];
+      }
+      const years = [];
+      for (let year = startYear; year <= endYear; year += 1) years.push(String(year));
+      return years;
+    }
+
+    function metaReportComparisonMonthKeyParts(monthKey) {
+      if (!monthKey || !/^\d{4}-\d{2}$/.test(monthKey)) {
+        const anchorKey = metaReportsState.activeMonthKey;
+        if (anchorKey && /^\d{4}-\d{2}$/.test(anchorKey)) {
+          return { month: anchorKey.slice(5, 7), year: anchorKey.slice(0, 4) };
+        }
+        const now = new Date();
+        return {
+          month: String(now.getMonth() + 1).padStart(2, '0'),
+          year: String(now.getFullYear()),
+        };
+      }
+      return { month: monthKey.slice(5, 7), year: monthKey.slice(0, 4) };
+    }
+
+    function renderMetaReportComparisonMonthInput(side, monthKey, payload) {
+      const years = metaReportComparisonMonthPickerYears(payload);
+      const { month, year } = metaReportComparisonMonthKeyParts(monthKey);
+      const monthLabel = side === 'b' ? 'Comparison month' : 'Current month';
+      const yearLabel = side === 'b' ? 'Comparison year' : 'Current year';
+      const monthOptions = META_MONTH_LABELS.map((label, index) => {
+        const value = String(index + 1).padStart(2, '0');
+        return `<option value="${value}"${value === month ? ' selected' : ''}>${esc(label)}</option>`;
+      }).join('');
+      const yearOptions = years.map((entry) => (
+        `<option value="${esc(entry)}"${entry === year ? ' selected' : ''}>${esc(entry)}</option>`
+      )).join('');
       return `
-        <label class="meta-report-comparison-month-picker">
-          <input type="month" class="meta-report-comparison-month-input" data-comparison-month="${esc(side)}" value="${esc(monthKey)}" aria-label="${esc(label)}"${minAttr}${maxAttr} />
-        </label>
+        <div class="meta-report-comparison-month-picker" data-comparison-month-side="${esc(side)}">
+          <span class="meta-report-comparison-month-select-wrap">
+            <select class="meta-report-comparison-month-select" data-comparison-month-part="month" aria-label="${esc(monthLabel)}">${monthOptions}</select>
+          </span>
+          <span class="meta-report-comparison-month-select-wrap">
+            <select class="meta-report-comparison-month-select" data-comparison-month-part="year" aria-label="${esc(yearLabel)}">${yearOptions}</select>
+          </span>
+        </div>
       `;
     }
 
-    function renderMetaReportComparisonMonthPickerSide(side, monthKey, bounds) {
+    function renderMetaReportComparisonMonthPickerSide(side, monthKey, payload) {
       const sideClass = side === 'b' ? 'is-b' : 'is-a';
       return `
         <div class="meta-report-comparison-duel-side ${sideClass}">
-          ${renderMetaReportComparisonMonthInput(side, monthKey, bounds)}
+          ${renderMetaReportComparisonMonthInput(side, monthKey, payload)}
         </div>
       `;
     }
@@ -11379,25 +11424,30 @@
     }
 
     function bindMetaReportComparisonMonthInputs(payload, { editable = false } = {}) {
-      document.querySelectorAll('[data-comparison-month]').forEach((input) => {
-        input.onchange = () => {
-          const side = input.getAttribute('data-comparison-month');
-          if (!side) return;
-          applyMetaReportComparisonMonthChange(payload, side, input.value, { editable });
+      document.querySelectorAll('[data-comparison-month-side]').forEach((wrap) => {
+        const side = wrap.getAttribute('data-comparison-month-side');
+        const monthSelect = wrap.querySelector('[data-comparison-month-part="month"]');
+        const yearSelect = wrap.querySelector('[data-comparison-month-part="year"]');
+        if (!side || !monthSelect || !yearSelect) return;
+        const apply = () => {
+          const monthKey = `${yearSelect.value}-${monthSelect.value}`;
+          applyMetaReportComparisonMonthChange(payload, side, monthKey, { editable });
         };
+        monthSelect.onchange = apply;
+        yearSelect.onchange = apply;
       });
     }
 
     function renderMetaReportComparisonMonthPickersPanel(periodA, periodB, payload) {
       const bounds = metaReportComparisonMonthInputBounds(payload);
-      const monthA = periodA?.startMonthKey || metaReportsState.activeMonthKey || bounds.min || '';
-      const monthB = periodB?.startMonthKey || metaReportComparisonAddMonths(monthA, -1) || bounds.min || '';
+      const monthA = periodA?.startMonthKey || metaReportsState.activeMonthKey || bounds.min?.slice(0, 7) || '';
+      const monthB = periodB?.startMonthKey || metaReportComparisonAddMonths(monthA, -1) || bounds.min?.slice(0, 7) || '';
 
       return `
         <div class="meta-report-comparison-duel is-month-pickers" id="meta-report-comparison-range-panel" role="group" aria-label="Compare months">
-          ${renderMetaReportComparisonMonthPickerSide('a', monthA, bounds)}
+          ${renderMetaReportComparisonMonthPickerSide('a', monthA, payload)}
           <div class="meta-report-comparison-duel-divider" aria-hidden="true">vs</div>
-          ${renderMetaReportComparisonMonthPickerSide('b', monthB, bounds)}
+          ${renderMetaReportComparisonMonthPickerSide('b', monthB, payload)}
         </div>
       `;
     }
