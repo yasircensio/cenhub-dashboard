@@ -5031,13 +5031,24 @@
       box-shadow: var(--shadow-sm); padding: 12px 16px; width: 100%;
     }
     .meta-report-comparison-period-card.is-custom { padding: 16px 18px; }
+    .meta-report-comparison-summary-bar-wrap {
+      display: flex; flex-direction: column; gap: 10px; width: 100%;
+    }
+    .meta-report-comparison-summary-context {
+      color: var(--text-soft); font-size: 13px; font-weight: 500; line-height: 1.4;
+      margin: 0; text-align: center;
+    }
+    .meta-report-comparison-summary-context strong {
+      color: var(--text); font-weight: 700;
+    }
     .meta-report-comparison-summary-bar {
       align-items: center; background: var(--panel-soft); border-radius: 14px;
       display: grid; gap: 10px 14px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      min-height: 48px; padding: 10px 14px; width: 100%;
+      min-height: 56px; padding: 12px 16px; width: 100%;
     }
     .meta-report-comparison-summary-item {
-      align-items: flex-start; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+      align-items: center; display: flex; flex-direction: column; gap: 2px;
+      min-width: 0; text-align: center;
     }
     .meta-report-comparison-summary-item-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 6px 8px;
@@ -5053,6 +5064,15 @@
     }
     .meta-report-comparison-summary-item.is-a .meta-report-comparison-summary-caption { color: #c2410c; }
     .meta-report-comparison-summary-item.is-b .meta-report-comparison-summary-caption { color: #64748b; }
+    .meta-report-comparison-summary-primary {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 22px;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+    }
+    .meta-report-comparison-summary-item.is-a .meta-report-comparison-summary-primary { color: #c2410c; }
+    .meta-report-comparison-summary-item.is-b .meta-report-comparison-summary-primary { color: #334155; }
+    .meta-report-comparison-summary-secondary {
+      color: var(--text-muted); font-size: 12px; font-weight: 600; line-height: 1.3;
+    }
     .meta-report-comparison-summary-label {
       color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px;
       font-weight: 700; line-height: 1.3; overflow-wrap: anywhere;

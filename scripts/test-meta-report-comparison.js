@@ -162,7 +162,7 @@ function testComparisonDisplayLabels() {
   );
   assert.strictEqual(
     formatComparisonDisplayLabel('ytd', { startDate: '2026-01-01', endDate: '2026-08-31' }),
-    '1 Jan–31 Aug 2026',
+    '2026',
   );
   assert.ok(
     formatComparisonDisplayLabel('custom', { startDate: '2026-08-10', endDate: '2026-08-15' }).includes('Aug'),
@@ -184,8 +184,8 @@ function testYtdByMonthKeepsMissingPriorMonths() {
   assert.strictEqual(result.ytdByMonth[0].hasDataA, true);
   assert.strictEqual(result.ytdByMonth[0].hasDataB, false);
   assert.strictEqual(result.ytdByMonth[0].periodB, null);
-  assert.strictEqual(result.periodA.label, '1 Jan–28 Feb 2026');
-  assert.strictEqual(result.periodB.label, '1 Jan–28 Feb 2025');
+  assert.strictEqual(result.periodA.label, '2026');
+  assert.strictEqual(result.periodB.label, '2025');
 }
 
 function testSamePeriodValidation() {
