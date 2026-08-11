@@ -11756,8 +11756,6 @@
         panel.classList.toggle('is-active', isActive);
         panel.hidden = !isActive;
       });
-      const previewCard = document.querySelector('#meta-report-month-panel .meta-report-preview-card');
-      if (previewCard) previewCard.hidden = metaReportsState.reportViewMode === 'comparison';
       if (metaReportsState.reportViewMode === 'monthly') {
         destroyMetaReportComparisonChart();
         mountMetaReportTrendCharts(payload, { editable, clientId: payload?.clientId || null });
