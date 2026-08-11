@@ -5060,18 +5060,28 @@
       padding: 8px 12px;
     }
     .meta-report-comparison-duel.is-month-pickers .meta-report-comparison-duel-side {
-      padding: 8px 12px;
+      cursor: pointer; padding: 8px 12px;
     }
     .meta-report-comparison-month-picker {
-      align-items: center; display: inline-flex; gap: 6px; justify-content: center; min-width: 0;
+      align-items: center; display: flex; gap: 8px; justify-content: center;
+      max-width: 100%; min-width: 0; width: 100%;
     }
     .meta-report-comparison-month-select-wrap {
-      display: inline-flex; position: relative;
+      border-radius: 8px; cursor: pointer; display: block; flex: 1 1 0;
+      max-width: 7.5rem; min-width: 0; padding: 6px 8px; position: relative;
+      transition: background 0.15s ease;
+    }
+    .meta-report-comparison-month-select-wrap:hover {
+      background: rgba(255, 255, 255, 0.45);
+    }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-select-wrap:hover {
+      background: rgba(255, 255, 255, 0.55);
     }
     .meta-report-comparison-month-select {
       appearance: none; -webkit-appearance: none; background: transparent; border: 0;
-      color: inherit; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 16px;
-      font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; min-width: 0; padding: 0 16px 0 0;
+      color: inherit; cursor: pointer; display: block; font-family: 'Poppins', sans-serif;
+      font-size: 16px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+      min-height: 24px; min-width: 0; padding: 0 14px 0 0; width: 100%;
     }
     .meta-report-comparison-month-select-wrap::after {
       color: currentColor; content: '▾'; font-size: 10px; opacity: 0.55; pointer-events: none;
@@ -5082,15 +5092,15 @@
     }
     .meta-report-comparison-duel-side.is-a .meta-report-comparison-month-select { color: #c2410c; }
     .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-select { color: #334155; }
-    .meta-report-comparison-month-select[data-comparison-month-part="month"] { min-width: 3.2em; text-align: left; }
-    .meta-report-comparison-month-select[data-comparison-month-part="year"] { min-width: 3.4em; text-align: left; }
+    .meta-report-comparison-month-select[data-comparison-month-part="month"] { text-align: left; }
+    .meta-report-comparison-month-select[data-comparison-month-part="year"] { text-align: left; }
     .meta-report-comparison-custom-range {
-      align-items: center; display: inline-flex; gap: 5px; justify-content: center;
-      max-width: 100%; min-width: 0;
+      align-items: center; cursor: pointer; display: flex; gap: 5px; justify-content: center;
+      max-width: 100%; min-width: 0; padding: 4px 6px; width: 100%;
     }
     .meta-report-comparison-custom-range-field {
-      border-radius: 6px; cursor: pointer; flex: 0 1 auto; min-width: 0;
-      padding: 1px 3px; transition: background 0.15s ease;
+      border-radius: 6px; cursor: pointer; flex: 1 1 0; min-width: 0;
+      padding: 4px 6px; transition: background 0.15s ease;
     }
     .meta-report-comparison-custom-range-field:hover {
       background: rgba(255, 255, 255, 0.45);
@@ -5106,16 +5116,16 @@
     .meta-report-comparison-date-input-wrap .flatpickr-input,
     .meta-report-comparison-date-input {
       background: transparent; border: 0 !important; box-shadow: none !important;
-      color: inherit; cursor: pointer; font-family: 'Poppins', sans-serif;
+      color: inherit; cursor: pointer; display: block; font-family: 'Poppins', sans-serif;
       font-size: 16px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
-      min-width: 0; padding: 0; text-align: center; width: auto;
+      min-height: 24px; min-width: 0; padding: 0; text-align: center; width: 100%;
     }
     .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-input,
     .meta-report-comparison-duel-side.is-a .flatpickr-input { color: #c2410c; }
     .meta-report-comparison-duel-side.is-b .meta-report-comparison-date-input,
     .meta-report-comparison-duel-side.is-b .flatpickr-input { color: #334155; }
     .meta-report-comparison-custom-range-field .flatpickr-input {
-      min-width: 2.8em; width: auto !important;
+      min-width: 0; width: 100% !important;
     }
     .meta-report-comparison-date-input:focus { outline: none; }
     .meta-report-comparison-date-input-wrap .flatpickr-input[readonly] { cursor: pointer; }
