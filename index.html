@@ -4983,11 +4983,15 @@
       box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 680px; overflow: hidden;
       padding: 18px 20px 20px; width: 100%;
     }
-    .meta-report-comparison-view-card.is-table-split { max-width: 980px; }
-    .meta-report-comparison-split {
+    .meta-report-comparison-table-layout {
       align-items: start; display: grid; gap: 18px;
       grid-template-columns: minmax(0, 1fr) minmax(220px, 272px);
+      margin: 0 auto; max-width: 980px; width: 100%;
     }
+    .meta-report-comparison-table-layout .meta-report-comparison-view-card {
+      margin: 0; max-width: none;
+    }
+    .meta-report-comparison-summary-card[hidden] { display: none !important; }
     .meta-report-comparison-summary {
       display: flex; flex-direction: column; gap: 10px; min-width: 0;
       position: sticky; top: 12px;
@@ -5026,7 +5030,7 @@
       display: flex; flex-direction: column; gap: 8px; min-height: 88px; padding: 14px;
     }
     @media (max-width: 860px) {
-      .meta-report-comparison-split { grid-template-columns: 1fr; }
+      .meta-report-comparison-table-layout { grid-template-columns: 1fr; }
       .meta-report-comparison-summary { position: static; }
       .meta-report-comparison-summary-stack {
         display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5037,7 +5041,7 @@
     }
     .meta-report-comparison-view-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;
-      margin-bottom: 14px;
+      margin: 0 auto 14px; max-width: 980px; width: 100%;
     }
     .meta-report-comparison-tabs {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
@@ -12157,20 +12161,24 @@
               </div>
             </div>
           </div>
-          <div class="meta-report-comparison-view-card${isLoading ? ' is-loading' : ''}${activeTab === 'table' ? ' is-table-split' : ''}">
-            <div class="meta-report-comparison-view-head">
-              <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
-                <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
-                <button type="button" class="meta-report-chart-tab${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-tab="chart" role="tab" aria-selected="${activeTab === 'chart'}">Show in chart</button>
-              </div>
+          <div class="meta-report-comparison-view-head">
+            <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
+              <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
+              <button type="button" class="meta-report-chart-tab${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-tab="chart" role="tab" aria-selected="${activeTab === 'chart'}">Show in chart</button>
             </div>
-            <div class="meta-report-comparison-tab-panel${activeTab === 'table' ? ' is-active' : ''}" data-comparison-panel="table" role="tabpanel"${activeTab === 'table' ? '' : ' hidden'}>
-              <div class="meta-report-comparison-split">
+          </div>
+          <div class="meta-report-comparison-tab-panel${activeTab === 'table' ? ' is-active' : ''}" data-comparison-panel="table" role="tabpanel"${activeTab === 'table' ? '' : ' hidden'}>
+            <div class="meta-report-comparison-table-layout">
+              <div class="meta-report-comparison-view-card meta-report-comparison-table-card${isLoading ? ' is-loading' : ''}">
                 <div id="meta-report-comparison-table-wrap">${renderMetaReportComparisonTables(comparison)}</div>
+              </div>
+              <div class="meta-report-comparison-view-card meta-report-comparison-summary-card${isLoading ? ' is-loading' : ''}" id="meta-report-comparison-summary-card"${!isLoading && (!comparison || comparison.insufficientData || comparison.samePeriod) ? ' hidden' : ''}>
                 <div id="meta-report-comparison-summary-wrap">${renderMetaReportComparisonSummaryBoxes(comparison)}</div>
               </div>
             </div>
-            <div class="meta-report-comparison-tab-panel${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-panel="chart" role="tabpanel"${activeTab === 'chart' ? '' : ' hidden'}>
+          </div>
+          <div class="meta-report-comparison-tab-panel${activeTab === 'chart' ? ' is-active' : ''}" data-comparison-panel="chart" role="tabpanel"${activeTab === 'chart' ? '' : ' hidden'}>
+            <div class="meta-report-comparison-view-card${isLoading ? ' is-loading' : ''}">
               <div class="meta-report-comparison-chart-card">
                 <div class="meta-report-comparison-chart-toolbar">
                   <div class="meta-report-chart-toggle" id="meta-report-comparison-chart-mode" role="group" aria-label="Comparison chart display mode">
@@ -12437,10 +12445,6 @@
         panel.classList.toggle('is-active', isActive);
         panel.hidden = !isActive;
       });
-      const viewCard = document.querySelector('.meta-report-comparison-view-card');
-      if (viewCard) {
-        viewCard.classList.toggle('is-table-split', metaReportsState.comparisonTab === 'table');
-      }
       if (metaReportsState.comparisonTab === 'chart') {
         const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
         mountMetaReportComparisonChart(metaReportsState.comparisonResult || computeMetaReportComparison(payload));
@@ -12500,17 +12504,21 @@
       const headlineWrap = document.getElementById('meta-report-comparison-headline-wrap');
       if (headlineWrap) headlineWrap.remove();
 
-      const viewCard = view.querySelector('.meta-report-comparison-view-card');
-      if (viewCard) {
-        viewCard.classList.toggle('is-loading', Boolean(metaReportsState.comparisonLoading));
-        viewCard.classList.toggle('is-table-split', (metaReportsState.comparisonTab || 'table') === 'table');
-      }
+      const isLoading = Boolean(metaReportsState.comparisonLoading);
+      const tableCard = view.querySelector('.meta-report-comparison-table-card');
+      const summaryCard = document.getElementById('meta-report-comparison-summary-card');
+      const chartCard = view.querySelector('[data-comparison-panel="chart"] .meta-report-comparison-view-card');
+      if (tableCard) tableCard.classList.toggle('is-loading', isLoading);
+      if (summaryCard) summaryCard.classList.toggle('is-loading', isLoading);
+      if (chartCard) chartCard.classList.toggle('is-loading', isLoading);
 
       const tableWrap = document.getElementById('meta-report-comparison-table-wrap');
       if (tableWrap) tableWrap.innerHTML = renderMetaReportComparisonTables(comparison);
 
+      const summaryHtml = renderMetaReportComparisonSummaryBoxes(comparison);
       const summaryWrap = document.getElementById('meta-report-comparison-summary-wrap');
-      if (summaryWrap) summaryWrap.innerHTML = renderMetaReportComparisonSummaryBoxes(comparison);
+      if (summaryWrap) summaryWrap.innerHTML = summaryHtml;
+      if (summaryCard) summaryCard.hidden = !isLoading && !summaryHtml;
 
       const emptyEl = document.getElementById('meta-report-comparison-chart-empty');
       if (emptyEl) {
