@@ -4125,9 +4125,22 @@
 
     .meta-report-unit { color: var(--text-soft); font-size: 12px; }
     .meta-report-empty { color: var(--text-soft); font-size: 16px; padding: 48px 16px; text-align: center; }
+    .meta-report-empty-month-wrap {
+      display: flex; justify-content: center; padding: 32px 16px; width: 100%;
+    }
     .meta-report-empty-month-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 560px; padding: 36px 28px 32px; text-align: center;
+      box-shadow: var(--shadow-sm); margin: 0; max-width: 480px; padding: 36px 28px 32px;
+      text-align: center; width: 100%;
+    }
+    .meta-report-empty-month-card.is-synced-empty {
+      padding: 32px 28px 28px;
+    }
+    .meta-report-empty-month-card.is-synced-empty .meta-report-empty-month-icon {
+      margin-bottom: 14px;
+    }
+    .meta-report-empty-month-card.is-synced-empty .meta-report-empty-month-title {
+      margin: 0;
     }
     .meta-report-empty-month-icon {
       align-items: center; background: rgba(255, 106, 0, 0.1); border-radius: 16px; color: var(--primary);
@@ -4142,12 +4155,13 @@
       color: var(--text-soft); font-size: 14px; line-height: 1.55; margin: 0 auto 22px; max-width: 40ch;
     }
     .meta-report-empty-month-hints {
-      display: flex; flex-direction: column; gap: 10px; margin: 0 auto; max-width: 380px; text-align: left;
+      align-items: stretch; display: flex; flex-direction: column; gap: 10px; margin: 0 auto;
+      max-width: 360px; text-align: center; width: 100%;
     }
     .meta-report-empty-month-hint {
-      align-items: flex-start; background: var(--panel-soft); border: 1px solid var(--border);
-      border-radius: 12px; color: var(--text-soft); display: flex; font-size: 13px; gap: 10px;
-      line-height: 1.45; padding: 12px 14px;
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text-soft); display: flex; flex-direction: column;
+      font-size: 13px; gap: 8px; line-height: 1.45; padding: 14px 16px; text-align: center;
     }
     .meta-report-empty-month-hint strong { color: var(--text); font-weight: 600; }
     .meta-report-empty-month-hint-icon {
@@ -4752,6 +4766,9 @@
     }
     .meta-report-content-main {
       max-width: 450px; min-width: 0;
+    }
+    .meta-report-content-main:has(.meta-report-empty-month-wrap) {
+      margin: 0 auto; max-width: none; width: 100%;
     }
     .meta-report-client-page .meta-report-content-main,
     .meta-reports-page--public .meta-report-content-main {
@@ -13917,7 +13934,18 @@
       });
     }
 
-    function renderMetaReportEmptyMonthCard({ editable = false } = {}) {
+    function renderMetaReportEmptyMonthCard({ editable = false, synced = false } = {}) {
+      if (synced) {
+        return `
+          <div class="meta-report-empty-month-wrap">
+            <div class="meta-report-empty-month-card is-synced-empty" role="status">
+              <div class="meta-report-empty-month-icon" aria-hidden="true">${ICON_CHART}</div>
+              <h3 class="meta-report-empty-month-title">No ad spend recorded for this month</h3>
+            </div>
+          </div>
+        `;
+      }
+
       const hintsHtml = editable ? `
         <div class="meta-report-empty-month-hints">
           <div class="meta-report-empty-month-hint">
@@ -13934,11 +13962,13 @@
       `;
 
       return `
-        <div class="meta-report-empty-month-card" role="status">
-          <div class="meta-report-empty-month-icon" aria-hidden="true">${ICON_CHART}</div>
-          <h3 class="meta-report-empty-month-title">No ad spend recorded for this month yet</h3>
-          ${editable ? '<p class="meta-report-empty-month-text">Sync Meta ads data to populate this report.</p>' : ''}
-          ${hintsHtml}
+        <div class="meta-report-empty-month-wrap">
+          <div class="meta-report-empty-month-card" role="status">
+            <div class="meta-report-empty-month-icon" aria-hidden="true">${ICON_CHART}</div>
+            <h3 class="meta-report-empty-month-title">No ad spend recorded for this month yet</h3>
+            ${editable ? '<p class="meta-report-empty-month-text">Sync Meta ads data to populate this report.</p>' : ''}
+            ${hintsHtml}
+          </div>
         </div>
       `;
     }
@@ -13948,7 +13978,10 @@
         return '<div class="meta-report-empty">No data for this month yet.</div>';
       }
       if (monthPayload.meta?.emptyMonth) {
-        return renderMetaReportEmptyMonthCard({ editable });
+        return renderMetaReportEmptyMonthCard({
+          editable,
+          synced: Boolean(monthPayload.metaFetchedAt),
+        });
       }
 
       const metaRows = [
