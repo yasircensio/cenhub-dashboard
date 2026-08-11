@@ -5037,41 +5037,56 @@
     }
     .meta-report-comparison-period-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); padding: 16px 18px; width: 100%;
+      box-shadow: var(--shadow-sm); padding: 12px 16px; width: 100%;
     }
-    .meta-report-comparison-tiles {
-      align-items: stretch; display: grid; gap: 10px 12px;
+    .meta-report-comparison-period-card.is-custom { padding: 16px 18px; }
+    .meta-report-comparison-summary-bar {
+      align-items: center; background: var(--panel-soft); border-radius: 14px;
+      display: grid; gap: 10px 14px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      min-height: 48px; padding: 10px 14px; width: 100%;
+    }
+    .meta-report-comparison-summary-item {
+      align-items: flex-start; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+    }
+    .meta-report-comparison-summary-item-head {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 6px 8px;
+    }
+    .meta-report-comparison-summary-dot {
+      border-radius: 50%; flex-shrink: 0; height: 8px; width: 8px;
+    }
+    .meta-report-comparison-summary-item.is-a .meta-report-comparison-summary-dot { background: var(--primary); }
+    .meta-report-comparison-summary-item.is-b .meta-report-comparison-summary-dot { background: #94a3b8; }
+    .meta-report-comparison-summary-caption {
+      color: var(--text-soft); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .meta-report-comparison-summary-item.is-a .meta-report-comparison-summary-caption { color: #c2410c; }
+    .meta-report-comparison-summary-item.is-b .meta-report-comparison-summary-caption { color: #64748b; }
+    .meta-report-comparison-summary-label {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 14px;
+      font-weight: 700; line-height: 1.3; overflow-wrap: anywhere;
+    }
+    .meta-report-comparison-summary-vs {
+      align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;
+      padding-top: 0; text-transform: uppercase;
+    }
+    .meta-report-comparison-custom-dates {
+      align-items: start; display: grid; gap: 10px 14px;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     }
-    .meta-report-comparison-tile {
-      border-radius: 14px; display: flex; flex-direction: column; gap: 8px;
-      min-height: 72px; min-width: 0; padding: 14px 16px 14px 18px; position: relative;
-    }
-    .meta-report-comparison-tile::before {
-      border-radius: 3px; content: ''; height: 18px; left: 10px; position: absolute;
-      top: 50%; transform: translateY(-50%); width: 4px;
-    }
-    .meta-report-comparison-tile.is-a {
-      background: rgba(255, 106, 0, 0.06); border: 1px solid rgba(255, 106, 0, 0.25);
-    }
-    .meta-report-comparison-tile.is-a::before { background: var(--primary); }
-    .meta-report-comparison-tile.is-b {
-      background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.28);
-    }
-    .meta-report-comparison-tile.is-b::before { background: #94a3b8; }
-    .meta-report-comparison-tile-caption {
+    .meta-report-comparison-custom-period { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .meta-report-comparison-custom-period-caption {
       color: var(--text-soft); font-size: 11px; font-weight: 700;
       letter-spacing: 0.04em; text-transform: uppercase;
     }
-    .meta-report-comparison-tile.is-a .meta-report-comparison-tile-caption { color: #c2410c; }
-    .meta-report-comparison-tile.is-b .meta-report-comparison-tile-caption { color: #475569; }
-    .meta-report-comparison-tile-label {
-      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 19px;
-      font-weight: 700; line-height: 1.25;
+    .meta-report-comparison-custom-period.is-a .meta-report-comparison-custom-period-caption { color: #c2410c; }
+    .meta-report-comparison-custom-period.is-b .meta-report-comparison-custom-period-caption { color: #64748b; }
+    .meta-report-comparison-custom-period-dates {
+      display: grid; gap: 10px 14px; grid-template-columns: 1fr 1fr;
     }
-    .meta-report-comparison-tile.is-custom { min-height: 88px; }
-    .meta-report-comparison-tile-dates {
-      display: grid; gap: 10px 14px; grid-template-columns: 1fr 1fr; margin-top: 4px;
+    .meta-report-comparison-custom-dates-vs {
+      align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;
+      margin-top: 22px; text-transform: uppercase;
     }
     .meta-report-comparison-date-field {
       cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
@@ -5080,8 +5095,8 @@
       color: var(--text-soft); font-size: 10px; font-weight: 700;
       letter-spacing: 0.04em; text-transform: uppercase;
     }
-    .meta-report-comparison-tile.is-a .meta-report-comparison-date-field-label { color: #c2410c; }
-    .meta-report-comparison-tile.is-b .meta-report-comparison-date-field-label { color: #64748b; }
+    .meta-report-comparison-custom-period.is-a .meta-report-comparison-date-field-label { color: #c2410c; }
+    .meta-report-comparison-custom-period.is-b .meta-report-comparison-date-field-label { color: #64748b; }
     .meta-report-comparison-date-input-wrap {
       align-items: center; background: transparent; border: 0;
       border-bottom: 1.5px solid rgba(26, 18, 8, 0.14); border-radius: 0;
@@ -5106,9 +5121,15 @@
     .meta-report-comparison-date-icon {
       align-items: center; color: #c2410c; display: inline-flex; flex-shrink: 0; pointer-events: none;
     }
-    .meta-report-comparison-tile.is-b .meta-report-comparison-date-icon { color: #64748b; }
+    .meta-report-comparison-custom-period.is-b .meta-report-comparison-date-icon { color: #64748b; }
+    @media (max-width: 720px) {
+      .meta-report-comparison-summary-bar,
+      .meta-report-comparison-custom-dates { grid-template-columns: 1fr; }
+      .meta-report-comparison-summary-vs,
+      .meta-report-comparison-custom-dates-vs { margin-top: 0; padding: 2px 0; text-align: center; }
+    }
     @media (max-width: 560px) {
-      .meta-report-comparison-tile-dates { grid-template-columns: 1fr; }
+      .meta-report-comparison-custom-period-dates { grid-template-columns: 1fr; }
     }
     .meta-report-comparison-view-card.is-loading {
       min-height: 460px;
@@ -5191,10 +5212,6 @@
     .flatpickr-calendar.meta-report-flatpickr .flatpickr-prev-month svg,
     .flatpickr-calendar.meta-report-flatpickr .flatpickr-next-month svg {
       fill: var(--text-soft);
-    }
-    .meta-report-comparison-tiles-vs {
-      align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;
-      padding-top: 0; text-transform: uppercase;
     }
     .meta-report-comparison-chart-toolbar {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: flex-end;
@@ -5305,10 +5322,6 @@
     }
     .meta-report-comparison-range-fields select { font-size: 12px; min-width: 0; width: 100%; }
     .meta-report-comparison-range-sep { color: var(--text-muted); font-size: 12px; font-weight: 600; }
-    @media (max-width: 960px) {
-      .meta-report-comparison-tiles { grid-template-columns: 1fr; }
-      .meta-report-comparison-tiles-vs { padding: 4px 0; text-align: center; }
-    }
     .meta-report-comparison-empty,
     .meta-report-comparison-loading,
     .meta-report-comparison-warning {
@@ -10644,7 +10657,7 @@
         return metaReportComparisonPeriodLabel(normalized.startMonthKey, normalized.endMonthKey);
       }
       if (mode === 'ytd') {
-        return normalized.startDate.slice(0, 4);
+        return metaReportComparisonFormatDateRangeLabel(normalized.startDate, normalized.endDate);
       }
       return metaReportComparisonFormatDateRangeLabel(normalized.startDate, normalized.endDate);
     }
@@ -11425,52 +11438,80 @@
       });
     }
 
-    function renderMetaReportComparisonPeriodTiles(periodA, periodB, payload) {
-      const mode = metaReportsState.comparisonMode || 'mom';
+    function metaReportComparisonSummaryRangeLabel(period) {
+      const normalized = metaReportComparisonNormalizePeriod(period);
+      if (!normalized) return '—';
+      return metaReportComparisonFormatDateRangeLabel(normalized.startDate, normalized.endDate);
+    }
 
-      if (mode === 'custom') {
-        const bounds = metaReportComparisonDateInputBounds(payload);
-        const startA = periodA?.startDate || bounds.min || '';
-        const endA = periodA?.endDate || startA;
-        const startB = periodB?.startDate || bounds.min || '';
-        const endB = periodB?.endDate || startB;
-
-        return `
-          <div class="meta-report-comparison-tiles" id="meta-report-comparison-range-panel">
-            <div class="meta-report-comparison-tile is-a is-custom">
-              <span class="meta-report-comparison-tile-caption">Period A</span>
-              <div class="meta-report-comparison-tile-dates">
-                ${renderMetaReportComparisonDateField('a', 'start', startA, bounds, 'From')}
-                ${renderMetaReportComparisonDateField('a', 'end', endA, bounds, 'To')}
-              </div>
-            </div>
-            <div class="meta-report-comparison-tiles-vs" aria-hidden="true">vs</div>
-            <div class="meta-report-comparison-tile is-b is-custom">
-              <span class="meta-report-comparison-tile-caption">Period B</span>
-              <div class="meta-report-comparison-tile-dates">
-                ${renderMetaReportComparisonDateField('b', 'start', startB, bounds, 'From')}
-                ${renderMetaReportComparisonDateField('b', 'end', endB, bounds, 'To')}
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      const labelA = metaReportComparisonFormatDisplayLabel(mode, periodA);
-      const labelB = metaReportComparisonFormatDisplayLabel(mode, periodB);
+    function renderMetaReportComparisonSummaryItem(side, caption, rangeLabel, partialData = false) {
+      const partialBadge = partialData
+        ? '<span class="meta-report-comparison-partial-badge">Partial data</span>'
+        : '';
       return `
-        <div class="meta-report-comparison-tiles" id="meta-report-comparison-range-panel">
-          <div class="meta-report-comparison-tile is-a">
-            <span class="meta-report-comparison-tile-caption">Period A</span>
-            <div class="meta-report-comparison-tile-label">${esc(labelA)}</div>
+        <div class="meta-report-comparison-summary-item is-${esc(side)}">
+          <div class="meta-report-comparison-summary-item-head">
+            <span class="meta-report-comparison-summary-dot" aria-hidden="true"></span>
+            <span class="meta-report-comparison-summary-caption">${esc(caption)}</span>
+            ${partialBadge}
           </div>
-          <div class="meta-report-comparison-tiles-vs" aria-hidden="true">vs</div>
-          <div class="meta-report-comparison-tile is-b">
-            <span class="meta-report-comparison-tile-caption">Period B</span>
-            <div class="meta-report-comparison-tile-label">${esc(labelB)}</div>
+          <span class="meta-report-comparison-summary-label">${esc(rangeLabel)}</span>
+        </div>
+      `;
+    }
+
+    function renderMetaReportComparisonSummaryBar(periodA, periodB, comparison = null) {
+      const partialA = comparison?.periodA?.partialData === true;
+      const partialB = comparison?.periodB?.partialData === true;
+      const labelA = metaReportComparisonSummaryRangeLabel(periodA);
+      const labelB = metaReportComparisonSummaryRangeLabel(periodB);
+      return `
+        <div class="meta-report-comparison-summary-bar" id="meta-report-comparison-range-panel">
+          ${renderMetaReportComparisonSummaryItem('a', 'Period A', labelA, partialA)}
+          <div class="meta-report-comparison-summary-vs" aria-hidden="true">vs</div>
+          ${renderMetaReportComparisonSummaryItem('b', 'Period B', labelB, partialB)}
+        </div>
+      `;
+    }
+
+    function renderMetaReportComparisonCustomDatesPanel(periodA, periodB, payload) {
+      const bounds = metaReportComparisonDateInputBounds(payload);
+      const startA = periodA?.startDate || bounds.min || '';
+      const endA = periodA?.endDate || startA;
+      const startB = periodB?.startDate || bounds.min || '';
+      const endB = periodB?.endDate || startB;
+
+      return `
+        <div class="meta-report-comparison-custom-dates" id="meta-report-comparison-range-panel">
+          <div class="meta-report-comparison-custom-period is-a">
+            <span class="meta-report-comparison-custom-period-caption">Period A</span>
+            <div class="meta-report-comparison-custom-period-dates">
+              ${renderMetaReportComparisonDateField('a', 'start', startA, bounds, 'From')}
+              ${renderMetaReportComparisonDateField('a', 'end', endA, bounds, 'To')}
+            </div>
+          </div>
+          <div class="meta-report-comparison-custom-dates-vs" aria-hidden="true">vs</div>
+          <div class="meta-report-comparison-custom-period is-b">
+            <span class="meta-report-comparison-custom-period-caption">Period B</span>
+            <div class="meta-report-comparison-custom-period-dates">
+              ${renderMetaReportComparisonDateField('b', 'start', startB, bounds, 'From')}
+              ${renderMetaReportComparisonDateField('b', 'end', endB, bounds, 'To')}
+            </div>
           </div>
         </div>
       `;
+    }
+
+    function renderMetaReportComparisonPeriodControls(periodA, periodB, payload, comparison = null) {
+      const mode = metaReportsState.comparisonMode || 'mom';
+      if (mode === 'custom') {
+        return renderMetaReportComparisonCustomDatesPanel(periodA, periodB, payload);
+      }
+      return renderMetaReportComparisonSummaryBar(periodA, periodB, comparison);
+    }
+
+    function renderMetaReportComparisonPeriodTiles(periodA, periodB, payload, comparison = null) {
+      return renderMetaReportComparisonPeriodControls(periodA, periodB, payload, comparison);
     }
 
     function renderMetaReportComparisonChangeCell(deltaPct, higherIsBetter, hasDataA = true, hasDataB = true) {
@@ -11607,9 +11648,9 @@
                 `;
               }).join('')}
             </div>
-            <div class="meta-report-comparison-period-card">
+            <div class="meta-report-comparison-period-card${metaReportsState.comparisonMode === 'custom' ? ' is-custom' : ''}">
               <div id="meta-report-comparison-range-wrap">
-                ${renderMetaReportComparisonPeriodTiles(periodA, periodB, payload)}
+                ${renderMetaReportComparisonPeriodControls(periodA, periodB, payload, comparison)}
               </div>
             </div>
           </div>
