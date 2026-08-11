@@ -5101,16 +5101,22 @@
       flex-shrink: 0; font-size: 9px; line-height: 1; opacity: 0.55;
     }
     .meta-report-comparison-month-menu {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-      box-shadow: 0 12px 32px rgba(26, 18, 8, 0.14); left: 50%; max-height: 240px;
-      min-width: 5.5rem; overflow-y: auto; padding: 6px; position: fixed;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      box-shadow: 0 16px 40px rgba(26, 18, 8, 0.16); left: 50%; max-height: 280px;
+      overflow-x: hidden; overflow-y: auto; padding: 8px; position: fixed;
       transform: translateX(-50%); z-index: 10000;
+    }
+    .meta-report-comparison-month-menu--month {
+      min-width: 11rem; width: 11rem;
+    }
+    .meta-report-comparison-month-menu--year {
+      min-width: 7.5rem; width: 7.5rem;
     }
     .meta-report-comparison-month-menu[hidden] { display: none !important; }
     .meta-report-comparison-month-option {
       background: transparent; border: 0; border-radius: 8px; color: var(--text);
       cursor: pointer; display: block; font: inherit; font-size: 14px; font-weight: 600;
-      padding: 8px 10px; text-align: left; width: 100%;
+      padding: 10px 14px; text-align: left; white-space: nowrap; width: 100%;
     }
     .meta-report-comparison-month-option:hover { background: var(--panel-soft); }
     .meta-report-comparison-month-option.is-selected {
@@ -11414,7 +11420,7 @@
             <span class="meta-report-comparison-month-trigger-value">${esc(selectedLabel)}</span>
             <span class="meta-report-comparison-month-trigger-icon" aria-hidden="true">▾</span>
           </button>
-          <div class="meta-report-comparison-month-menu" role="listbox" hidden>${items}</div>
+          <div class="meta-report-comparison-month-menu meta-report-comparison-month-menu--${esc(part)}" data-comparison-menu-part="${esc(part)}" role="listbox" hidden>${items}</div>
         </div>
       `;
     }
@@ -11474,11 +11480,14 @@
       void refreshMetaReportComparison(payload, { editable });
     }
 
-    function positionMetaReportComparisonMonthMenu(trigger, menu) {
+    function positionMetaReportComparisonMonthMenu(trigger, menu, dropdown) {
       const rect = trigger.getBoundingClientRect();
+      const part = dropdown?.getAttribute('data-comparison-month-part') || 'month';
+      const minWidth = part === 'year' ? 120 : 176;
       menu.style.left = `${rect.left + rect.width / 2}px`;
-      menu.style.top = `${rect.bottom + 4}px`;
-      menu.style.minWidth = `${Math.max(rect.width + 12, 72)}px`;
+      menu.style.top = `${rect.bottom + 6}px`;
+      menu.style.width = `${Math.max(minWidth, rect.width + 28)}px`;
+      menu.style.minWidth = `${minWidth}px`;
     }
 
     function openMetaReportComparisonMonthMenu(trigger, menu, dropdown) {
@@ -11490,7 +11499,7 @@
       menu.hidden = false;
       dropdown.classList.add('is-open');
       trigger.setAttribute('aria-expanded', 'true');
-      positionMetaReportComparisonMonthMenu(trigger, menu);
+      positionMetaReportComparisonMonthMenu(trigger, menu, dropdown);
     }
 
     function closeMetaReportComparisonMonthMenus(exceptMenu = null) {
@@ -11575,7 +11584,11 @@
           closeMetaReportComparisonMonthMenus();
         });
         window.addEventListener('resize', () => closeMetaReportComparisonMonthMenus());
-        window.addEventListener('scroll', () => closeMetaReportComparisonMonthMenus(), true);
+        window.addEventListener('scroll', (event) => {
+          const target = event.target;
+          if (target instanceof Element && target.closest('.meta-report-comparison-month-menu')) return;
+          closeMetaReportComparisonMonthMenus();
+        }, true);
         metaReportsState.comparisonMonthMenuListenerBound = true;
       }
     }
