@@ -4967,7 +4967,7 @@
     }
     .meta-report-view-panel[hidden] { display: none !important; }
     .meta-report-comparison-controls {
-      display: flex; flex-direction: column; gap: 12px; width: 100%;
+      display: flex; flex-direction: column; gap: 10px; width: 100%;
     }
     .meta-report-comparison-view-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
@@ -5026,19 +5026,15 @@
     .meta-report-comparison-presets .preset-btn.is-disabled {
       cursor: not-allowed; opacity: 0.4;
     }
-    .meta-report-comparison-period-card {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); padding: 12px 16px; width: 100%;
-    }
-    .meta-report-comparison-period-card.is-custom { padding: 10px 12px; }
+    .meta-report-comparison-period-card { min-width: 0; width: 100%; }
     .meta-report-comparison-duel {
       align-items: stretch; border: 1px solid var(--border); border-radius: 16px;
       display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      min-height: 52px; overflow: hidden; width: 100%;
+      min-height: 48px; overflow: hidden; width: 100%;
     }
     .meta-report-comparison-duel-side {
       align-items: center; display: flex; flex-direction: column; gap: 2px;
-      justify-content: center; min-width: 0; padding: 12px 10px; text-align: center;
+      justify-content: center; min-width: 0; padding: 10px 14px; text-align: center;
     }
     .meta-report-comparison-duel-side.is-a { background: rgba(255, 106, 0, 0.07); }
     .meta-report-comparison-duel-side.is-b { background: rgba(148, 163, 184, 0.08); }
@@ -5060,51 +5056,58 @@
     .meta-report-comparison-duel-side.is-partial .meta-report-comparison-duel-value::after {
       color: #b45309; content: '*'; font-size: 14px; margin-left: 2px; vertical-align: super;
     }
-    .meta-report-comparison-duel.is-custom-dates { min-height: 48px; }
+    .meta-report-comparison-duel.is-custom-dates .meta-report-comparison-duel-side {
+      padding: 8px 12px;
+    }
     .meta-report-comparison-custom-range {
-      align-items: center; background: var(--panel); border: 1px solid var(--border);
-      border-radius: 10px; display: flex; gap: 2px 4px; max-width: 100%;
-      min-width: 0; padding: 5px 8px; transition: border-color 0.15s ease, box-shadow 0.15s ease;
-      width: 100%;
-    }
-    .meta-report-comparison-duel-side.is-a .meta-report-comparison-custom-range:hover {
-      border-color: rgba(255, 106, 0, 0.45);
-    }
-    .meta-report-comparison-duel-side.is-b .meta-report-comparison-custom-range:hover {
-      border-color: rgba(100, 116, 139, 0.45);
-    }
-    .meta-report-comparison-custom-range:focus-within {
-      border-color: var(--primary); box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.1);
+      align-items: center; display: inline-flex; gap: 5px; justify-content: center;
+      max-width: 100%; min-width: 0;
     }
     .meta-report-comparison-custom-range-field {
-      cursor: pointer; flex: 1 1 0; min-width: 0;
+      border-radius: 6px; cursor: pointer; flex: 0 1 auto; min-width: 0;
+      padding: 1px 3px; transition: background 0.15s ease;
+    }
+    .meta-report-comparison-custom-range-field:hover {
+      background: rgba(255, 255, 255, 0.45);
+    }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-custom-range-field:hover {
+      background: rgba(255, 255, 255, 0.55);
     }
     .meta-report-comparison-custom-range-sep {
-      color: var(--text-muted); flex-shrink: 0; font-size: 12px; font-weight: 600; line-height: 1;
-      padding: 0 1px; pointer-events: none; user-select: none;
+      color: var(--text-muted); flex-shrink: 0; font-family: 'Poppins', sans-serif;
+      font-size: 15px; font-weight: 600; line-height: 1; opacity: 0.55;
+      pointer-events: none; user-select: none;
     }
     .meta-report-comparison-date-input-wrap .flatpickr-input,
     .meta-report-comparison-date-input {
       background: transparent; border: 0 !important; box-shadow: none !important;
-      color: var(--text); cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
-      min-width: 0; padding: 4px 2px; text-align: center; width: 100%;
+      color: inherit; cursor: pointer; font-family: 'Poppins', sans-serif;
+      font-size: 16px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
+      min-width: 0; padding: 0; text-align: center; width: auto;
     }
-    .meta-report-comparison-date-input-wrap .flatpickr-input:focus,
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-input,
+    .meta-report-comparison-duel-side.is-a .flatpickr-input { color: #c2410c; }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-date-input,
+    .meta-report-comparison-duel-side.is-b .flatpickr-input { color: #334155; }
+    .meta-report-comparison-custom-range-field .flatpickr-input {
+      min-width: 2.8em; width: auto !important;
+    }
     .meta-report-comparison-date-input:focus { outline: none; }
     .meta-report-comparison-date-input-wrap .flatpickr-input[readonly] { cursor: pointer; }
     .meta-report-comparison-date-icon {
-      align-items: center; color: #c2410c; display: inline-flex; flex-shrink: 0;
-      margin-left: 2px; pointer-events: none;
+      align-items: center; display: inline-flex; flex-shrink: 0; margin-left: 1px;
+      opacity: 0.45; pointer-events: none;
     }
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-icon { color: #c2410c; }
     .meta-report-comparison-duel-side.is-b .meta-report-comparison-date-icon { color: #64748b; }
     @media (max-width: 720px) {
-      .meta-report-comparison-duel,
-      .meta-report-comparison-custom-dates { grid-template-columns: 1fr; }
-      .meta-report-comparison-duel-divider,
-      .meta-report-comparison-custom-dates-vs { margin: 0; padding: 2px 0; text-align: center; }
-      .meta-report-comparison-duel-value { font-size: 18px; }
+      .meta-report-comparison-duel { grid-template-columns: 1fr; min-height: 0; }
+      .meta-report-comparison-duel-side { padding: 10px 12px; }
+      .meta-report-comparison-duel-divider { margin: 0; padding: 2px 0; text-align: center; }
+      .meta-report-comparison-duel-value { font-size: 17px; }
       .meta-report-comparison-date-input-wrap .flatpickr-input,
-      .meta-report-comparison-date-input { font-size: 12px; }
+      .meta-report-comparison-date-input { font-size: 15px; }
+      .meta-report-comparison-custom-range { flex-wrap: wrap; row-gap: 2px; }
     }
     .meta-report-comparison-view-card.is-loading {
       min-height: 460px;
