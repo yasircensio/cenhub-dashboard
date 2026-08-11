@@ -5005,9 +5005,6 @@
     .meta-report-comparison-tab-panel .meta-report-group-table td {
       overflow: visible; text-overflow: clip; white-space: nowrap;
     }
-    #meta-report-comparison-table-wrap {
-      -webkit-overflow-scrolling: touch; overflow-x: auto;
-    }
     .meta-report-comparison-chart-card {
       display: flex; flex-direction: column; gap: 12px; min-width: 0;
     }
@@ -5065,12 +5062,87 @@
     }
     .meta-report-comparison-tile.is-custom { min-height: 88px; }
     .meta-report-comparison-tile-dates {
-      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;
+      display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin-top: 2px;
     }
-    .meta-report-comparison-tile-dates input[type="date"] {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); flex: 1 1 120px; font: inherit; font-size: 12px;
-      min-width: 0; padding: 6px 8px;
+    .meta-report-comparison-date-field {
+      cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .meta-report-comparison-date-field-label {
+      color: var(--text-soft); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .meta-report-comparison-date-input-wrap {
+      align-items: center; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; cursor: pointer; display: flex; gap: 8px; min-height: 40px;
+      padding: 0 10px; transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .meta-report-comparison-date-input-wrap:hover {
+      border-color: rgba(255, 106, 0, 0.35);
+    }
+    .meta-report-comparison-date-input-wrap:focus-within {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
+    }
+    .meta-report-comparison-date-input {
+      background: transparent; border: 0; color: var(--text); cursor: pointer;
+      flex: 1 1 auto; font: inherit; font-size: 13px; font-weight: 500; min-width: 0;
+      padding: 10px 0; width: 100%;
+    }
+    .meta-report-comparison-date-input:focus { outline: none; }
+    .meta-report-comparison-date-icon {
+      align-items: center; color: #c2410c; display: inline-flex; flex-shrink: 0;
+    }
+    .meta-report-comparison-view-card.is-loading {
+      min-height: 460px;
+    }
+    #meta-report-comparison-table-wrap {
+      -webkit-overflow-scrolling: touch; min-height: 360px; overflow-x: auto;
+    }
+    .meta-report-comparison-skeleton {
+      display: flex; flex-direction: column; gap: 18px; min-height: 360px; width: 100%;
+    }
+    .meta-report-comparison-skeleton-group {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; gap: 10px; padding: 14px 12px;
+    }
+    .meta-report-comparison-skeleton-row {
+      align-items: center; display: grid; gap: 10px;
+      grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(52px, 1fr));
+    }
+    .meta-report-comparison-skeleton-cell {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%; border-radius: 8px; height: 14px;
+    }
+    .meta-report-comparison-skeleton-cell--label { height: 12px; width: 88%; }
+    .meta-report-comparison-skeleton-cell--short { width: 72%; justify-self: end; }
+    .flatpickr-calendar {
+      border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(26, 18, 8, 0.14); font-family: inherit; overflow: hidden;
+      padding: 8px;
+    }
+    .flatpickr-months { padding: 4px 4px 8px; }
+    .flatpickr-current-month { font-size: 14px; font-weight: 700; }
+    .flatpickr-weekdays { margin-top: 4px; }
+    span.flatpickr-weekday {
+      color: var(--text-soft); font-size: 11px; font-weight: 700;
+    }
+    .flatpickr-day {
+      border-radius: 10px; color: var(--text); font-size: 13px; font-weight: 500; line-height: 36px;
+    }
+    .flatpickr-day.today { border-color: rgba(255, 106, 0, 0.35); }
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    .flatpickr-day:hover { background: rgba(255, 106, 0, 0.12); border-color: transparent; }
+    .flatpickr-day.selected:hover,
+    .flatpickr-day.startRange:hover,
+    .flatpickr-day.endRange:hover {
+      background: #e55f00; border-color: #e55f00; color: #fff;
+    }
+    @media (max-width: 560px) {
+      .meta-report-comparison-tile-dates { grid-template-columns: 1fr; }
     }
     .meta-report-comparison-tiles-vs {
       align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;

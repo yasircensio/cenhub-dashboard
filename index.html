@@ -5014,9 +5014,6 @@
     .meta-report-comparison-tab-panel .meta-report-group-table td {
       overflow: visible; text-overflow: clip; white-space: nowrap;
     }
-    #meta-report-comparison-table-wrap {
-      -webkit-overflow-scrolling: touch; overflow-x: auto;
-    }
     .meta-report-comparison-chart-card {
       display: flex; flex-direction: column; gap: 12px; min-width: 0;
     }
@@ -5074,12 +5071,87 @@
     }
     .meta-report-comparison-tile.is-custom { min-height: 88px; }
     .meta-report-comparison-tile-dates {
-      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;
+      display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin-top: 2px;
     }
-    .meta-report-comparison-tile-dates input[type="date"] {
-      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); flex: 1 1 120px; font: inherit; font-size: 12px;
-      min-width: 0; padding: 6px 8px;
+    .meta-report-comparison-date-field {
+      cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .meta-report-comparison-date-field-label {
+      color: var(--text-soft); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .meta-report-comparison-date-input-wrap {
+      align-items: center; background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; cursor: pointer; display: flex; gap: 8px; min-height: 40px;
+      padding: 0 10px; transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .meta-report-comparison-date-input-wrap:hover {
+      border-color: rgba(255, 106, 0, 0.35);
+    }
+    .meta-report-comparison-date-input-wrap:focus-within {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
+    }
+    .meta-report-comparison-date-input {
+      background: transparent; border: 0; color: var(--text); cursor: pointer;
+      flex: 1 1 auto; font: inherit; font-size: 13px; font-weight: 500; min-width: 0;
+      padding: 10px 0; width: 100%;
+    }
+    .meta-report-comparison-date-input:focus { outline: none; }
+    .meta-report-comparison-date-icon {
+      align-items: center; color: #c2410c; display: inline-flex; flex-shrink: 0;
+    }
+    .meta-report-comparison-view-card.is-loading {
+      min-height: 460px;
+    }
+    #meta-report-comparison-table-wrap {
+      -webkit-overflow-scrolling: touch; min-height: 360px; overflow-x: auto;
+    }
+    .meta-report-comparison-skeleton {
+      display: flex; flex-direction: column; gap: 18px; min-height: 360px; width: 100%;
+    }
+    .meta-report-comparison-skeleton-group {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      display: flex; flex-direction: column; gap: 10px; padding: 14px 12px;
+    }
+    .meta-report-comparison-skeleton-row {
+      align-items: center; display: grid; gap: 10px;
+      grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(52px, 1fr));
+    }
+    .meta-report-comparison-skeleton-cell {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%; border-radius: 8px; height: 14px;
+    }
+    .meta-report-comparison-skeleton-cell--label { height: 12px; width: 88%; }
+    .meta-report-comparison-skeleton-cell--short { width: 72%; justify-self: end; }
+    .flatpickr-calendar {
+      border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(26, 18, 8, 0.14); font-family: inherit; overflow: hidden;
+      padding: 8px;
+    }
+    .flatpickr-months { padding: 4px 4px 8px; }
+    .flatpickr-current-month { font-size: 14px; font-weight: 700; }
+    .flatpickr-weekdays { margin-top: 4px; }
+    span.flatpickr-weekday {
+      color: var(--text-soft); font-size: 11px; font-weight: 700;
+    }
+    .flatpickr-day {
+      border-radius: 10px; color: var(--text); font-size: 13px; font-weight: 500; line-height: 36px;
+    }
+    .flatpickr-day.today { border-color: rgba(255, 106, 0, 0.35); }
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    .flatpickr-day:hover { background: rgba(255, 106, 0, 0.12); border-color: transparent; }
+    .flatpickr-day.selected:hover,
+    .flatpickr-day.startRange:hover,
+    .flatpickr-day.endRange:hover {
+      background: #e55f00; border-color: #e55f00; color: #fff;
+    }
+    @media (max-width: 560px) {
+      .meta-report-comparison-tile-dates { grid-template-columns: 1fr; }
     }
     .meta-report-comparison-tiles-vs {
       align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;
@@ -10347,7 +10419,7 @@
 
     const META_REPORT_COMPARISON_PRESETS = [
       { id: 'mom', label: 'This month vs last month' },
-      { id: 'custom', label: 'Custom' },
+      { id: 'custom', label: 'Custom dates' },
       { id: 'ytd', label: 'This year vs last year' },
     ];
 
@@ -11127,9 +11199,6 @@
       const missingYears = years.filter((year) => year !== currentYear && !metaReportsState.comparisonYearCache[year]);
       if (!missingYears.length) return;
 
-      metaReportsState.comparisonLoading = true;
-      syncMetaReportComparisonUi(payload, { editable });
-
       for (const year of missingYears) {
         try {
           let fetched;
@@ -11150,8 +11219,6 @@
           /* leave cache empty for unavailable years */
         }
       }
-
-      metaReportsState.comparisonLoading = false;
     }
 
     function computeMetaReportComparison(payload) {
@@ -11179,6 +11246,31 @@
       return { min, max };
     }
 
+    function renderMetaReportComparisonDateField(side, bound, value, bounds, label) {
+      const minAttr = bounds.min ? ` data-min="${esc(bounds.min)}"` : '';
+      const maxAttr = bounds.max ? ` data-max="${esc(bounds.max)}"` : '';
+      return `
+        <label class="meta-report-comparison-date-field">
+          <span class="meta-report-comparison-date-field-label">${esc(label)}</span>
+          <span class="meta-report-comparison-date-input-wrap">
+            <input type="text" class="meta-report-comparison-date-input" data-comparison-date="${esc(side)}-${esc(bound)}" value="${esc(value)}" placeholder="Select date" autocomplete="off" inputmode="none"${minAttr}${maxAttr} />
+            <span class="meta-report-comparison-date-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </span>
+          </span>
+        </label>
+      `;
+    }
+
+    function destroyMetaReportComparisonDatePickers() {
+      document.querySelectorAll('[data-comparison-date]').forEach((input) => {
+        if (input._metaComparisonDatePicker) {
+          input._metaComparisonDatePicker.destroy();
+          input._metaComparisonDatePicker = null;
+        }
+      });
+    }
+
     function renderMetaReportComparisonPeriodTiles(periodA, periodB, payload) {
       const mode = metaReportsState.comparisonMode || 'mom';
 
@@ -11188,24 +11280,22 @@
         const endA = periodA?.endDate || startA;
         const startB = periodB?.startDate || bounds.min || '';
         const endB = periodB?.endDate || startB;
-        const minAttr = bounds.min ? ` min="${esc(bounds.min)}"` : '';
-        const maxAttr = bounds.max ? ` max="${esc(bounds.max)}"` : '';
 
         return `
           <div class="meta-report-comparison-tiles" id="meta-report-comparison-range-panel">
             <div class="meta-report-comparison-tile is-a is-custom">
               <span class="meta-report-comparison-tile-caption">Period A</span>
               <div class="meta-report-comparison-tile-dates">
-                <input type="date" class="admin-select" data-comparison-date="a-start" value="${esc(startA)}" aria-label="Period A start date"${minAttr}${maxAttr} />
-                <input type="date" class="admin-select" data-comparison-date="a-end" value="${esc(endA)}" aria-label="Period A end date"${minAttr}${maxAttr} />
+                ${renderMetaReportComparisonDateField('a', 'start', startA, bounds, 'From')}
+                ${renderMetaReportComparisonDateField('a', 'end', endA, bounds, 'To')}
               </div>
             </div>
             <div class="meta-report-comparison-tiles-vs" aria-hidden="true">vs</div>
             <div class="meta-report-comparison-tile is-b is-custom">
               <span class="meta-report-comparison-tile-caption">Period B</span>
               <div class="meta-report-comparison-tile-dates">
-                <input type="date" class="admin-select" data-comparison-date="b-start" value="${esc(startB)}" aria-label="Period B start date"${minAttr}${maxAttr} />
-                <input type="date" class="admin-select" data-comparison-date="b-end" value="${esc(endB)}" aria-label="Period B end date"${minAttr}${maxAttr} />
+                ${renderMetaReportComparisonDateField('b', 'start', startB, bounds, 'From')}
+                ${renderMetaReportComparisonDateField('b', 'end', endB, bounds, 'To')}
               </div>
             </div>
           </div>
@@ -11288,9 +11378,32 @@
       `;
     }
 
+    function renderMetaReportComparisonTableSkeleton() {
+      const rowHtml = Array.from({ length: 6 }).map(() => `
+        <div class="meta-report-comparison-skeleton-row">
+          <div class="meta-report-comparison-skeleton-cell meta-report-comparison-skeleton-cell--label"></div>
+          <div class="meta-report-comparison-skeleton-cell"></div>
+          <div class="meta-report-comparison-skeleton-cell"></div>
+          <div class="meta-report-comparison-skeleton-cell meta-report-comparison-skeleton-cell--short"></div>
+        </div>
+      `).join('');
+      return `
+        <div class="meta-report-comparison-skeleton" aria-busy="true" aria-label="Loading comparison data">
+          <div class="meta-report-comparison-skeleton-group">
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+            ${rowHtml}
+          </div>
+          <div class="meta-report-comparison-skeleton-group">
+            <div class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></div>
+            ${rowHtml}
+          </div>
+        </div>
+      `;
+    }
+
     function renderMetaReportComparisonTables(comparison) {
       if (metaReportsState.comparisonLoading) {
-        return '<p class="meta-report-comparison-loading">Loading comparison data…</p>';
+        return renderMetaReportComparisonTableSkeleton();
       }
       if (!comparison || comparison.insufficientData) {
         return '<p class="meta-report-comparison-empty">Select two periods with ad data to compare performance.</p>';
@@ -11326,6 +11439,7 @@
       const comparison = metaReportsState.comparisonResult || computeMetaReportComparison(payload);
       const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
       const activeTab = metaReportsState.comparisonTab || 'table';
+      const isLoading = metaReportsState.comparisonLoading;
 
       return `
         <section class="meta-report-comparison-view" id="meta-report-comparison-view">
@@ -11345,7 +11459,7 @@
               </div>
             </div>
           </div>
-          <div class="meta-report-comparison-view-card">
+          <div class="meta-report-comparison-view-card${isLoading ? ' is-loading' : ''}">
             <div class="meta-report-comparison-view-head">
               <div class="meta-report-comparison-tabs" role="tablist" aria-label="Comparison views">
                 <button type="button" class="meta-report-chart-tab${activeTab === 'table' ? ' is-active' : ''}" data-comparison-tab="table" role="tab" aria-selected="${activeTab === 'table'}">Compare table</button>
@@ -11683,6 +11797,9 @@
       const headlineWrap = document.getElementById('meta-report-comparison-headline-wrap');
       if (headlineWrap) headlineWrap.remove();
 
+      const viewCard = view.querySelector('.meta-report-comparison-view-card');
+      if (viewCard) viewCard.classList.toggle('is-loading', Boolean(metaReportsState.comparisonLoading));
+
       const tableWrap = document.getElementById('meta-report-comparison-table-wrap');
       if (tableWrap) tableWrap.innerHTML = renderMetaReportComparisonTables(comparison);
 
@@ -11698,8 +11815,48 @@
 
     async function refreshMetaReportComparison(payload, { editable = false } = {}) {
       if (!payload || !document.getElementById('meta-report-comparison-view')) return;
-      await ensureMetaReportComparisonYears(payload, { editable });
+      const started = Date.now();
+      metaReportsState.comparisonLoading = true;
       syncMetaReportComparisonUi(payload, { editable });
+      try {
+        await ensureMetaReportComparisonYears(payload, { editable });
+      } finally {
+        const elapsed = Date.now() - started;
+        if (elapsed < 180) {
+          await new Promise((resolve) => setTimeout(resolve, 180 - elapsed));
+        }
+        metaReportsState.comparisonLoading = false;
+        syncMetaReportComparisonUi(payload, { editable });
+      }
+    }
+
+    async function applyMetaReportComparisonDateChange(payload, input, { editable = false } = {}) {
+      const key = input.getAttribute('data-comparison-date');
+      if (!key || !input.value) return;
+      const [side, bound] = key.split('-');
+      const stateKey = `comparisonPeriod${side.toUpperCase()}`;
+      if (!metaReportsState[stateKey]) {
+        metaReportsState[stateKey] = { startDate: null, endDate: null };
+      }
+      const period = metaReportsState[stateKey];
+      period[`${bound}Date`] = input.value;
+      if (period.startDate && period.endDate && period.startDate > period.endDate) {
+        const tmp = period.startDate;
+        period.startDate = period.endDate;
+        period.endDate = tmp;
+      }
+      metaReportsState.comparisonMode = 'custom';
+      await refreshMetaReportComparison(payload, { editable });
+      const rangeWrap = document.getElementById('meta-report-comparison-range-wrap');
+      if (rangeWrap) {
+        const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
+        rangeWrap.innerHTML = renderMetaReportComparisonPeriodTiles(periodA, periodB, payload);
+        bindComparisonDateInputs();
+      }
+      document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
+        button.classList.toggle('active', button.getAttribute('data-comparison-preset') === 'custom');
+        button.setAttribute('aria-pressed', button.getAttribute('data-comparison-preset') === 'custom');
+      });
     }
 
     function bindMetaReportComparisonControls(payload, { editable = false } = {}) {
@@ -11711,6 +11868,7 @@
             if (!mode) return;
             metaReportsState.comparisonMode = mode;
             metaReportApplyComparisonPresetDefaults(payload, mode);
+            metaReportsState.comparisonLoading = true;
             const view = document.getElementById('meta-report-comparison-view');
             if (view) {
               view.outerHTML = renderMetaReportComparisonView();
@@ -11722,34 +11880,42 @@
       };
 
       const bindComparisonDateInputs = () => {
+        destroyMetaReportComparisonDatePickers();
         document.querySelectorAll('[data-comparison-date]').forEach((input) => {
-          input.onchange = async () => {
-            const key = input.getAttribute('data-comparison-date');
-            if (!key || !input.value) return;
-            const [side, bound] = key.split('-');
-            const stateKey = `comparisonPeriod${side.toUpperCase()}`;
-            if (!metaReportsState[stateKey]) {
-              metaReportsState[stateKey] = { startDate: null, endDate: null };
+          input.onchange = null;
+        });
+        if (typeof flatpickr !== 'undefined') {
+          document.querySelectorAll('[data-comparison-date]').forEach((input) => {
+            const bounds = metaReportComparisonDateInputBounds(payload);
+            if (input._metaComparisonDatePicker) {
+              input._metaComparisonDatePicker.destroy();
             }
-            const period = metaReportsState[stateKey];
-            period[`${bound}Date`] = input.value;
-            if (period.startDate && period.endDate && period.startDate > period.endDate) {
-              const tmp = period.startDate;
-              period.startDate = period.endDate;
-              period.endDate = tmp;
-            }
-            metaReportsState.comparisonMode = 'custom';
-            await refreshMetaReportComparison(payload, { editable });
-            const rangeWrap = document.getElementById('meta-report-comparison-range-wrap');
-            if (rangeWrap) {
-              const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
-              rangeWrap.innerHTML = renderMetaReportComparisonPeriodTiles(periodA, periodB, payload);
-              bindComparisonDateInputs();
-            }
-            document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
-              button.classList.toggle('active', button.getAttribute('data-comparison-preset') === 'custom');
-              button.setAttribute('aria-pressed', button.getAttribute('data-comparison-preset') === 'custom');
+            input._metaComparisonDatePicker = flatpickr(input, {
+              dateFormat: 'Y-m-d',
+              minDate: bounds.min || input.getAttribute('data-min') || undefined,
+              maxDate: bounds.max || input.getAttribute('data-max') || undefined,
+              disableMobile: true,
+              allowInput: false,
+              clickOpens: true,
+              animate: true,
+              onChange: (_selectedDates, dateStr, instance) => {
+                if (!dateStr || instance._metaComparisonApplying) return;
+                void applyMetaReportComparisonDateChange(payload, instance.input, { editable });
+              },
             });
+            const wrap = input.closest('.meta-report-comparison-date-input-wrap');
+            if (wrap) {
+              wrap.onclick = (event) => {
+                if (event.target === input) return;
+                input._metaComparisonDatePicker?.open();
+              };
+            }
+          });
+          return;
+        }
+        document.querySelectorAll('[data-comparison-date]').forEach((input) => {
+          input.onchange = () => {
+            void applyMetaReportComparisonDateChange(payload, input, { editable });
           };
         });
       };
