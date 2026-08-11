@@ -5068,6 +5068,29 @@
     .meta-report-comparison-duel.is-custom-dates .meta-report-comparison-duel-side {
       padding: 8px 12px;
     }
+    .meta-report-comparison-duel.is-month-pickers .meta-report-comparison-duel-side {
+      padding: 8px 12px;
+    }
+    .meta-report-comparison-month-picker {
+      align-items: center; display: flex; justify-content: center; min-width: 0; width: 100%;
+    }
+    .meta-report-comparison-month-input {
+      appearance: none; -webkit-appearance: none; background: transparent; border: 0;
+      color: inherit; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 16px;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; min-width: 0; padding: 0;
+      text-align: center; width: auto;
+    }
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-month-input { color: #c2410c; }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-input { color: #334155; }
+    .meta-report-comparison-month-input:focus {
+      outline: 2px solid rgba(255, 106, 0, 0.25); outline-offset: 2px;
+    }
+    .meta-report-comparison-month-input::-webkit-calendar-picker-indicator {
+      cursor: pointer; margin-left: 4px; opacity: 0.55;
+    }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-input::-webkit-calendar-picker-indicator {
+      opacity: 0.45;
+    }
     .meta-report-comparison-custom-range {
       align-items: center; display: inline-flex; gap: 5px; justify-content: center;
       max-width: 100%; min-width: 0;
@@ -10462,6 +10485,7 @@
 
     const META_REPORT_COMPARISON_PRESETS = [
       { id: 'mom', label: 'This month vs last month' },
+      { id: 'months', label: 'Compare months' },
       { id: 'custom', label: 'Custom dates' },
       { id: 'ytd', label: 'This year vs last year' },
     ];
@@ -10643,7 +10667,7 @@
     function metaReportComparisonFormatDisplayLabel(mode, period) {
       const normalized = metaReportComparisonNormalizePeriod(period);
       if (!normalized) return '—';
-      if (mode === 'mom') {
+      if (mode === 'mom' || mode === 'months') {
         return metaReportComparisonPeriodLabel(normalized.startMonthKey, normalized.endMonthKey);
       }
       if (mode === 'ytd') {
@@ -10667,7 +10691,7 @@
         };
       }
       let agg;
-      if (mode === 'mom') {
+      if (mode === 'mom' || mode === 'months') {
         agg = metaReportAggregateComparisonRange(monthsMap, normalized.startMonthKey, normalized.endMonthKey);
       } else {
         agg = metaReportComparisonAggregateDateRange(monthsMap, normalized.startDate, normalized.endDate);
@@ -10971,6 +10995,21 @@
           mode,
           periodA: metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodA),
           periodB: metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodB),
+        };
+      }
+      if (mode === 'months') {
+        const periodA = metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodA);
+        const periodB = metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodB);
+        const isSingleMonth = (period) => period && period.startMonthKey === period.endMonthKey;
+        if (isSingleMonth(periodA) && isSingleMonth(periodB)) {
+          return { mode, periodA, periodB };
+        }
+        if (!anchorKey) return { mode, periodA: null, periodB: null };
+        const previousKey = metaReportComparisonAddMonths(anchorKey, -1);
+        return {
+          mode,
+          periodA: metaReportComparisonFullMonthDates(anchorKey),
+          periodB: previousKey ? metaReportComparisonFullMonthDates(previousKey) : null,
         };
       }
       if (!anchorKey) return { mode, periodA: null, periodB: null };
@@ -11289,6 +11328,80 @@
       return { min, max };
     }
 
+    function metaReportComparisonMonthInputBounds(payload) {
+      const years = new Set();
+      if (payload?.year) years.add(String(payload.year));
+      Object.keys(metaReportsState.comparisonYearCache || {}).forEach((year) => years.add(String(year)));
+      metaReportComparisonAvailableMonthKeys(payload).forEach((key) => years.add(String(key).slice(0, 4)));
+      if (!years.size) {
+        const anchorKey = metaReportsState.activeMonthKey;
+        if (anchorKey) years.add(String(anchorKey).slice(0, 4));
+      }
+      if (!years.size) {
+        const year = String(new Date().getFullYear());
+        return { min: `${year}-01`, max: `${year}-12` };
+      }
+      const sorted = [...years].sort((a, b) => Number(a) - Number(b));
+      return { min: `${sorted[0]}-01`, max: `${sorted[sorted.length - 1]}-12` };
+    }
+
+    function renderMetaReportComparisonMonthInput(side, monthKey, bounds) {
+      const minAttr = bounds.min ? ` min="${esc(bounds.min)}"` : '';
+      const maxAttr = bounds.max ? ` max="${esc(bounds.max)}"` : '';
+      const label = side === 'b' ? 'Comparison month' : 'Current month';
+      return `
+        <label class="meta-report-comparison-month-picker">
+          <input type="month" class="meta-report-comparison-month-input" data-comparison-month="${esc(side)}" value="${esc(monthKey)}" aria-label="${esc(label)}"${minAttr}${maxAttr} />
+        </label>
+      `;
+    }
+
+    function renderMetaReportComparisonMonthPickerSide(side, monthKey, bounds) {
+      const sideClass = side === 'b' ? 'is-b' : 'is-a';
+      return `
+        <div class="meta-report-comparison-duel-side ${sideClass}">
+          ${renderMetaReportComparisonMonthInput(side, monthKey, bounds)}
+        </div>
+      `;
+    }
+
+    function applyMetaReportComparisonMonthChange(payload, side, monthKey, { editable = false } = {}) {
+      if (!monthKey || !/^\d{4}-\d{2}$/.test(monthKey)) return;
+      const stateKey = side === 'b' ? 'comparisonPeriodB' : 'comparisonPeriodA';
+      metaReportsState[stateKey] = metaReportComparisonFullMonthDates(monthKey);
+      metaReportsState.comparisonMode = 'months';
+      document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
+        const isMonths = button.getAttribute('data-comparison-preset') === 'months';
+        button.classList.toggle('active', isMonths);
+        button.setAttribute('aria-pressed', isMonths);
+      });
+      void refreshMetaReportComparison(payload, { editable });
+    }
+
+    function bindMetaReportComparisonMonthInputs(payload, { editable = false } = {}) {
+      document.querySelectorAll('[data-comparison-month]').forEach((input) => {
+        input.onchange = () => {
+          const side = input.getAttribute('data-comparison-month');
+          if (!side) return;
+          applyMetaReportComparisonMonthChange(payload, side, input.value, { editable });
+        };
+      });
+    }
+
+    function renderMetaReportComparisonMonthPickersPanel(periodA, periodB, payload) {
+      const bounds = metaReportComparisonMonthInputBounds(payload);
+      const monthA = periodA?.startMonthKey || metaReportsState.activeMonthKey || bounds.min || '';
+      const monthB = periodB?.startMonthKey || metaReportComparisonAddMonths(monthA, -1) || bounds.min || '';
+
+      return `
+        <div class="meta-report-comparison-duel is-month-pickers" id="meta-report-comparison-range-panel" role="group" aria-label="Compare months">
+          ${renderMetaReportComparisonMonthPickerSide('a', monthA, bounds)}
+          <div class="meta-report-comparison-duel-divider" aria-hidden="true">vs</div>
+          ${renderMetaReportComparisonMonthPickerSide('b', monthB, bounds)}
+        </div>
+      `;
+    }
+
     function renderMetaReportComparisonDateInput(side, bound, value, bounds) {
       const minAttr = bounds.min ? ` data-min="${esc(bounds.min)}"` : '';
       const maxAttr = bounds.max ? ` data-max="${esc(bounds.max)}"` : '';
@@ -11485,7 +11598,7 @@
     function metaReportComparisonPresetPeriodDisplay(mode, period) {
       const normalized = metaReportComparisonNormalizePeriod(period);
       if (!normalized) return { value: '—', hint: '' };
-      if (mode === 'mom') {
+      if (mode === 'mom' || mode === 'months') {
         const monthKey = normalized.startMonthKey || normalized.endMonthKey;
         const year = String(monthKey || normalized.startDate).slice(0, 4);
         return { value: `${metaMonthLabel(monthKey)} ${year}`, hint: '' };
@@ -11551,6 +11664,9 @@
       const mode = metaReportsState.comparisonMode || 'mom';
       if (mode === 'custom') {
         return renderMetaReportComparisonCustomDatesPanel(periodA, periodB, payload);
+      }
+      if (mode === 'months') {
+        return renderMetaReportComparisonMonthPickersPanel(periodA, periodB, payload);
       }
       return renderMetaReportComparisonSummaryBar(periodA, periodB, comparison);
     }
@@ -12108,6 +12224,7 @@
 
       bindPresetButtons();
       bindMetaReportComparisonDateInputs(payload, { editable });
+      bindMetaReportComparisonMonthInputs(payload, { editable });
       setMetaReportComparisonTab(metaReportsState.comparisonTab || 'table');
     }
 

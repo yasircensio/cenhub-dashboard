@@ -161,6 +161,10 @@ function testComparisonDisplayLabels() {
     'Aug 2026',
   );
   assert.strictEqual(
+    formatComparisonDisplayLabel('months', { startDate: '2026-03-01', endDate: '2026-03-31' }),
+    'Mar 2026',
+  );
+  assert.strictEqual(
     formatComparisonDisplayLabel('ytd', { startDate: '2026-01-01', endDate: '2026-08-31' }),
     '2026',
   );
@@ -186,6 +190,39 @@ function testYtdByMonthKeepsMissingPriorMonths() {
   assert.strictEqual(result.ytdByMonth[0].periodB, null);
   assert.strictEqual(result.periodA.label, '2026');
   assert.strictEqual(result.periodB.label, '2025');
+}
+
+function testMonthsPreset() {
+  const presets = resolveComparisonPresets({ activeMonthKey: '2026-08', mode: 'months' });
+  assert.strictEqual(presets.periodA.startMonthKey, '2026-08');
+  assert.strictEqual(presets.periodB.startMonthKey, '2026-07');
+  assert.strictEqual(presets.periodA.startDate, '2026-08-01');
+  assert.strictEqual(presets.periodA.endDate, '2026-08-31');
+
+  const customMonths = resolveComparisonPresets({
+    activeMonthKey: '2026-08',
+    mode: 'months',
+    customPeriodA: { startDate: '2026-03-01', endDate: '2026-03-31' },
+    customPeriodB: { startDate: '2025-11-01', endDate: '2025-11-30' },
+  });
+  assert.strictEqual(customMonths.periodA.startMonthKey, '2026-03');
+  assert.strictEqual(customMonths.periodB.startMonthKey, '2025-11');
+}
+
+function testBuildComparisonMonths() {
+  const months = {
+    '2026-03': monthPayload({ monthKey: '2026-03', spend: 9000, leads: 45, wonLeads: 4 }),
+    '2025-11': monthPayload({ monthKey: '2025-11', spend: 11000, leads: 55, wonLeads: 5 }),
+  };
+  const result = buildComparison({
+    monthsMap: months,
+    periodA: { startDate: '2026-03-01', endDate: '2026-03-31' },
+    periodB: { startDate: '2025-11-01', endDate: '2025-11-30' },
+    mode: 'months',
+  });
+  assert.strictEqual(result.periodA.label, 'Mar 2026');
+  assert.strictEqual(result.periodB.label, 'Nov 2025');
+  approx(result.deltas.spend.pct, -18.18, 0.1);
 }
 
 function testSamePeriodValidation() {
@@ -219,12 +256,14 @@ function testDeltaPct() {
 
 function run() {
   testMomPreset();
+  testMonthsPreset();
   testPartialDateRange();
   testYtdPreset();
   testAggregateSingleMonth();
   testAggregateRangeSums();
   testPartialRange();
   testBuildComparisonMom();
+  testBuildComparisonMonths();
   testBuildComparisonMissingPriorYear();
   testComparisonDisplayLabels();
   testYtdByMonthKeepsMissingPriorMonths();

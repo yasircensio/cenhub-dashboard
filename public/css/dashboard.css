@@ -5059,6 +5059,29 @@
     .meta-report-comparison-duel.is-custom-dates .meta-report-comparison-duel-side {
       padding: 8px 12px;
     }
+    .meta-report-comparison-duel.is-month-pickers .meta-report-comparison-duel-side {
+      padding: 8px 12px;
+    }
+    .meta-report-comparison-month-picker {
+      align-items: center; display: flex; justify-content: center; min-width: 0; width: 100%;
+    }
+    .meta-report-comparison-month-input {
+      appearance: none; -webkit-appearance: none; background: transparent; border: 0;
+      color: inherit; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 16px;
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; min-width: 0; padding: 0;
+      text-align: center; width: auto;
+    }
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-month-input { color: #c2410c; }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-input { color: #334155; }
+    .meta-report-comparison-month-input:focus {
+      outline: 2px solid rgba(255, 106, 0, 0.25); outline-offset: 2px;
+    }
+    .meta-report-comparison-month-input::-webkit-calendar-picker-indicator {
+      cursor: pointer; margin-left: 4px; opacity: 0.55;
+    }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-input::-webkit-calendar-picker-indicator {
+      opacity: 0.45;
+    }
     .meta-report-comparison-custom-range {
       align-items: center; display: inline-flex; gap: 5px; justify-content: center;
       max-width: 100%; min-width: 0;
