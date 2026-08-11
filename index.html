@@ -13332,7 +13332,7 @@
         : (previewMonthKey ? `Report · ${metaMonthLabel(previewMonthKey)}` : 'Report');
       const viewMode = metaReportsState.reportViewMode || 'monthly';
       const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
-      const previewHtml = viewMode === 'monthly' && monthPayload && !monthPayload.meta?.emptyMonth ? `
+      const previewHtml = monthPayload && !monthPayload.meta?.emptyMonth ? `
         <div class="meta-report-preview-card">
           <div class="meta-report-preview-card-label">${previewLabel}</div>
           ${renderMetaReportHighlightStrip(monthPayload)}
