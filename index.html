@@ -5073,7 +5073,7 @@
       align-items: start; display: grid; gap: 10px 14px;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     }
-    .meta-report-comparison-custom-period { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .meta-report-comparison-custom-period { display: flex; flex-direction: column; gap: 8px; min-width: 0; position: relative; z-index: 1; }
     .meta-report-comparison-custom-period-tag {
       color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -5084,8 +5084,9 @@
       display: grid; gap: 10px 14px; grid-template-columns: 1fr 1fr;
     }
     .meta-report-comparison-custom-dates-vs {
-      align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;
-      margin-top: 22px; text-transform: uppercase;
+      align-self: center; color: var(--text-muted); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em; margin-top: 14px; pointer-events: none; position: relative;
+      text-transform: lowercase; z-index: 0;
     }
     .meta-report-comparison-date-field {
       cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
@@ -5125,7 +5126,7 @@
       .meta-report-comparison-duel,
       .meta-report-comparison-custom-dates { grid-template-columns: 1fr; }
       .meta-report-comparison-duel-divider,
-      .meta-report-comparison-custom-dates-vs { margin: -6px 0; text-align: center; }
+      .meta-report-comparison-custom-dates-vs { margin: 0; padding: 2px 0; text-align: center; }
       .meta-report-comparison-duel-value { font-size: 18px; }
     }
     @media (max-width: 560px) {
@@ -11312,7 +11313,7 @@
       const minAttr = bounds.min ? ` data-min="${esc(bounds.min)}"` : '';
       const maxAttr = bounds.max ? ` data-max="${esc(bounds.max)}"` : '';
       return `
-        <label class="meta-report-comparison-date-field">
+        <div class="meta-report-comparison-date-field" role="button" tabindex="0">
           <span class="meta-report-comparison-date-field-label">${esc(label)}</span>
           <span class="meta-report-comparison-date-input-wrap">
             <input type="text" class="meta-report-comparison-date-input" data-comparison-date="${esc(side)}-${esc(bound)}" value="${esc(value)}" placeholder="Select date" autocomplete="off" inputmode="none" readonly${minAttr}${maxAttr} />
@@ -11320,20 +11321,33 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             </span>
           </span>
-        </label>
+        </div>
       `;
     }
 
-    function applyMetaReportComparisonDateChange(payload, input, { editable = false } = {}) {
-      const key = input.getAttribute('data-comparison-date');
-      if (!key || !input.value) return;
-      const [side, bound] = key.split('-');
-      const stateKey = `comparisonPeriod${side.toUpperCase()}`;
+    function parseComparisonDateKey(key) {
+      const match = String(key || '').match(/^([ab])-(start|end)$/);
+      if (!match) return null;
+      return { side: match[1], bound: match[2], stateKey: match[1] === 'b' ? 'comparisonPeriodB' : 'comparisonPeriodA' };
+    }
+
+    function metaReportComparisonSafePickerBounds(minDate, maxDate) {
+      const min = minDate || undefined;
+      const max = maxDate || undefined;
+      if (min && max && min > max) return { min: max, max: min };
+      return { min, max };
+    }
+
+    function applyMetaReportComparisonDateChange(payload, input, { editable = false, dateStr = null } = {}) {
+      const parsed = parseComparisonDateKey(input.getAttribute('data-comparison-date'));
+      const value = dateStr || input.value;
+      if (!parsed || !value) return;
+      const { side, bound, stateKey } = parsed;
       if (!metaReportsState[stateKey]) {
         metaReportsState[stateKey] = { startDate: null, endDate: null };
       }
       const period = metaReportsState[stateKey];
-      period[`${bound}Date`] = input.value;
+      period[`${bound}Date`] = value;
       if (period.startDate && period.endDate && period.startDate > period.endDate) {
         const tmp = period.startDate;
         period.startDate = period.endDate;
@@ -11360,17 +11374,25 @@
     function syncMetaReportComparisonPeriodPickerBounds(payload) {
       const bounds = metaReportComparisonDateInputBounds(payload);
       ['a', 'b'].forEach((side) => {
-        const stateKey = `comparisonPeriod${side.toUpperCase()}`;
+        const stateKey = side === 'b' ? 'comparisonPeriodB' : 'comparisonPeriodA';
         const period = metaReportsState[stateKey] || {};
         const startInput = document.querySelector(`[data-comparison-date="${side}-start"]`);
         const endInput = document.querySelector(`[data-comparison-date="${side}-end"]`);
         if (startInput?._metaComparisonDatePicker) {
-          startInput._metaComparisonDatePicker.set('minDate', bounds.min || undefined);
-          startInput._metaComparisonDatePicker.set('maxDate', period.endDate || bounds.max || undefined);
+          const { min, max } = metaReportComparisonSafePickerBounds(
+            bounds.min || undefined,
+            period.endDate || bounds.max || undefined,
+          );
+          startInput._metaComparisonDatePicker.set('minDate', min);
+          startInput._metaComparisonDatePicker.set('maxDate', max);
         }
         if (endInput?._metaComparisonDatePicker) {
-          endInput._metaComparisonDatePicker.set('minDate', period.startDate || bounds.min || undefined);
-          endInput._metaComparisonDatePicker.set('maxDate', bounds.max || undefined);
+          const { min, max } = metaReportComparisonSafePickerBounds(
+            period.startDate || bounds.min || undefined,
+            bounds.max || undefined,
+          );
+          endInput._metaComparisonDatePicker.set('minDate', min);
+          endInput._metaComparisonDatePicker.set('maxDate', max);
         }
       });
     }
@@ -11400,15 +11422,25 @@
       const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
 
       document.querySelectorAll('[data-comparison-date]').forEach((input) => {
-        const key = input.getAttribute('data-comparison-date');
-        if (!key) return;
-        const [side, bound] = key.split('-');
+        const parsed = parseComparisonDateKey(input.getAttribute('data-comparison-date'));
+        if (!parsed) return;
+        const { side, bound } = parsed;
         const period = side === 'b' ? periodB : periodA;
         const value = period?.[`${bound}Date`] || input.value || '';
         let minDate = bounds.min || input.getAttribute('data-min') || undefined;
         let maxDate = bounds.max || input.getAttribute('data-max') || undefined;
         if (bound === 'start' && period?.endDate) maxDate = period.endDate;
         if (bound === 'end' && period?.startDate) minDate = period.startDate;
+        ({ min: minDate, max: maxDate } = metaReportComparisonSafePickerBounds(minDate, maxDate));
+
+        const openPicker = (picker, event) => {
+          if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          closeMetaReportComparisonDatePickers(picker);
+          picker.open();
+        };
 
         const picker = flatpickr(input, {
           dateFormat: 'Y-m-d',
@@ -11429,7 +11461,7 @@
           },
           onChange: (_selectedDates, dateStr, instance) => {
             if (!dateStr || instance._metaComparisonApplying) return;
-            void applyMetaReportComparisonDateChange(payload, instance.input, { editable });
+            void applyMetaReportComparisonDateChange(payload, instance.input, { editable, dateStr });
           },
         });
 
@@ -11437,12 +11469,18 @@
         metaReportsState.comparisonDatePickers.push(picker);
 
         const wrap = input.closest('.meta-report-comparison-date-input-wrap');
+        const field = input.closest('.meta-report-comparison-date-field');
         if (wrap) {
-          wrap.onclick = (event) => {
-            const altInput = picker.altInput;
-            if (event.target === input || event.target === altInput) return;
-            picker.open();
+          wrap.onclick = (event) => openPicker(picker, event);
+        }
+        if (field) {
+          field.onclick = (event) => {
+            if (event.target.closest('.meta-report-comparison-date-input-wrap')) return;
+            openPicker(picker, event);
           };
+        }
+        if (picker.altInput) {
+          picker.altInput.addEventListener('click', (event) => openPicker(picker, event));
         }
       });
     }

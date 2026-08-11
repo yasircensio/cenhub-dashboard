@@ -5064,7 +5064,7 @@
       align-items: start; display: grid; gap: 10px 14px;
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     }
-    .meta-report-comparison-custom-period { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .meta-report-comparison-custom-period { display: flex; flex-direction: column; gap: 8px; min-width: 0; position: relative; z-index: 1; }
     .meta-report-comparison-custom-period-tag {
       color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -5075,8 +5075,9 @@
       display: grid; gap: 10px 14px; grid-template-columns: 1fr 1fr;
     }
     .meta-report-comparison-custom-dates-vs {
-      align-self: center; color: var(--text-muted); font-size: 11px; font-weight: 700;
-      margin-top: 22px; text-transform: uppercase;
+      align-self: center; color: var(--text-muted); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.06em; margin-top: 14px; pointer-events: none; position: relative;
+      text-transform: lowercase; z-index: 0;
     }
     .meta-report-comparison-date-field {
       cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0;
@@ -5116,7 +5117,7 @@
       .meta-report-comparison-duel,
       .meta-report-comparison-custom-dates { grid-template-columns: 1fr; }
       .meta-report-comparison-duel-divider,
-      .meta-report-comparison-custom-dates-vs { margin: -6px 0; text-align: center; }
+      .meta-report-comparison-custom-dates-vs { margin: 0; padding: 2px 0; text-align: center; }
       .meta-report-comparison-duel-value { font-size: 18px; }
     }
     @media (max-width: 560px) {
