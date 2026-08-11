@@ -4125,6 +4125,40 @@
 
     .meta-report-unit { color: var(--text-soft); font-size: 12px; }
     .meta-report-empty { color: var(--text-soft); font-size: 16px; padding: 48px 16px; text-align: center; }
+    .meta-report-empty-month-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 560px; padding: 36px 28px 32px; text-align: center;
+    }
+    .meta-report-empty-month-icon {
+      align-items: center; background: rgba(255, 106, 0, 0.1); border-radius: 16px; color: var(--primary);
+      display: inline-flex; height: 56px; justify-content: center; margin: 0 auto 18px; width: 56px;
+    }
+    .meta-report-empty-month-icon svg { display: block; }
+    .meta-report-empty-month-title {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 700;
+      line-height: 1.35; margin: 0 0 10px;
+    }
+    .meta-report-empty-month-text {
+      color: var(--text-soft); font-size: 14px; line-height: 1.55; margin: 0 auto 22px; max-width: 40ch;
+    }
+    .meta-report-empty-month-hints {
+      display: flex; flex-direction: column; gap: 10px; margin: 0 auto; max-width: 380px; text-align: left;
+    }
+    .meta-report-empty-month-hint {
+      align-items: flex-start; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text-soft); display: flex; font-size: 13px; gap: 10px;
+      line-height: 1.45; padding: 12px 14px;
+    }
+    .meta-report-empty-month-hint strong { color: var(--text); font-weight: 600; }
+    .meta-report-empty-month-hint-icon {
+      align-items: center; background: rgba(255, 106, 0, 0.12); border-radius: 8px; color: var(--primary);
+      display: inline-flex; flex-shrink: 0; font-size: 12px; font-weight: 700; height: 28px;
+      justify-content: center; width: 28px;
+    }
+    @media (max-width: 480px) {
+      .meta-report-empty-month-card { padding: 28px 18px 24px; }
+      .meta-report-empty-month-title { font-size: 17px; }
+    }
     .meta-report-toolbar, .meta-report-settings {
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
     }
@@ -13883,12 +13917,38 @@
       });
     }
 
+    function renderMetaReportEmptyMonthCard({ editable = false } = {}) {
+      const hintsHtml = editable ? `
+        <div class="meta-report-empty-month-hints">
+          <div class="meta-report-empty-month-hint">
+            <span class="meta-report-empty-month-hint-icon" aria-hidden="true">↓</span>
+            <span>Click <strong>Refresh from Meta</strong> below to pull data for this month.</span>
+          </div>
+          <div class="meta-report-empty-month-hint">
+            <span class="meta-report-empty-month-hint-icon" aria-hidden="true">↑</span>
+            <span>Use <strong>Backfill from Meta</strong> above to import historical months.</span>
+          </div>
+        </div>
+      ` : `
+        <p class="meta-report-empty-month-text">Ad spend data has not been synced for this month yet.</p>
+      `;
+
+      return `
+        <div class="meta-report-empty-month-card" role="status">
+          <div class="meta-report-empty-month-icon" aria-hidden="true">${ICON_CHART}</div>
+          <h3 class="meta-report-empty-month-title">No ad spend recorded for this month yet</h3>
+          ${editable ? '<p class="meta-report-empty-month-text">Sync Meta ads data to populate this report.</p>' : ''}
+          ${hintsHtml}
+        </div>
+      `;
+    }
+
     function renderMetaReportMonthTables(monthPayload, { editable = false } = {}) {
       if (!monthPayload) {
         return '<div class="meta-report-empty">No data for this month yet.</div>';
       }
       if (monthPayload.meta?.emptyMonth) {
-        return `<div class="meta-report-empty">No ad spend recorded for this month yet.${editable ? ' Click "Refresh from Meta" below, or use "Backfill from Meta" above to pull historical months.' : ''}</div>`;
+        return renderMetaReportEmptyMonthCard({ editable });
       }
 
       const metaRows = [
