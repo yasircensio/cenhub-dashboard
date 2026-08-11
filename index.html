@@ -4980,7 +4980,7 @@
     }
     .meta-report-comparison-view-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
-      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 600px; overflow: hidden;
+      box-shadow: var(--shadow-sm); margin: 0 auto; max-width: 680px; overflow: hidden;
       padding: 18px 20px 20px; width: 100%;
     }
     .meta-report-comparison-view-head {
@@ -5005,10 +5005,10 @@
     .meta-report-comparison-tab-panel[hidden] { display: none !important; }
     .meta-report-comparison-tab-panel .meta-report-groups-stack { gap: 14px; }
     .meta-report-comparison-tab-panel .meta-report-group-head { margin-bottom: 8px; }
-    .meta-report-comparison-tab-panel .meta-report-group-title { font-size: 14px; }
+    .meta-report-comparison-tab-panel .meta-report-group-title { font-size: 15px; }
     .meta-report-comparison-tab-panel .meta-report-group-table th,
     .meta-report-comparison-tab-panel .meta-report-group-table td {
-      padding: 8px 10px;
+      padding: 9px 11px;
     }
     .meta-report-comparison-tab-panel .meta-report-group-table-wrap { overflow: visible; }
     .meta-report-comparison-tab-panel .meta-report-group-table td {
@@ -5037,6 +5037,10 @@
     }
     .meta-report-comparison-presets .preset-btn.is-disabled {
       cursor: not-allowed; opacity: 0.4;
+    }
+    .meta-report-comparison-period-card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+      box-shadow: var(--shadow-sm); padding: 16px 18px; width: 100%;
     }
     .meta-report-comparison-tiles {
       align-items: stretch; display: grid; gap: 10px 12px;
@@ -5092,22 +5096,23 @@
     }
     .meta-report-comparison-table { table-layout: auto; width: 100%; }
     .meta-report-comparison-table thead th {
-      color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.03em;
-      padding: 8px 12px; text-align: right; text-transform: uppercase;
+      color: var(--text-soft); font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
+      padding: 9px 12px; text-align: right; text-transform: uppercase;
     }
     .meta-report-comparison-table thead th:first-child {
-      min-width: 120px; text-align: left; white-space: normal; width: 42%; word-break: break-word;
+      min-width: 128px; text-align: left; white-space: normal; width: 42%; word-break: break-word;
     }
     .meta-report-comparison-table tbody th {
-      overflow: visible; text-overflow: clip; white-space: normal; word-break: break-word;
+      font-size: 14px; overflow: visible; text-overflow: clip; white-space: normal; word-break: break-word;
     }
     .meta-report-comparison-table tbody td {
+      font-family: 'Poppins', sans-serif; font-size: 14.5px; font-weight: 600;
       overflow: visible; text-overflow: clip; white-space: nowrap;
     }
     .meta-report-comparison-table thead th:first-child { text-align: left; }
-    .meta-report-comparison-col-a { color: #c2410c; font-weight: 600; min-width: 84px; text-align: right; }
-    .meta-report-comparison-col-b { color: #475569; min-width: 84px; text-align: right; }
-    .meta-report-comparison-col-change { min-width: 84px; text-align: right; white-space: nowrap; }
+    .meta-report-comparison-col-a { color: #c2410c; font-weight: 600; min-width: 90px; text-align: right; }
+    .meta-report-comparison-col-b { color: #475569; min-width: 90px; text-align: right; }
+    .meta-report-comparison-col-change { min-width: 90px; text-align: right; white-space: nowrap; }
     .meta-report-comparison-custom-panel {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 16px;
       display: flex; flex-direction: column; gap: 14px; padding: 16px 18px;
@@ -11334,8 +11339,10 @@
                 `;
               }).join('')}
             </div>
-            <div id="meta-report-comparison-range-wrap">
-              ${renderMetaReportComparisonPeriodTiles(periodA, periodB, payload)}
+            <div class="meta-report-comparison-period-card">
+              <div id="meta-report-comparison-range-wrap">
+                ${renderMetaReportComparisonPeriodTiles(periodA, periodB, payload)}
+              </div>
             </div>
           </div>
           <div class="meta-report-comparison-view-card">
@@ -11642,10 +11649,16 @@
         mountMetaReportTrendCharts(payload, { editable, clientId: payload?.clientId || null });
         if (editable) syncMetaReportScenario(payload);
       } else {
-        destroyMetaReportCharts();
+        destroyMetaReportTrendCharts();
         if (payload) {
+          const { series } = resolveMetaReportChartSeries(payload);
+          if (series.length) metaReportsState.chartSeries = series;
           bindMetaReportComparisonControls(payload, { editable });
           void refreshMetaReportComparison(payload, { editable });
+          if (editable) {
+            bindMetaReportScenarioControls(payload, { editable: true });
+            syncMetaReportScenario(payload);
+          }
         }
       }
     }
@@ -11976,7 +11989,7 @@
       `;
     }
 
-    function destroyMetaReportCharts() {
+    function destroyMetaReportTrendCharts() {
       ['roas', 'poas'].forEach((kind) => {
         if (metaReportsState.chartInstances[kind]) {
           metaReportsState.chartInstances[kind].destroy();
@@ -11986,11 +11999,12 @@
           metaReportsState.chartScatterInstances[kind].destroy();
           metaReportsState.chartScatterInstances[kind] = null;
         }
-        if (metaReportsState.scenarioChartInstances[kind]) {
-          metaReportsState.scenarioChartInstances[kind].destroy();
-          metaReportsState.scenarioChartInstances[kind] = null;
-        }
       });
+    }
+
+    function destroyMetaReportCharts() {
+      destroyMetaReportTrendCharts();
+      destroyMetaReportScenarioCharts();
       destroyMetaReportComparisonChart();
     }
 
@@ -13029,6 +13043,12 @@
       }
 
       mountMetaReportComparison(payload, { editable });
+      if (editable) {
+        const { series } = resolveMetaReportChartSeries(payload);
+        if (series.length) metaReportsState.chartSeries = series;
+        bindMetaReportScenarioControls(payload, { editable: true });
+        syncMetaReportScenario(payload);
+      }
     }
 
     function syncMetaReportMonthPanelDom(monthPayload, options = {}, yearPayload = null) {
@@ -13166,11 +13186,11 @@
               <div class="meta-report-content-main">${tablesHtml}</div>
               ${chartsPanel}
             </div>
-            ${scenarioCard}
           </div>
           <div class="meta-report-view-panel${viewMode === 'comparison' ? ' is-active' : ''}" data-report-view-panel="comparison" role="tabpanel"${viewMode === 'comparison' ? '' : ' hidden'}>
             ${renderMetaReportComparisonView()}
           </div>
+          ${scenarioCard}
         `;
       } else {
         bodyHtml = `<div class="meta-report-content-main">${tablesHtml}</div>`;
