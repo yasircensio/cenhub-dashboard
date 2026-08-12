@@ -95,11 +95,13 @@ function main() {
     'loadMetaReportsClientPage',
   ];
 
-  const adminBootRoutes = [
+    const adminBootRoutes = [
     'IS_ADMIN_META_REPORTS_CUSTOM',
     'loadMetaReportsCustomValuesPage',
     'IS_ADMIN_META_REPORTS_GHL_CLIENTS',
     'loadMetaReportsGhlClientsPage',
+    'renderMetaToplineSourcePanel',
+    'bindMetaToplineSourceEvents',
     'IS_ADMIN_META_REPORTS',
     'loadMetaReportsHubPage',
   ];

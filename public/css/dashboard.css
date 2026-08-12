@@ -5637,6 +5637,31 @@
       background: var(--panel-soft); border: 1px solid var(--border); font-size: 13px; color: var(--text-muted);
     }
     .meta-cv-ghl-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+    .meta-topline-source-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      margin: 0 0 16px; padding: 14px 16px;
+    }
+    .meta-report-control-panel .meta-topline-source-panel { margin: 12px 0 0; }
+    .meta-topline-source-head {
+      align-items: flex-start; display: flex; gap: 12px; justify-content: space-between; margin-bottom: 10px;
+    }
+    .meta-topline-source-title { color: var(--text); font-size: 14px; font-weight: 700; margin: 0 0 2px; }
+    .meta-topline-source-sub { color: var(--text-soft); font-size: 12px; line-height: 1.4; margin: 0; }
+    .meta-topline-source-detail {
+      color: var(--text-muted); font-size: 13px; line-height: 1.45; margin: 0 0 12px;
+    }
+    .meta-topline-source-panel.is-compact { margin-bottom: 12px; padding: 12px 14px; }
+    .meta-topline-source-panel.is-compact .meta-cv-ghl-actions { margin-bottom: 10px; }
+    .meta-report-tab.is-complete:not(.is-active) { border-color: rgba(22, 163, 74, 0.35); }
+    .meta-report-tab.is-partial:not(.is-active) { border-color: rgba(217, 119, 6, 0.35); }
+    .meta-report-tab.is-empty:not(.is-active) { border-style: dashed; }
+    .meta-report-edit-note {
+      color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 12px;
+    }
+    .meta-report-edit-grid input:disabled,
+    .meta-report-edit-grid input[readonly] {
+      background: var(--panel-soft); color: var(--text-muted); cursor: not-allowed;
+    }
     .meta-ghl-clients-table {
       width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel);
       border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
