@@ -5250,31 +5250,49 @@
       pointer-events: none; user-select: none;
     }
     .meta-report-comparison-date-input-wrap .flatpickr-input,
-    .meta-report-comparison-date-input,
-    .meta-report-comparison-month-input {
+    .meta-report-comparison-date-input {
       background: transparent; border: 0 !important; box-shadow: none !important;
       color: inherit; cursor: pointer; display: block; font-family: 'Poppins', sans-serif;
       font-size: 16px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15;
       min-height: 24px; min-width: 0; padding: 0; text-align: center; width: 100%;
     }
-    .meta-report-comparison-month-input {
-      appearance: none; -webkit-appearance: none;
-      background: rgba(255, 255, 255, 0.72) !important;
-      border: 1px solid rgba(148, 163, 184, 0.35) !important;
-      border-radius: 10px !important; box-shadow: none !important;
-      color-scheme: light; min-width: 118px; padding: 5px 8px !important;
+    .meta-report-comparison-date-trigger {
+      align-items: center; background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(148, 163, 184, 0.38); border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); cursor: pointer;
+      display: flex; font-family: 'Poppins', sans-serif; font-size: 14px;
+      font-weight: 700; justify-content: center; letter-spacing: -0.01em;
+      min-height: 38px; padding: 7px 12px; transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      width: 100%;
     }
-    .meta-report-comparison-duel-side.is-a .meta-report-comparison-month-input {
-      border-color: rgba(194, 65, 12, 0.28) !important; color: #c2410c;
+    .meta-report-comparison-date-trigger:hover,
+    .meta-report-comparison-date-trigger.is-active {
+      background: #fff; box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
     }
-    .meta-report-comparison-duel-side.is-b .meta-report-comparison-month-input {
-      border-color: rgba(100, 116, 139, 0.28) !important; color: #334155;
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-trigger {
+      border-color: rgba(194, 65, 12, 0.28); color: #c2410c;
     }
-    .meta-report-comparison-custom-range-field:hover .meta-report-comparison-month-input {
-      border-color: rgba(194, 65, 12, 0.45) !important;
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-trigger:hover,
+    .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-trigger.is-active {
+      border-color: rgba(255, 106, 0, 0.45);
     }
-    .meta-report-comparison-duel-side.is-b .meta-report-comparison-custom-range-field:hover .meta-report-comparison-month-input {
-      border-color: rgba(100, 116, 139, 0.45) !important;
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-date-trigger {
+      border-color: rgba(100, 116, 139, 0.3); color: #334155;
+    }
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-date-trigger:hover,
+    .meta-report-comparison-duel-side.is-b .meta-report-comparison-date-trigger.is-active {
+      border-color: rgba(100, 116, 139, 0.5); box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+    }
+    .meta-report-comparison-date-trigger.is-empty .meta-report-comparison-date-trigger-value {
+      color: var(--text-soft); font-weight: 600;
+    }
+    .meta-report-comparison-date-popover {
+      position: fixed; z-index: 1202;
+    }
+    .meta-report-comparison-date-popover[hidden] { display: none !important; }
+    .meta-report-comparison-date-backdrop[hidden] { display: none !important; }
+    .meta-report-comparison-date-backdrop {
+      background: rgba(15, 23, 42, 0.18); inset: 0; position: fixed; z-index: 1201;
     }
     .meta-report-comparison-duel-side.is-a .meta-report-comparison-date-input,
     .meta-report-comparison-duel-side.is-a .flatpickr-input { color: #c2410c; }
@@ -11815,52 +11833,52 @@
       return parsed ? parsed.slice(0, 7) : '';
     }
 
-    function metaReportComparisonMonthKeyBounds(payload) {
-      const { min, max } = metaReportComparisonDateInputBounds(payload);
-      return {
-        min: min ? min.slice(0, 7) : '',
-        max: max ? max.slice(0, 7) : '',
-      };
+    const metaReportComparisonDatePickerState = {
+      inputKey: null,
+      side: null,
+      bound: null,
+      anchorEl: null,
+      viewYear: null,
+      viewMonth: null,
+      payload: null,
+      editable: false,
+    };
+
+    function getMetaReportComparisonDatePickerFieldBounds(payload, side, bound) {
+      const dateBounds = metaReportComparisonDateInputBounds(payload);
+      const stateKey = side === 'b' ? 'comparisonPeriodB' : 'comparisonPeriodA';
+      const period = metaReportsState[stateKey] || {};
+      let min = dateBounds.min || undefined;
+      let max = dateBounds.max || undefined;
+      if (bound === 'start' && period.endDate) max = period.endDate;
+      if (bound === 'end' && period.startDate) min = period.startDate;
+      return metaReportComparisonSafePickerBounds(min, max);
     }
 
-    function metaReportComparisonDateFromMonthKey(monthKey, bound) {
-      if (!monthKey || !/^\d{4}-\d{2}$/.test(monthKey)) return null;
-      const bounds = metaReportMonthBounds(monthKey);
-      return bound === 'start' ? bounds.start : bounds.end;
+    function renderMetaReportComparisonDateInput(side, bound, value, bounds, period = null) {
+      const inputKey = `${side}-${bound}`;
+      const label = bound === 'start' ? 'From date' : 'To date';
+      const display = value ? metaReportComparisonFormatDateLabel(value) : 'Select date';
+      const emptyClass = value ? ' has-value' : ' is-empty';
+      return `
+        <button type="button" class="meta-report-comparison-date-trigger${emptyClass}" data-comparison-date-trigger="${esc(inputKey)}" aria-label="${esc(label)}" aria-haspopup="dialog">
+          <span class="meta-report-comparison-date-trigger-value">${esc(display)}</span>
+        </button>
+        <input type="hidden" data-comparison-date="${esc(inputKey)}" value="${esc(value || '')}" />
+      `;
     }
 
-    function renderMetaReportComparisonDateInput(side, bound, value, monthBounds, period = null) {
-      const monthKey = metaReportComparisonMonthKeyFromDate(value) || monthBounds.min || '';
-      let min = monthBounds.min || '';
-      let max = monthBounds.max || '';
-      if (bound === 'start' && period?.endDate) {
-        max = metaReportComparisonMonthKeyFromDate(period.endDate) || max;
-      }
-      if (bound === 'end' && period?.startDate) {
-        min = metaReportComparisonMonthKeyFromDate(period.startDate) || min;
-      }
-      if (min && max && min > max) {
-        const safe = metaReportComparisonSafePickerBounds(min, max);
-        min = safe.min || min;
-        max = safe.max || max;
-      }
-      const minAttr = min ? ` min="${esc(min)}"` : '';
-      const maxAttr = max ? ` max="${esc(max)}"` : '';
-      return `<input type="month" class="meta-report-comparison-month-input" data-comparison-date="${esc(side)}-${esc(bound)}" value="${esc(monthKey)}"${minAttr}${maxAttr} aria-label="${bound === 'start' ? 'From month' : 'To month'}" />`;
-    }
-
-    function renderMetaReportComparisonCustomRangeSide(side, start, end, payload, period = null) {
-      const monthBounds = metaReportComparisonMonthKeyBounds(payload);
+    function renderMetaReportComparisonCustomRangeSide(side, start, end, bounds, period = null) {
       const sideClass = side === 'b' ? 'is-b' : 'is-a';
       return `
         <div class="meta-report-comparison-duel-side ${sideClass}">
           <div class="meta-report-comparison-custom-range">
             <div class="meta-report-comparison-custom-range-field" data-comparison-range="${esc(side)}-start">
-              ${renderMetaReportComparisonDateInput(side, 'start', start, monthBounds, period)}
+              ${renderMetaReportComparisonDateInput(side, 'start', start, bounds, period)}
             </div>
             <span class="meta-report-comparison-custom-range-sep" aria-hidden="true">–</span>
             <div class="meta-report-comparison-custom-range-field" data-comparison-range="${esc(side)}-end">
-              ${renderMetaReportComparisonDateInput(side, 'end', end, monthBounds, period)}
+              ${renderMetaReportComparisonDateInput(side, 'end', end, bounds, period)}
             </div>
             <span class="meta-report-comparison-date-icon" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -11883,34 +11901,44 @@
       return { min, max };
     }
 
-    function applyMetaReportComparisonDateChange(payload, input, { editable = false, monthKey = null } = {}) {
-      const parsed = parseComparisonDateKey(input.getAttribute('data-comparison-date'));
-      const rawValue = monthKey || input.value;
-      if (!parsed || !rawValue) return;
+    function syncMetaReportComparisonDateDisplays() {
+      document.querySelectorAll('[data-comparison-date]').forEach((input) => {
+        const inputKey = input.getAttribute('data-comparison-date');
+        const trigger = document.querySelector(`[data-comparison-date-trigger="${inputKey}"]`);
+        if (!inputKey || !trigger) return;
+        const value = input.value || '';
+        const valueEl = trigger.querySelector('.meta-report-comparison-date-trigger-value');
+        if (valueEl) valueEl.textContent = value ? metaReportComparisonFormatDateLabel(value) : 'Select date';
+        trigger.classList.toggle('has-value', Boolean(value));
+        trigger.classList.toggle('is-empty', !value);
+      });
+    }
+
+    function applyMetaReportComparisonDateChange(payload, inputKey, dateStr, { editable = false } = {}) {
+      const parsed = parseComparisonDateKey(inputKey);
+      if (!parsed || !dateStr) return;
       const { side, bound, stateKey } = parsed;
-      const dateValue = metaReportComparisonDateFromMonthKey(rawValue, bound);
-      if (!dateValue) return;
       if (!metaReportsState[stateKey]) {
         metaReportsState[stateKey] = { startDate: null, endDate: null };
       }
       const period = metaReportsState[stateKey];
-      period[`${bound}Date`] = dateValue;
+      period[`${bound}Date`] = dateStr;
       // #region agent log
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix',hypothesisId:'A',location:'index.html:applyMetaReportComparisonDateChange',message:'month change applied',data:{side,bound,stateKey,monthKey:rawValue,startDate:period.startDate,endDate:period.endDate},timestamp:Date.now()})}).catch(()=>{});
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-v2',hypothesisId:'A',location:'index.html:applyMetaReportComparisonDateChange',message:'date change applied',data:{side,bound,stateKey,dateStr,startDate:period.startDate,endDate:period.endDate},timestamp:Date.now()})}).catch(()=>{});
       // #endregion
       if (period.startDate && period.endDate && period.startDate > period.endDate) {
         if (bound === 'end') {
-          period.startDate = metaReportMonthBounds(rawValue).start;
+          period.startDate = period.endDate;
         } else {
-          period.endDate = metaReportMonthBounds(rawValue).end;
+          period.endDate = period.startDate;
         }
       }
       const startInput = document.querySelector(`[data-comparison-date="${side}-start"]`);
       const endInput = document.querySelector(`[data-comparison-date="${side}-end"]`);
-      if (startInput) startInput.value = metaReportComparisonMonthKeyFromDate(period.startDate) || '';
-      if (endInput) endInput.value = metaReportComparisonMonthKeyFromDate(period.endDate) || '';
+      if (startInput) startInput.value = period.startDate || '';
+      if (endInput) endInput.value = period.endDate || '';
+      syncMetaReportComparisonDateDisplays();
       metaReportsState.comparisonMode = 'custom';
-      syncMetaReportComparisonPeriodPickerBounds(payload);
       document.querySelectorAll('[data-comparison-preset]').forEach((button) => {
         const isCustom = button.getAttribute('data-comparison-preset') === 'custom';
         button.classList.toggle('active', isCustom);
@@ -11919,63 +11947,295 @@
       void refreshMetaReportComparison(payload, { editable });
     }
 
-    function syncMetaReportComparisonPeriodPickerBounds(payload) {
-      const monthBounds = metaReportComparisonMonthKeyBounds(payload);
-      ['a', 'b'].forEach((side) => {
-        const stateKey = side === 'b' ? 'comparisonPeriodB' : 'comparisonPeriodA';
-        const period = metaReportsState[stateKey] || {};
-        const startInput = document.querySelector(`[data-comparison-date="${side}-start"]`);
-        const endInput = document.querySelector(`[data-comparison-date="${side}-end"]`);
-        if (startInput) {
-          if (monthBounds.min) startInput.min = monthBounds.min;
-          const maxMonth = metaReportComparisonMonthKeyFromDate(period.endDate) || monthBounds.max || '';
-          if (maxMonth) startInput.max = maxMonth;
-          // #region agent log
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix',hypothesisId:'B',location:'index.html:syncMetaReportComparisonPeriodPickerBounds',message:'start month bounds synced',data:{side,boundsMin:monthBounds.min,boundsMax:monthBounds.max,periodStart:period.startDate,periodEnd:period.endDate,appliedMin:startInput.min,appliedMax:startInput.max},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
-        }
-        if (endInput) {
-          const minMonth = metaReportComparisonMonthKeyFromDate(period.startDate) || monthBounds.min || '';
-          if (minMonth) endInput.min = minMonth;
-          if (monthBounds.max) endInput.max = monthBounds.max;
-          // #region agent log
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix',hypothesisId:'B',location:'index.html:syncMetaReportComparisonPeriodPickerBounds',message:'end month bounds synced',data:{side,boundsMin:monthBounds.min,boundsMax:monthBounds.max,periodStart:period.startDate,periodEnd:period.endDate,appliedMin:endInput.min,appliedMax:endInput.max},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
-        }
-      });
+    function ensureMetaReportComparisonDatePickerPopover() {
+      if (document.getElementById('meta-report-comparison-date-popover')) return;
+      const backdrop = document.createElement('div');
+      backdrop.id = 'meta-report-comparison-date-backdrop';
+      backdrop.className = 'meta-report-comparison-date-backdrop';
+      backdrop.hidden = true;
+      backdrop.addEventListener('click', closeMetaReportComparisonDatePicker);
+      document.body.appendChild(backdrop);
+
+      const popover = document.createElement('div');
+      popover.id = 'meta-report-comparison-date-popover';
+      popover.className = 'meta-report-comparison-date-popover';
+      popover.hidden = true;
+      popover.setAttribute('role', 'dialog');
+      popover.setAttribute('aria-modal', 'true');
+      document.body.appendChild(popover);
     }
 
-    function closeMetaReportComparisonDatePickers(exceptInstance = null) {
-      (metaReportsState.comparisonDatePickers || []).forEach((picker) => {
-        if (picker !== exceptInstance && picker.isOpen) picker.close();
-      });
+    function isMetaReportComparisonDatePickerDayDisabled(iso, payload, side, bound) {
+      const { min, max } = getMetaReportComparisonDatePickerFieldBounds(payload, side, bound);
+      if (min && iso < min) return true;
+      if (max && iso > max) return true;
+      return false;
+    }
+
+    function metaReportComparisonDatePickerCanShiftMonth(delta) {
+      const { viewYear, viewMonth, payload, side, bound } = metaReportComparisonDatePickerState;
+      if (!viewYear || !viewMonth || !payload || !side || !bound) return false;
+      let nextMonth = viewMonth + delta;
+      let nextYear = viewYear;
+      if (nextMonth < 1) { nextMonth = 12; nextYear -= 1; }
+      if (nextMonth > 12) { nextMonth = 1; nextYear += 1; }
+      const targetKey = `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+      const { min, max } = getMetaReportComparisonDatePickerFieldBounds(payload, side, bound);
+      const minKey = min ? min.slice(0, 7) : null;
+      const maxKey = max ? max.slice(0, 7) : null;
+      if (minKey && targetKey < minKey) return false;
+      if (maxKey && targetKey > maxKey) return false;
+      return true;
+    }
+
+    function renderMetaReportComparisonDatePickerDayCell(iso, dayNum, isOutside, todayIso, selectedValue, rangeStart, rangeEnd, payload, side, bound) {
+      const classes = ['date-picker-day'];
+      if (isOutside) classes.push('is-outside');
+      if (iso === todayIso) classes.push('is-today');
+      if (iso === selectedValue) classes.push('is-selected');
+      if (rangeStart && rangeEnd) {
+        const start = rangeStart <= rangeEnd ? rangeStart : rangeEnd;
+        const end = rangeStart <= rangeEnd ? rangeEnd : rangeStart;
+        if (iso >= start && iso <= end) classes.push('is-in-range');
+        if (iso === rangeStart) classes.push('is-range-start');
+        if (iso === rangeEnd) classes.push('is-range-end');
+      }
+      if (isMetaReportComparisonDatePickerDayDisabled(iso, payload, side, bound)) {
+        classes.push('is-disabled');
+        return `<button type="button" class="${classes.join(' ')}" disabled aria-disabled="true">${dayNum}</button>`;
+      }
+      return `<button type="button" class="${classes.join(' ')}" onclick="selectMetaReportComparisonDatePickerDay('${iso}')">${dayNum}</button>`;
+    }
+
+    function renderMetaReportComparisonDatePickerPopover() {
+      const popover = document.getElementById('meta-report-comparison-date-popover');
+      const { viewYear, viewMonth, inputKey, payload, side, bound } = metaReportComparisonDatePickerState;
+      if (!popover || !inputKey || !viewYear || !viewMonth || !payload || !side || !bound) return;
+
+      const monthLabel = new Intl.DateTimeFormat('en-GB', {
+        month: 'long',
+        year: 'numeric',
+      }).format(new Date(viewYear, viewMonth - 1, 1));
+      const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+      const firstDay = new Date(viewYear, viewMonth - 1, 1);
+      const mondayOffset = (firstDay.getDay() + 6) % 7;
+      const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+      const daysInPrevMonth = new Date(viewYear, viewMonth - 1, 0).getDate();
+      const todayIso = isoFromParts(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate());
+      const selectedInput = document.querySelector(`[data-comparison-date="${inputKey}"]`);
+      const selectedValue = selectedInput?.value || '';
+      const stateKey = side === 'b' ? 'comparisonPeriodB' : 'comparisonPeriodA';
+      const period = metaReportsState[stateKey] || {};
+      const rangeStart = period.startDate || '';
+      const rangeEnd = period.endDate || '';
+      const { min, max } = getMetaReportComparisonDatePickerFieldBounds(payload, side, bound);
+
+      let cells = '';
+      for (let index = mondayOffset - 1; index >= 0; index -= 1) {
+        const day = daysInPrevMonth - index;
+        const month = viewMonth === 1 ? 12 : viewMonth - 1;
+        const year = viewMonth === 1 ? viewYear - 1 : viewYear;
+        const iso = isoFromParts(year, month, day);
+        cells += renderMetaReportComparisonDatePickerDayCell(iso, day, true, todayIso, selectedValue, rangeStart, rangeEnd, payload, side, bound);
+      }
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const iso = isoFromParts(viewYear, viewMonth, day);
+        cells += renderMetaReportComparisonDatePickerDayCell(iso, day, false, todayIso, selectedValue, rangeStart, rangeEnd, payload, side, bound);
+      }
+      const trailing = (7 - ((mondayOffset + daysInMonth) % 7)) % 7;
+      for (let day = 1; day <= trailing; day += 1) {
+        const month = viewMonth === 12 ? 1 : viewMonth + 1;
+        const year = viewMonth === 12 ? viewYear + 1 : viewYear;
+        const iso = isoFromParts(year, month, day);
+        cells += renderMetaReportComparisonDatePickerDayCell(iso, day, true, todayIso, selectedValue, rangeStart, rangeEnd, payload, side, bound);
+      }
+
+      const hint = bound === 'start' && max
+        ? `<span class="date-picker-hint">Through ${esc(metaReportComparisonFormatDateLabel(max))}</span>`
+        : bound === 'end' && min
+          ? `<span class="date-picker-hint">From ${esc(metaReportComparisonFormatDateLabel(min))}</span>`
+          : '';
+
+      popover.innerHTML = `
+        <div class="date-picker-panel">
+          <div class="date-picker-header">
+            <div class="date-picker-title">${esc(monthLabel)}</div>
+            <div class="date-picker-nav">
+              <button type="button" class="date-picker-nav-btn" aria-label="Previous month" onclick="shiftMetaReportComparisonDatePickerMonth(-1)" ${metaReportComparisonDatePickerCanShiftMonth(-1) ? '' : 'disabled'}>${ICON_CHEVRON_LEFT}</button>
+              <button type="button" class="date-picker-nav-btn" aria-label="Next month" onclick="shiftMetaReportComparisonDatePickerMonth(1)" ${metaReportComparisonDatePickerCanShiftMonth(1) ? '' : 'disabled'}>${ICON_CHEVRON_RIGHT}</button>
+            </div>
+          </div>
+          <div class="date-picker-weekdays">
+            ${weekdays.map((day) => `<div class="date-picker-weekday">${day}</div>`).join('')}
+          </div>
+          <div class="date-picker-grid">${cells}</div>
+          <div class="date-picker-footer">
+            ${hint}
+            <button type="button" class="date-picker-footer-btn" onclick="clearMetaReportComparisonDatePickerField()">Clear</button>
+          </div>
+        </div>
+      `;
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-v2',hypothesisId:'C',location:'index.html:renderMetaReportComparisonDatePickerPopover',message:'calendar rendered',data:{inputKey,side,bound,min,max,viewYear,viewMonth},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    }
+
+    function positionMetaReportComparisonDatePickerPopover() {
+      const popover = document.getElementById('meta-report-comparison-date-popover');
+      const anchor = metaReportComparisonDatePickerState.anchorEl;
+      if (!popover || !anchor) return;
+      popover.hidden = false;
+      popover.style.visibility = 'hidden';
+      popover.style.left = '0';
+      popover.style.top = '0';
+      popover.style.transform = '';
+      const rect = anchor.getBoundingClientRect();
+      const popRect = popover.getBoundingClientRect();
+      const margin = 8;
+      let top = rect.bottom + margin;
+      let left = rect.left + rect.width / 2 - popRect.width / 2;
+      if (window.innerWidth <= 640) {
+        left = Math.max(16, (window.innerWidth - popRect.width) / 2);
+        top = Math.max(16, (window.innerHeight - popRect.height) / 2);
+      } else {
+        if (left + popRect.width > window.innerWidth - 16) left = window.innerWidth - popRect.width - 16;
+        if (left < 16) left = 16;
+        if (top + popRect.height > window.innerHeight - 16) top = Math.max(16, rect.top - popRect.height - margin);
+      }
+      popover.style.top = `${top}px`;
+      popover.style.left = `${left}px`;
+      popover.style.visibility = '';
+    }
+
+    function openMetaReportComparisonDatePicker(inputKey, anchorEl, payload, { editable = false } = {}) {
+      ensureMetaReportComparisonDatePickerPopover();
+      const popover = document.getElementById('meta-report-comparison-date-popover');
+      const backdrop = document.getElementById('meta-report-comparison-date-backdrop');
+      const parsed = parseComparisonDateKey(inputKey);
+      if (!popover || !backdrop || !anchorEl || !parsed) return;
+      if (metaReportComparisonDatePickerState.inputKey === inputKey && !popover.hidden) {
+        closeMetaReportComparisonDatePicker();
+        return;
+      }
+      closeMetaReportComparisonDatePicker();
+      const selectedInput = document.querySelector(`[data-comparison-date="${inputKey}"]`);
+      const selectedValue = selectedInput?.value || '';
+      let viewYear = new Date().getFullYear();
+      let viewMonth = new Date().getMonth() + 1;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(selectedValue)) {
+        viewYear = Number(selectedValue.slice(0, 4));
+        viewMonth = Number(selectedValue.slice(5, 7));
+      } else {
+        const { min } = getMetaReportComparisonDatePickerFieldBounds(payload, parsed.side, parsed.bound);
+        if (min && /^\d{4}-\d{2}-\d{2}$/.test(min)) {
+          viewYear = Number(min.slice(0, 4));
+          viewMonth = Number(min.slice(5, 7));
+        }
+      }
+      metaReportComparisonDatePickerState.inputKey = inputKey;
+      metaReportComparisonDatePickerState.side = parsed.side;
+      metaReportComparisonDatePickerState.bound = parsed.bound;
+      metaReportComparisonDatePickerState.anchorEl = anchorEl;
+      metaReportComparisonDatePickerState.viewYear = viewYear;
+      metaReportComparisonDatePickerState.viewMonth = viewMonth;
+      metaReportComparisonDatePickerState.payload = payload;
+      metaReportComparisonDatePickerState.editable = editable;
+      renderMetaReportComparisonDatePickerPopover();
+      backdrop.hidden = false;
+      anchorEl.classList.add('is-active');
+      positionMetaReportComparisonDatePickerPopover();
+    }
+
+    function closeMetaReportComparisonDatePicker() {
+      const popover = document.getElementById('meta-report-comparison-date-popover');
+      const backdrop = document.getElementById('meta-report-comparison-date-backdrop');
+      if (popover) popover.hidden = true;
+      if (backdrop) backdrop.hidden = true;
+      metaReportComparisonDatePickerState.anchorEl?.classList.remove('is-active');
+      metaReportComparisonDatePickerState.inputKey = null;
+      metaReportComparisonDatePickerState.side = null;
+      metaReportComparisonDatePickerState.bound = null;
+      metaReportComparisonDatePickerState.anchorEl = null;
+      metaReportComparisonDatePickerState.payload = null;
+    }
+
+    function shiftMetaReportComparisonDatePickerMonth(delta) {
+      if (!metaReportComparisonDatePickerCanShiftMonth(delta)) return;
+      let { viewYear, viewMonth } = metaReportComparisonDatePickerState;
+      viewMonth += delta;
+      if (viewMonth < 1) { viewMonth = 12; viewYear -= 1; }
+      if (viewMonth > 12) { viewMonth = 1; viewYear += 1; }
+      metaReportComparisonDatePickerState.viewYear = viewYear;
+      metaReportComparisonDatePickerState.viewMonth = viewMonth;
+      renderMetaReportComparisonDatePickerPopover();
+      positionMetaReportComparisonDatePickerPopover();
+    }
+
+    function selectMetaReportComparisonDatePickerDay(isoDate) {
+      const { inputKey, payload, editable } = metaReportComparisonDatePickerState;
+      if (!inputKey || !payload || !isoDate) return;
+      const input = document.querySelector(`[data-comparison-date="${inputKey}"]`);
+      if (input) input.value = isoDate;
+      closeMetaReportComparisonDatePicker();
+      applyMetaReportComparisonDateChange(payload, inputKey, isoDate, { editable });
+    }
+
+    function clearMetaReportComparisonDatePickerField() {
+      const { inputKey, payload, editable } = metaReportComparisonDatePickerState;
+      if (!inputKey || !payload) return;
+      closeMetaReportComparisonDatePicker();
+      const parsed = parseComparisonDateKey(inputKey);
+      if (!parsed) return;
+      const { side, bound, stateKey } = parsed;
+      if (!metaReportsState[stateKey]) metaReportsState[stateKey] = { startDate: null, endDate: null };
+      metaReportsState[stateKey][`${bound}Date`] = null;
+      const input = document.querySelector(`[data-comparison-date="${inputKey}"]`);
+      if (input) input.value = '';
+      syncMetaReportComparisonDateDisplays();
+      void refreshMetaReportComparison(payload, { editable });
+    }
+
+    function closeMetaReportComparisonDatePickers() {
+      closeMetaReportComparisonDatePicker();
     }
 
     function destroyMetaReportComparisonDatePickers() {
-      closeMetaReportComparisonDatePickers();
-      document.querySelectorAll('[data-comparison-date]').forEach((input) => {
-        if (input._metaComparisonDatePicker) {
-          input._metaComparisonDatePicker.destroy();
-          input._metaComparisonDatePicker = null;
-        }
-      });
-      metaReportsState.comparisonDatePickers = [];
+      closeMetaReportComparisonDatePicker();
     }
 
     function bindMetaReportComparisonDateInputs(payload, { editable = false } = {}) {
       destroyMetaReportComparisonDatePickers();
-      syncMetaReportComparisonPeriodPickerBounds(payload);
-      document.querySelectorAll('[data-comparison-date]').forEach((input) => {
-        input.onchange = () => {
-          // #region agent log
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix',hypothesisId:'C',location:'index.html:monthInput.onchange',message:'month input changed',data:{inputKey:input.getAttribute('data-comparison-date'),value:input.value,min:input.min,max:input.max},timestamp:Date.now()})}).catch(()=>{});
-          // #endregion
-          applyMetaReportComparisonDateChange(payload, input, { editable });
-        };
-        input.onfocus = () => {
-          syncMetaReportComparisonPeriodPickerBounds(payload);
+      syncMetaReportComparisonDateDisplays();
+      document.querySelectorAll('[data-comparison-date-trigger]').forEach((trigger) => {
+        trigger.onclick = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const inputKey = trigger.getAttribute('data-comparison-date-trigger');
+          if (!inputKey) return;
+          openMetaReportComparisonDatePicker(inputKey, trigger, payload, { editable });
         };
       });
+      document.querySelectorAll('.meta-report-comparison-custom-range').forEach((rangeEl) => {
+        rangeEl.onclick = (event) => {
+          const field = event.target.closest('.meta-report-comparison-custom-range-field');
+          if (!field) return;
+          const trigger = field.querySelector('[data-comparison-date-trigger]');
+          if (!trigger) return;
+          event.preventDefault();
+          event.stopPropagation();
+          const inputKey = trigger.getAttribute('data-comparison-date-trigger');
+          if (inputKey) openMetaReportComparisonDatePicker(inputKey, trigger, payload, { editable });
+        };
+      });
+      if (!metaReportsState.comparisonDatePickerListenerBound) {
+        window.addEventListener('resize', closeMetaReportComparisonDatePicker);
+        window.addEventListener('scroll', (event) => {
+          const target = event.target;
+          if (target instanceof Element && target.closest('#meta-report-comparison-date-popover')) return;
+          closeMetaReportComparisonDatePicker();
+        }, true);
+        metaReportsState.comparisonDatePickerListenerBound = true;
+      }
     }
 
     function metaReportComparisonYtdSpanLabel(startDate, endDate) {
@@ -12050,9 +12310,9 @@
 
       return `
         <div class="meta-report-comparison-duel is-custom-dates" id="meta-report-comparison-range-panel" role="group" aria-label="Custom compared periods">
-          ${renderMetaReportComparisonCustomRangeSide('a', startA, endA, payload, periodA)}
+          ${renderMetaReportComparisonCustomRangeSide('a', startA, endA, bounds, periodA)}
           <div class="meta-report-comparison-duel-divider" aria-hidden="true">vs</div>
-          ${renderMetaReportComparisonCustomRangeSide('b', startB, endB, payload, periodB)}
+          ${renderMetaReportComparisonCustomRangeSide('b', startB, endB, bounds, periodB)}
         </div>
       `;
     }
