@@ -254,6 +254,45 @@ function testDeltaPct() {
   assert.strictEqual(computeDeltaPct(100, 0), null);
 }
 
+function testCustomDateRangeSpansMultipleMonths() {
+  const months = {
+    '2026-01': monthPayload({ monthKey: '2026-01', spend: 8000, leads: 40, wonLeads: 4 }),
+    '2026-02': monthPayload({ monthKey: '2026-02', spend: 9000, leads: 45, wonLeads: 5 }),
+    '2026-03': monthPayload({ monthKey: '2026-03', spend: 10000, leads: 50, wonLeads: 5 }),
+  };
+  const result = buildComparison({
+    monthsMap: months,
+    periodA: { startDate: '2026-01-01', endDate: '2026-03-31' },
+    periodB: { startDate: '2025-12-01', endDate: '2025-12-31' },
+    mode: 'custom',
+  });
+  assert.strictEqual(result.insufficientData, false);
+  assert.strictEqual(result.samePeriod, false);
+  approx(result.periodA.metrics.spend, 27000);
+  approx(result.periodA.metrics.leads, 135);
+  assert.ok(formatComparisonDisplayLabel('custom', {
+    startDate: '2026-01-01',
+    endDate: '2026-03-31',
+  }).includes('Mar'));
+}
+
+function testCustomDateEndAfterStartWithinMonth() {
+  const months = {
+    '2026-03': monthPayload({ monthKey: '2026-03', spend: 10000, leads: 50, wonLeads: 5 }),
+  };
+  months['2026-03'].periodStart = '2026-03-01';
+  months['2026-03'].periodEnd = '2026-03-31';
+  const result = buildComparison({
+    monthsMap: months,
+    periodA: { startDate: '2026-03-05', endDate: '2026-03-20' },
+    periodB: { startDate: '2026-02-01', endDate: '2026-02-28' },
+    mode: 'custom',
+  });
+  assert.strictEqual(result.insufficientData, false);
+  assert.strictEqual(result.periodA.hasData, true);
+  approx(result.periodA.metrics.spend, 5161.29, 100);
+}
+
 function run() {
   testMomPreset();
   testMonthsPreset();
@@ -268,6 +307,8 @@ function run() {
   testComparisonDisplayLabels();
   testYtdByMonthKeepsMissingPriorMonths();
   testSamePeriodValidation();
+  testCustomDateRangeSpansMultipleMonths();
+  testCustomDateEndAfterStartWithinMonth();
   testYearsNeeded();
   testFormatPeriodLabel();
   testDeltaPct();

@@ -1023,7 +1023,7 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(a?setFbL
     <section class="meta-report-comparison-view" id="meta-report-comparison-view">
       <div class="meta-report-comparison-controls">
         <div class="meta-report-comparison-presets" id="meta-report-comparison-presets">
-          ${META_REPORT_COMPARISON_PRESETS.map(({id:s,label:i})=>{const l=metaReportComparisonPresetDisabled(s,e),c=l&&s==="mom"?"No previous month available":"";return`
+          ${META_REPORT_COMPARISON_PRESETS.map(({id:s,label:i})=>{const l=metaReportComparisonPresetDisabled(s,e),c=l&&s==="mom"?"No previous month available":i;return`
               <button type="button" class="preset-btn${metaReportsState.comparisonMode===s?" active":""}${l?" is-disabled":""}" data-comparison-preset="${esc(s)}" aria-pressed="${metaReportsState.comparisonMode===s}"${l?" disabled":""}${c?` title="${esc(c)}"`:""}>${esc(i)}</button>
             `}).join("")}
         </div>

@@ -5040,10 +5040,10 @@
     }
     .meta-report-comparison-summary-heading {
       color: var(--text-soft); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-      margin: 0; text-transform: uppercase;
+      margin: 0 0 6px; text-transform: uppercase;
     }
     .meta-report-comparison-summary-stack {
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex; flex-direction: column; gap: 12px;
     }
     .meta-report-comparison-summary-item {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
@@ -5124,6 +5124,10 @@
     .meta-report-comparison-tab-panel .meta-report-comparison-table thead th {
       background: var(--panel-soft);
       border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
     .meta-report-comparison-tab-panel .meta-report-comparison-table tbody th,
     .meta-report-comparison-tab-panel .meta-report-comparison-table tbody td {
@@ -5156,6 +5160,9 @@
     }
     .meta-report-comparison-presets .preset-btn.is-disabled {
       cursor: not-allowed; opacity: 0.4;
+    }
+    .meta-report-comparison-presets .preset-btn {
+      white-space: nowrap;
     }
     .meta-report-comparison-period-card { min-width: 0; width: 100%; }
     .meta-report-comparison-duel {
@@ -5334,6 +5341,29 @@
       .meta-report-comparison-date-input { font-size: 15px; }
       .meta-report-comparison-month-trigger { font-size: 15px; }
       .meta-report-comparison-custom-range { flex-wrap: wrap; row-gap: 2px; }
+      .meta-report-comparison-view-card { border-radius: 16px; padding: 14px 14px 16px; }
+      .meta-report-comparison-presets { max-width: 100%; width: 100%; }
+      .meta-report-comparison-presets .preset-btn { font-size: 11px; padding: 7px 10px; white-space: normal; }
+      .meta-report-comparison-date-trigger { font-size: 13px; min-height: 36px; padding: 6px 8px; }
+      .meta-report-comparison-tab-panel .meta-report-comparison-table thead th {
+        font-size: 10px; padding: 8px;
+      }
+      .meta-report-comparison-tab-panel .meta-report-comparison-table tbody th,
+      .meta-report-comparison-tab-panel .meta-report-comparison-table tbody td {
+        font-size: 13px; padding: 8px;
+      }
+      .meta-report-comparison-summary-item { padding: 12px 12px 10px; }
+      .meta-report-comparison-date-popover .date-picker-panel { width: min(300px, calc(100vw - 32px)); }
+    }
+    @media (max-width: 520px) {
+      .meta-report-comparison-presets .preset-btn { font-size: 10.5px; line-height: 1.25; padding: 6px 8px; }
+      .meta-report-comparison-duel.is-custom-dates .meta-report-comparison-custom-range {
+        align-items: stretch; flex-direction: column; gap: 6px;
+      }
+      .meta-report-comparison-custom-range-sep { display: none; }
+      .meta-report-comparison-view-head { justify-content: stretch; }
+      .meta-report-comparison-tabs { width: 100%; }
+      .meta-report-comparison-tabs .meta-report-chart-tab { flex: 1; text-align: center; }
     }
     .meta-report-comparison-view-card.is-loading {
       min-height: 460px;
