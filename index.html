@@ -11923,9 +11923,6 @@
       }
       const period = metaReportsState[stateKey];
       period[`${bound}Date`] = dateStr;
-      // #region agent log
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-v2',hypothesisId:'A',location:'index.html:applyMetaReportComparisonDateChange',message:'date change applied',data:{side,bound,stateKey,dateStr,startDate:period.startDate,endDate:period.endDate},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       if (period.startDate && period.endDate && period.startDate > period.endDate) {
         if (bound === 'end') {
           period.startDate = period.endDate;
@@ -12075,9 +12072,6 @@
           </div>
         </div>
       `;
-      // #region agent log
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'post-fix-v2',hypothesisId:'C',location:'index.html:renderMetaReportComparisonDatePickerPopover',message:'calendar rendered',data:{inputKey,side,bound,min,max,viewYear,viewMonth},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     }
 
     function positionMetaReportComparisonDatePickerPopover() {
