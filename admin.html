@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Admin</title>
   <!-- theme: warm-cream v27 -->
-  <link rel="stylesheet" href="/css/dashboard.css?v=224" />
+  <link rel="stylesheet" href="/css/dashboard.css?v=225" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
 </head>
 <body>
@@ -21,6 +21,8 @@
         document.body.dataset.dashboardMode = 'fb-lead-sync';
       } else if (parts[0] === 'admin' && parts[1] === 'meta-reports' && parts[2] === 'custom-values') {
         document.body.dataset.dashboardMode = 'meta-reports-custom';
+      } else if (parts[0] === 'admin' && parts[1] === 'meta-reports' && parts[2] === 'ghl-clients') {
+        document.body.dataset.dashboardMode = 'meta-reports-ghl-clients';
       } else if (parts[0] === 'admin' && parts[1] === 'meta-reports' && parts[2]) {
         document.body.dataset.dashboardMode = 'meta-reports-client';
         document.body.dataset.clientSlug = parts[2];
@@ -56,6 +58,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" defer></script>
   <script src="/lib/marketing-metrics.js" defer></script>
-  <script src="/js/admin.bundle.js?v=224" defer></script>
+  <script src="/js/admin.bundle.js?v=225" defer></script>
 </body>
 </html>
