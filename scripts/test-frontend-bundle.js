@@ -98,6 +98,8 @@ function main() {
   const adminBootRoutes = [
     'IS_ADMIN_META_REPORTS_CUSTOM',
     'loadMetaReportsCustomValuesPage',
+    'IS_ADMIN_META_REPORTS_GHL_CLIENTS',
+    'loadMetaReportsGhlClientsPage',
     'IS_ADMIN_META_REPORTS',
     'loadMetaReportsHubPage',
   ];

@@ -89,6 +89,9 @@ async function main() {
 
   const adminInit = `
 async function bootAdminApp() {
+  // #region agent log
+  fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'build-frontend.js:bootAdminApp',message:'bootAdminApp entry',data:{dashboardMode:DASHBOARD_MODE,clientSlug:document.body.dataset.clientSlug,resolvedClientSlug:CLIENT_SLUG,isGhlClients:IS_ADMIN_META_REPORTS_GHL_CLIENTS,isMetaReportsClient:IS_ADMIN_META_REPORTS_CLIENT,pathname:window.location.pathname},timestamp:Date.now(),hypothesisId:'A'})}).catch(function(){});
+  // #endregion
   if (IS_REPORT_VIEW) {
     await loadPublicMetaReportPage();
     return;
@@ -121,6 +124,13 @@ async function bootAdminApp() {
     await loadMetaReportsCustomValuesPage();
     return;
   }
+  if (IS_ADMIN_META_REPORTS_GHL_CLIENTS) {
+    // #region agent log
+    fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'build-frontend.js:bootAdminApp',message:'routing to GHL clients page',data:{},timestamp:Date.now(),hypothesisId:'A',runId:'post-fix'})}).catch(function(){});
+    // #endregion
+    await loadMetaReportsGhlClientsPage();
+    return;
+  }
   if (IS_ADMIN_META_REPORTS_CLIENT) {
     await loadMetaReportsClientPage();
     return;
@@ -129,6 +139,9 @@ async function bootAdminApp() {
     loadTeamPage();
     return;
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'build-frontend.js:bootAdminApp',message:'bootAdminApp fallthrough to dashboard',data:{dashboardMode:DASHBOARD_MODE,clientSlug:CLIENT_SLUG,isAdminClient:IS_ADMIN_CLIENT},timestamp:Date.now(),hypothesisId:'A'})}).catch(function(){});
+  // #endregion
   try {
     tenantParams = await resolveTenantParams();
   } catch (error) {
