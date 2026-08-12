@@ -31,6 +31,12 @@ function main() {
     clientId: 'ml-tagdaekning',
     monthKey: '2026-01',
   });
+  assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/ghl-clients'), { kind: 'ghl-clients' });
+  assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/clients/ml-tagdaekning/months/2026-01/sync-ghl'), {
+    kind: 'month-sync-ghl',
+    clientId: 'ml-tagdaekning',
+    monthKey: '2026-01',
+  });
   console.log('Meta reports handler path tests passed.');
 }
 

@@ -5625,6 +5625,27 @@
     .meta-cv-month-pill.is-active {
       box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.35); color: var(--text);
     }
+    .meta-cv-source-badge {
+      display: inline-block; margin-left: 4px; padding: 1px 5px; border-radius: 999px;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; vertical-align: middle;
+    }
+    .meta-cv-source-badge.is-ghl { background: #ecfdf5; color: #047857; }
+    .meta-cv-source-badge.is-manual { background: #fff7ed; color: #9a3412; }
+    .meta-cv-source-badge.is-meta { background: #eff6ff; color: #1d4ed8; }
+    .meta-cv-ghl-banner {
+      margin: 0 0 14px; padding: 10px 12px; border-radius: 10px;
+      background: var(--panel-soft); border: 1px solid var(--border); font-size: 13px; color: var(--text-muted);
+    }
+    .meta-cv-ghl-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+    .meta-ghl-clients-table {
+      width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .meta-ghl-clients-table th, .meta-ghl-clients-table td {
+      padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; font-size: 14px;
+    }
+    .meta-ghl-clients-table th { background: var(--panel-soft); font-weight: 600; color: var(--text-muted); }
+    .meta-ghl-clients-table tr:last-child td { border-bottom: none; }
     .meta-cv-editor h3 { font-size: 15px; margin: 0 0 4px; }
     .meta-cv-editor-sub { color: var(--text-soft); font-size: 12px; margin: 0 0 12px; }
     .meta-cv-editor-empty {

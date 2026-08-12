@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   meta_report_default_won_leads NUMERIC,
   meta_report_default_avg_lead_value NUMERIC,
   meta_report_default_avg_profit_per_won NUMERIC,
+  meta_report_ghl_data_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -157,6 +158,14 @@ CREATE TABLE IF NOT EXISTS meta_report_months (
   won_leads NUMERIC,
   avg_lead_value NUMERIC,
   avg_profit_per_won NUMERIC,
+  topline_source TEXT,
+  manual_override BOOLEAN NOT NULL DEFAULT FALSE,
+  ghl_leads INTEGER,
+  ghl_won_leads INTEGER,
+  ghl_total_revenue NUMERIC,
+  ghl_total_profit NUMERIC,
+  ghl_synced_at TIMESTAMPTZ,
+  manual_leads INTEGER,
   published BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

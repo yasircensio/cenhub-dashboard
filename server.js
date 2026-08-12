@@ -71,6 +71,7 @@ function serveDashboardHtml(response, mode, clientSlug = null, extraAttrs = {}) 
   const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team'
     || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'fb-lead-sync'
     || mode === 'meta-reports' || mode === 'meta-reports-client' || mode === 'meta-reports-custom'
+    || mode === 'meta-reports-ghl-clients'
     || mode === 'report';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
   let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
@@ -436,8 +437,13 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/admin/meta-reports/ghl-clients') {
+    serveDashboardHtml(response, 'meta-reports-ghl-clients');
+    return;
+  }
+
   const metaReportsClientMatch = url.match(/^\/admin\/meta-reports\/([^/]+)\/?$/);
-  if (metaReportsClientMatch && metaReportsClientMatch[1] !== 'custom-values') {
+  if (metaReportsClientMatch && !['custom-values', 'ghl-clients'].includes(metaReportsClientMatch[1])) {
     serveDashboardHtml(response, 'meta-reports-client', normalizeClientId(metaReportsClientMatch[1]));
     return;
   }
