@@ -10203,8 +10203,8 @@
     }
 
     function resolveMetaReportScenarioSeries(payload) {
-      if (isMetaReportViewingPastYear(payload) && metaReportsState.scenarioSeries?.length) {
-        return metaReportsState.scenarioSeries;
+      if (isMetaReportViewingPastYear(payload)) {
+        return metaReportsState.scenarioSeries || [];
       }
       return metaReportsState.chartSeries || [];
     }
@@ -11839,6 +11839,9 @@
       }
       const period = metaReportsState[stateKey];
       period[`${bound}Date`] = value;
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'pre-fix',hypothesisId:'A',location:'index.html:applyMetaReportComparisonDateChange',message:'date change applied',data:{side,bound,stateKey,value,startDate:period.startDate,endDate:period.endDate},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       if (period.startDate && period.endDate && period.startDate > period.endDate) {
         const tmp = period.startDate;
         period.startDate = period.endDate;
@@ -11876,6 +11879,9 @@
           );
           startInput._metaComparisonDatePicker.set('minDate', min);
           startInput._metaComparisonDatePicker.set('maxDate', max);
+          // #region agent log
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'pre-fix',hypothesisId:'B',location:'index.html:syncMetaReportComparisonPeriodPickerBounds',message:'start picker bounds synced',data:{side,boundsMin:bounds.min,boundsMax:bounds.max,periodStart:period.startDate,periodEnd:period.endDate,appliedMin:min,appliedMax:max,configMax:startInput._metaComparisonDatePicker.config.maxDate},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
         }
         if (endInput?._metaComparisonDatePicker) {
           const { min, max } = metaReportComparisonSafePickerBounds(
@@ -11884,6 +11890,9 @@
           );
           endInput._metaComparisonDatePicker.set('minDate', min);
           endInput._metaComparisonDatePicker.set('maxDate', max);
+          // #region agent log
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'pre-fix',hypothesisId:'B',location:'index.html:syncMetaReportComparisonPeriodPickerBounds',message:'end picker bounds synced',data:{side,boundsMin:bounds.min,boundsMax:bounds.max,periodStart:period.startDate,periodEnd:period.endDate,appliedMin:min,appliedMax:max,configMax:endInput._metaComparisonDatePicker.config.maxDate},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
         }
       });
     }
@@ -11949,6 +11958,10 @@
           className: 'meta-report-flatpickr',
           onOpen: (_selectedDates, _dateStr, instance) => {
             closeMetaReportComparisonDatePickers(instance);
+            // #region agent log
+            const openKey = instance.input?.getAttribute('data-comparison-date') || '';
+            fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',runId:'pre-fix',hypothesisId:'C',location:'index.html:flatpickr.onOpen',message:'picker opened',data:{inputKey:openKey,minDate:instance.config.minDate,maxDate:instance.config.maxDate,currentMonth:instance.currentMonth},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
           },
           onChange: (_selectedDates, dateStr, instance) => {
             if (!dateStr || instance._metaComparisonApplying) return;
