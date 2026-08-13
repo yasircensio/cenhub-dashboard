@@ -14328,7 +14328,6 @@
       const scenarioPayload = resolveMetaReportScenarioPayload(payload);
       const series = resolveMetaReportScenarioSeries(payload);
       const hasBottomline = payloadHasMetaReportBottomline(scenarioPayload);
-      const scenarioSeries = filterMetaReportScenarioSeries(series, { hasBottomline });
       const poasWrap = document.getElementById('meta-report-scenario-poas-wrap');
       if (poasWrap) poasWrap.hidden = !hasBottomline;
 
