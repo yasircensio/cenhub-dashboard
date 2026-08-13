@@ -14333,9 +14333,9 @@
       if (poasWrap) poasWrap.hidden = !hasBottomline;
 
       const projection = metaReportsState.chartProjection;
-      updateMetaReportScenarioChart('roas', scenarioSeries, projection, metaReportsState.chartScenarioRoasMode);
+      updateMetaReportScenarioChart('roas', series, projection, metaReportsState.chartScenarioRoasMode);
       if (hasBottomline) {
-        updateMetaReportScenarioChart('poas', scenarioSeries, projection, metaReportsState.chartScenarioPoasMode);
+        updateMetaReportScenarioChart('poas', series, projection, metaReportsState.chartScenarioPoasMode);
       } else if (metaReportsState.scenarioChartInstances.poas) {
         metaReportsState.scenarioChartInstances.poas.destroy();
         metaReportsState.scenarioChartInstances.poas = null;
