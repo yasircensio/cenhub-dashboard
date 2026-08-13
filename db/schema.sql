@@ -167,6 +167,9 @@ CREATE TABLE IF NOT EXISTS meta_report_months (
   ghl_total_profit NUMERIC,
   ghl_synced_at TIMESTAMPTZ,
   manual_leads INTEGER,
+  meta_saved_won_leads NUMERIC,
+  meta_saved_avg_lead_value NUMERIC,
+  meta_saved_avg_profit_per_won NUMERIC,
   published BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
