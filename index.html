@@ -5692,9 +5692,21 @@
       color: var(--text-muted); font-size: 12px; font-weight: 500; line-height: 1.4;
     }
     .meta-report-month-manual-row {
-      align-items: center; border-top: 1px solid var(--border);
-      display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
-      margin: 4px 0 0; padding: 14px 0 0;
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: space-between; margin: 12px 0 0; padding: 12px 14px;
+    }
+    .meta-report-month-manual-row-copy {
+      display: flex; flex: 1 1 180px; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .meta-report-month-manual-row-title {
+      color: var(--text); font-size: 13px; font-weight: 600; margin: 0;
+    }
+    .meta-report-month-manual-row-desc {
+      color: var(--text-muted); font-size: 12px; line-height: 1.4; margin: 0;
+    }
+    .meta-report-month-manual-row-actions {
+      align-items: center; display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 8px;
     }
     .meta-topline-subsection-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
@@ -9679,6 +9691,13 @@
       }
     }
 
+    function rebindMetaReportMonthPanelEvents(clientId, payload) {
+      bindMetaReportsClientEditEvents(clientId, payload);
+      if (isMetaReportGhlListClient(payload?.settings || {})) {
+        bindMetaReportMonthManualEvents(clientId, payload);
+      }
+    }
+
     function bindMetaReportMonthManualEvents(clientId, payload) {
       bindMetaMonthSourceOverrideEvents(clientId, payload?.settings || {}, {
         prefix: 'meta-report',
@@ -9757,10 +9776,10 @@
         getMetaReportMonthBodyOptions(payload.settings, { editable: true, yearPayload: payload }),
         payload,
       );
-      bindMetaReportsClientEditEvents(payload.clientId, payload);
+      rebindMetaReportMonthPanelEvents(payload.clientId, payload);
       // #region agent log
       const _dbgManualBtn = document.getElementById('meta-report-use-manual-month');
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:refreshMetaReportMonthPanel',message:'after panel refresh',data:{hasManualBtn:!!_dbgManualBtn,hasOnclick:!!_dbgManualBtn?.onclick,reboundManualEvents:false},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:refreshMetaReportMonthPanel',message:'after panel refresh',data:{hasManualBtn:!!_dbgManualBtn,hasOnclick:!!_dbgManualBtn?.onclick,reboundManualEvents:true,runId:'post-fix'},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
       // #endregion
       refreshMetaReportBackfillControl(payload);
     }
@@ -9827,7 +9846,7 @@
           getMetaReportMonthBodyOptions(settings, { editable: true, yearPayload: payload }),
           payload,
         );
-        bindMetaReportsClientEditEvents(payload.clientId, payload);
+        rebindMetaReportMonthPanelEvents(payload.clientId, payload);
       }
       refreshMetaReportBackfillControl(payload);
       void ensureMetaReportScenarioSource(payload, { editable: true });
@@ -9983,10 +10002,10 @@
         }), payload);
 
         if (editable && payload.clientId) {
-          bindMetaReportsClientEditEvents(payload.clientId, payload);
+          rebindMetaReportMonthPanelEvents(payload.clientId, payload);
           // #region agent log
           const _dbgTabManualBtn = document.getElementById('meta-report-use-manual-month');
-          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:switchMetaReportMonthTab',message:'after tab panel refresh',data:{monthKey,hasManualBtn:!!_dbgTabManualBtn,hasOnclick:!!_dbgTabManualBtn?.onclick,reboundManualEvents:false},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:switchMetaReportMonthTab',message:'after tab panel refresh',data:{monthKey,hasManualBtn:!!_dbgTabManualBtn,hasOnclick:!!_dbgTabManualBtn?.onclick,reboundManualEvents:true,runId:'post-fix'},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
           // #endregion
         }
 
@@ -15537,7 +15556,7 @@
               getMetaReportMonthBodyOptions(settings, { editable: true, yearPayload: payload }),
               payload,
             );
-            bindMetaReportsClientEditEvents(clientId, payload);
+            rebindMetaReportMonthPanelEvents(clientId, payload);
           }
         }
         showToast(describeMetaReportSettingsChange(patch, settings), 'success');
@@ -15815,10 +15834,9 @@
     function bindMetaReportsClientEvents(payload) {
       bindMetaReportsClientChromeEvents(payload);
       bindMetaReportsClientTabEvents(payload);
-      bindMetaReportsClientEditEvents(payload.clientId, payload);
+      rebindMetaReportMonthPanelEvents(payload.clientId, payload);
       if (isMetaReportGhlListClient(payload.settings || {})) {
         bindMetaReportToplineSourceControl(payload.clientId, payload);
-        bindMetaReportMonthManualEvents(payload.clientId, payload);
       }
     }
 
@@ -16413,15 +16431,27 @@
       if (!isManual) {
         return `
           <div class="meta-report-month-manual-row">
-            <button type="button" class="meta-topline-manual-pill-btn" id="${prefix}-use-manual-month">Use manual values for this month</button>
+            <div class="meta-report-month-manual-row-copy">
+              <p class="meta-report-month-manual-row-title">Month data source</p>
+              <p class="meta-report-month-manual-row-desc">This month uses Cenhub values. Switch to manual if you need to override won leads, average lead value, or profit.</p>
+            </div>
+            <div class="meta-report-month-manual-row-actions">
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="${prefix}-use-manual-month">Use manual values</button>
+            </div>
           </div>
         `;
       }
 
       return `
         <div class="meta-report-month-manual-row">
-          ${renderMetaToplineSourcePillHtml('Manual values this month', 'manual')}
-          <button type="button" class="meta-topline-manual-pill-btn" id="${prefix}-restore-month-source">Use Cenhub data for this month</button>
+          <div class="meta-report-month-manual-row-copy">
+            <p class="meta-report-month-manual-row-title">Manual override active</p>
+            <p class="meta-report-month-manual-row-desc">You are editing custom values for this month instead of Cenhub data.</p>
+          </div>
+          <div class="meta-report-month-manual-row-actions">
+            ${renderMetaToplineSourcePillHtml('Manual this month', 'manual')}
+            <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-restore-month-source">Switch back to Cenhub</button>
+          </div>
         </div>
       `;
     }
