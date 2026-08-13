@@ -762,10 +762,14 @@ Resume the interrupted ${S}?`)&&(l=w.id,c=Number(w.batchOffset)||0)}}if(a?setFbL
       </div>
       ${r?`
         <div class="meta-report-control-status"${s?" hidden":""} id="meta-report-control-status">
-          <div class="meta-report-control-status-grid">
-            ${renderMetaReportShareSummary(e)}
-            ${renderMetaReportBottomlineFeeSummary(t,"meta-report")}
-            ${renderMetaReportExcelSheetSummary(t)}
+          <div class="meta-report-control-status-stack">
+            <div class="meta-report-control-status-excel-row">
+              ${renderMetaReportExcelSheetSummary(t)}
+            </div>
+            <div class="meta-report-control-status-grid">
+              ${renderMetaReportShareSummary(e)}
+              ${renderMetaReportBottomlineFeeSummary(t,"meta-report")}
+            </div>
           </div>
         </div>
       `:`

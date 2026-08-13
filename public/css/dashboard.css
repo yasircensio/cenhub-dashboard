@@ -4602,19 +4602,21 @@
     }
     .meta-report-control-status { margin-bottom: 0; margin-top: 0; }
     .meta-report-control-status[hidden] { display: none !important; }
+    .meta-report-control-status-stack {
+      display: flex; flex-direction: column; gap: 10px;
+    }
     #meta-report-topline-source-host:not([hidden]) {
-      margin-top: 12px;
+      margin-top: 0;
     }
     .meta-report-control-status-grid {
       align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .meta-report-control-status-grid > .meta-report-share-summary,
-    .meta-report-control-status-grid > .meta-report-bottomline-summary,
-    .meta-report-control-status-grid > .meta-report-excel-sheet-summary {
+    .meta-report-control-status-grid > .meta-report-bottomline-summary {
       height: 100%; min-height: 52px;
     }
-    .meta-report-control-status-grid > .meta-report-excel-sheet-summary {
-      grid-column: 1 / -1;
+    .meta-report-control-status-excel-row .meta-report-excel-sheet-summary {
+      min-height: 52px; width: 100%;
     }
     .meta-report-control-editors {
       display: flex; flex-direction: column; gap: 12px;
@@ -4654,7 +4656,7 @@
       justify-content: space-between; padding: 12px 14px; width: 100%;
     }
     .meta-report-topline-source-wrap {
-      display: flex; flex-direction: column; gap: 10px; width: 100%;
+      display: flex; flex-direction: column; gap: 10px; margin-top: 10px; width: 100%;
     }
     .meta-report-topline-source-wrap.is-loading .meta-report-topline-summary {
       opacity: 0.65; pointer-events: none;
