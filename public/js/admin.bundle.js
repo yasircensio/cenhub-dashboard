@@ -1700,7 +1700,6 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!b
       <h2 class="meta-report-modal-title">Bottomline & Censio fee</h2>
       <button type="button" class="meta-report-modal-close" aria-label="Close">&times;</button>
     </div>
-    <p class="metrics-model-copy">Control whether clients see profit metrics and how the Censio fee is calculated on this report.</p>
     <div class="meta-report-share-panel">
       ${renderMetaReportBottomlineFeeEditor(t,"meta-report",{modal:!0})}
     </div>
