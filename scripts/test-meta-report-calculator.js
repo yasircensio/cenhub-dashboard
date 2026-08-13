@@ -531,6 +531,59 @@ function testBaselineModesMatchProjectionSpend() {
   approx(monthSpend, 9609);
 }
 
+function testScenarioMultiplierMatchesProjectedSpend() {
+  const baselineSpend = 18270.29;
+  const series = [
+    {
+      spend: 9000,
+      leads: 18,
+      wonLeads: 1,
+      avgLeadValue: 51000,
+      avgProfitPerWon: 41000,
+      periodEnd: '2026-06-30',
+    },
+    {
+      spend: 12000,
+      leads: 20,
+      wonLeads: 1,
+      avgLeadValue: 51000,
+      avgProfitPerWon: 41000,
+      periodEnd: '2026-07-31',
+    },
+    {
+      spend: 12258,
+      leads: 23,
+      wonLeads: 1,
+      avgLeadValue: 51000,
+      avgProfitPerWon: 41000,
+      periodEnd: '2026-08-31',
+    },
+  ];
+
+  const projection = projectScenario({
+    series,
+    baselineSpend,
+    multiplier: 2,
+    monthWindow: '6',
+    hasBottomline: true,
+    asOfDate: new Date('2026-09-01T12:00:00.000Z'),
+  });
+
+  assert.strictEqual(projection.insufficientData, false);
+  approx(projection.projected.spend, baselineSpend * 2, 1);
+  approx(projection.projected.spend / projection.baselineSpend, 2, 0.01);
+
+  const steps = buildScenarioProjectionSteps(projection, {
+    hasBottomline: true,
+    targetMultiplier: 2,
+    asOfDate: new Date('2026-09-01T12:00:00.000Z'),
+  });
+  steps.forEach((step) => {
+    approx(step.spend, baselineSpend * 2, 1);
+    approx(step.spendMultiplier, 2, 0.01);
+  });
+}
+
 function main() {
   testSheetExample();
   testFeeNotNegativeOnLoss();
@@ -539,6 +592,7 @@ function main() {
   testLeadActionParsing();
   testBudgetScenarioProjection();
   testScenarioProjectionStepsMatchTargetMultiplier();
+  testScenarioMultiplierMatchesProjectedSpend();
   testShortAdHistoryUsesAvailableMonths();
   testIncompleteMonthExcluded();
   testDownwardTrendLowersProjection();

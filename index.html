@@ -10409,6 +10409,7 @@
       const avgLeadValue = metaReportParseAmount(point.avgLeadValue);
       const avgProfitPerWon = metaReportParseAmount(point.avgProfitPerWon);
       const totalLeadValue = metaReportRoundMoney(wonLeads * avgLeadValue);
+      const totalProfit = metaReportRoundMoney(wonLeads * avgProfitPerWon);
       return {
         ...point,
         spend,
@@ -10418,7 +10419,9 @@
         avgProfitPerWon,
         cpl: leads > 0 ? metaReportRoundMoney(spend / leads) : 0,
         totalLeadValue,
+        totalProfit,
         efficiencyIndex: spend > 0 ? totalLeadValue / spend : 0,
+        profitEfficiencyIndex: spend > 0 ? totalProfit / spend : 0,
       };
     }
 
@@ -10477,7 +10480,9 @@
             next.wonLeads = Math.max(0, Math.round(rescaledLeads * monthWinRate));
             next.totalLeadValue = metaReportRoundMoney(next.wonLeads * metaReportParseAmount(point.avgLeadValue));
             const spend = metaReportParseAmount(next.spend);
+            next.totalProfit = metaReportRoundMoney(next.wonLeads * metaReportParseAmount(point.avgProfitPerWon));
             next.efficiencyIndex = spend > 0 ? next.totalLeadValue / spend : 0;
+            next.profitEfficiencyIndex = spend > 0 ? next.totalProfit / spend : 0;
           }
           return next;
         });
@@ -10529,7 +10534,10 @@
       };
     }
 
-    function metaReportScenarioMonthlyTrend(months = [], elasticity = 0.75, { dampenHotStreak = false } = {}) {
+    function metaReportScenarioMonthlyTrend(months = [], elasticity = 0.75, {
+      dampenHotStreak = false,
+      metricKey = 'efficiencyIndex',
+    } = {}) {
       if (months.length < META_SCENARIO_MIN_TREND_MONTHS) {
         return { trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0 };
       }
@@ -10537,8 +10545,8 @@
       const medianSpend = metaReportScenarioMedian(spends) || 1;
       const residuals = months.map((point, index) => {
         const spend = metaReportParseAmount(point.spend);
-        const efficiencyIndex = metaReportParseAmount(point.efficiencyIndex);
-        const safeEfficiency = efficiencyIndex > 0 ? efficiencyIndex : 0.000001;
+        const metricValue = metaReportParseAmount(point[metricKey]);
+        const safeEfficiency = metricValue > 0 ? metricValue : 0.000001;
         const safeSpend = spend > 0 ? spend : medianSpend;
         return {
           x: index,
@@ -10548,9 +10556,9 @@
       const { slope, r } = metaReportScenarioLinearRegression(residuals);
       let trendRate = Math.max(-META_SCENARIO_MAX_MONTHLY_TREND, Math.min(META_SCENARIO_MAX_MONTHLY_TREND, slope));
       if (dampenHotStreak) {
-        const efficiencyValues = months.map((point) => metaReportParseAmount(point.efficiencyIndex)).filter((value) => value > 0);
+        const efficiencyValues = months.map((point) => metaReportParseAmount(point[metricKey])).filter((value) => value > 0);
         const fullMedian = metaReportScenarioMedian(efficiencyValues);
-        const recentAvg = months.slice(-3).reduce((sum, point) => sum + metaReportParseAmount(point.efficiencyIndex), 0) / Math.min(3, months.length);
+        const recentAvg = months.slice(-3).reduce((sum, point) => sum + metaReportParseAmount(point[metricKey]), 0) / Math.min(3, months.length);
         if (fullMedian > 0 && recentAvg > fullMedian * 1.15 && trendRate > 0) trendRate *= 0.5;
       }
       let trendDirection = 'flat';
@@ -10573,6 +10581,7 @@
       blendHistory = false,
       includeTrend = false,
       cautionStrongMonths = false,
+      hasBottomline = false,
     } = {}) {
       const presetElasticity = META_REPORT_SCENARIO_FIXED_ELASTICITY;
       const elasticity = metaReportScenarioCalibrateElasticity();
@@ -10584,7 +10593,11 @@
       const efficiency = blendHistory ? metaReportScenarioBlendEfficiency(pooled, recencyWeighted, 0.5) : recencyWeighted;
       let trendInfo = { trendRate: 0, trendDirection: 'flat', trendRatePct: 0, trendR: 0 };
       if (includeTrend) {
-        const computedTrend = metaReportScenarioMonthlyTrend(months, elasticity, { dampenHotStreak: cautionStrongMonths });
+        const trendMetricKey = hasBottomline ? 'profitEfficiencyIndex' : 'efficiencyIndex';
+        const computedTrend = metaReportScenarioMonthlyTrend(months, elasticity, {
+          dampenHotStreak: cautionStrongMonths,
+          metricKey: trendMetricKey,
+        });
         if (Math.abs(computedTrend.trendR) >= META_SCENARIO_TREND_R_THRESHOLD) trendInfo = computedTrend;
       }
       return { efficiency, elasticity, presetElasticity, ...trendInfo };
@@ -10795,7 +10808,12 @@
       smoothOutliers = true,
     } = {}) {
       const prepared = metaReportPrepareScenarioSeries(series, { windowMonths: monthWindow, asOfDate, smoothOutliers });
-      const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, { blendHistory, includeTrend, cautionStrongMonths });
+      const efficiencyResult = metaReportComputeScenarioEfficiency(prepared.months, {
+        blendHistory,
+        includeTrend,
+        cautionStrongMonths,
+        hasBottomline,
+      });
       let resolvedBaselineSpend = metaReportParseAmount(baselineSpend);
       if (!resolvedBaselineSpend) {
         resolvedBaselineSpend = resolveMetaReportScenarioBaselineSpend(series, prepared, {
@@ -14596,9 +14614,27 @@
       }, 350);
     }
 
+    function syncMetaReportScenarioControlValues() {
+      const slider = document.getElementById('meta-report-budget-multiplier');
+      const output = document.getElementById('meta-report-budget-multiplier-value');
+      if (slider) slider.value = String(metaReportsState.budgetMultiplier);
+      if (output) output.textContent = `${metaReportsState.budgetMultiplier.toFixed(1)}×`;
+
+      const baselineSelect = document.getElementById('meta-report-budget-baseline');
+      if (baselineSelect) {
+        baselineSelect.value = normalizeMetaReportBudgetBaseline(metaReportsState.budgetBaseline);
+      }
+
+      const windowSelect = document.getElementById('meta-report-scenario-month-window');
+      if (windowSelect) {
+        windowSelect.value = normalizeMetaReportScenarioMonthWindow(metaReportsState.scenarioMonthWindow);
+      }
+    }
+
     function bindMetaReportScenarioControls(payload, { editable = false } = {}) {
       if (!editable) return;
       const clientId = payload?.clientId || null;
+      syncMetaReportScenarioControlValues();
       const slider = document.getElementById('meta-report-budget-multiplier');
       const output = document.getElementById('meta-report-budget-multiplier-value');
       const baselineSelect = document.getElementById('meta-report-budget-baseline');
@@ -14729,6 +14765,10 @@
       const resolvedMonthPayload = resolveMetaReportActiveMonthPayload(payload) || monthPayload;
       const panel = document.getElementById('meta-report-month-panel');
       if (!panel) return;
+      if (payload) {
+        hydrateMetaReportSpendChartType(payload);
+        hydrateMetaReportScenarioSettings(payload);
+      }
       panel.innerHTML = renderMetaReportMonthBody(resolvedMonthPayload, {
         ...options,
         yearPayload: options.yearPayload || payload,
@@ -15864,6 +15904,8 @@
           metaReportsState.clientPayload = payload;
           metaReportsState.clientReportSettingsExpanded = false;
           metaReportsState.clientShareExpanded = false;
+          hydrateMetaReportSpendChartType(payload);
+          hydrateMetaReportScenarioSettings(payload);
           dashboard.innerHTML = renderMetaReportsClientPage(payload);
           metaReportsState.clientPageMounted = true;
           bindMetaReportsClientEvents(payload);
@@ -15917,6 +15959,8 @@
         await ensureMetaReportScenarioSource(payload, { editable: false });
         if (!metaReportsState.publicPageMounted) {
           metaReportsState.publicPayload = payload;
+          hydrateMetaReportSpendChartType(payload);
+          hydrateMetaReportScenarioSettings(payload);
           dashboard.innerHTML = renderPublicMetaReportPage(payload);
           metaReportsState.publicPageMounted = true;
           syncMetaReportPublicBranding(payload);
