@@ -552,8 +552,32 @@ function testLastMonthBaselineRequiresExactPreviousMonth() {
     asOfDate,
   });
 
-  assert.strictEqual(result.baselineSpend, 0);
-  assert.strictEqual(result.insufficientData, true);
+  assert.strictEqual(result.insufficientData, false);
+  approx(result.baselineSpend, 10804.5);
+  approx(result.projected.spend, 21609);
+}
+
+function testScenarioHistoryWindowWithFourMonths() {
+  const asOfDate = new Date('2026-08-13T12:00:00.000Z');
+  const series = [
+    { monthKey: '2026-05', spend: 12000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-05-31' },
+    { monthKey: '2026-06', spend: 13000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-06-30' },
+    { monthKey: '2026-07', spend: 14000, leads: 50, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-07-31' },
+    { monthKey: '2026-08', spend: 9609, leads: 40, wonLeads: 4, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2026-08-31' },
+  ];
+
+  for (const monthWindow of ['3', '6', '9', 'all']) {
+    const result = projectScenario({
+      series,
+      baselineMode: 'year',
+      multiplier: 2,
+      monthWindow,
+      asOfDate,
+    });
+    assert.strictEqual(result.insufficientData, false, `expected projection with window ${monthWindow}`);
+    assert.ok(result.prepared.monthsUsed >= 2, `expected at least 2 model months with window ${monthWindow}`);
+    assert.ok(result.baselineSpend > 0, `expected baseline spend with window ${monthWindow}`);
+  }
 }
 
 function testBaselineModesMatchProjectionSpend() {
@@ -691,6 +715,7 @@ function main() {
   testBudgetScenarioInsufficientData();
   testLastMonthBaselineMode();
   testLastMonthBaselineRequiresExactPreviousMonth();
+  testScenarioHistoryWindowWithFourMonths();
   testBaselineModesMatchProjectionSpend();
   testEfficiencyInsight();
   testLinearRegression();
