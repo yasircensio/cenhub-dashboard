@@ -4596,7 +4596,7 @@
     .meta-reports-page { padding-bottom: 32px; }
     .meta-report-client-page .meta-report-control-panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
-      box-shadow: var(--shadow-sm); margin-bottom: 16px; padding: 14px 16px 16px; width: 100%;
+      box-shadow: var(--shadow-sm); margin-bottom: 20px; padding: 14px 16px 18px; width: 100%;
     }
     .meta-report-control-panel.is-share-disabled { opacity: 0.92; }
     .meta-report-control-bar {
@@ -4611,6 +4611,9 @@
     }
     .meta-report-control-status { margin-bottom: 0; margin-top: 0; }
     .meta-report-control-status[hidden] { display: none !important; }
+    #meta-report-topline-source-host:not([hidden]) {
+      margin-top: 12px;
+    }
     .meta-report-control-status-grid {
       align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -4655,7 +4658,7 @@
       justify-content: space-between; padding: 12px 14px; width: 100%;
     }
     .meta-report-topline-source-wrap {
-      display: flex; flex-direction: column; gap: 8px; margin-top: 10px; width: 100%;
+      display: flex; flex-direction: column; gap: 10px; width: 100%;
     }
     .meta-report-topline-source-wrap.is-loading .meta-report-topline-summary {
       opacity: 0.65; pointer-events: none;
@@ -4744,7 +4747,7 @@
       .meta-report-control-bar { align-items: stretch; }
       .meta-report-control-bar-actions { margin-left: 0; width: 100%; }
     }
-    .meta-report-client-page .meta-report-tabs { margin: 0 0 20px; }
+    .meta-report-client-page .meta-report-tabs { margin: 20px 0 20px; }
     .meta-report-client-page .meta-report-month-panel {
       background: transparent; border: 0; border-radius: 0; display: flex; flex-direction: column;
       gap: 32px; padding: 0;
