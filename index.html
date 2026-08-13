@@ -4618,8 +4618,12 @@
       align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .meta-report-control-status-grid > .meta-report-share-summary,
-    .meta-report-control-status-grid > .meta-report-bottomline-summary {
+    .meta-report-control-status-grid > .meta-report-bottomline-summary,
+    .meta-report-control-status-grid > .meta-report-excel-sheet-summary {
       height: 100%; min-height: 52px;
+    }
+    .meta-report-control-status-grid > .meta-report-excel-sheet-summary {
+      grid-column: 1 / -1;
     }
     .meta-report-control-editors {
       display: flex; flex-direction: column; gap: 12px;
@@ -4650,6 +4654,7 @@
       border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
     }
     .meta-report-share-summary,
+    .meta-report-excel-sheet-summary,
     .meta-report-control-status-grid > .meta-report-bottomline-summary,
     .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary,
     .meta-report-topline-summary {
@@ -4682,24 +4687,30 @@
     }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
+    .meta-report-excel-sheet-summary-main,
     .meta-report-bottomline-summary-content {
       display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: 8px 16px; min-width: 0;
     }
     .meta-report-share-summary-row,
+    .meta-report-excel-sheet-summary-row,
     .meta-report-bottomline-summary-row {
       align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px;
     }
     .meta-report-share-summary-label,
+    .meta-report-excel-sheet-summary-label,
     .meta-report-bottomline-summary-label {
       color: var(--text-soft); font-size: 12px; font-weight: 600;
     }
     .meta-report-share-summary-value,
+    .meta-report-excel-sheet-summary-value,
     .meta-report-bottomline-summary-value {
       color: var(--text); font-size: 13px; font-weight: 600;
     }
     .meta-report-share-summary-value.is-on,
+    .meta-report-excel-sheet-summary-value.is-on,
     .meta-report-bottomline-summary-value.is-on { color: #15803d; }
     .meta-report-share-summary-value.is-off,
+    .meta-report-excel-sheet-summary-value.is-off,
     .meta-report-bottomline-summary-value.is-off { color: var(--text-soft); }
     .meta-report-share-editor[hidden] { display: none !important; }
     .meta-report-share-panel {
@@ -4742,11 +4753,6 @@
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
     }
     .meta-report-client-page .meta-report-toolbar-actions { margin-left: auto; }
-    .meta-report-excel-sheet-panel {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
-      margin-top: 14px; padding: 14px 16px;
-    }
-    .meta-report-excel-sheet-panel .meta-report-settings-card-head { margin-bottom: 0; }
     .meta-report-excel-sheet-row {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;
     }
@@ -8852,6 +8858,7 @@
       clientPageMounted: false,
       clientReportSettingsExpanded: false,
       clientShareExpanded: false,
+      clientExcelSheetExpanded: false,
       clientToplineDraftMode: null,
       clientToplineModalPayload: null,
       activeMonthKey: null,
@@ -9006,6 +9013,8 @@
       document.getElementById('meta-report-modal-root')?.remove();
       document.body.classList.remove('meta-report-modal-open');
       metaReportsState.clientShareExpanded = false;
+      metaReportsState.clientExcelSheetExpanded = false;
+      syncMetaReportControlPanelUi();
     }
 
     function openMetaReportModal(contentHtml, { wizard = false } = {}) {
@@ -9193,10 +9202,11 @@
       if (!panel) return;
       const shareExpanded = metaReportsState.clientShareExpanded;
       const reportExpanded = metaReportsState.clientReportSettingsExpanded;
+      const excelExpanded = metaReportsState.clientExcelSheetExpanded;
       panel.classList.toggle('is-editing-share', shareExpanded);
       panel.classList.toggle('is-editing-report', reportExpanded);
       const status = document.getElementById('meta-report-control-status');
-      if (status) status.hidden = shareExpanded || reportExpanded;
+      if (status) status.hidden = shareExpanded || reportExpanded || excelExpanded;
     }
 
     function setMetaReportShareExpanded(expanded) {
@@ -9275,11 +9285,45 @@
       return `<a class="admin-btn admin-btn--primary${prominent ? ' meta-report-excel-sheet-btn' : ''}" href="${esc(url)}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>`;
     }
 
-    function renderMetaReportExcelSheetSettings(settings = {}) {
+    function describeMetaReportExcelSheetLabel(url) {
+      if (!url) return 'Not set';
+      try {
+        const parsed = new URL(url);
+        const path = parsed.pathname.length > 24 ? `${parsed.pathname.slice(0, 24)}…` : parsed.pathname;
+        return `${parsed.hostname}${path}`;
+      } catch {
+        return url.length > 40 ? `${url.slice(0, 40)}…` : url;
+      }
+    }
+
+    function renderMetaReportExcelSheetSummary(settings = {}) {
+      const url = resolveMetaReportExcelSheetUrl(settings);
+      const label = describeMetaReportExcelSheetLabel(url);
+      return `
+        <div class="meta-report-excel-sheet-summary" id="meta-report-excel-sheet-summary">
+          <div class="meta-report-excel-sheet-summary-main">
+            <div class="meta-report-excel-sheet-summary-row">
+              <span class="meta-report-excel-sheet-summary-label">Excel sheet</span>
+              <span class="meta-report-excel-sheet-summary-value${url ? ' is-on' : ' is-off'}" id="meta-report-excel-sheet-summary-value">${esc(label)}</span>
+            </div>
+          </div>
+          <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-excel-sheet-edit">Edit</button>
+        </div>
+      `;
+    }
+
+    function renderMetaReportExcelSheetModalContent(payload) {
+      const settings = payload.settings || {};
       const url = resolveMetaReportExcelSheetUrl(settings) || '';
       return `
-        <div class="meta-report-excel-sheet-settings">
-          <div class="meta-report-excel-sheet-row">
+        <div class="meta-report-modal-head">
+          <h2 class="meta-report-modal-title">Excel sheet link</h2>
+          <button type="button" class="meta-report-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <p class="metrics-model-copy">Add a Google Sheets or Excel Online link. Clients see a “See Excel sheet” button on their report.</p>
+        <div class="meta-report-share-panel">
+          <div class="meta-report-share-field">
+            <label for="meta-report-excel-sheet-url">Spreadsheet URL</label>
             <input
               type="url"
               id="meta-report-excel-sheet-url"
@@ -9290,32 +9334,79 @@
               spellcheck="false"
               aria-label="Excel sheet URL"
             />
-            <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-excel-sheet-save">Save link</button>
-            ${url ? `<a class="admin-btn admin-btn--secondary admin-btn--small meta-report-excel-sheet-preview" href="${esc(url)}" target="_blank" rel="noopener noreferrer" id="meta-report-excel-sheet-preview">Preview</a>` : '<span class="meta-report-excel-sheet-preview" id="meta-report-excel-sheet-preview" hidden></span>'}
           </div>
-          <p class="meta-report-share-field-hint">Paste a Google Sheets or Excel Online link. Clients see a “See Excel sheet” button on their report.</p>
+          <div class="meta-report-share-editor-actions">
+            ${url ? `<a class="admin-btn admin-btn--ghost admin-btn--small" href="${esc(url)}" target="_blank" rel="noopener noreferrer" id="meta-report-excel-sheet-preview">Preview link</a>` : '<span id="meta-report-excel-sheet-preview" hidden></span>'}
+            <div class="meta-report-share-editor-actions-end">
+              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-meta-report-modal-close>Done</button>
+              <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-excel-sheet-save">Save link</button>
+            </div>
+          </div>
         </div>
       `;
     }
 
+    function openMetaReportExcelSheetModal(payload) {
+      metaReportsState.clientExcelSheetExpanded = true;
+      syncMetaReportControlPanelUi();
+      openMetaReportModal(renderMetaReportExcelSheetModalContent(payload));
+      bindMetaReportExcelSheetModalEvents(payload);
+    }
+
+    function updateMetaReportExcelSheetSummary(settings = {}) {
+      const summary = document.getElementById('meta-report-excel-sheet-summary');
+      if (!summary) return;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = renderMetaReportExcelSheetSummary(settings).trim();
+      const next = wrapper.firstElementChild;
+      if (!next) return;
+      summary.replaceWith(next);
+      bindMetaReportExcelSheetSummaryEvents(metaReportsState.clientPayload);
+    }
+
+    function bindMetaReportExcelSheetSummaryEvents(payload) {
+      const editBtn = document.getElementById('meta-report-excel-sheet-edit');
+      if (!editBtn || !payload) return;
+      editBtn.onclick = () => openMetaReportExcelSheetModal(payload);
+    }
+
+    function bindMetaReportExcelSheetModalEvents(payload) {
+      const clientId = payload.clientId;
+      const input = document.getElementById('meta-report-excel-sheet-url');
+      const saveBtn = document.getElementById('meta-report-excel-sheet-save');
+      if (!input || !saveBtn) return;
+
+      const save = async () => {
+        const previous = resolveMetaReportExcelSheetUrl(metaReportsState.clientPayload?.settings || {});
+        const nextValue = input.value.trim();
+        saveBtn.disabled = true;
+        try {
+          await saveMetaReportClientSettings(clientId, { metaReportExcelSheetUrl: nextValue || null }, () => {
+            input.value = previous || '';
+          });
+          syncMetaReportExcelSheetUi(metaReportsState.clientPayload?.settings || {});
+          closeMetaReportModal();
+        } finally {
+          saveBtn.disabled = false;
+        }
+      };
+
+      saveBtn.onclick = save;
+      input.onkeydown = (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          save();
+        }
+      };
+    }
+
     function syncMetaReportExcelSheetUi(settings = {}) {
       const url = resolveMetaReportExcelSheetUrl(settings);
-      const input = document.getElementById('meta-report-excel-sheet-url');
-      if (input) input.value = url || '';
-      const preview = document.getElementById('meta-report-excel-sheet-preview');
-      if (preview) {
-        if (url) {
-          preview.hidden = false;
-          preview.href = url;
-          preview.textContent = 'Preview';
-          preview.removeAttribute('aria-hidden');
-          preview.classList.add('admin-btn', 'admin-btn--secondary', 'admin-btn--small');
-        } else {
-          preview.hidden = true;
-          preview.removeAttribute('href');
-          preview.textContent = '';
-          preview.classList.remove('admin-btn', 'admin-btn--secondary', 'admin-btn--small');
-        }
+      const summaryValue = document.getElementById('meta-report-excel-sheet-summary-value');
+      if (summaryValue) {
+        summaryValue.textContent = describeMetaReportExcelSheetLabel(url);
+        summaryValue.classList.toggle('is-on', Boolean(url));
+        summaryValue.classList.toggle('is-off', !url);
       }
       const controlBarBtn = document.getElementById('meta-report-excel-sheet-toolbar-btn');
       if (controlBarBtn) {
@@ -9332,40 +9423,13 @@
       }
     }
 
-    function bindMetaReportExcelSheetEvents(clientId) {
-      const input = document.getElementById('meta-report-excel-sheet-url');
-      const saveBtn = document.getElementById('meta-report-excel-sheet-save');
-      if (!input || !saveBtn) return;
-
-      const save = async () => {
-        const previous = resolveMetaReportExcelSheetUrl(metaReportsState.clientPayload?.settings || {});
-        const nextValue = input.value.trim();
-        saveBtn.disabled = true;
-        try {
-          await saveMetaReportClientSettings(clientId, { metaReportExcelSheetUrl: nextValue || null }, () => {
-            input.value = previous || '';
-          });
-          syncMetaReportExcelSheetUi(metaReportsState.clientPayload?.settings || {});
-        } finally {
-          saveBtn.disabled = false;
-        }
-      };
-
-      saveBtn.onclick = save;
-      input.onkeydown = (event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          save();
-        }
-      };
-    }
-
     function renderMetaReportClientControlPanel(payload) {
       const settings = payload.settings || {};
       const shareExpanded = metaReportsState.clientShareExpanded;
       const reportExpanded = metaReportsState.clientReportSettingsExpanded;
+      const excelExpanded = metaReportsState.clientExcelSheetExpanded;
       const hasLink = Boolean(payload.reportUrl);
-      const statusHidden = shareExpanded || reportExpanded;
+      const statusHidden = shareExpanded || reportExpanded || excelExpanded;
       const missing = metaReportMonthsNeedingBackfill(payload);
       const resyncLabel = missing.length
         ? `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`
@@ -9391,17 +9455,12 @@
               ${resolveMetaReportExcelSheetUrl(settings) ? `<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="${esc(resolveMetaReportExcelSheetUrl(settings))}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>` : '<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="#" target="_blank" rel="noopener noreferrer" hidden>See Excel sheet</a>'}
             </div>
           </div>
-          <div class="meta-report-excel-sheet-panel" id="meta-report-excel-sheet-panel">
-            <div class="meta-report-settings-card-head">
-              <span class="meta-report-settings-card-title">Excel sheet link</span>
-            </div>
-            ${renderMetaReportExcelSheetSettings(settings)}
-          </div>
           ${hasLink ? `
             <div class="meta-report-control-status"${statusHidden ? ' hidden' : ''} id="meta-report-control-status">
               <div class="meta-report-control-status-grid">
                 ${renderMetaReportShareSummary(payload)}
                 ${renderMetaReportBottomlineFeeSummary(settings, 'meta-report')}
+                ${renderMetaReportExcelSheetSummary(settings)}
               </div>
             </div>
           ` : `
@@ -9428,6 +9487,7 @@
       syncMetaReportToolbarCopy(payload);
       updateMetaReportShareSummary(payload);
       updateMetaReportBottomlineFeeSummary(payload.settings || {}, 'meta-report');
+      updateMetaReportExcelSheetSummary(payload.settings || {});
       document.getElementById('meta-report-control-panel')?.classList.toggle('is-share-disabled', !payload.settings?.metaReportEnabled);
       const urlEl = document.getElementById('meta-report-share-url');
       if (urlEl && payload.reportUrl) urlEl.textContent = metaReportFullUrl(payload.reportUrl);
@@ -15715,6 +15775,7 @@
         syncMetaReportSettingsControls(settings, monthPayload);
 
         if (Object.prototype.hasOwnProperty.call(patch, 'metaReportExcelSheetUrl')) {
+          updateMetaReportExcelSheetSummary(settings);
           syncMetaReportExcelSheetUi(settings);
         }
 
@@ -16014,7 +16075,7 @@
       bindMetaReportCopyButtons();
       bindMetaReportBackfillButton(clientId);
       bindMetaReportBottomlineFeeEvents(clientId, 'meta-report');
-      bindMetaReportExcelSheetEvents(clientId);
+      bindMetaReportExcelSheetSummaryEvents(payload);
       bindMetaReportShareEvents(payload);
     }
 

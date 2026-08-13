@@ -4609,8 +4609,12 @@
       align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .meta-report-control-status-grid > .meta-report-share-summary,
-    .meta-report-control-status-grid > .meta-report-bottomline-summary {
+    .meta-report-control-status-grid > .meta-report-bottomline-summary,
+    .meta-report-control-status-grid > .meta-report-excel-sheet-summary {
       height: 100%; min-height: 52px;
+    }
+    .meta-report-control-status-grid > .meta-report-excel-sheet-summary {
+      grid-column: 1 / -1;
     }
     .meta-report-control-editors {
       display: flex; flex-direction: column; gap: 12px;
@@ -4641,6 +4645,7 @@
       border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px;
     }
     .meta-report-share-summary,
+    .meta-report-excel-sheet-summary,
     .meta-report-control-status-grid > .meta-report-bottomline-summary,
     .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary,
     .meta-report-topline-summary {
@@ -4673,24 +4678,30 @@
     }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
+    .meta-report-excel-sheet-summary-main,
     .meta-report-bottomline-summary-content {
       display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: 8px 16px; min-width: 0;
     }
     .meta-report-share-summary-row,
+    .meta-report-excel-sheet-summary-row,
     .meta-report-bottomline-summary-row {
       align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px;
     }
     .meta-report-share-summary-label,
+    .meta-report-excel-sheet-summary-label,
     .meta-report-bottomline-summary-label {
       color: var(--text-soft); font-size: 12px; font-weight: 600;
     }
     .meta-report-share-summary-value,
+    .meta-report-excel-sheet-summary-value,
     .meta-report-bottomline-summary-value {
       color: var(--text); font-size: 13px; font-weight: 600;
     }
     .meta-report-share-summary-value.is-on,
+    .meta-report-excel-sheet-summary-value.is-on,
     .meta-report-bottomline-summary-value.is-on { color: #15803d; }
     .meta-report-share-summary-value.is-off,
+    .meta-report-excel-sheet-summary-value.is-off,
     .meta-report-bottomline-summary-value.is-off { color: var(--text-soft); }
     .meta-report-share-editor[hidden] { display: none !important; }
     .meta-report-share-panel {
@@ -4733,11 +4744,6 @@
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
     }
     .meta-report-client-page .meta-report-toolbar-actions { margin-left: auto; }
-    .meta-report-excel-sheet-panel {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
-      margin-top: 14px; padding: 14px 16px;
-    }
-    .meta-report-excel-sheet-panel .meta-report-settings-card-head { margin-bottom: 0; }
     .meta-report-excel-sheet-row {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;
     }
