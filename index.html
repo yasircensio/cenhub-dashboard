@@ -9625,9 +9625,16 @@
       onSuccess,
     }) {
       const manualBtn = document.getElementById(`${prefix}-use-manual-month`);
+      const restoreBtn = document.getElementById(`${prefix}-restore-month-source`);
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:bindMetaMonthSourceOverrideEvents',message:'bind manual/restore buttons',data:{prefix,manualBtnFound:!!manualBtn,restoreBtnFound:!!restoreBtn,ghlEnabled:Boolean(settings?.metaReportGhlDataEnabled),toplineMode:settings?.metaReportToplineMode||null,activeMonthKey:getMonthKey?.()||null},timestamp:Date.now(),hypothesisId:'A-B-E'})}).catch(()=>{});
+      // #endregion
       if (manualBtn) {
         manualBtn.onclick = async () => {
           const monthKey = getMonthKey();
+          // #region agent log
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:use-manual-click',message:'use manual clicked',data:{prefix,monthKey,clientId},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
+          // #endregion
           if (!monthKey) return;
           manualBtn.disabled = true;
           try {
@@ -9635,9 +9642,15 @@
               `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/use-manual`,
               { method: 'POST', body: '{}' },
             );
+            // #region agent log
+            fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:use-manual-result',message:'use manual API result',data:{monthKey,dataSource:result?.monthPayload?.dataSource||null,manualOverride:result?.monthPayload?.manualOverride??null,toplineSource:result?.month?.toplineSource||null},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             onSuccess(result, monthKey);
             showToast('Manual values enabled for this month', 'success');
           } catch (error) {
+            // #region agent log
+            fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:use-manual-error',message:'use manual API error',data:{monthKey,errorMessage:error?.message||String(error)},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             showToast(error.message || 'Could not switch to manual mode', 'error');
           } finally {
             manualBtn.disabled = false;
@@ -9645,7 +9658,6 @@
         };
       }
 
-      const restoreBtn = document.getElementById(`${prefix}-restore-month-source`);
       if (restoreBtn) {
         restoreBtn.onclick = async () => {
           const monthKey = getMonthKey();
@@ -9746,6 +9758,10 @@
         payload,
       );
       bindMetaReportsClientEditEvents(payload.clientId, payload);
+      // #region agent log
+      const _dbgManualBtn = document.getElementById('meta-report-use-manual-month');
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:refreshMetaReportMonthPanel',message:'after panel refresh',data:{hasManualBtn:!!_dbgManualBtn,hasOnclick:!!_dbgManualBtn?.onclick,reboundManualEvents:false},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       refreshMetaReportBackfillControl(payload);
     }
 
@@ -9968,6 +9984,10 @@
 
         if (editable && payload.clientId) {
           bindMetaReportsClientEditEvents(payload.clientId, payload);
+          // #region agent log
+          const _dbgTabManualBtn = document.getElementById('meta-report-use-manual-month');
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:switchMetaReportMonthTab',message:'after tab panel refresh',data:{monthKey,hasManualBtn:!!_dbgTabManualBtn,hasOnclick:!!_dbgTabManualBtn?.onclick,reboundManualEvents:false},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
         }
 
         syncMetaReportSettingsControls(payload.settings || {}, resolveMetaReportActiveMonthPayload(payload));
@@ -16386,6 +16406,9 @@
       if (resolveClientToplineMode(settings) !== 'cenhub') return '';
       const source = resolveMetaToplineSource(monthPayload);
       const isManual = source === 'manual';
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b952dc'},body:JSON.stringify({sessionId:'b952dc',location:'index.html:renderMetaReportMonthManualRow',message:'render manual row',data:{prefix,globalMode:resolveClientToplineMode(settings),source,isManual,isGhlReadOnlyContext:source==='ghl'},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
 
       if (!isManual) {
         return `
