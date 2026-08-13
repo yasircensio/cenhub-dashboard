@@ -100,7 +100,7 @@ function main() {
     'loadMetaReportsCustomValuesPage',
     'IS_ADMIN_META_REPORTS_GHL_CLIENTS',
     'loadMetaReportsGhlClientsPage',
-    'renderMetaToplineSourcePanel',
+    'renderMetaToplineModeSection',
     'bindMetaToplineSourceEvents',
     'IS_ADMIN_META_REPORTS',
     'loadMetaReportsHubPage',

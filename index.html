@@ -5645,25 +5645,38 @@
       margin: 0 0 14px; padding: 10px 12px; border-radius: 10px;
       background: var(--panel-soft); border: 1px solid var(--border); font-size: 13px; color: var(--text-muted);
     }
-    .meta-cv-ghl-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
-    .meta-topline-source-panel {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
-      margin: 0 0 16px; padding: 14px 16px;
+    .meta-cv-ghl-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+    .meta-topline-subsection {
+      border-top: 1px solid var(--border); margin: 4px 0 0; padding: 16px 0 0;
     }
-    .meta-report-control-panel .meta-topline-source-panel { margin: 12px 0 0; }
-    .meta-topline-source-head {
-      align-items: flex-start; display: flex; gap: 12px; justify-content: space-between; margin-bottom: 10px;
+    .meta-topline-subsection-label {
+      color: var(--text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      margin: 0 0 10px; text-transform: uppercase;
     }
-    .meta-topline-source-title { color: var(--text); font-size: 14px; font-weight: 700; margin: 0 0 2px; }
-    .meta-topline-source-sub { color: var(--text-soft); font-size: 12px; line-height: 1.4; margin: 0; }
-    .meta-topline-source-detail {
-      color: var(--text-muted); font-size: 13px; line-height: 1.45; margin: 0 0 12px;
+    .meta-topline-mode-pills {
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px;
     }
-    .meta-topline-source-panel.is-compact { margin-bottom: 12px; padding: 12px 14px; }
-    .meta-topline-source-panel.is-compact .meta-cv-ghl-actions { margin-bottom: 10px; }
-    .meta-report-tab.is-complete:not(.is-active) { border-color: rgba(22, 163, 74, 0.35); }
-    .meta-report-tab.is-partial:not(.is-active) { border-color: rgba(217, 119, 6, 0.35); }
-    .meta-report-tab.is-empty:not(.is-active) { border-style: dashed; }
+    .meta-topline-mode-pill {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text-soft); cursor: pointer; font-size: 13px; font-weight: 600; padding: 8px 16px;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+    .meta-topline-mode-pill:hover:not(:disabled) { border-color: var(--border-strong); }
+    .meta-topline-mode-pill.is-active {
+      background: #fff8f3; border-color: var(--primary); box-shadow: 0 0 0 1px rgba(196, 106, 47, 0.1); color: var(--primary);
+    }
+    .meta-topline-mode-pill:disabled { cursor: default; opacity: 0.55; }
+    .meta-topline-mode-status {
+      color: var(--text); font-size: 13px; font-weight: 600; line-height: 1.45; margin: 0 0 6px;
+    }
+    .meta-topline-mode-detail {
+      color: var(--text-muted); font-size: 12px; line-height: 1.45; margin: 0 0 12px;
+    }
+    .meta-topline-manual-link {
+      background: none; border: 0; color: var(--primary); cursor: pointer; font: inherit;
+      font-size: 12px; font-weight: 600; margin: 0 0 12px; padding: 0; text-decoration: underline;
+    }
+    .meta-topline-manual-link:disabled { cursor: default; opacity: 0.55; text-decoration: none; }
     .meta-report-edit-note {
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 12px;
     }
@@ -8730,15 +8743,15 @@
         saving: false,
         settingsSaving: false,
         settingsSavingScope: null,
-        overrideManual: false,
+        toplineUiMode: null,
       },
       ghlClients: {
         mounted: false,
         data: null,
         savingClientId: null,
       },
-      clientOverrideManual: false,
       clientToplineSaving: false,
+      clientToplineUiMode: null,
     };
 
     const META_HUB_FILTER_OPTIONS = [
@@ -9021,18 +9034,6 @@
       const resyncLabel = missing.length
         ? `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Meta`
         : `${ICON_SYNC} Re-sync year from Meta`;
-      const activeKey = metaReportsState.activeMonthKey || payload.monthKeys?.[payload.monthKeys.length - 1] || null;
-      const monthPayload = activeKey ? payload.months?.[activeKey] : null;
-      const toplineCardHtml = isMetaReportGhlListClient(settings)
-        ? `<div id="meta-report-topline-card">${renderMetaToplineSourcePanel({
-          prefix: 'meta-report',
-          monthKey: activeKey,
-          monthPayload,
-          settings,
-          saving: metaReportsState.clientToplineSaving,
-          overrideManual: metaReportsState.clientOverrideManual,
-        })}</div>`
-        : '';
 
       return `
         <div class="meta-report-control-panel${shareExpanded ? ' is-editing-share' : ''}${reportExpanded ? ' is-editing-report' : ''}${settings.metaReportEnabled ? '' : ' is-share-disabled'}" id="meta-report-control-panel">
@@ -9053,7 +9054,6 @@
               ${hasLink ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(payload.reportUrl)}"${settings.metaReportEnabled ? '' : ' disabled'}>Copy link</button>` : ''}
             </div>
           </div>
-          ${toplineCardHtml}
           ${hasLink ? `
             <div class="meta-report-control-status"${statusHidden ? ' hidden' : ''} id="meta-report-control-status">
               <div class="meta-report-control-status-grid">
@@ -9368,38 +9368,25 @@
     function renderMetaReportsClientTabs(payload) {
       const monthKeys = payload.monthKeys || [];
       const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
-      const settings = payload.settings || {};
-      const showGhlStatus = isMetaReportGhlListClient(settings);
-      const requireProfit = Boolean(settings.metaReportShowBottomline);
-      return monthKeys.map((key) => {
-        const monthPayload = payload.months?.[key] || null;
-        const status = classifyMetaReportMonthInputStatus(monthPayload, requireProfit);
-        const source = resolveMetaToplineSource(monthPayload);
-        const sourceBadge = showGhlStatus && source !== 'meta' ? metaCvSourceBadgeHtml(source) : '';
-        return `
-          <button type="button" class="meta-report-tab is-${esc(status)}${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}" title="${esc(metaMonthLabel(key))} · ${esc(status)}${showGhlStatus ? ` · ${source}` : ''}">${esc(metaMonthLabel(key))}${sourceBadge}</button>
-        `;
-      }).join('');
+      return monthKeys.map((key) => `
+        <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
+      `).join('');
     }
 
-    function syncMetaReportToplineCard(payload) {
-      const card = document.getElementById('meta-report-topline-card');
-      if (!card || !payload) return;
+    function syncMetaReportToplineSection(payload) {
+      const section = document.getElementById('meta-report-topline-section');
+      if (!section || !payload) return;
       const settings = payload.settings || {};
-      if (!isMetaReportGhlListClient(settings)) {
-        card.innerHTML = '';
-        card.hidden = true;
-        return;
-      }
-      card.hidden = false;
-      const activeKey = metaReportsState.activeMonthKey || payload.monthKeys?.[payload.monthKeys.length - 1] || null;
-      card.innerHTML = renderMetaToplineSourcePanel({
+      if (!isMetaReportGhlListClient(settings)) return;
+      const activeKey = metaReportsState.activeMonthKey;
+      const monthPayload = activeKey ? payload.months?.[activeKey] : null;
+      section.outerHTML = renderMetaToplineModeSection({
         prefix: 'meta-report',
         monthKey: activeKey,
-        monthPayload: activeKey ? payload.months?.[activeKey] : null,
+        monthPayload,
         settings,
         saving: metaReportsState.clientToplineSaving,
-        overrideManual: metaReportsState.clientOverrideManual,
+        uiPreference: metaReportsState.clientToplineUiMode,
       });
       bindMetaReportToplineEvents(payload.clientId, payload);
     }
@@ -9411,30 +9398,27 @@
         getMonthKey: () => metaReportsState.activeMonthKey,
         getYear: () => metaReportsState.selectedYear,
         getMonthRecord: (monthKey) => payload?.months?.[monthKey] || null,
+        getUiPreference: () => metaReportsState.clientToplineUiMode,
         setSaving: (isPending) => {
           metaReportsState.clientToplineSaving = isPending;
-          syncMetaReportToplineCard(payload);
+          syncMetaReportToplineSection(payload);
         },
-        setOverrideManual: (value) => {
-          metaReportsState.clientOverrideManual = value;
+        setUiPreference: (value) => {
+          metaReportsState.clientToplineUiMode = value;
         },
         onMonthUpdated: async (result, monthKey, options = {}) => {
           if (options.yearSync) {
+            metaReportsState.clientToplineUiMode = null;
             await loadMetaReportsClientPage({ silent: true });
             return;
           }
           if (result?.monthPayload && monthKey) {
             payload.months = payload.months || {};
             payload.months[monthKey] = result.monthPayload;
+            metaReportsState.clientToplineUiMode = null;
             refreshMetaReportMonthPanel(result.monthPayload);
           } else if (options.refreshUiOnly) {
             refreshMetaReportMonthPanel(payload.months?.[metaReportsState.activeMonthKey]);
-          }
-          syncMetaReportToplineCard(payload);
-          const tabsEl = document.querySelector('.meta-report-tabs');
-          if (tabsEl) {
-            tabsEl.innerHTML = renderMetaReportsClientTabs(payload);
-            bindMetaReportsClientTabEvents(payload);
           }
         },
       });
@@ -9505,7 +9489,7 @@
         payload,
       );
       bindMetaReportsClientEditEvents(payload.clientId, payload);
-      syncMetaReportToplineCard(payload);
+      syncMetaReportToplineSection(payload);
       refreshMetaReportBackfillControl(payload);
     }
 
@@ -9561,7 +9545,7 @@
         bindMetaReportsClientTabEvents(payload);
       }
 
-      syncMetaReportToplineCard(payload);
+      syncMetaReportToplineSection(payload);
 
       const panel = document.getElementById('meta-report-month-panel');
       if (panel) {
@@ -9692,7 +9676,7 @@
         metaReportsState.reportViewMode = 'monthly';
       }
       metaReportsState.activeMonthKey = monthKey;
-      if (editable) metaReportsState.clientOverrideManual = false;
+      if (editable) metaReportsState.clientToplineUiMode = null;
       const payload = metaReportsState.clientPayload || metaReportsState.publicPayload;
       if (!payload) return;
 
@@ -9700,7 +9684,9 @@
         tab.classList.toggle('is-active', tab.getAttribute('data-meta-month-tab') === monthKey);
       });
 
-      if (editable) syncMetaReportToplineCard(payload);
+      if (editable) {
+        /* topline section re-rendered via refreshMetaReportMonthPanel */
+      }
 
       const { series } = resolveMetaReportChartSeries(payload);
       if (series.length) metaReportsState.chartSeries = series;
@@ -14571,24 +14557,26 @@
       const tabBounds = tabMonthKey ? metaReportMonthBounds(tabMonthKey) : null;
       const resolvedSettings = settings || yearPayload?.settings || {};
       const isGhlListClient = isMetaReportGhlListClient(resolvedSettings);
-      const overrideManual = Boolean(metaReportsState.clientOverrideManual);
+      const uiMode = resolveMetaToplineUiMode(monthPayload, metaReportsState.clientToplineUiMode);
       const toplineSource = resolveMetaToplineSource(monthPayload);
-      const isGhlReadOnly = isGhlListClient && toplineSource === 'ghl' && !overrideManual;
-      const showManualLeads = isGhlListClient && (overrideManual || toplineSource === 'manual');
+      const isGhlReadOnly = isGhlListClient && uiMode === 'cenhub' && toplineSource === 'ghl';
+      const showManualLeads = isGhlListClient && uiMode === 'cenhub' && toplineSource !== 'ghl';
       let editPanelHtml = '';
       if (editable && monthPayload && !monthPayload.meta?.emptyMonth && tabBounds) {
         const readOnlyAttr = isGhlReadOnly ? ' readonly' : '';
-        const disabledAttr = isGhlReadOnly ? ' disabled' : '';
         const manualLeadsValue = monthPayload.manualLeads ?? monthPayload.inputs?.manualLeads ?? '';
-        const editNote = isGhlListClient
-          ? (isGhlReadOnly
-            ? 'Values come from Cenhub. Use the topline panel above to sync or enable manual override.'
-            : 'These fields drive Topline KPI\'er. Ad spend comes from Meta.')
-          : 'These fields drive Topline KPI\'er. Ad spend comes from Meta.';
+        const toplineSectionHtml = isGhlListClient ? renderMetaToplineModeSection({
+          prefix: 'meta-report',
+          monthKey: tabMonthKey,
+          monthPayload,
+          settings: resolvedSettings,
+          saving: metaReportsState.clientToplineSaving,
+          uiPreference: metaReportsState.clientToplineUiMode,
+        }) : '';
         editPanelHtml = `
           <div class="meta-report-edit-panel" id="meta-report-edit-panel">
             <h3>Edit month inputs · ${esc(metaMonthLabel(tabMonthKey))}</h3>
-            <p class="meta-report-edit-note">${esc(editNote)}</p>
+            <p class="meta-report-edit-note">These fields drive Topline KPI'er. Ad spend comes from Meta.</p>
             <div class="meta-report-edit-grid">
               <label>Period start<input type="date" id="meta-report-period-start" value="${esc(tabBounds.start)}" /></label>
               <label>Period end<input type="date" id="meta-report-period-end" value="${esc(tabBounds.end)}" /></label>
@@ -14597,6 +14585,7 @@
               <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}"${readOnlyAttr} /></label>
               <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}"${readOnlyAttr} /></label>
             </div>
+            ${toplineSectionHtml}
             <div class="meta-report-edit-actions">
               <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Meta</button>
               <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month"${isGhlReadOnly ? ' disabled' : ''}>Save month</button>
@@ -15424,8 +15413,10 @@
             const monthKey = metaReportsState.activeMonthKey;
             const monthPayload = payload?.months?.[monthKey];
             const settings = payload?.settings || {};
+            const uiMode = resolveMetaToplineUiMode(monthPayload, metaReportsState.clientToplineUiMode);
             const manualMode = isMetaReportGhlListClient(settings)
-              && (metaReportsState.clientOverrideManual || resolveMetaToplineSource(monthPayload) === 'manual');
+              && uiMode === 'cenhub'
+              && resolveMetaToplineSource(monthPayload) !== 'ghl';
             const body = {
               periodStart: document.getElementById('meta-report-period-start')?.value,
               periodEnd: document.getElementById('meta-report-period-end')?.value,
@@ -15685,11 +15676,23 @@
       ));
     }
 
-    function metaCvSourceBadgeHtml(source) {
-      if (!source || source === 'meta') return '<span class="meta-cv-source-badge is-meta">Meta</span>';
-      if (source === 'ghl') return '<span class="meta-cv-source-badge is-ghl">GHL</span>';
-      if (source === 'manual') return '<span class="meta-cv-source-badge is-manual">Manual</span>';
-      return '';
+    function renderMetaCvMonthPills(client, monthKeys = []) {
+      const selectedClientId = metaReportsState.customValues.selectedClientId;
+      const selectedMonthKey = metaReportsState.customValues.selectedMonthKey;
+      return monthKeys.map((monthKey) => {
+        const monthRow = client.months?.[monthKey] || {};
+        const status = monthRow.status || 'empty';
+        const isActive = selectedClientId === client.clientId && selectedMonthKey === monthKey;
+        return `
+          <button
+            type="button"
+            class="meta-cv-month-pill is-${esc(status)}${isActive ? ' is-active' : ''}"
+            data-meta-cv-client="${esc(client.clientId)}"
+            data-meta-cv-month="${esc(monthKey)}"
+            title="${esc(metaCvShortMonth(monthKey))} · ${esc(status)}"
+          >${esc(metaCvShortMonth(monthKey))}</button>
+        `;
+      }).join('');
     }
 
     function isMetaReportGhlListClient(settings = {}) {
@@ -15710,74 +15713,96 @@
       return 'empty';
     }
 
-    function renderMetaToplineSourceDetail(monthPayload, { overrideManual = false } = {}) {
+    function resolveMetaToplineUiMode(monthPayload, uiPreference = null) {
+      if (uiPreference === 'cenhub' || uiPreference === 'meta') return uiPreference;
+      const source = resolveMetaToplineSource(monthPayload);
+      return source === 'meta' ? 'meta' : 'cenhub';
+    }
+
+    function monthHasCenhubSnapshot(monthPayload) {
+      const source = resolveMetaToplineSource(monthPayload);
+      if (source === 'ghl') return true;
+      const ghlTotals = monthPayload?.ghlTotals || {};
+      return Boolean(
+        monthPayload?.ghlSyncedAt
+        || ghlTotals.leads != null
+        || ghlTotals.wonLeads != null,
+      );
+    }
+
+    function renderMetaToplineModeCopy(monthPayload, uiMode) {
       const source = resolveMetaToplineSource(monthPayload);
       const ghlTotals = monthPayload?.ghlTotals || {};
       const ghlLeads = ghlTotals.leads ?? monthPayload?.ghlLeads;
       const ghlWon = ghlTotals.wonLeads ?? monthPayload?.ghlWonLeads;
       const ghlRevenue = ghlTotals.totalRevenue ?? monthPayload?.ghlTotalRevenue;
       const ghlProfit = ghlTotals.totalProfit ?? monthPayload?.ghlTotalProfit;
+      const syncedLine = monthPayload?.ghlSyncedAt
+        ? `Last synced ${metaCvFormatUpdatedAt(monthPayload.ghlSyncedAt)}.`
+        : '';
 
-      if (source === 'ghl' && !overrideManual) {
-        if (!monthPayload?.ghlSyncedAt && ghlLeads == null && ghlWon == null) {
-          return 'No Cenhub data for this month yet. Sync to pull from dashboard snapshots.';
-        }
-        if (ghlLeads != null || ghlWon != null || ghlRevenue != null || ghlProfit != null) {
-          return `Leads ${ghlLeads != null ? ghlLeads : '—'} · Won ${ghlWon != null ? ghlWon : '—'} · Revenue ${ghlRevenue != null ? ghlRevenue : '—'} · Profit ${ghlProfit != null ? ghlProfit : '—'}`;
-        }
-        return 'Cenhub snapshot synced — topline values drive this month\'s report.';
+      if (uiMode === 'meta') {
+        return {
+          status: 'Using Meta analytics for topline KPIs.',
+          detail: 'Ad spend still comes from Meta. Switch to Cenhub to use dashboard snapshot data.',
+        };
       }
-      if (source === 'manual' || overrideManual) {
-        return 'Manual override active — edit values below and save.';
+
+      if (source === 'ghl') {
+        const totals = `Leads ${ghlLeads != null ? ghlLeads : '—'} · Won ${ghlWon != null ? ghlWon : '—'} · Revenue ${ghlRevenue != null ? ghlRevenue : '—'} · Profit ${ghlProfit != null ? ghlProfit : '—'}`;
+        return {
+          status: 'Using Cenhub snapshot for this month.',
+          detail: syncedLine ? `${syncedLine} ${totals}` : totals,
+        };
       }
-      return 'Topline uses Meta metrics until you sync from Cenhub.';
+
+      if (source === 'manual') {
+        return {
+          status: 'Manual values for this month.',
+          detail: 'Enter won leads and averages below, then save.',
+        };
+      }
+
+      return {
+        status: 'No Cenhub data for this month yet.',
+        detail: 'Sync from Cenhub or enter values manually below, then save.',
+      };
     }
 
-    function renderMetaToplineSourcePanel({
+    function renderMetaToplineModeSection({
       prefix,
       monthKey,
       monthPayload,
       settings = {},
       saving = false,
-      overrideManual = false,
-      showOverrideToggle = true,
-      compact = false,
+      uiPreference = null,
     } = {}) {
       if (!isMetaReportGhlListClient(settings)) return '';
 
+      const uiMode = resolveMetaToplineUiMode(monthPayload, uiPreference);
       const source = resolveMetaToplineSource(monthPayload);
-      const sourceLabel = source === 'ghl'
-        ? 'Sourced from Cenhub snapshot'
-        : (source === 'manual' ? 'Manual override' : 'Meta metrics');
-      const monthLabel = monthKey ? metaMonthLabel(monthKey) : 'This month';
-      const syncedLine = monthPayload?.ghlSyncedAt
-        ? ` · Synced ${metaCvFormatUpdatedAt(monthPayload.ghlSyncedAt)}`
-        : '';
-      const detail = renderMetaToplineSourceDetail(monthPayload, { overrideManual });
+      const copy = renderMetaToplineModeCopy(monthPayload, uiMode);
       const disabledAttr = saving ? ' disabled' : '';
       const hasGhl = settings.hasGhl !== false;
+      const showCenhubActions = uiMode === 'cenhub';
+      const showManualLink = uiMode === 'cenhub' && source === 'ghl';
 
       return `
-        <div class="meta-topline-source-panel${compact ? ' is-compact' : ''}" data-meta-topline-prefix="${esc(prefix)}">
-          <div class="meta-topline-source-head">
-            <div>
-              <div class="meta-topline-source-title">Topline data · ${esc(monthLabel)}</div>
-              <p class="meta-topline-source-sub">${esc(sourceLabel)}${syncedLine ? esc(syncedLine) : ''}</p>
+        <div class="meta-topline-subsection" id="${esc(prefix)}-topline-section" data-meta-topline-prefix="${esc(prefix)}">
+          <div class="meta-topline-subsection-label">Topline source</div>
+          <div class="meta-topline-mode-pills" role="group" aria-label="Topline source">
+            <button type="button" class="meta-topline-mode-pill${uiMode === 'cenhub' ? ' is-active' : ''}" id="${esc(prefix)}-mode-cenhub" data-meta-topline-mode="cenhub"${disabledAttr}>Cenhub</button>
+            <button type="button" class="meta-topline-mode-pill${uiMode === 'meta' ? ' is-active' : ''}" id="${esc(prefix)}-mode-meta" data-meta-topline-mode="meta"${disabledAttr}>Meta analytics</button>
+          </div>
+          <p class="meta-topline-mode-status">${esc(copy.status)}</p>
+          <p class="meta-topline-mode-detail">${esc(copy.detail)}</p>
+          ${showManualLink ? `<button type="button" class="meta-topline-manual-link" id="${esc(prefix)}-use-manual"${disabledAttr}>Enter manually anyway</button>` : ''}
+          ${showCenhubActions ? `
+            <div class="meta-cv-ghl-actions">
+              <button type="button" class="admin-btn admin-btn--secondary" id="${esc(prefix)}-sync-ghl"${disabledAttr || !hasGhl ? ' disabled' : ''}${!hasGhl ? ' title="GHL not connected"' : ''}>Sync with Cenhub</button>
+              <button type="button" class="admin-btn admin-btn--ghost" id="${esc(prefix)}-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}>Sync year…</button>
+              <button type="button" class="admin-btn admin-btn--ghost" id="${esc(prefix)}-refresh-snapshot"${disabledAttr || !hasGhl ? ' disabled' : ''}>Refresh Cenhub data</button>
             </div>
-            ${metaCvSourceBadgeHtml(source)}
-          </div>
-          <p class="meta-topline-source-detail">${esc(detail)}</p>
-          <div class="meta-cv-ghl-actions">
-            <button type="button" class="admin-btn admin-btn--secondary" id="${esc(prefix)}-sync-ghl"${disabledAttr || !hasGhl ? ' disabled' : ''}${!hasGhl ? ' title="GHL not connected"' : ''}>Sync with Cenhub</button>
-            <button type="button" class="admin-btn admin-btn--ghost" id="${esc(prefix)}-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}>Sync year…</button>
-            <button type="button" class="admin-btn admin-btn--ghost" id="${esc(prefix)}-refresh-snapshot"${disabledAttr || !hasGhl ? ' disabled' : ''}>Refresh Cenhub data</button>
-            ${source !== 'meta' ? `<button type="button" class="admin-btn admin-btn--ghost" id="${esc(prefix)}-use-meta"${disabledAttr}>Use Meta metrics</button>` : ''}
-          </div>
-          ${showOverrideToggle ? `
-            <label style="display:flex;align-items:center;gap:8px;margin:0;font-size:13px">
-              <input type="checkbox" id="${esc(prefix)}-override-ghl"${overrideManual ? ' checked' : ''}${disabledAttr} />
-              Override GHL — enter manually
-            </label>
           ` : ''}
         </div>
       `;
@@ -15790,30 +15815,71 @@
       getYear,
       getMonthRecord,
       setSaving,
-      getOverrideManual,
-      setOverrideManual,
+      getUiPreference,
+      setUiPreference,
       onMonthUpdated,
     }) {
       if (!clientId || !prefix) return;
 
-      const overrideToggle = document.getElementById(`${prefix}-override-ghl`);
-      if (overrideToggle) {
-        overrideToggle.onchange = async () => {
-          const next = overrideToggle.checked;
-          if (setOverrideManual) setOverrideManual(next);
+      const cenhubModeBtn = document.getElementById(`${prefix}-mode-cenhub`);
+      if (cenhubModeBtn) {
+        cenhubModeBtn.onclick = async () => {
+          if (cenhubModeBtn.disabled) return;
           const monthKey = getMonthKey?.();
-          if (next && monthKey) {
-            try {
-              await adminFetch(
-                `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/use-manual`,
-                { method: 'POST', body: '{}' },
-              );
-              if (onMonthUpdated) await onMonthUpdated({}, monthKey);
-            } catch (error) {
-              showToast(error.message || 'Could not switch to manual mode', 'error');
-            }
-          }
+          const month = getMonthRecord?.(monthKey);
+          const currentMode = resolveMetaToplineUiMode(month, getUiPreference?.());
+          if (currentMode === 'cenhub') return;
+          if (setUiPreference) setUiPreference('cenhub');
           if (onMonthUpdated) await onMonthUpdated({}, monthKey, { refreshUiOnly: true });
+        };
+      }
+
+      const metaModeBtn = document.getElementById(`${prefix}-mode-meta`);
+      if (metaModeBtn) {
+        metaModeBtn.onclick = async () => {
+          if (metaModeBtn.disabled) return;
+          const monthKey = getMonthKey?.();
+          const month = getMonthRecord?.(monthKey);
+          const currentMode = resolveMetaToplineUiMode(month, getUiPreference?.());
+          if (currentMode === 'meta') return;
+          if (!monthKey) return;
+          if (setSaving) setSaving(true);
+          try {
+            const result = await adminFetch(
+              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/use-meta`,
+              { method: 'POST', body: '{}' },
+            );
+            if (setUiPreference) setUiPreference(null);
+            if (onMonthUpdated) await onMonthUpdated(result, monthKey);
+            showToast('Using Meta analytics for this month', 'success');
+          } catch (error) {
+            showToast(error.message || 'Update failed', 'error');
+          } finally {
+            if (setSaving) setSaving(false);
+          }
+        };
+      }
+
+      const manualLink = document.getElementById(`${prefix}-use-manual`);
+      if (manualLink) {
+        manualLink.onclick = async () => {
+          if (manualLink.disabled) return;
+          const monthKey = getMonthKey?.();
+          if (!monthKey) return;
+          if (setSaving) setSaving(true);
+          try {
+            const result = await adminFetch(
+              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/use-manual`,
+              { method: 'POST', body: '{}' },
+            );
+            if (setUiPreference) setUiPreference('cenhub');
+            if (onMonthUpdated) await onMonthUpdated(result, monthKey);
+            showToast('Manual entry enabled for this month', 'success');
+          } catch (error) {
+            showToast(error.message || 'Could not switch to manual mode', 'error');
+          } finally {
+            if (setSaving) setSaving(false);
+          }
         };
       }
 
@@ -15834,7 +15900,7 @@
               `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/sync-ghl`,
               { method: 'POST', body: JSON.stringify({ overwriteManual }) },
             );
-            if (setOverrideManual) setOverrideManual(false);
+            if (setUiPreference) setUiPreference('cenhub');
             if (onMonthUpdated) await onMonthUpdated(result, monthKey);
             showToast('Synced from Cenhub snapshot', 'success');
           } catch (error) {
@@ -15871,6 +15937,7 @@
               `/api/meta-reports/clients/${encodeURIComponent(clientId)}/sync-ghl-year?year=${encodeURIComponent(year)}`,
               { method: 'POST', body: JSON.stringify({ skipManual, overwriteManual }) },
             );
+            if (setUiPreference) setUiPreference(null);
             if (onMonthUpdated) await onMonthUpdated(result, null, { yearSync: true });
             showToast(`Synced ${result.synced?.length || 0} month(s)${result.skipped?.length ? `, skipped ${result.skipped.length}` : ''}`, 'success');
           } catch (error) {
@@ -15892,6 +15959,7 @@
               `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh-snapshot`,
               { method: 'POST', body: '{}' },
             );
+            if (setUiPreference) setUiPreference('cenhub');
             if (onMonthUpdated) await onMonthUpdated(result, monthKey);
             showToast('Cenhub data refreshed and synced', 'success');
           } catch (error) {
@@ -15901,49 +15969,6 @@
           }
         };
       }
-
-      const useMetaBtn = document.getElementById(`${prefix}-use-meta`);
-      if (useMetaBtn) {
-        useMetaBtn.onclick = async () => {
-          const monthKey = getMonthKey?.();
-          if (!monthKey) return;
-          if (setSaving) setSaving(true);
-          try {
-            const result = await adminFetch(
-              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/use-meta`,
-              { method: 'POST', body: '{}' },
-            );
-            if (setOverrideManual) setOverrideManual(false);
-            if (onMonthUpdated) await onMonthUpdated(result, monthKey);
-            showToast('Using Meta metrics for this month', 'success');
-          } catch (error) {
-            showToast(error.message || 'Update failed', 'error');
-          } finally {
-            if (setSaving) setSaving(false);
-          }
-        };
-      }
-    }
-
-    function renderMetaCvMonthPills(client, monthKeys = []) {
-      const selectedClientId = metaReportsState.customValues.selectedClientId;
-      const selectedMonthKey = metaReportsState.customValues.selectedMonthKey;
-      return monthKeys.map((monthKey) => {
-        const monthRow = client.months?.[monthKey] || {};
-        const status = monthRow.status || 'empty';
-        const source = monthRow.toplineSource || null;
-        const isActive = selectedClientId === client.clientId && selectedMonthKey === monthKey;
-        const sourceBadge = client.metaReportGhlDataEnabled ? metaCvSourceBadgeHtml(source) : '';
-        return `
-          <button
-            type="button"
-            class="meta-cv-month-pill is-${esc(status)}${isActive ? ' is-active' : ''}"
-            data-meta-cv-client="${esc(client.clientId)}"
-            data-meta-cv-month="${esc(monthKey)}"
-            title="${esc(metaCvShortMonth(monthKey))} · ${esc(status)}${source ? ` · ${source}` : ''}"
-          >${esc(metaCvShortMonth(monthKey))}${sourceBadge}</button>
-        `;
-      }).join('');
     }
 
     function renderMetaCvClientRows(overview) {
@@ -16513,8 +16538,9 @@
       const showProfit = client.metaReportShowBottomline;
       const isGhlListClient = Boolean(client.metaReportGhlDataEnabled);
       const toplineSource = monthStatus.toplineSource || monthPayload?.dataSource || 'meta';
-      const overrideManual = Boolean(state.overrideManual);
-      const isGhlReadOnly = isGhlListClient && toplineSource === 'ghl' && !overrideManual;
+      const uiMode = resolveMetaToplineUiMode(monthPayload || { dataSource: toplineSource }, state.toplineUiMode);
+      const isGhlReadOnly = isGhlListClient && uiMode === 'cenhub' && toplineSource === 'ghl';
+      const showManualLeads = isGhlListClient && uiMode === 'cenhub' && toplineSource !== 'ghl';
 
       const wonValue = monthStatus.wonLeads != null
         ? monthStatus.wonLeads
@@ -16537,11 +16563,8 @@
       const disabledAttr = isGhlReadOnly ? ' disabled' : '';
 
       const reportSettingsSaving = state.settingsSaving && state.settingsSavingScope === 'report';
-      const sourceLabel = toplineSource === 'ghl'
-        ? 'Sourced from Cenhub snapshot'
-        : (toplineSource === 'manual' ? 'Manual override' : 'Meta metrics');
 
-      const ghlBanner = isGhlListClient ? renderMetaToplineSourcePanel({
+      const toplineSectionHtml = isGhlListClient ? renderMetaToplineModeSection({
         prefix: 'meta-cv',
         monthKey,
         monthPayload: monthPayload || {
@@ -16558,10 +16581,10 @@
           hasGhl: client.hasGhl !== false,
         },
         saving: state.saving,
-        overrideManual,
+        uiPreference: state.toplineUiMode,
       }) : '';
 
-      const manualLeadsField = isGhlListClient && (overrideManual || toplineSource === 'manual') ? `
+      const manualLeadsField = showManualLeads ? `
           <label>Manual leads (optional)
             <input type="number" step="any" id="meta-cv-manual-leads" value="${esc(displayManualLeads)}" />
           </label>
@@ -16572,10 +16595,8 @@
         <p class="meta-cv-editor-sub">
           ${esc(metaMonthLabel(monthKey))}
           · ${esc(monthStatus.status || 'empty')}
-          ${isGhlListClient ? ` · ${esc(sourceLabel)}` : ''}
           · ${monthStatus.updatedAt ? `Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}` : 'Not updated yet'}
         </p>
-        ${ghlBanner}
         <div class="meta-cv-editor-grid">
           <label>Client
             <select id="meta-cv-client-select" class="admin-select">
@@ -16602,6 +16623,7 @@
             <input type="number" step="any" id="meta-cv-avg-profit" value="${esc(displayAvgProfit)}"${readOnlyAttr} />
           </label>
         </div>
+        ${toplineSectionHtml}
         <div class="meta-report-settings-group meta-report-settings-group--stacked meta-cv-client-settings${reportSettingsSaving ? ' is-saving' : ''}">
           ${renderMetaReportSaveIndicator('meta-cv-settings-status', reportSettingsSaving)}
           ${renderMetaReportBottomlineFeeSettings(client, 'meta-cv', { variant: 'cv' })}
@@ -16674,6 +16696,81 @@
         </div>
         `)}
       `;
+    }
+
+    function syncMetaCvToplineSection() {
+      const section = document.getElementById('meta-cv-topline-section');
+      if (!section) return;
+      const state = metaReportsState.customValues;
+      const client = state.overview?.clients?.find((row) => row.clientId === state.selectedClientId);
+      const monthKey = state.selectedMonthKey;
+      if (!client || !monthKey) return;
+      const monthStatus = client.months?.[monthKey] || {};
+      const monthPayload = state.editorPayload?.months?.[monthKey] || null;
+      const toplineSource = monthStatus.toplineSource || monthPayload?.dataSource || 'meta';
+      const ghlLeads = monthStatus.ghlLeads ?? monthPayload?.ghlTotals?.leads ?? '';
+      const ghlRevenue = monthStatus.ghlTotalRevenue ?? monthPayload?.ghlTotals?.totalRevenue ?? '';
+      const ghlProfit = monthStatus.ghlTotalProfit ?? monthPayload?.ghlTotals?.totalProfit ?? '';
+      section.outerHTML = renderMetaToplineModeSection({
+        prefix: 'meta-cv',
+        monthKey,
+        monthPayload: monthPayload || {
+          dataSource: toplineSource,
+          ghlTotals: {
+            leads: ghlLeads !== '' ? ghlLeads : null,
+            totalRevenue: ghlRevenue !== '' ? ghlRevenue : null,
+            totalProfit: ghlProfit !== '' ? ghlProfit : null,
+          },
+          ghlSyncedAt: monthStatus.ghlSyncedAt || null,
+        },
+        settings: {
+          metaReportGhlDataEnabled: true,
+          hasGhl: client.hasGhl !== false,
+        },
+        saving: state.saving,
+        uiPreference: state.toplineUiMode,
+      });
+      bindMetaCvToplineEvents();
+    }
+
+    function bindMetaCvToplineEvents() {
+      const clientId = metaReportsState.customValues.selectedClientId;
+      if (!clientId) return;
+      bindMetaToplineSourceEvents({
+        clientId,
+        prefix: 'meta-cv',
+        getMonthKey: () => metaReportsState.customValues.selectedMonthKey,
+        getYear: () => metaReportsState.selectedYear,
+        getMonthRecord: (monthKey) => metaReportsState.customValues.overview?.clients
+          ?.find((row) => row.clientId === clientId)?.months?.[monthKey] || null,
+        getUiPreference: () => metaReportsState.customValues.toplineUiMode,
+        setSaving: (isPending) => {
+          metaReportsState.customValues.saving = isPending;
+          syncMetaCvToplineSection();
+          setMetaCvSavePending(isPending);
+        },
+        setUiPreference: (value) => {
+          metaReportsState.customValues.toplineUiMode = value;
+        },
+        onMonthUpdated: async (result, monthKey, options = {}) => {
+          if (options.refreshUiOnly) {
+            refreshMetaCvListAndEditor();
+            return;
+          }
+          if (options.yearSync) {
+            metaReportsState.customValues.toplineUiMode = null;
+            await refreshMetaCvOverviewSilently();
+            refreshMetaCvListAndEditor();
+            return;
+          }
+          if (monthKey) {
+            applyMetaCvSaveResult(clientId, monthKey, {}, result);
+            metaReportsState.customValues.toplineUiMode = null;
+          }
+          await refreshMetaCvOverviewSilently();
+          refreshMetaCvListAndEditor();
+        },
+      });
     }
 
     function refreshMetaCvListAndEditor() {
@@ -16794,8 +16891,12 @@
       const monthKey = metaReportsState.customValues.selectedMonthKey;
       const client = metaReportsState.customValues.overview?.clients?.find((row) => row.clientId === clientId);
       const month = client?.months?.[monthKey];
+      const monthPayload = metaReportsState.customValues.editorPayload?.months?.[monthKey] || null;
+      const toplineSource = month?.toplineSource || monthPayload?.dataSource || 'meta';
+      const uiMode = resolveMetaToplineUiMode(monthPayload || { dataSource: toplineSource }, metaReportsState.customValues.toplineUiMode);
       const manualMode = Boolean(client?.metaReportGhlDataEnabled)
-        && (metaReportsState.customValues.overrideManual || month?.toplineSource === 'manual');
+        && uiMode === 'cenhub'
+        && toplineSource !== 'ghl';
       const body = {
         wonLeads: document.getElementById('meta-cv-won-leads')?.value === ''
           ? null
@@ -16869,7 +16970,7 @@
     async function selectMetaCvMonth(clientId, monthKey, { reloadEditor = true } = {}) {
       metaReportsState.customValues.selectedClientId = clientId;
       metaReportsState.customValues.selectedMonthKey = monthKey;
-      metaReportsState.customValues.overrideManual = false;
+      metaReportsState.customValues.toplineUiMode = null;
       refreshMetaCvListAndEditor();
       if (!reloadEditor) return;
       metaReportsState.customValues.loadingEditor = true;
@@ -16955,39 +17056,7 @@
         };
       }
 
-      const overrideToggle = document.getElementById('meta-cv-override-ghl');
-      if (overrideToggle) {
-        overrideToggle.onchange = null;
-      }
-
-      bindMetaToplineSourceEvents({
-        clientId,
-        prefix: 'meta-cv',
-        getMonthKey: () => metaReportsState.customValues.selectedMonthKey,
-        getYear: () => metaReportsState.selectedYear,
-        getMonthRecord: (monthKey) => metaReportsState.customValues.overview?.clients
-          ?.find((row) => row.clientId === clientId)?.months?.[monthKey] || null,
-        setSaving: setMetaCvSavePending,
-        setOverrideManual: (value) => {
-          metaReportsState.customValues.overrideManual = value;
-        },
-        onMonthUpdated: async (result, monthKey, options = {}) => {
-          if (options.refreshUiOnly) {
-            refreshMetaCvListAndEditor();
-            return;
-          }
-          if (options.yearSync) {
-            await refreshMetaCvOverviewSilently();
-            refreshMetaCvListAndEditor();
-            return;
-          }
-          if (monthKey) {
-            applyMetaCvSaveResult(clientId, monthKey, {}, result);
-          }
-          await refreshMetaCvOverviewSilently();
-          refreshMetaCvListAndEditor();
-        },
-      });
+      bindMetaCvToplineEvents();
     }
 
     function bindMetaReportsCustomValuesEvents(overview) {
