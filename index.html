@@ -4609,12 +4609,14 @@
     .meta-report-control-bar-actions {
       align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 8px; margin-left: auto;
     }
-    .meta-report-control-status-rows { margin: 0; }
+    .meta-report-control-status-rows {
+      display: flex; flex-direction: column; gap: 10px; margin: 0;
+    }
     .meta-report-control-status-rows[hidden] { display: none !important; }
     .meta-report-control-status-stack {
       display: flex; flex-direction: column; gap: 10px;
     }
-    .meta-report-control-status-stack > .meta-report-excel-sheet-summary,
+    .meta-report-control-status-rows > .meta-report-excel-sheet-summary,
     .meta-report-control-status-grid > .meta-report-share-summary,
     .meta-report-control-status-grid > .meta-report-bottomline-summary,
     .meta-report-topline-source-wrap > .meta-report-topline-summary {
