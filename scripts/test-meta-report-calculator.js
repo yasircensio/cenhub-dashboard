@@ -221,7 +221,7 @@ function testIncompleteMonthExcluded() {
   const series = [
     { spend: 9000, leads: 45, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-01-31' },
     { spend: 9000, leads: 45, wonLeads: 5, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-02-28' },
-    { spend: 12000, leads: 60, wonLeads: 6, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-08-31' },
+    { spend: 12000, leads: 60, wonLeads: 0, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-08-31' },
   ];
 
   const prepared = prepareScenarioSeries(series, {
@@ -230,6 +230,57 @@ function testIncompleteMonthExcluded() {
   });
 
   assert.strictEqual(prepared.monthsUsed, 2);
+
+  const withCompleteInputs = prepareScenarioSeries([
+    ...series.slice(0, 2),
+    { spend: 12000, leads: 60, wonLeads: 6, avgLeadValue: 100000, avgProfitPerWon: 50000, periodEnd: '2025-08-31' },
+  ], {
+    windowMonths: '6',
+    hasBottomline: true,
+    asOfDate: new Date('2025-08-10T12:00:00.000Z'),
+  });
+
+  assert.strictEqual(withCompleteInputs.monthsUsed, 3);
+}
+
+function testActiveMonthAnchorsProjectionEfficiency() {
+  const baselineSpend = 18270;
+  const asOfDate = new Date('2026-08-13T12:00:00.000Z');
+  const series = [
+    { monthKey: '2026-03', spend: 9000, leads: 18, wonLeads: 0, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-03-31' },
+    { monthKey: '2026-04', spend: 9000, leads: 18, wonLeads: 0, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-04-30' },
+    { monthKey: '2026-05', spend: 9000, leads: 18, wonLeads: 0, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-05-31' },
+    { monthKey: '2026-06', spend: 9000, leads: 18, wonLeads: 0, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-06-30' },
+    { monthKey: '2026-07', spend: 18000, leads: 36, wonLeads: 6, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-07-31' },
+    { monthKey: '2026-08', spend: 12258, leads: 23, wonLeads: 1, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-08-31' },
+  ];
+
+  const anchored = projectScenario({
+    series,
+    baselineSpend,
+    multiplier: 2,
+    hasBottomline: true,
+    monthWindow: '6',
+    activeMonthKey: '2026-08',
+    asOfDate,
+  });
+  const distant = projectScenario({
+    series,
+    baselineSpend,
+    multiplier: 2,
+    hasBottomline: true,
+    monthWindow: '6',
+    activeMonthKey: '2026-07',
+    asOfDate,
+  });
+
+  const augPoasX = (41000 - 12258) / 12258;
+
+  assert.ok(anchored.projected.poasX > 0);
+  assert.ok(
+    Math.abs(anchored.projected.poasX - augPoasX)
+    < Math.abs(distant.projected.poasX - augPoasX),
+  );
 }
 
 function testDownwardTrendLowersProjection() {
@@ -595,6 +646,7 @@ function main() {
   testScenarioMultiplierMatchesProjectedSpend();
   testShortAdHistoryUsesAvailableMonths();
   testIncompleteMonthExcluded();
+  testActiveMonthAnchorsProjectionEfficiency();
   testDownwardTrendLowersProjection();
   testPillsAreIndependent();
   testConservativeOptimisticBandCollapsesWithoutTrend();
