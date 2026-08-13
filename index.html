@@ -5685,6 +5685,79 @@
     .meta-topline-status-badge.is-cenhub { background: #ecfdf5; color: #047857; }
     .meta-topline-status-badge.is-manual { background: #fff7ed; color: #9a3412; }
     .meta-topline-status-badge.is-cenhub-empty { background: #fef3c7; color: #92400e; }
+    .meta-topline-source-pill {
+      border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+      line-height: 1; padding: 6px 12px; text-transform: uppercase; white-space: nowrap;
+    }
+    .meta-topline-source-pill.is-meta {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+    }
+    .meta-topline-source-pill.is-cenhub {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46;
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25);
+    }
+    .meta-topline-source-pill.is-manual {
+      background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412;
+      box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.25);
+    }
+    .meta-topline-source-pill.is-cenhub-empty {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e;
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
+    }
+    .meta-topline-source-panel {
+      border-top: 1px solid var(--border); margin: 0; padding: 14px 0 0;
+    }
+    .meta-topline-source-panel.is-loading { opacity: 0.65; pointer-events: none; }
+    .meta-topline-source-loading {
+      align-items: center; color: var(--text-muted); display: flex; font-size: 12px;
+      font-weight: 600; gap: 8px; margin: 10px 0 0;
+    }
+    .meta-topline-source-loading[hidden] { display: none !important; }
+    .meta-report-edit-panel-head {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: space-between; margin: 0 0 8px;
+    }
+    .meta-report-edit-panel-head h3 { margin: 0; }
+    .meta-topline-manual-pill-btn {
+      background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+      border: 1px solid rgba(249, 115, 22, 0.35); border-radius: 999px;
+      color: #9a3412; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.02em; padding: 8px 14px; transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .meta-topline-manual-pill-btn:hover:not(:disabled) {
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2); transform: translateY(-1px);
+    }
+    .meta-topline-manual-pill-btn:disabled { cursor: default; opacity: 0.55; }
+    .meta-report-modal-root {
+      align-items: center; display: flex; inset: 0; justify-content: center;
+      padding: 24px 16px; position: fixed; z-index: 1200;
+    }
+    .meta-report-modal-backdrop {
+      background: rgba(15, 23, 42, 0.45); inset: 0; position: absolute;
+    }
+    .meta-report-modal {
+      background: #fff; border-radius: 16px; box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
+      max-height: min(90vh, 720px); max-width: 560px; overflow: auto; padding: 20px 22px;
+      position: relative; width: 100%; z-index: 1;
+    }
+    .meta-report-modal.is-wizard {
+      box-shadow: 0 10px 28px rgba(220, 100, 10, 0.14), 0 0 0 1.5px var(--selected-line);
+    }
+    .meta-report-modal-head {
+      align-items: flex-start; display: flex; gap: 12px; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .meta-report-modal-title {
+      color: var(--text); font-family: 'Poppins', sans-serif; font-size: 18px;
+      font-weight: 600; margin: 0;
+    }
+    .meta-report-modal-close {
+      background: var(--panel-soft); border: 0; border-radius: 8px; color: var(--text-muted);
+      cursor: pointer; font-size: 18px; height: 32px; line-height: 1; width: 32px;
+    }
+    .meta-report-modal-close:hover { color: var(--text); }
+    body.meta-report-modal-open { overflow: hidden; }
     .meta-report-edit-note {
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 12px;
     }
@@ -8701,6 +8774,8 @@
       clientPageMounted: false,
       clientReportSettingsExpanded: false,
       clientShareExpanded: false,
+      clientToplineDraftMode: null,
+      clientToplineModalPayload: null,
       activeMonthKey: null,
       selectedYear: new Date().getFullYear(),
       publicPayload: null,
@@ -8847,6 +8922,82 @@
       const token = String(payload.reportUrl || '').replace(/^\/report\//, '');
       const match = token.match(/-(\d{4})$/);
       return match ? match[1] : '';
+    }
+
+    function closeMetaReportModal() {
+      document.getElementById('meta-report-modal-root')?.remove();
+      document.body.classList.remove('meta-report-modal-open');
+      metaReportsState.clientShareExpanded = false;
+    }
+
+    function openMetaReportModal(contentHtml, { wizard = false } = {}) {
+      closeMetaReportModal();
+      const root = document.createElement('div');
+      root.id = 'meta-report-modal-root';
+      root.className = 'meta-report-modal-root';
+      root.innerHTML = `
+        <div class="meta-report-modal-backdrop" data-meta-report-modal-close aria-hidden="true"></div>
+        <div class="meta-report-modal${wizard ? ' is-wizard' : ''}" role="dialog" aria-modal="true">
+          ${contentHtml}
+        </div>
+      `;
+      document.body.appendChild(root);
+      document.body.classList.add('meta-report-modal-open');
+      root.querySelectorAll('[data-meta-report-modal-close]').forEach((el) => {
+        el.addEventListener('click', closeMetaReportModal);
+      });
+      root.querySelector('.meta-report-modal-close')?.addEventListener('click', closeMetaReportModal);
+    }
+
+    function renderMetaReportShareModalContent(payload) {
+      const settings = payload.settings || {};
+      const enabled = Boolean(settings.metaReportEnabled);
+      const reportUrl = payload.reportUrl || null;
+      if (!reportUrl) return '';
+      const fullUrl = metaReportFullUrl(reportUrl);
+      const slug = resolveMetaReportShareSlug(payload);
+      const code = resolveMetaReportShareCode(payload);
+
+      return `
+        <div class="meta-report-modal-head">
+          <h2 class="meta-report-modal-title">Share link & slug</h2>
+          <button type="button" class="meta-report-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <p class="metrics-model-copy">Control the public report preview link and slug prefix for this client.</p>
+        <div class="meta-report-share-panel">
+          <div class="meta-report-share-preview-row">
+            <span class="meta-report-share-preview-title">Preview</span>
+            ${renderMetaHubSwitch({
+              label: enabled ? 'Enabled' : 'Disabled',
+              attr: 'data-meta-client-preview',
+              value: payload.clientId,
+              checked: enabled,
+            })}
+          </div>
+          <div class="meta-report-share-field">
+            <div class="meta-report-share-slug-row">
+              <span class="meta-report-share-slug-prefix">/report/</span>
+              <input type="text" id="meta-report-share-slug" class="admin-input meta-report-share-slug-input" value="${esc(slug)}" autocomplete="off" spellcheck="false" aria-label="Report slug" />
+              <span class="meta-report-share-slug-suffix" id="meta-report-share-slug-suffix">-${esc(code || '····')}</span>
+            </div>
+          </div>
+          <code class="meta-report-share-url" id="meta-report-share-url">${esc(fullUrl)}</code>
+          <div class="meta-report-share-editor-actions">
+            <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-rotate-token"${enabled ? '' : ' disabled'}>Rotate link</button>
+            <div class="meta-report-share-editor-actions-end">
+              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-meta-report-modal-close>Done</button>
+              <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-share-save">Save slug</button>
+            </div>
+          </div>
+          ${enabled ? '' : '<p class="meta-report-share-note">Preview disabled — link won\u2019t load.</p>'}
+        </div>
+      `;
+    }
+
+    function openMetaReportShareModal(payload) {
+      metaReportsState.clientShareExpanded = true;
+      openMetaReportModal(renderMetaReportShareModalContent(payload));
+      bindMetaReportShareEvents(payload);
     }
 
     function renderMetaReportShareSummary(payload, { hidden = false } = {}) {
@@ -9074,7 +9225,6 @@
             ${isMetaReportGhlListClient(settings) ? renderMetaReportToplineSourceControl(payload) : ''}
           </div>
           <div class="meta-report-control-editors">
-            ${hasLink ? renderMetaReportShareEditor(payload) : ''}
             <div class="meta-report-control-editor meta-report-control-editor--report" id="meta-report-report-editor-wrap">
               <div class="meta-report-settings-card-head">
                 <span class="meta-report-settings-card-title">Report settings</span>
@@ -9161,12 +9311,12 @@
 
       const editBtn = document.getElementById('meta-report-share-edit');
       if (editBtn) {
-        editBtn.onclick = () => setMetaReportShareExpanded(true);
+        editBtn.onclick = () => openMetaReportShareModal(payload);
       }
 
       const doneBtn = document.getElementById('meta-report-share-done');
       if (doneBtn) {
-        doneBtn.onclick = () => setMetaReportShareExpanded(false);
+        doneBtn.onclick = closeMetaReportModal;
       }
 
       const saveBtn = document.getElementById('meta-report-share-save');
@@ -9187,7 +9337,7 @@
             currentPayload.reportUrl = settings.reportUrl || null;
             metaReportsState.clientPayload = currentPayload;
             refreshMetaReportClientShareUi(currentPayload);
-            setMetaReportShareExpanded(false);
+            closeMetaReportModal();
             showToast('Share link slug saved', 'success');
           } catch (error) {
             showToast(error.message || 'Save failed', 'error');
@@ -9398,53 +9548,11 @@
 
     function bindMetaReportToplineSourceControl(clientId, payload) {
       if (!clientId || !payload) return;
-      const select = document.getElementById('meta-report-topline-source');
-      if (!select) return;
 
-      select.onchange = async () => {
-        const nextMode = select.value === 'cenhub' ? 'cenhub' : 'meta';
-        const currentMode = resolveClientToplineMode(payload.settings || {});
-        if (nextMode === currentMode) return;
-
-        select.disabled = true;
-        metaReportsState.clientToplineSaving = true;
-        syncMetaReportToplineSourceBar(payload);
-
-        try {
-          let body = { mode: nextMode, year: metaReportsState.selectedYear };
-          if (nextMode === 'cenhub') {
-            const preview = await adminFetch(
-              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/sync-ghl-preview?year=${encodeURIComponent(metaReportsState.selectedYear)}`,
-            );
-            if ((preview.skipManual || []).length) {
-              const choice = window.prompt(
-                `${preview.skipManual.length} month(s) have manual values (${preview.skipManual.join(', ')}).\nType "skip" to skip manual months, or "overwrite" to replace all:`,
-                'skip',
-              );
-              if (!choice) {
-                select.value = currentMode;
-                return;
-              }
-              if (choice.trim().toLowerCase() === 'overwrite') {
-                body = { ...body, skipManual: false, overwriteManual: true };
-              }
-            }
-          }
-
-          await adminFetch(
-            `/api/meta-reports/clients/${encodeURIComponent(clientId)}/switch-topline-source`,
-            { method: 'POST', body: JSON.stringify(body) },
-          );
-          showToast(nextMode === 'cenhub' ? 'Switched all months to Cenhub' : 'Switched all months to Meta Analytics', 'success');
-          await loadMetaReportsClientPage({ silent: true });
-        } catch (error) {
-          select.value = currentMode;
-          showToast(error.message || 'Could not switch topline source', 'error');
-        } finally {
-          metaReportsState.clientToplineSaving = false;
-          syncMetaReportToplineSourceBar(metaReportsState.clientPayload);
-        }
-      };
+      const changeBtn = document.getElementById('meta-report-topline-change');
+      if (changeBtn) {
+        changeBtn.onclick = () => openMetaReportToplineChangeModal(payload);
+      }
 
       bindMetaToplineCenhubActionEvents({
         clientId,
@@ -14635,7 +14743,10 @@
         const manualRowHtml = renderMetaReportMonthManualRow(monthPayload, resolvedSettings);
         editPanelHtml = `
           <div class="meta-report-edit-panel" id="meta-report-edit-panel">
-            <h3>Edit month inputs · ${esc(metaMonthLabel(tabMonthKey))}</h3>
+            <div class="meta-report-edit-panel-head">
+              <h3>Edit month inputs · ${esc(metaMonthLabel(tabMonthKey))}</h3>
+              ${renderMetaMonthSourcePill(monthPayload, resolvedSettings)}
+            </div>
             <p class="meta-report-edit-note">These fields drive Topline KPI'er. Ad spend comes from Meta.</p>
             <div class="meta-report-edit-grid">
               <label>Period start<input type="date" id="meta-report-period-start" value="${esc(tabBounds.start)}" /></label>
@@ -15782,6 +15893,26 @@
       return mode === 'cenhub' ? 'Using Cenhub for all months' : 'Using Meta Analytics for all months';
     }
 
+    function metaToplineConfirmWord(mode) {
+      return mode === 'cenhub' ? 'Cenhub' : 'Meta';
+    }
+
+    function renderMetaMonthSourcePill(monthPayload, settings = {}) {
+      if (!isMetaReportGhlListClient(settings)) return '';
+      const source = resolveMetaToplineSource(monthPayload);
+      const globalMode = resolveClientToplineMode(settings);
+      if (source === 'manual') {
+        return '<span class="meta-topline-source-pill is-manual">Manual this month</span>';
+      }
+      if (globalMode === 'meta' || source === 'meta') {
+        return '<span class="meta-topline-source-pill is-meta">Meta Analytics</span>';
+      }
+      if (source === 'ghl') {
+        return '<span class="meta-topline-source-pill is-cenhub">Cenhub</span>';
+      }
+      return '<span class="meta-topline-source-pill is-cenhub-empty">No Cenhub data</span>';
+    }
+
     function renderMetaReportToplineSourceControl(payload) {
       const settings = payload?.settings || {};
       if (!isMetaReportGhlListClient(settings)) return '';
@@ -15789,26 +15920,227 @@
       const saving = metaReportsState.clientToplineSaving;
       const disabledAttr = saving ? ' disabled' : '';
       const hasGhl = settings.hasGhl !== false;
-      const showCenhubActions = mode === 'cenhub';
+      const pillClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
+      const pillLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
 
       return `
-        <div class="meta-report-topline-source-bar">
-          <label class="meta-report-topline-source-field">
-            <span>Topline data source</span>
-            <select id="meta-report-topline-source" class="admin-select"${disabledAttr}>
-              <option value="meta"${mode === 'meta' ? ' selected' : ''}>Meta Analytics</option>
-              <option value="cenhub"${mode === 'cenhub' ? ' selected' : ''}>Cenhub</option>
-            </select>
-            <span class="meta-topline-source-note">${esc(metaToplineSourceNote(mode))}</span>
-          </label>
-          ${showCenhubActions ? `
-            <div class="meta-cv-ghl-actions" id="meta-report-topline-cenhub-actions">
+        <div class="metrics-model-panel meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-report-topline-source-panel">
+          <div class="metrics-model-header">
+            <div class="metrics-model-heading">
+              <h3 class="metrics-model-title">Topline data source</h3>
+            </div>
+            <span class="meta-topline-source-pill ${pillClass}">${esc(pillLabel)}</span>
+          </div>
+          <p class="metrics-model-copy">${esc(metaToplineSourceNote(mode))}. Applies to every month in ${esc(metaReportsState.selectedYear)}.</p>
+          <div class="metrics-model-facts">
+            <div class="metrics-model-fact is-config">
+              <span class="metrics-model-fact-icon">${ICON_LAYER}</span>
+              <div class="metrics-model-fact-body">
+                <div class="metrics-model-fact-label">Scope</div>
+                <div class="metrics-model-fact-value">All months · ${esc(metaReportsState.selectedYear)}</div>
+              </div>
+            </div>
+            <div class="metrics-model-fact is-config">
+              <span class="metrics-model-fact-icon">${ICON_TAG}</span>
+              <div class="metrics-model-fact-body">
+                <div class="metrics-model-fact-label">Won leads & revenue</div>
+                <div class="metrics-model-fact-value">${mode === 'cenhub' ? 'From Cenhub snapshots' : 'From Meta analytics'}</div>
+              </div>
+            </div>
+          </div>
+          <div class="meta-topline-source-loading" id="meta-report-topline-loading"${saving ? '' : ' hidden'}>
+            <span class="meta-report-save-indicator-spinner"></span> Switching source…
+          </div>
+          <div class="metrics-model-actions">
+            <button type="button" class="admin-btn" id="meta-report-topline-change"${disabledAttr}>${ICON_EDIT} Change source</button>
+            ${mode === 'cenhub' ? `
               <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}${!hasGhl ? ' title="GHL not connected"' : ''}>Sync year from Cenhub</button>
               <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-refresh-snapshot"${disabledAttr || !hasGhl ? ' disabled' : ''}>Refresh Cenhub snapshot</button>
-            </div>
-          ` : ''}
+            ` : ''}
+          </div>
         </div>
       `;
+    }
+
+    function renderMetaReportToplineChangeModal(payload, draftMode) {
+      const currentMode = resolveClientToplineMode(payload?.settings || {});
+
+      return `
+        <div class="meta-report-modal-head">
+          <h2 class="meta-report-modal-title">Change topline source</h2>
+          <button type="button" class="meta-report-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <p class="metrics-model-copy">Choose where won leads, average lead value, and profit come from for every month in ${esc(metaReportsState.selectedYear)}.</p>
+        <div class="metrics-option-cards">
+          <label class="metrics-option-card">
+            <input type="radio" name="meta-topline-draft-mode" value="meta"${draftMode === 'meta' ? ' checked' : ''} />
+            <span class="metrics-option-card-top">
+              <span class="metrics-option-card-icon">${ICON_TARGET}</span>
+              <span class="metrics-option-card-title">Meta Analytics</span>
+              <span class="metrics-option-card-radio">${ICON_CHECK}</span>
+            </span>
+            <span class="metrics-option-card-desc">Use Meta-derived topline KPIs. Ad spend always comes from Meta.</span>
+          </label>
+          <label class="metrics-option-card">
+            <input type="radio" name="meta-topline-draft-mode" value="cenhub"${draftMode === 'cenhub' ? ' checked' : ''} />
+            <span class="metrics-option-card-top">
+              <span class="metrics-option-card-icon">${ICON_TAG}</span>
+              <span class="metrics-option-card-title">Cenhub</span>
+              <span class="metrics-option-card-radio">${ICON_CHECK}</span>
+            </span>
+            <span class="metrics-option-card-desc">Pull leads, won deals, revenue, and profit from Cenhub dashboard snapshots.</span>
+          </label>
+        </div>
+        <p class="meta-report-edit-note" id="meta-report-topline-no-change-hint"${draftMode !== currentMode ? ' hidden' : ''}>Select a different source above to switch.</p>
+        <div class="metrics-confirm-strip" id="meta-report-topline-confirm-strip"${draftMode === currentMode ? ' hidden' : ''}>
+          <div class="metrics-confirm-strip-title">${ICON_WARNING} Topline KPIs will change for all months in ${esc(metaReportsState.selectedYear)}</div>
+          <div class="metrics-confirm-strip-row">
+            <label class="metrics-confirm-check">
+              <input id="meta-report-topline-ack" type="checkbox" />
+              <span>I understand the numbers will change</span>
+            </label>
+            <input id="meta-report-topline-confirm" type="text" placeholder="Type ${esc(metaToplineConfirmWord(draftMode))} to confirm" autocomplete="off" />
+          </div>
+        </div>
+        <div class="metrics-model-actions">
+          <button type="button" class="admin-btn" data-meta-report-modal-close>Cancel</button>
+          <button type="button" class="admin-btn admin-btn--danger-solid" id="meta-report-topline-apply" disabled>${ICON_CHECK} Apply change</button>
+        </div>
+        <div class="meta-topline-source-loading" id="meta-report-topline-modal-loading" hidden>
+          <span class="meta-report-save-indicator-spinner"></span> Switching source…
+        </div>
+      `;
+    }
+
+    function openMetaReportToplineChangeModal(payload) {
+      const currentMode = resolveClientToplineMode(payload?.settings || {});
+      metaReportsState.clientToplineModalPayload = payload;
+      openMetaReportModal(renderMetaReportToplineChangeModal(payload, currentMode), { wizard: true });
+      bindMetaReportToplineChangeModal(payload);
+      updateMetaReportToplineApplyState();
+    }
+
+    function openMetaCvToplineChangeModal(client) {
+      const payload = {
+        clientId: client.clientId,
+        settings: { metaReportToplineMode: client.metaReportToplineMode },
+        reload: async () => {
+          await refreshMetaCvOverviewSilently();
+          refreshMetaCvListAndEditor();
+        },
+      };
+      metaReportsState.clientToplineModalPayload = payload;
+      openMetaReportModal(
+        renderMetaReportToplineChangeModal(payload, resolveClientToplineMode(payload.settings)),
+        { wizard: true },
+      );
+      bindMetaReportToplineChangeModal(payload);
+      updateMetaReportToplineApplyState();
+    }
+
+    function getMetaReportToplineDraftMode() {
+      return document.querySelector('input[name="meta-topline-draft-mode"]:checked')?.value === 'cenhub'
+        ? 'cenhub'
+        : 'meta';
+    }
+
+    function updateMetaReportToplineApplyState() {
+      const payload = metaReportsState.clientToplineModalPayload || metaReportsState.clientPayload;
+      if (!payload) return;
+      const currentMode = resolveClientToplineMode(payload.settings || {});
+      const draftMode = getMetaReportToplineDraftMode();
+      const isChanging = draftMode !== currentMode;
+      const strip = document.getElementById('meta-report-topline-confirm-strip');
+      const hint = document.getElementById('meta-report-topline-no-change-hint');
+      if (strip) strip.hidden = !isChanging;
+      if (hint) hint.hidden = isChanging;
+      const confirmInput = document.getElementById('meta-report-topline-confirm');
+      if (confirmInput) {
+        confirmInput.placeholder = `Type ${metaToplineConfirmWord(draftMode)} to confirm`;
+        if (!isChanging) confirmInput.value = '';
+      }
+      const ackInput = document.getElementById('meta-report-topline-ack');
+      if (ackInput && !isChanging) ackInput.checked = false;
+      const applyBtn = document.getElementById('meta-report-topline-apply');
+      if (!applyBtn) return;
+      if (!isChanging) {
+        applyBtn.disabled = true;
+        return;
+      }
+      const ack = Boolean(ackInput?.checked);
+      const confirm = confirmInput?.value?.trim() || '';
+      applyBtn.disabled = !(ack && confirm === metaToplineConfirmWord(draftMode));
+    }
+
+    async function applyMetaReportToplineSwitch(clientId, payload, nextMode) {
+      let body = { mode: nextMode, year: metaReportsState.selectedYear };
+      if (nextMode === 'cenhub') {
+        const preview = await adminFetch(
+          `/api/meta-reports/clients/${encodeURIComponent(clientId)}/sync-ghl-preview?year=${encodeURIComponent(metaReportsState.selectedYear)}`,
+        );
+        if ((preview.skipManual || []).length) {
+          const choice = window.prompt(
+            `${preview.skipManual.length} month(s) have manual values (${preview.skipManual.join(', ')}).\nType "skip" to skip manual months, or "overwrite" to replace all:`,
+            'skip',
+          );
+          if (!choice) return false;
+          if (choice.trim().toLowerCase() === 'overwrite') {
+            body = { ...body, skipManual: false, overwriteManual: true };
+          }
+        }
+      }
+      await adminFetch(
+        `/api/meta-reports/clients/${encodeURIComponent(clientId)}/switch-topline-source`,
+        { method: 'POST', body: JSON.stringify(body) },
+      );
+      showToast(nextMode === 'cenhub' ? 'Switched all months to Cenhub' : 'Switched all months to Meta Analytics', 'success');
+      if (typeof payload.reload === 'function') {
+        await payload.reload();
+      } else {
+        await loadMetaReportsClientPage({ silent: true });
+      }
+      return true;
+    }
+
+    function bindMetaReportToplineChangeModal(payload) {
+      const clientId = payload.clientId;
+      document.querySelectorAll('input[name="meta-topline-draft-mode"]').forEach((input) => {
+        input.addEventListener('change', updateMetaReportToplineApplyState);
+      });
+      document.getElementById('meta-report-topline-ack')?.addEventListener('change', updateMetaReportToplineApplyState);
+      document.getElementById('meta-report-topline-confirm')?.addEventListener('input', updateMetaReportToplineApplyState);
+
+      const applyBtn = document.getElementById('meta-report-topline-apply');
+      if (applyBtn) {
+        applyBtn.onclick = async () => {
+          const nextMode = getMetaReportToplineDraftMode();
+          const currentMode = resolveClientToplineMode(payload.settings || {});
+          if (nextMode === currentMode) return;
+          applyBtn.disabled = true;
+          document.getElementById('meta-report-topline-modal-loading')?.removeAttribute('hidden');
+          const isCv = typeof payload.reload === 'function';
+          if (isCv) {
+            setMetaCvSavePending(true);
+          } else {
+            metaReportsState.clientToplineSaving = true;
+            syncMetaReportToplineSourceBar(metaReportsState.clientPayload || payload);
+          }
+          try {
+            const ok = await applyMetaReportToplineSwitch(clientId, payload, nextMode);
+            if (ok) closeMetaReportModal();
+          } catch (error) {
+            showToast(error.message || 'Could not switch topline source', 'error');
+          } finally {
+            if (isCv) {
+              setMetaCvSavePending(false);
+            } else {
+              metaReportsState.clientToplineSaving = false;
+              syncMetaReportToplineSourceBar(metaReportsState.clientPayload);
+            }
+            document.getElementById('meta-report-topline-modal-loading')?.setAttribute('hidden', '');
+          }
+        };
+      }
     }
 
     function renderMetaReportMonthManualRow(monthPayload, settings = {}) {
@@ -15822,8 +16154,8 @@
 
       return `
         <div class="meta-report-month-manual-row">
-          ${isManual ? '<span class="meta-topline-status-badge is-manual">Manual values this month</span>' : ''}
-          ${showManualBtn ? '<button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-use-manual-month">Use manual values for this month</button>' : ''}
+          ${isManual ? '<span class="meta-topline-source-pill is-manual">Manual values this month</span>' : ''}
+          ${showManualBtn ? '<button type="button" class="meta-topline-manual-pill-btn" id="meta-report-use-manual-month">Use manual values for this month</button>' : ''}
         </div>
       `;
     }
@@ -15834,22 +16166,27 @@
       const saving = metaReportsState.customValues.saving;
       const disabledAttr = saving ? ' disabled' : '';
       const hasGhl = client.hasGhl !== false;
+      const pillClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
+      const pillLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
 
       return `
-        <div class="meta-report-topline-source-bar">
-          <label class="meta-report-topline-source-field">
-            <span>Topline data source</span>
-            <select id="meta-cv-topline-source" class="admin-select"${disabledAttr}>
-              <option value="meta"${mode === 'meta' ? ' selected' : ''}>Meta Analytics</option>
-              <option value="cenhub"${mode === 'cenhub' ? ' selected' : ''}>Cenhub</option>
-            </select>
-            <span class="meta-topline-source-note">${esc(metaToplineSourceNote(mode))}</span>
-          </label>
-          ${mode === 'cenhub' ? `
-            <div class="meta-cv-ghl-actions">
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}>Sync year from Cenhub</button>
+        <div class="metrics-model-panel meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-cv-topline-source-panel">
+          <div class="metrics-model-header">
+            <div class="metrics-model-heading">
+              <h3 class="metrics-model-title">Topline data source</h3>
             </div>
-          ` : ''}
+            <span class="meta-topline-source-pill ${pillClass}">${esc(pillLabel)}</span>
+          </div>
+          <p class="metrics-model-copy">${esc(metaToplineSourceNote(mode))}. Applies to every month in ${esc(metaReportsState.selectedYear)}.</p>
+          <div class="meta-topline-source-loading" id="meta-cv-topline-loading"${saving ? '' : ' hidden'}>
+            <span class="meta-report-save-indicator-spinner"></span> Switching source…
+          </div>
+          <div class="metrics-model-actions">
+            <button type="button" class="admin-btn admin-btn--small" id="meta-cv-topline-change"${disabledAttr}>${ICON_EDIT} Change source</button>
+            ${mode === 'cenhub' ? `
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}>Sync year from Cenhub</button>
+            ` : ''}
+          </div>
         </div>
       `;
     }
@@ -15863,8 +16200,8 @@
       if (!isManual && !showManualBtn) return '';
       return `
         <div class="meta-report-month-manual-row">
-          ${isManual ? '<span class="meta-topline-status-badge is-manual">Manual values this month</span>' : ''}
-          ${showManualBtn ? '<button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-cv-use-manual-month">Use manual values for this month</button>' : ''}
+          ${isManual ? '<span class="meta-topline-source-pill is-manual">Manual values this month</span>' : ''}
+          ${showManualBtn ? '<button type="button" class="meta-topline-manual-pill-btn" id="meta-cv-use-manual-month">Use manual values for this month</button>' : ''}
         </div>
       `;
     }
@@ -16551,13 +16888,26 @@
           </label>
       ` : '';
 
+      const cvSettings = {
+        metaReportGhlDataEnabled: client.metaReportGhlDataEnabled,
+        metaReportToplineMode: client.metaReportToplineMode,
+      };
+      const monthSourcePill = isGhlListClient
+        ? renderMetaMonthSourcePill(monthPayload || { dataSource: toplineSource }, cvSettings)
+        : '';
+
       return `
-        <h3>${esc(client.accountName)}</h3>
-        <p class="meta-cv-editor-sub">
-          ${esc(metaMonthLabel(monthKey))}
-          · ${esc(monthStatus.status || 'empty')}
-          · ${monthStatus.updatedAt ? `Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}` : 'Not updated yet'}
-        </p>
+        <div class="meta-report-edit-panel-head">
+          <div>
+            <h3>${esc(client.accountName)}</h3>
+            <p class="meta-cv-editor-sub">
+              ${esc(metaMonthLabel(monthKey))}
+              · ${esc(monthStatus.status || 'empty')}
+              · ${monthStatus.updatedAt ? `Updated ${esc(metaCvFormatUpdatedAt(monthStatus.updatedAt))}` : 'Not updated yet'}
+            </p>
+          </div>
+          ${monthSourcePill}
+        </div>
         ${toplineControlHtml}
         <div class="meta-cv-editor-grid">
           <label>Client
@@ -16661,48 +17011,10 @@
     }
 
     function bindMetaCvToplineSourceControl(clientId, client) {
-      const select = document.getElementById('meta-cv-topline-source');
-      if (!select) return;
-      select.onchange = async () => {
-        const nextMode = select.value === 'cenhub' ? 'cenhub' : 'meta';
-        const currentMode = client.metaReportToplineMode === 'cenhub' ? 'cenhub' : 'meta';
-        if (nextMode === currentMode) return;
-        select.disabled = true;
-        setMetaCvSavePending(true);
-        try {
-          let body = { mode: nextMode, year: metaReportsState.selectedYear };
-          if (nextMode === 'cenhub') {
-            const preview = await adminFetch(
-              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/sync-ghl-preview?year=${encodeURIComponent(metaReportsState.selectedYear)}`,
-            );
-            if ((preview.skipManual || []).length) {
-              const choice = window.prompt(
-                `${preview.skipManual.length} month(s) have manual values (${preview.skipManual.join(', ')}).\nType "skip" to skip manual months, or "overwrite" to replace all:`,
-                'skip',
-              );
-              if (!choice) {
-                select.value = currentMode;
-                return;
-              }
-              if (choice.trim().toLowerCase() === 'overwrite') {
-                body = { ...body, skipManual: false, overwriteManual: true };
-              }
-            }
-          }
-          await adminFetch(
-            `/api/meta-reports/clients/${encodeURIComponent(clientId)}/switch-topline-source`,
-            { method: 'POST', body: JSON.stringify(body) },
-          );
-          showToast(nextMode === 'cenhub' ? 'Switched all months to Cenhub' : 'Switched all months to Meta Analytics', 'success');
-          await refreshMetaCvOverviewSilently();
-          refreshMetaCvListAndEditor();
-        } catch (error) {
-          select.value = currentMode;
-          showToast(error.message || 'Could not switch topline source', 'error');
-        } finally {
-          setMetaCvSavePending(false);
-        }
-      };
+      const changeBtn = document.getElementById('meta-cv-topline-change');
+      if (changeBtn) {
+        changeBtn.onclick = () => openMetaCvToplineChangeModal(client);
+      }
 
       bindMetaToplineCenhubActionEvents({
         clientId,
@@ -16757,7 +17069,14 @@
       metaReportsState.customValues.saving = isPending;
       const saveBtn = document.getElementById('meta-cv-save');
       const indicator = document.getElementById('meta-cv-save-indicator');
+      const toplinePanel = document.getElementById('meta-cv-topline-source-panel');
+      const toplineLoading = document.getElementById('meta-cv-topline-loading');
       if (indicator) indicator.classList.toggle('is-visible', isPending);
+      if (toplinePanel) toplinePanel.classList.toggle('is-loading', isPending);
+      if (toplineLoading) {
+        if (isPending) toplineLoading.removeAttribute('hidden');
+        else toplineLoading.setAttribute('hidden', '');
+      }
       if (saveBtn) {
         saveBtn.disabled = isPending || metaReportsState.customValues.loadingEditor || metaReportsState.customValues.settingsSaving;
         saveBtn.textContent = isPending ? 'Saving…' : 'Save values';
