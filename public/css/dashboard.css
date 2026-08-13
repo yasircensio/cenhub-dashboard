@@ -4396,6 +4396,18 @@
       font-size: 13px;
       margin-top: 6px;
     }
+    .meta-report-public-hero-head {
+      align-items: flex-start; display: flex; flex-wrap: wrap; gap: 16px 20px;
+      justify-content: space-between;
+    }
+    .meta-report-public-hero-copy { flex: 1 1 220px; min-width: 0; }
+    .meta-report-public-hero-actions {
+      align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 10px;
+    }
+    .meta-report-public-hero-actions:empty { display: none; }
+    .meta-report-public-excel-cta {
+      box-shadow: 0 10px 28px rgba(255, 106, 0, 0.28);
+    }
     .brand-footer--public-report {
       margin-top: 32px;
       padding-bottom: 8px;
@@ -4772,7 +4784,10 @@
       .meta-reports-page--public .meta-report-toolbar-actions {
         margin-left: 0; width: 100%;
       }
-      .meta-reports-page--public .meta-report-excel-sheet-btn { flex: 1 1 auto; text-align: center; }
+      .meta-report-public-hero-head { align-items: stretch; }
+      .meta-report-public-hero-actions { width: 100%; }
+      .meta-reports-page--public .meta-report-excel-sheet-btn,
+      .meta-report-public-excel-cta { flex: 1 1 auto; justify-content: center; text-align: center; }
     }
     .meta-report-client-page .meta-report-tabs { margin: 0 0 20px; }
     .meta-report-client-page .meta-report-month-panel {

@@ -4405,6 +4405,18 @@
       font-size: 13px;
       margin-top: 6px;
     }
+    .meta-report-public-hero-head {
+      align-items: flex-start; display: flex; flex-wrap: wrap; gap: 16px 20px;
+      justify-content: space-between;
+    }
+    .meta-report-public-hero-copy { flex: 1 1 220px; min-width: 0; }
+    .meta-report-public-hero-actions {
+      align-items: center; display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 10px;
+    }
+    .meta-report-public-hero-actions:empty { display: none; }
+    .meta-report-public-excel-cta {
+      box-shadow: 0 10px 28px rgba(255, 106, 0, 0.28);
+    }
     .brand-footer--public-report {
       margin-top: 32px;
       padding-bottom: 8px;
@@ -4781,7 +4793,10 @@
       .meta-reports-page--public .meta-report-toolbar-actions {
         margin-left: 0; width: 100%;
       }
-      .meta-reports-page--public .meta-report-excel-sheet-btn { flex: 1 1 auto; text-align: center; }
+      .meta-report-public-hero-head { align-items: stretch; }
+      .meta-report-public-hero-actions { width: 100%; }
+      .meta-reports-page--public .meta-report-excel-sheet-btn,
+      .meta-report-public-excel-cta { flex: 1 1 auto; justify-content: center; text-align: center; }
     }
     .meta-report-client-page .meta-report-tabs { margin: 0 0 20px; }
     .meta-report-client-page .meta-report-month-panel {
@@ -9283,10 +9298,22 @@
       return url || null;
     }
 
-    function renderMetaReportExcelSheetButton(settings = {}, { prominent = false } = {}) {
+    function renderMetaReportExcelSheetButton(settings = {}, { prominent = false, hero = false } = {}) {
       const url = resolveMetaReportExcelSheetUrl(settings);
       if (!url) return '';
-      return `<a class="admin-btn admin-btn--primary${prominent ? ' meta-report-excel-sheet-btn' : ''}" href="${esc(url)}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>`;
+      const classes = [
+        'admin-btn',
+        'admin-btn--primary',
+        prominent ? 'meta-report-excel-sheet-btn' : '',
+        hero ? 'meta-report-public-excel-cta' : '',
+      ].filter(Boolean).join(' ');
+      return `<a class="${classes}" href="${esc(url)}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>`;
+    }
+
+    function updateMetaReportPublicExcelSheetButton(settings = {}) {
+      const host = document.getElementById('meta-report-public-excel-sheet-btn');
+      if (!host) return;
+      host.innerHTML = renderMetaReportExcelSheetButton(settings, { prominent: true, hero: true });
     }
 
     function describeMetaReportExcelSheetLabel(url) {
@@ -9423,7 +9450,7 @@
       }
       const publicBtnHost = document.getElementById('meta-report-public-excel-sheet-btn');
       if (publicBtnHost) {
-        publicBtnHost.innerHTML = renderMetaReportExcelSheetButton(settings, { prominent: true });
+        publicBtnHost.innerHTML = renderMetaReportExcelSheetButton(settings, { prominent: true, hero: true });
       }
     }
 
@@ -10034,6 +10061,7 @@
     function updatePublicMetaReportContent(payload) {
       metaReportsState.publicPayload = payload;
       syncMetaReportPublicBranding(payload);
+      updateMetaReportPublicExcelSheetButton(payload.settings || {});
       const monthKeys = payload.monthKeys || [];
       if (!metaReportsState.activeMonthKey) {
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
@@ -15452,8 +15480,15 @@
         ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
           <div class="meta-premium-page-hero-inner">
-            <h1>${esc(clientName)}</h1>
-            <p class="meta-report-public-subtitle">Meta ads performance report</p>
+            <div class="meta-report-public-hero-head">
+              <div class="meta-report-public-hero-copy">
+                <h1>${esc(clientName)}</h1>
+                <p class="meta-report-public-subtitle">Meta ads performance report</p>
+              </div>
+              <div class="meta-report-public-hero-actions" id="meta-report-public-excel-sheet-btn">
+                ${renderMetaReportExcelSheetButton(payload.settings || {}, { prominent: true, hero: true })}
+              </div>
+            </div>
           </div>
         </div>
         <div class="meta-reports-page meta-reports-page--public">
@@ -15465,9 +15500,6 @@
                 </select>
               </label>
               <span class="meta-report-year-loading-banner" id="meta-report-public-year-loading-banner" hidden aria-live="polite"></span>
-            </div>
-            <div class="meta-report-toolbar-actions" id="meta-report-public-excel-sheet-btn">
-              ${renderMetaReportExcelSheetButton(payload.settings || {}, { prominent: true })}
             </div>
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
