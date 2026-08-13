@@ -16183,8 +16183,9 @@
 
     function renderMetaReportMonthManualRow(monthPayload, settings = {}) {
       if (!isMetaReportGhlListClient(settings)) return '';
-      const source = resolveMetaToplineSource(monthPayload);
       const globalMode = resolveClientToplineMode(settings);
+      if (globalMode !== 'cenhub') return '';
+      const source = resolveMetaToplineSource(monthPayload);
       const isManual = source === 'manual';
       const showManualBtn = !isManual;
 
@@ -16236,8 +16237,9 @@
 
     function renderMetaCvMonthManualRow(monthPayload, client) {
       if (!client?.metaReportGhlDataEnabled) return '';
-      const source = monthPayload?.dataSource || monthPayload?.toplineSource || 'meta';
       const globalMode = client.metaReportToplineMode === 'cenhub' ? 'cenhub' : 'meta';
+      if (globalMode !== 'cenhub') return '';
+      const source = monthPayload?.dataSource || monthPayload?.toplineSource || 'meta';
       const isManual = source === 'manual';
       const showManualBtn = !isManual;
       if (!isManual && !showManualBtn) return '';
