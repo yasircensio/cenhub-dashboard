@@ -4701,6 +4701,20 @@
       border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px;
       margin-top: 10px; padding-top: 10px; width: 100%;
     }
+    .meta-report-topline-sync-strip {
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px 12px;
+      justify-content: space-between; margin: 4px 0 16px; padding: 12px 14px;
+    }
+    .meta-report-topline-sync-strip-copy {
+      display: flex; flex: 1 1 180px; flex-direction: column; gap: 3px; min-width: 0;
+    }
+    .meta-report-topline-sync-strip-title {
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-topline-sync-strip-desc {
+      color: var(--text-muted); font-size: 12px; line-height: 1.4;
+    }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
     .meta-report-excel-sheet-summary-main,
@@ -9884,25 +9898,6 @@
       if (changeBtn) {
         changeBtn.onclick = () => openMetaReportToplineChangeModal(payload);
       }
-
-      bindMetaToplineCenhubActionEvents({
-        clientId,
-        prefix: 'meta-report',
-        getMonthKey: () => metaReportsState.activeMonthKey,
-        getYear: () => metaReportsState.selectedYear,
-        setSaving: (isPending) => {
-          metaReportsState.clientToplineSaving = isPending;
-          syncMetaReportToplineSourceBar(payload);
-        },
-        onReload: async () => loadMetaReportsClientPage({ silent: true }),
-        onMonthUpdated: async (result, monthKey) => {
-          if (result?.monthPayload && monthKey) {
-            payload.months = payload.months || {};
-            payload.months[monthKey] = result.monthPayload;
-            refreshMetaReportMonthPanel(result.monthPayload);
-          }
-        },
-      });
     }
 
     function bindMetaMonthSourceOverrideEvents(clientId, settings, {
@@ -16565,25 +16560,18 @@
 
       return `
         <div class="meta-report-topline-source-wrap meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-report-topline-source-panel">
-          <div class="meta-report-topline-summary${mode === 'cenhub' ? ' meta-report-topline-summary--stacked' : ''}">
-            <div class="meta-report-topline-summary-main">
-              <div class="meta-report-topline-summary-content">
-                <div class="meta-report-topline-summary-row">
-                  <span class="meta-report-topline-summary-label">Data source</span>
-                  <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
-                </div>
-                <div class="meta-report-topline-summary-row">
-                  <span class="meta-report-topline-summary-label">Scope</span>
-                  <span class="meta-report-topline-summary-value">All months · ${esc(metaReportsState.selectedYear)}</span>
-                </div>
+          <div class="meta-report-topline-summary">
+            <div class="meta-report-topline-summary-content">
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Data source</span>
+                <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
               </div>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-topline-change"${disabledAttr}>Edit</button>
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Scope</span>
+                <span class="meta-report-topline-summary-value">All months · ${esc(metaReportsState.selectedYear)}</span>
+              </div>
             </div>
-            ${mode === 'cenhub' ? `
-              <div class="meta-report-topline-summary-footer">
-                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}${!hasGhl ? ' title="GHL not connected"' : ''}>Sync year from Cenhub</button>
-              </div>
-            ` : ''}
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-topline-change"${disabledAttr}>Edit</button>
           </div>
           <div class="meta-topline-source-loading" id="meta-report-topline-loading"${saving ? '' : ' hidden'}>
             <span class="meta-report-save-indicator-spinner"></span> Switching source…
@@ -16593,7 +16581,9 @@
     }
 
     function renderMetaReportToplineChangeModal(payload, draftMode) {
-      const currentMode = resolveClientToplineMode(payload?.settings || {});
+      const settings = payload?.settings || {};
+      const currentMode = resolveClientToplineMode(settings);
+      const hasGhl = settings.hasGhl !== false;
 
       return `
         <div class="meta-report-modal-head">
@@ -16621,6 +16611,15 @@
             <span class="metrics-option-card-desc">Pull leads, won deals, revenue, and profit from Cenhub dashboard snapshots.</span>
           </label>
         </div>
+        ${currentMode === 'cenhub' ? `
+          <div class="meta-report-topline-sync-strip">
+            <div class="meta-report-topline-sync-strip-copy">
+              <span class="meta-report-topline-sync-strip-title">Sync from Cenhub</span>
+              <span class="meta-report-topline-sync-strip-desc">Re-pull all months in ${esc(metaReportsState.selectedYear)} from Cenhub snapshots.</span>
+            </div>
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-topline-modal-sync-ghl-year"${!hasGhl ? ' disabled title="GHL not connected"' : ''}>Sync year from Cenhub</button>
+          </div>
+        ` : ''}
         <p class="meta-report-edit-note" id="meta-report-topline-no-change-hint"${draftMode !== currentMode ? ' hidden' : ''}>Select a different source above to switch.</p>
         <div class="metrics-confirm-strip" id="meta-report-topline-confirm-strip"${draftMode === currentMode ? ' hidden' : ''}>
           <div class="metrics-confirm-strip-title">${ICON_WARNING} Topline KPIs will change for all months in ${esc(metaReportsState.selectedYear)}</div>
@@ -16740,6 +16739,30 @@
       document.getElementById('meta-report-topline-ack')?.addEventListener('change', updateMetaReportToplineApplyState);
       document.getElementById('meta-report-topline-confirm')?.addEventListener('input', updateMetaReportToplineApplyState);
 
+      if (resolveClientToplineMode(payload.settings || {}) === 'cenhub') {
+        const isCv = typeof payload.reload === 'function';
+        bindMetaToplineCenhubActionEvents({
+          clientId,
+          prefix: 'meta-report-topline-modal',
+          getMonthKey: () => metaReportsState.activeMonthKey,
+          getYear: () => metaReportsState.selectedYear,
+          setSaving: (isPending) => {
+            const loading = document.getElementById('meta-report-topline-modal-loading');
+            if (loading) loading.hidden = !isPending;
+            const syncBtn = document.getElementById('meta-report-topline-modal-sync-ghl-year');
+            if (syncBtn) syncBtn.disabled = isPending || payload.settings?.hasGhl === false;
+          },
+          onReload: async () => {
+            if (isCv) {
+              await payload.reload();
+            } else {
+              await loadMetaReportsClientPage({ silent: true });
+            }
+            closeMetaReportModal();
+          },
+        });
+      }
+
       const applyBtn = document.getElementById('meta-report-topline-apply');
       if (applyBtn) {
         applyBtn.onclick = async () => {
@@ -16818,25 +16841,18 @@
 
       return `
         <div class="meta-report-topline-source-wrap meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-cv-topline-source-panel">
-          <div class="meta-report-topline-summary${mode === 'cenhub' ? ' meta-report-topline-summary--stacked' : ''}">
-            <div class="meta-report-topline-summary-main">
-              <div class="meta-report-topline-summary-content">
-                <div class="meta-report-topline-summary-row">
-                  <span class="meta-report-topline-summary-label">Data source</span>
-                  <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
-                </div>
-                <div class="meta-report-topline-summary-row">
-                  <span class="meta-report-topline-summary-label">Scope</span>
-                  <span class="meta-report-topline-summary-value">All months · ${esc(metaReportsState.selectedYear)}</span>
-                </div>
+          <div class="meta-report-topline-summary">
+            <div class="meta-report-topline-summary-content">
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Data source</span>
+                <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
               </div>
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-topline-change"${disabledAttr}>Edit</button>
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Scope</span>
+                <span class="meta-report-topline-summary-value">All months · ${esc(metaReportsState.selectedYear)}</span>
+              </div>
             </div>
-            ${mode === 'cenhub' ? `
-              <div class="meta-report-topline-summary-footer">
-                <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-cv-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}>Sync year from Cenhub</button>
-              </div>
-            ` : ''}
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-topline-change"${disabledAttr}>Edit</button>
           </div>
           <div class="meta-topline-source-loading" id="meta-cv-topline-loading"${saving ? '' : ' hidden'}>
             <span class="meta-report-save-indicator-spinner"></span> Switching source…
@@ -17689,18 +17705,6 @@
       if (changeBtn) {
         changeBtn.onclick = () => openMetaCvToplineChangeModal(client);
       }
-
-      bindMetaToplineCenhubActionEvents({
-        clientId,
-        prefix: 'meta-cv',
-        getMonthKey: () => metaReportsState.customValues.selectedMonthKey,
-        getYear: () => metaReportsState.selectedYear,
-        setSaving: setMetaCvSavePending,
-        onReload: async () => {
-          await refreshMetaCvOverviewSilently();
-          refreshMetaCvListAndEditor();
-        },
-      });
     }
 
     function bindMetaCvMonthManualEvents(clientId) {

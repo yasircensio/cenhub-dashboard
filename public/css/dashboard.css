@@ -4692,6 +4692,20 @@
       border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px;
       margin-top: 10px; padding-top: 10px; width: 100%;
     }
+    .meta-report-topline-sync-strip {
+      align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
+      border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px 12px;
+      justify-content: space-between; margin: 4px 0 16px; padding: 12px 14px;
+    }
+    .meta-report-topline-sync-strip-copy {
+      display: flex; flex: 1 1 180px; flex-direction: column; gap: 3px; min-width: 0;
+    }
+    .meta-report-topline-sync-strip-title {
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-topline-sync-strip-desc {
+      color: var(--text-muted); font-size: 12px; line-height: 1.4;
+    }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
     .meta-report-excel-sheet-summary-main,
