@@ -9739,6 +9739,7 @@
 
     function updateMetaReportsClientContent(payload) {
       metaReportsState.clientPayload = payload;
+      metaReportsState.chartProjection = null;
       const monthKeys = payload.monthKeys || [];
       if (!metaReportsState.activeMonthKey) {
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
@@ -9777,14 +9778,9 @@
         bindMetaReportsClientEditEvents(payload.clientId, payload);
       }
       refreshMetaReportBackfillControl(payload);
-      if (metaReportsState.chartSeries?.length) {
-        void ensureMetaReportScenarioSource(payload, { editable: true }).then(() => {
-          const projection = buildMetaReportScenarioProjection(resolveMetaReportScenarioSeries(payload), payload);
-          metaReportsState.chartProjection = projection;
-          syncMetaReportBaselineUi(resolveMetaReportScenarioSeries(payload), projection, resolveMetaReportScenarioPayload(payload));
-          syncMetaReportScenario(payload);
-        });
-      }
+      void ensureMetaReportScenarioSource(payload, { editable: true }).then(() => {
+        syncMetaReportScenario(payload);
+      });
     }
 
     function updatePublicMetaReportContent(payload) {
@@ -9908,7 +9904,7 @@
         /* topline section re-rendered via refreshMetaReportMonthPanel */
       }
 
-      const { series } = resolveMetaReportChartSeries(payload);
+      const { series } = resolveMetaReportChartSeries(payload, { allowDemo: !editable });
       if (series.length) metaReportsState.chartSeries = series;
 
       void (async () => {
@@ -9942,14 +9938,9 @@
 
         syncMetaReportSettingsControls(payload.settings || {}, resolveMetaReportActiveMonthPayload(payload));
 
-        if (metaReportsState.chartSeries?.length) {
-          void ensureMetaReportScenarioSource(payload, { editable }).then(() => {
-            const projection = buildMetaReportScenarioProjection(resolveMetaReportScenarioSeries(payload), payload);
-            metaReportsState.chartProjection = projection;
-            syncMetaReportBaselineUi(resolveMetaReportScenarioSeries(payload), projection, resolveMetaReportScenarioPayload(payload));
-            syncMetaReportScenario(payload);
-          });
-        }
+        void ensureMetaReportScenarioSource(payload, { editable }).then(() => {
+          syncMetaReportScenario(payload);
+        });
       })();
     }
 
@@ -10032,9 +10023,9 @@
     function shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable = false } = {}) {
       if (!monthPayload || monthPayload.meta?.emptyMonth) return false;
       if (!yearPayload) return false;
-      const { series, demo } = resolveMetaReportChartSeries(yearPayload);
+      const { series, demo } = resolveMetaReportChartSeries(yearPayload, { allowDemo: !editable });
       if (series.length < META_REPORT_CHART_MIN_POINTS) return false;
-      if (demo && !editable) return false;
+      if (demo) return false;
       return true;
     }
 
@@ -10265,12 +10256,31 @@
       });
     }
 
-    function resolveMetaReportChartSeries(payload) {
+    function metaReportScenarioPointHasTopline(point) {
+      return metaReportParseAmount(point?.spend) > 0
+        && metaReportParseAmount(point?.leads) > 0
+        && metaReportParseAmount(point?.wonLeads) > 0
+        && metaReportParseAmount(point?.avgLeadValue) > 0;
+    }
+
+    function metaReportScenarioPointHasBottomlineInputs(point) {
+      return metaReportScenarioPointHasTopline(point)
+        && metaReportParseAmount(point?.avgProfitPerWon) > 0;
+    }
+
+    function filterMetaReportScenarioSeries(series = [], { hasBottomline = false } = {}) {
+      const predicate = hasBottomline
+        ? metaReportScenarioPointHasBottomlineInputs
+        : metaReportScenarioPointHasTopline;
+      return series.filter(predicate);
+    }
+
+    function resolveMetaReportChartSeries(payload, { allowDemo = true } = {}) {
       const real = buildMetaReportChartSeries(payload);
       if (real.length >= META_REPORT_CHART_MIN_POINTS) {
         return { series: real, demo: false };
       }
-      if (isMetaReportCensioClient(payload)) {
+      if (allowDemo && isMetaReportCensioClient(payload)) {
         const demo = getMetaReportDemoSeries(
           payload.clientId,
           payload.accountName,
@@ -10613,10 +10623,12 @@
     function buildMetaReportScenarioProjection(series, payload) {
       const pills = getMetaReportScenarioPillsFromState();
       const scenarioPayload = resolveMetaReportScenarioPayload(payload) || payload;
+      const hasBottomline = payloadHasMetaReportBottomline(scenarioPayload);
+      const scenarioSeries = filterMetaReportScenarioSeries(series, { hasBottomline });
       return metaReportProjectBudgetScenario({
-        series,
+        series: scenarioSeries,
         multiplier: metaReportsState.budgetMultiplier,
-        hasBottomline: payloadHasMetaReportBottomline(scenarioPayload),
+        hasBottomline,
         blendHistory: pills.blendHistory,
         includeTrend: pills.includeTrend,
         monthWindow: metaReportsState.scenarioMonthWindow,
@@ -10636,8 +10648,12 @@
       if (!payload) return;
       const calendarYear = getMetaReportCalendarYear(payload);
       if (Number(payload.year) !== calendarYear) return;
-      const { series } = resolveMetaReportChartSeries(payload);
-      if (!series.length) return;
+      const { series, demo } = resolveMetaReportChartSeries(payload, { allowDemo: false });
+      if (!series.length || demo) {
+        metaReportsState.scenarioSourcePayload = null;
+        metaReportsState.scenarioSeries = null;
+        return;
+      }
       metaReportsState.scenarioSourcePayload = payload;
       metaReportsState.scenarioSeries = series;
     }
@@ -11045,7 +11061,7 @@
 
     function renderMetaReportScenarioContextStrip(projection) {
       if (!projection || projection.insufficientData) {
-        return '<p class="meta-report-scenario-context" id="meta-report-scenario-context">Add at least two completed ad months to model a budget scenario.</p>';
+        return '<p class="meta-report-scenario-context" id="meta-report-scenario-context">Add at least two months with ad spend, leads, won leads, and average lead value to model a budget scenario.</p>';
       }
       const activePills = describeActiveMetaReportScenarioPills();
       const pillSummary = activePills.length ? activePills.join(' · ') : 'Recent months only';
@@ -13250,7 +13266,7 @@
       } else {
         destroyMetaReportTrendCharts();
         if (payload) {
-          const { series } = resolveMetaReportChartSeries(payload);
+          const { series } = resolveMetaReportChartSeries(payload, { allowDemo: !editable });
           if (series.length) metaReportsState.chartSeries = series;
           bindMetaReportComparisonControls(payload, { editable });
           void refreshMetaReportComparison(payload, { editable });
@@ -13490,7 +13506,7 @@
 
     function renderMetaReportScenarioMetrics(projection) {
       if (!projection || projection.insufficientData) {
-        return '<p class="meta-report-scenario-empty">Add months with ad spend and leads to model a budget scenario.</p>';
+        return '<p class="meta-report-scenario-empty">Add months with ad spend, leads, won leads, and average lead value to model a budget scenario.</p>';
       }
 
       const revenueDelta = metaReportFormatDeltaPct(
@@ -14291,13 +14307,14 @@
       const scenarioPayload = resolveMetaReportScenarioPayload(payload);
       const series = resolveMetaReportScenarioSeries(payload);
       const hasBottomline = payloadHasMetaReportBottomline(scenarioPayload);
+      const scenarioSeries = filterMetaReportScenarioSeries(series, { hasBottomline });
       const poasWrap = document.getElementById('meta-report-scenario-poas-wrap');
       if (poasWrap) poasWrap.hidden = !hasBottomline;
 
       const projection = metaReportsState.chartProjection;
-      updateMetaReportScenarioChart('roas', series, projection, metaReportsState.chartScenarioRoasMode);
+      updateMetaReportScenarioChart('roas', scenarioSeries, projection, metaReportsState.chartScenarioRoasMode);
       if (hasBottomline) {
-        updateMetaReportScenarioChart('poas', series, projection, metaReportsState.chartScenarioPoasMode);
+        updateMetaReportScenarioChart('poas', scenarioSeries, projection, metaReportsState.chartScenarioPoasMode);
       } else if (metaReportsState.scenarioChartInstances.poas) {
         metaReportsState.scenarioChartInstances.poas.destroy();
         metaReportsState.scenarioChartInstances.poas = null;
@@ -14577,9 +14594,11 @@
     function syncMetaReportScenario(payload) {
       const scenarioPayload = resolveMetaReportScenarioPayload(payload);
       const series = resolveMetaReportScenarioSeries(payload);
+      const hasBottomline = payloadHasMetaReportBottomline(scenarioPayload);
+      const scenarioSeries = filterMetaReportScenarioSeries(series, { hasBottomline });
       const projection = buildMetaReportScenarioProjection(series, payload);
       metaReportsState.chartProjection = projection;
-      syncMetaReportBaselineUi(series, projection, scenarioPayload);
+      syncMetaReportBaselineUi(scenarioSeries, projection, scenarioPayload);
 
       const scenarioCard = document.getElementById('meta-report-scenario-card');
       if (!scenarioCard) return;
@@ -14599,7 +14618,7 @@
 
       hydrateMetaReportSpendChartType(payload);
       hydrateMetaReportScenarioSettings(payload);
-      const { series, demo } = resolveMetaReportChartSeries(payload);
+      const { series, demo } = resolveMetaReportChartSeries(payload, { allowDemo: !editable });
       metaReportsState.chartSeries = series;
       metaReportsState.chartDemo = demo;
       updateMetaReportScenarioSource(payload);
@@ -14637,7 +14656,7 @@
 
       mountMetaReportComparison(payload, { editable });
       if (editable) {
-        const { series } = resolveMetaReportChartSeries(payload);
+        const { series } = resolveMetaReportChartSeries(payload, { allowDemo: false });
         if (series.length) metaReportsState.chartSeries = series;
         bindMetaReportScenarioControls(payload, { editable: true });
         syncMetaReportScenario(payload);
