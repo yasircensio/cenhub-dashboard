@@ -4744,6 +4744,16 @@
     .meta-report-share-preview-hint { color: var(--text-soft); font-size: 11.5px; line-height: 1.35; }
     .meta-report-share-field { display: flex; flex-direction: column; gap: 8px; width: 100%; }
     .meta-report-share-field label { color: var(--text-soft); font-size: 12px; font-weight: 600; }
+    .meta-report-excel-sheet-url-input {
+      background: #fff; border: 1.5px solid var(--border); border-radius: 10px;
+      box-sizing: border-box; color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;
+      line-height: 1.45; min-height: 48px; padding: 12px 14px; width: 100%;
+    }
+    .meta-report-excel-sheet-url-input::placeholder { color: var(--text-soft); }
+    .meta-report-excel-sheet-url-input:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12); outline: none;
+    }
     .meta-report-share-slug-row {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px;
     }
@@ -5849,6 +5859,9 @@
     }
     .meta-report-modal.is-wizard {
       box-shadow: 0 10px 28px rgba(220, 100, 10, 0.14), 0 0 0 1.5px var(--selected-line);
+    }
+    .meta-report-modal.is-wide {
+      max-width: min(720px, calc(100vw - 32px));
     }
     .meta-report-modal-head {
       align-items: flex-start; display: flex; gap: 12px; justify-content: space-between;
@@ -9039,14 +9052,19 @@
       syncMetaReportControlPanelUi();
     }
 
-    function openMetaReportModal(contentHtml, { wizard = false } = {}) {
+    function openMetaReportModal(contentHtml, { wizard = false, wide = false } = {}) {
       closeMetaReportModal();
       const root = document.createElement('div');
       root.id = 'meta-report-modal-root';
       root.className = 'meta-report-modal-root';
+      const modalClass = [
+        'meta-report-modal',
+        wizard ? 'is-wizard' : '',
+        wide ? 'is-wide' : '',
+      ].filter(Boolean).join(' ');
       root.innerHTML = `
         <div class="meta-report-modal-backdrop" data-meta-report-modal-close aria-hidden="true"></div>
-        <div class="meta-report-modal${wizard ? ' is-wizard' : ''}" role="dialog" aria-modal="true">
+        <div class="${modalClass}" role="dialog" aria-modal="true">
           ${contentHtml}
         </div>
       `;
@@ -9361,9 +9379,9 @@
             <input
               type="url"
               id="meta-report-excel-sheet-url"
-              class="admin-input"
+              class="admin-input meta-report-excel-sheet-url-input"
               value="${esc(url)}"
-              placeholder="https://docs.google.com/spreadsheets/..."
+              placeholder="https://docs.google.com/spreadsheets/d/..."
               autocomplete="off"
               spellcheck="false"
               aria-label="Excel sheet URL"
@@ -9383,7 +9401,7 @@
     function openMetaReportExcelSheetModal(payload) {
       metaReportsState.clientExcelSheetExpanded = true;
       syncMetaReportControlPanelUi();
-      openMetaReportModal(renderMetaReportExcelSheetModalContent(payload));
+      openMetaReportModal(renderMetaReportExcelSheetModalContent(payload), { wide: true });
       bindMetaReportExcelSheetModalEvents(payload);
     }
 
