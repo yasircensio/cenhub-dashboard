@@ -4648,10 +4648,34 @@
     }
     .meta-report-share-summary,
     .meta-report-control-status-grid > .meta-report-bottomline-summary,
-    .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary {
+    .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary,
+    .meta-report-topline-summary {
       align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
       border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px 14px;
       justify-content: space-between; padding: 12px 14px; width: 100%;
+    }
+    .meta-report-topline-source-wrap {
+      display: flex; flex-direction: column; gap: 8px; margin-top: 10px; width: 100%;
+    }
+    .meta-report-topline-source-wrap.is-loading .meta-report-topline-summary {
+      opacity: 0.65; pointer-events: none;
+    }
+    .meta-report-topline-summary-content {
+      display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: 8px 16px; min-width: 0;
+    }
+    .meta-report-topline-summary-row {
+      align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .meta-report-topline-summary-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-topline-summary-value {
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-topline-summary-value.is-meta { color: #1d4ed8; }
+    .meta-report-topline-summary-value.is-cenhub { color: #047857; }
+    .meta-report-topline-extra-actions {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; padding: 0 2px;
     }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
@@ -5706,9 +5730,8 @@
       box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
     }
     .meta-topline-source-panel {
-      border-top: 1px solid var(--border); margin: 0; padding: 14px 0 0;
+      margin: 0; padding: 0;
     }
-    .meta-topline-source-panel.is-loading { opacity: 0.65; pointer-events: none; }
     .meta-topline-source-loading {
       align-items: center; color: var(--text-muted); display: flex; font-size: 12px;
       font-weight: 600; gap: 8px; margin: 10px 0 0;
@@ -9102,7 +9125,12 @@
       next.hidden = metaReportsState.clientShareExpanded;
       summary.replaceWith(next);
       const editBtn = document.getElementById('meta-report-share-edit');
-      if (editBtn) editBtn.onclick = () => setMetaReportShareExpanded(true);
+      if (editBtn) {
+        const payload = metaReportsState.clientPayload;
+        editBtn.onclick = () => {
+          if (payload) openMetaReportShareModal(payload);
+        };
+      }
     }
 
     function syncMetaReportControlPanelUi() {
@@ -15920,44 +15948,33 @@
       const saving = metaReportsState.clientToplineSaving;
       const disabledAttr = saving ? ' disabled' : '';
       const hasGhl = settings.hasGhl !== false;
-      const pillClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
-      const pillLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
+      const sourceLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
+      const sourceValueClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
 
       return `
-        <div class="metrics-model-panel meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-report-topline-source-panel">
-          <div class="metrics-model-header">
-            <div class="metrics-model-heading">
-              <h3 class="metrics-model-title">Topline data source</h3>
-            </div>
-            <span class="meta-topline-source-pill ${pillClass}">${esc(pillLabel)}</span>
-          </div>
-          <p class="metrics-model-copy">${esc(metaToplineSourceNote(mode))}. Applies to every month in ${esc(metaReportsState.selectedYear)}.</p>
-          <div class="metrics-model-facts">
-            <div class="metrics-model-fact is-config">
-              <span class="metrics-model-fact-icon">${ICON_LAYER}</span>
-              <div class="metrics-model-fact-body">
-                <div class="metrics-model-fact-label">Scope</div>
-                <div class="metrics-model-fact-value">All months · ${esc(metaReportsState.selectedYear)}</div>
+        <div class="meta-report-topline-source-wrap meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-report-topline-source-panel">
+          <div class="meta-report-topline-summary">
+            <div class="meta-report-topline-summary-content">
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Topline source</span>
+                <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
+              </div>
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Scope</span>
+                <span class="meta-report-topline-summary-value">All months · ${esc(metaReportsState.selectedYear)}</span>
               </div>
             </div>
-            <div class="metrics-model-fact is-config">
-              <span class="metrics-model-fact-icon">${ICON_TAG}</span>
-              <div class="metrics-model-fact-body">
-                <div class="metrics-model-fact-label">Won leads & revenue</div>
-                <div class="metrics-model-fact-value">${mode === 'cenhub' ? 'From Cenhub snapshots' : 'From Meta analytics'}</div>
-              </div>
-            </div>
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-topline-change"${disabledAttr}>Edit</button>
           </div>
           <div class="meta-topline-source-loading" id="meta-report-topline-loading"${saving ? '' : ' hidden'}>
             <span class="meta-report-save-indicator-spinner"></span> Switching source…
           </div>
-          <div class="metrics-model-actions">
-            <button type="button" class="admin-btn" id="meta-report-topline-change"${disabledAttr}>${ICON_EDIT} Change source</button>
-            ${mode === 'cenhub' ? `
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}${!hasGhl ? ' title="GHL not connected"' : ''}>Sync year from Cenhub</button>
+          ${mode === 'cenhub' ? `
+            <div class="meta-report-topline-extra-actions">
+              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}${!hasGhl ? ' title="GHL not connected"' : ''}>Sync year from Cenhub</button>
               <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-report-refresh-snapshot"${disabledAttr || !hasGhl ? ' disabled' : ''}>Refresh Cenhub snapshot</button>
-            ` : ''}
-          </div>
+            </div>
+          ` : ''}
         </div>
       `;
     }
@@ -16166,27 +16183,32 @@
       const saving = metaReportsState.customValues.saving;
       const disabledAttr = saving ? ' disabled' : '';
       const hasGhl = client.hasGhl !== false;
-      const pillClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
-      const pillLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
+      const sourceLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
+      const sourceValueClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
 
       return `
-        <div class="metrics-model-panel meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-cv-topline-source-panel">
-          <div class="metrics-model-header">
-            <div class="metrics-model-heading">
-              <h3 class="metrics-model-title">Topline data source</h3>
+        <div class="meta-report-topline-source-wrap meta-topline-source-panel${saving ? ' is-loading' : ''}" id="meta-cv-topline-source-panel">
+          <div class="meta-report-topline-summary">
+            <div class="meta-report-topline-summary-content">
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Topline source</span>
+                <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
+              </div>
+              <div class="meta-report-topline-summary-row">
+                <span class="meta-report-topline-summary-label">Scope</span>
+                <span class="meta-report-topline-summary-value">All months · ${esc(metaReportsState.selectedYear)}</span>
+              </div>
             </div>
-            <span class="meta-topline-source-pill ${pillClass}">${esc(pillLabel)}</span>
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-topline-change"${disabledAttr}>Edit</button>
           </div>
-          <p class="metrics-model-copy">${esc(metaToplineSourceNote(mode))}. Applies to every month in ${esc(metaReportsState.selectedYear)}.</p>
           <div class="meta-topline-source-loading" id="meta-cv-topline-loading"${saving ? '' : ' hidden'}>
             <span class="meta-report-save-indicator-spinner"></span> Switching source…
           </div>
-          <div class="metrics-model-actions">
-            <button type="button" class="admin-btn admin-btn--small" id="meta-cv-topline-change"${disabledAttr}>${ICON_EDIT} Change source</button>
-            ${mode === 'cenhub' ? `
-              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-cv-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}>Sync year from Cenhub</button>
-            ` : ''}
-          </div>
+          ${mode === 'cenhub' ? `
+            <div class="meta-report-topline-extra-actions">
+              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" id="meta-cv-sync-ghl-year"${disabledAttr || !hasGhl ? ' disabled' : ''}>Sync year from Cenhub</button>
+            </div>
+          ` : ''}
         </div>
       `;
     }

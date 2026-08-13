@@ -4639,10 +4639,34 @@
     }
     .meta-report-share-summary,
     .meta-report-control-status-grid > .meta-report-bottomline-summary,
-    .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary {
+    .meta-report-bottomline-fee-settings--client .meta-report-bottomline-summary,
+    .meta-report-topline-summary {
       align-items: center; background: var(--panel-soft); border: 1px solid var(--border);
       border-radius: 12px; display: flex; flex-wrap: wrap; gap: 10px 14px;
       justify-content: space-between; padding: 12px 14px; width: 100%;
+    }
+    .meta-report-topline-source-wrap {
+      display: flex; flex-direction: column; gap: 8px; margin-top: 10px; width: 100%;
+    }
+    .meta-report-topline-source-wrap.is-loading .meta-report-topline-summary {
+      opacity: 0.65; pointer-events: none;
+    }
+    .meta-report-topline-summary-content {
+      display: flex; flex: 1 1 220px; flex-wrap: wrap; gap: 8px 16px; min-width: 0;
+    }
+    .meta-report-topline-summary-row {
+      align-items: baseline; display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .meta-report-topline-summary-label {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
+    .meta-report-topline-summary-value {
+      color: var(--text); font-size: 13px; font-weight: 600;
+    }
+    .meta-report-topline-summary-value.is-meta { color: #1d4ed8; }
+    .meta-report-topline-summary-value.is-cenhub { color: #047857; }
+    .meta-report-topline-extra-actions {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px; padding: 0 2px;
     }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
@@ -5697,9 +5721,8 @@
       box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
     }
     .meta-topline-source-panel {
-      border-top: 1px solid var(--border); margin: 0; padding: 14px 0 0;
+      margin: 0; padding: 0;
     }
-    .meta-topline-source-panel.is-loading { opacity: 0.65; pointer-events: none; }
     .meta-topline-source-loading {
       align-items: center; color: var(--text-muted); display: flex; font-size: 12px;
       font-weight: 600; gap: 8px; margin: 10px 0 0;
