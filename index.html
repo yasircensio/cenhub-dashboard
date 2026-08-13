@@ -9778,9 +9778,7 @@
         bindMetaReportsClientEditEvents(payload.clientId, payload);
       }
       refreshMetaReportBackfillControl(payload);
-      void ensureMetaReportScenarioSource(payload, { editable: true }).then(() => {
-        syncMetaReportScenario(payload);
-      });
+      void ensureMetaReportScenarioSource(payload, { editable: true });
     }
 
     function updatePublicMetaReportContent(payload) {
@@ -10987,6 +10985,37 @@
         baselineMode: metaReportsState.budgetBaseline,
         activeMonthKey: resolveMetaReportScenarioActiveMonthKey(payload),
       });
+    }
+
+    function resolveMetaReportScenarioDisplayTimeline(payload, fallbackSeries = []) {
+      if (metaReportsState.chartSeries?.length) {
+        return metaReportsState.chartSeries;
+      }
+      if (payload) {
+        return buildMetaReportChartSeries(payload);
+      }
+      return fallbackSeries;
+    }
+
+    function resolveMetaReportScenarioActiveTimeline(series = []) {
+      const currentKey = metaReportMonthKeyFromDate(new Date());
+      return series.filter((point) => !currentKey || !point.monthKey || point.monthKey <= currentKey);
+    }
+
+    function resolveMetaReportScenarioAdActiveSeries(timeline, kind) {
+      const activeTimeline = resolveMetaReportScenarioActiveTimeline(timeline);
+      if (kind === 'poas') {
+        return activeTimeline.filter((point) => (
+          point.poasKr != null && point.poasX != null && metaReportParseAmount(point.spend) > 0
+        ));
+      }
+      return activeTimeline.filter((point) => metaReportParseAmount(point.spend) > 0);
+    }
+
+    function resolveMetaReportScenarioLastAdActiveIndex(series = []) {
+      return series.reduce((lastIndex, point, index) => (
+        metaReportParseAmount(point.spend) > 0 ? index : lastIndex
+      ), -1);
     }
 
     function resolveMetaReportScenarioChartSeries(series) {
@@ -13983,11 +14012,9 @@
       const krKey = kind === 'roas' ? 'roasKr' : 'poasKr';
       const xKey = kind === 'roas' ? 'roasX' : 'poasX';
       const returnLabel = kind === 'roas' ? 'ROAS' : 'POAS';
-      const chartSeries = resolveMetaReportScenarioChartSeries(
-        kind === 'poas'
-          ? series.filter((point) => point.poasKr != null && point.poasX != null)
-          : series,
-      );
+      const timelineSeries = resolveMetaReportScenarioActiveTimeline(series);
+      const adActiveSeries = resolveMetaReportScenarioAdActiveSeries(timelineSeries, kind);
+      const chartSeries = resolveMetaReportScenarioChartSeries(adActiveSeries);
       const baselineSpend = resolveMetaReportSpendChartBaseline(chartSeries, projection);
       const useMultiplier = mode === 'x' && baselineSpend > 0;
       const projectionSteps = buildMetaReportScenarioProjectionSteps(projection, {
@@ -13995,14 +14022,18 @@
         targetMultiplier: metaReportsState.budgetMultiplier,
       });
       const normalizedType = normalizeMetaReportSpendChartType(chartType);
-      const labels = chartSeries.map((point) => point.label);
-      const spendValues = chartSeries.map((point) => (
-        useMultiplier
+      const labels = timelineSeries.map((point) => point.label);
+      const spendValues = timelineSeries.map((point) => {
+        if (metaReportParseAmount(point.spend) <= 0) return null;
+        return useMultiplier
           ? metaReportSpendMultiplierValue(point.spend, baselineSpend)
-          : metaReportParseAmount(point.spend)
-      ));
-      const returnValues = chartSeries.map((point) => metaReportChartValue(point, mode, krKey, xKey));
-      const lastHistoricalIndex = chartSeries.length - 1;
+          : metaReportParseAmount(point.spend);
+      });
+      const returnValues = timelineSeries.map((point) => {
+        if (metaReportParseAmount(point.spend) <= 0) return null;
+        return metaReportChartValue(point, mode, krKey, xKey);
+      });
+      const lastHistoricalIndex = resolveMetaReportScenarioLastAdActiveIndex(timelineSeries);
       const firstProjectedIndex = labels.length;
 
       for (const step of projectionSteps) {
@@ -14287,15 +14318,15 @@
       });
     }
 
-    function updateMetaReportScenarioChart(kind, series, projection, mode) {
+    function updateMetaReportScenarioChart(kind, series, projection, mode, payload = null) {
       const canvas = document.getElementById(`meta-report-scenario-chart-${kind}`);
       const emptyEl = document.getElementById(`meta-report-scenario-chart-${kind}-empty`);
       if (!canvas || !emptyEl) return;
 
-      const chartSeries = kind === 'poas'
-        ? series.filter((point) => point.poasKr != null && point.poasX != null)
-        : series.filter((point) => metaReportParseAmount(point.spend) > 0);
-      const trimmedSeries = resolveMetaReportScenarioChartSeries(chartSeries);
+      const activePayload = payload || metaReportsState.clientPayload || metaReportsState.publicPayload;
+      const timeline = resolveMetaReportScenarioDisplayTimeline(activePayload, series);
+      const adActiveSeries = resolveMetaReportScenarioAdActiveSeries(timeline, kind);
+      const trimmedSeries = resolveMetaReportScenarioChartSeries(adActiveSeries);
 
       if (metaReportsState.scenarioChartInstances[kind]) {
         metaReportsState.scenarioChartInstances[kind].destroy();
@@ -14315,7 +14346,7 @@
       canvas.hidden = false;
       emptyEl.hidden = true;
       metaReportsState.scenarioChartInstances[kind] = buildMetaReportScenarioExtrapolationChart(canvas, {
-        series: chartSeries,
+        series: timeline,
         mode,
         kind,
         projection,
@@ -14326,15 +14357,16 @@
 
     function mountMetaReportScenarioCharts(payload) {
       const scenarioPayload = resolveMetaReportScenarioPayload(payload);
-      const series = resolveMetaReportScenarioSeries(payload);
+      const activePayload = payload || metaReportsState.clientPayload || metaReportsState.publicPayload;
+      const series = resolveMetaReportScenarioDisplayTimeline(activePayload);
       const hasBottomline = payloadHasMetaReportBottomline(scenarioPayload);
       const poasWrap = document.getElementById('meta-report-scenario-poas-wrap');
       if (poasWrap) poasWrap.hidden = !hasBottomline;
 
       const projection = metaReportsState.chartProjection;
-      updateMetaReportScenarioChart('roas', series, projection, metaReportsState.chartScenarioRoasMode);
+      updateMetaReportScenarioChart('roas', series, projection, metaReportsState.chartScenarioRoasMode, activePayload);
       if (hasBottomline) {
-        updateMetaReportScenarioChart('poas', series, projection, metaReportsState.chartScenarioPoasMode);
+        updateMetaReportScenarioChart('poas', series, projection, metaReportsState.chartScenarioPoasMode, activePayload);
       } else if (metaReportsState.scenarioChartInstances.poas) {
         metaReportsState.scenarioChartInstances.poas.destroy();
         metaReportsState.scenarioChartInstances.poas = null;
@@ -14472,7 +14504,10 @@
             });
             updateMetaReportScenarioChart(
               'roas',
-              metaReportsState.chartSeries || [],
+              resolveMetaReportScenarioDisplayTimeline(
+                metaReportsState.clientPayload || metaReportsState.publicPayload,
+                metaReportsState.chartSeries || [],
+              ),
               metaReportsState.chartProjection,
               mode,
             );
@@ -14491,7 +14526,10 @@
             });
             updateMetaReportScenarioChart(
               'poas',
-              metaReportsState.chartSeries || [],
+              resolveMetaReportScenarioDisplayTimeline(
+                metaReportsState.clientPayload || metaReportsState.publicPayload,
+                metaReportsState.chartSeries || [],
+              ),
               metaReportsState.chartProjection,
               mode,
             );
@@ -14658,7 +14696,7 @@
         button.classList.toggle('is-active', button.getAttribute('data-spend-chart-type') === metaReportsState.spendChartType);
       });
       setMetaReportChartTab(metaReportsState.chartTab || 'trend');
-      if (editable) syncMetaReportScenario(payload);
+      syncMetaReportScenario(payload);
     }
 
     function mountMetaReportCharts(payload, { editable = false, clientId = null } = {}) {
