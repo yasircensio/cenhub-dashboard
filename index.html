@@ -9910,6 +9910,7 @@
     function bindMetaMonthSourceOverrideEvents(clientId, settings, {
       prefix,
       getMonthKey,
+      getMonthPayload,
       onSuccess,
     }) {
       const manualBtn = document.getElementById(`${prefix}-use-manual-month`);
@@ -9940,14 +9941,23 @@
           if (!monthKey) return;
           restoreBtn.disabled = true;
           try {
+            const monthPayload = getMonthPayload?.() || null;
+            const restoreToCenhub = monthHasCenhubSnapshot(monthPayload, settings);
+            const endpoint = restoreToCenhub ? 'sync-ghl' : 'use-meta';
             const result = await adminFetch(
-              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/sync-ghl`,
-              { method: 'POST', body: JSON.stringify({ overwriteManual: true }) },
+              `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/${endpoint}`,
+              {
+                method: 'POST',
+                body: restoreToCenhub ? JSON.stringify({ overwriteManual: true }) : '{}',
+              },
             );
             onSuccess(result, monthKey);
-            showToast('Cenhub data restored for this month', 'success');
+            showToast(
+              restoreToCenhub ? 'Cenhub data restored for this month' : 'Meta restored for this month',
+              'success',
+            );
           } catch (error) {
-            showToast(error.message || 'Could not restore Cenhub data', 'error');
+            showToast(error.message || 'Could not restore month data source', 'error');
           } finally {
             restoreBtn.disabled = false;
           }
@@ -9979,6 +9989,10 @@
       bindMetaMonthSourceOverrideEvents(clientId, payload?.settings || {}, {
         prefix: 'meta-report',
         getMonthKey: () => metaReportsState.activeMonthKey,
+        getMonthPayload: () => {
+          const monthKey = metaReportsState.activeMonthKey;
+          return monthKey ? payload?.months?.[monthKey] || null : null;
+        },
         onSuccess: (result, monthKey) => {
           if (result?.monthPayload && monthKey) {
             payload.months = payload.months || {};
@@ -16221,7 +16235,8 @@
             const globalMode = resolveClientToplineMode(settings);
             const toplineSource = resolveMetaToplineSource(monthPayload, settings);
             const manualMode = isMetaReportGhlListClient(settings)
-              && (toplineSource === 'manual' || (globalMode === 'cenhub' && toplineSource !== 'ghl'));
+              && globalMode === 'cenhub'
+              && toplineSource === 'manual';
             const body = {
               periodStart: document.getElementById('meta-report-period-start')?.value,
               periodEnd: document.getElementById('meta-report-period-end')?.value,
@@ -16528,7 +16543,7 @@
     }
 
     function metaToplineSourceNote(mode) {
-      return mode === 'cenhub' ? 'Using Cenhub for all months' : 'Using Meta Analytics for all months';
+      return mode === 'cenhub' ? 'Using Cenhub for all months' : 'Using Meta for all months';
     }
 
     function metaToplineConfirmWord(mode) {
@@ -16547,7 +16562,7 @@
         return renderMetaToplineSourcePillHtml('Manual this month', 'manual');
       }
       if (globalMode === 'meta' || source === 'meta') {
-        return renderMetaToplineSourcePillHtml('Meta Analytics', 'meta');
+        return renderMetaToplineSourcePillHtml('Meta', 'meta');
       }
       if (source === 'ghl') {
         return renderMetaToplineSourcePillHtml('Cenhub', 'cenhub');
@@ -16562,7 +16577,7 @@
       const saving = metaReportsState.clientToplineSaving;
       const disabledAttr = saving ? ' disabled' : '';
       const hasGhl = settings.hasGhl !== false;
-      const sourceLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
+      const sourceLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta';
       const sourceValueClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
 
       return `
@@ -16603,7 +16618,7 @@
             <input type="radio" name="meta-topline-draft-mode" value="meta"${draftMode === 'meta' ? ' checked' : ''} />
             <span class="metrics-option-card-top">
               <span class="metrics-option-card-icon">${ICON_TARGET}</span>
-              <span class="metrics-option-card-title">Meta Analytics</span>
+              <span class="metrics-option-card-title">Meta</span>
               <span class="metrics-option-card-radio">${ICON_CHECK}</span>
             </span>
             <span class="metrics-option-card-desc">Use Meta-derived topline KPIs. Ad spend always comes from Meta.</span>
@@ -16732,7 +16747,7 @@
         `/api/meta-reports/clients/${encodeURIComponent(clientId)}/switch-topline-source`,
         { method: 'POST', body: JSON.stringify(body) },
       );
-      showToast(nextMode === 'cenhub' ? 'Switched all months to Cenhub' : 'Switched all months to Meta Analytics', 'success');
+      showToast(nextMode === 'cenhub' ? 'Switched all months to Cenhub' : 'Switched all months to Meta', 'success');
       if (typeof payload.reload === 'function') {
         await payload.reload();
       } else {
@@ -16810,6 +16825,7 @@
       if (!isMetaReportGhlListClient(settings)) return '';
       if (resolveClientToplineMode(settings) !== 'cenhub') return '';
       const source = resolveMetaToplineSource(monthPayload, settings);
+      if (source === 'meta') return '';
       const isManual = source === 'manual';
 
       if (!isManual) {
@@ -16846,7 +16862,7 @@
       const saving = metaReportsState.customValues.saving;
       const disabledAttr = saving ? ' disabled' : '';
       const hasGhl = client.hasGhl !== false;
-      const sourceLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta Analytics';
+      const sourceLabel = mode === 'cenhub' ? 'Cenhub' : 'Meta';
       const sourceValueClass = mode === 'cenhub' ? 'is-cenhub' : 'is-meta';
 
       return `
@@ -17870,7 +17886,7 @@
       );
       const manualMode = Boolean(client?.metaReportGhlDataEnabled)
         && globalMode === 'cenhub'
-        && (toplineSource === 'manual' || toplineSource !== 'ghl');
+        && toplineSource === 'manual';
       const body = {
         wonLeads: document.getElementById('meta-cv-won-leads')?.value === ''
           ? null
