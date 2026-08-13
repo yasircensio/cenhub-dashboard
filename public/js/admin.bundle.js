@@ -761,23 +761,21 @@ Resume the interrupted ${S}?`)&&(l=w.id,c=Number(w.batchOffset)||0)}}if(a?setFbL
         </div>
       </div>
       ${r?`
-        <div class="meta-report-control-status"${s?" hidden":""} id="meta-report-control-status">
-          <div class="meta-report-control-status-stack">
-            <div class="meta-report-control-status-excel-row">
-              ${renderMetaReportExcelSheetSummary(t)}
-            </div>
+        <div class="meta-report-control-status-stack">
+          <div class="meta-report-control-status-rows"${s?" hidden":""} id="meta-report-control-status">
+            ${renderMetaReportExcelSheetSummary(t)}
             <div class="meta-report-control-status-grid">
               ${renderMetaReportShareSummary(e)}
               ${renderMetaReportBottomlineFeeSummary(t,"meta-report")}
             </div>
           </div>
+          <div id="meta-report-topline-source-host"${isMetaReportGhlListClient(t)?"":" hidden"}>
+            ${isMetaReportGhlListClient(t)?renderMetaReportToplineSourceControl(e):""}
+          </div>
         </div>
       `:`
         <p class="meta-report-share-empty">Share link will appear once this client has a Meta ad account configured.</p>
       `}
-      <div id="meta-report-topline-source-host"${isMetaReportGhlListClient(t)?"":" hidden"}>
-        ${isMetaReportGhlListClient(t)?renderMetaReportToplineSourceControl(e):""}
-      </div>
       <div class="meta-report-control-editors">
         <div class="meta-report-control-editor meta-report-control-editor--report" id="meta-report-report-editor-wrap">
           <div class="meta-report-settings-card-head">
