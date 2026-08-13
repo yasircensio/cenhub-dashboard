@@ -5882,20 +5882,7 @@
       display: none;
     }
     .meta-report-bottomline-editor--modal .meta-report-fee-mode-grid--list {
-      gap: 0;
-    }
-    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card {
-      background: transparent; border: 0; border-radius: 0; box-shadow: none;
-      padding: 10px 2px;
-    }
-    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card + .meta-report-fee-mode-card {
-      border-top: 1px solid var(--border);
-    }
-    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card:hover {
-      background: rgba(15, 23, 42, 0.03);
-    }
-    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card:has(input:checked) {
-      background: #fff8f3; box-shadow: none;
+      gap: 8px;
     }
     .meta-report-bottomline-editor--modal .meta-report-fee-value {
       margin-top: 10px; min-height: 0; padding-top: 10px;
