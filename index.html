@@ -15959,7 +15959,7 @@
           <div class="meta-report-topline-summary">
             <div class="meta-report-topline-summary-content">
               <div class="meta-report-topline-summary-row">
-                <span class="meta-report-topline-summary-label">Topline source</span>
+                <span class="meta-report-topline-summary-label">Data source</span>
                 <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
               </div>
               <div class="meta-report-topline-summary-row">
@@ -15987,7 +15987,7 @@
 
       return `
         <div class="meta-report-modal-head">
-          <h2 class="meta-report-modal-title">Change topline source</h2>
+          <h2 class="meta-report-modal-title">Change data source</h2>
           <button type="button" class="meta-report-modal-close" aria-label="Close">&times;</button>
         </div>
         <p class="metrics-model-copy">Choose where won leads, average lead value, and profit come from for every month in ${esc(metaReportsState.selectedYear)}.</p>
@@ -16149,7 +16149,7 @@
             const ok = await applyMetaReportToplineSwitch(clientId, payload, nextMode);
             if (ok) closeMetaReportModal();
           } catch (error) {
-            showToast(error.message || 'Could not switch topline source', 'error');
+            showToast(error.message || 'Could not switch data source', 'error');
           } finally {
             if (isCv) {
               setMetaCvSavePending(false);
@@ -16194,7 +16194,7 @@
           <div class="meta-report-topline-summary">
             <div class="meta-report-topline-summary-content">
               <div class="meta-report-topline-summary-row">
-                <span class="meta-report-topline-summary-label">Topline source</span>
+                <span class="meta-report-topline-summary-label">Data source</span>
                 <span class="meta-report-topline-summary-value ${sourceValueClass}">${esc(sourceLabel)}</span>
               </div>
               <div class="meta-report-topline-summary-row">
