@@ -635,6 +635,37 @@ function testScenarioMultiplierMatchesProjectedSpend() {
   });
 }
 
+function testProjectionStepsMatchSummaryMetrics() {
+  const baselineSpend = 18270;
+  const asOfDate = new Date('2026-08-13T12:00:00.000Z');
+  const series = [
+    { monthKey: '2026-06', spend: 9000, leads: 18, wonLeads: 0, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-06-30' },
+    { monthKey: '2026-07', spend: 18000, leads: 36, wonLeads: 6, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-07-31' },
+    { monthKey: '2026-08', spend: 12258, leads: 23, wonLeads: 1, avgLeadValue: 51000, avgProfitPerWon: 41000, periodEnd: '2026-08-31' },
+  ];
+  const projection = projectScenario({
+    series,
+    baselineSpend,
+    multiplier: 2,
+    hasBottomline: true,
+    monthWindow: '6',
+    activeMonthKey: '2026-08',
+    asOfDate,
+  });
+  const steps = buildScenarioProjectionSteps(projection, {
+    hasBottomline: true,
+    targetMultiplier: 2,
+    asOfDate,
+  });
+
+  assert.ok(steps.length > 0);
+  steps.forEach((step) => {
+    approx(step.poasX, projection.projected.poasX, 0.01);
+    approx(step.poasKr, projection.projected.poasKr, 1);
+    approx(step.spend, projection.projected.spend, 1);
+  });
+}
+
 function main() {
   testSheetExample();
   testFeeNotNegativeOnLoss();
@@ -647,6 +678,7 @@ function main() {
   testShortAdHistoryUsesAvailableMonths();
   testIncompleteMonthExcluded();
   testActiveMonthAnchorsProjectionEfficiency();
+  testProjectionStepsMatchSummaryMetrics();
   testDownwardTrendLowersProjection();
   testPillsAreIndependent();
   testConservativeOptimisticBandCollapsesWithoutTrend();

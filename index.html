@@ -10875,6 +10875,7 @@
       if (!efficiency || efficiency.avgCpl <= 0 || resolvedBaselineSpend <= 0 || prepared.monthsUsed < META_SCENARIO_MIN_EFFICIENCY_MONTHS) {
         return {
           ...efficiencyResult,
+          efficiency,
           prepared,
           baseline: metaReportProjectBudgetAtSpend({ baselineSpend: 0, spend: 0, efficiency }),
           projected: metaReportProjectBudgetAtSpend({ baselineSpend: 0, spend: 0, efficiency }),
@@ -10921,6 +10922,7 @@
       });
       return {
         ...efficiencyResult,
+        efficiency,
         prepared,
         baseline,
         projected,
