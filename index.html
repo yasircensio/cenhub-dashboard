@@ -10405,6 +10405,7 @@
 
     const META_SCENARIO_MIN_EFFICIENCY_MONTHS = 2;
     const META_SCENARIO_MIN_TREND_MONTHS = 4;
+    const META_SCENARIO_SPEND_RAMP_CAP = 2;
     const META_SCENARIO_MAD_MULTIPLIER = 2.5;
     const META_SCENARIO_MAX_MONTHLY_TREND = 0.03;
 
@@ -11027,6 +11028,14 @@
       return keys;
     }
 
+    function metaReportResolveScenarioStepMultiplier(stepIndex, targetMultiplier = 1) {
+      const targetMult = metaReportParseAmount(targetMultiplier) || 1;
+      const step = Number.parseInt(stepIndex, 10) || 1;
+      if (targetMult <= META_SCENARIO_SPEND_RAMP_CAP) return targetMult;
+      if (step <= 1) return META_SCENARIO_SPEND_RAMP_CAP;
+      return targetMult;
+    }
+
     function buildMetaReportScenarioProjectionSteps(projection, {
       months = META_REPORT_SCENARIO_PROJECTED_MONTHS,
       hasBottomline = false,
@@ -11042,7 +11051,7 @@
       const projectionMonthKeys = metaReportBuildScenarioProjectionMonthKeys(months, asOfDate);
       const steps = [];
       for (let step = 1; step <= months; step += 1) {
-        const stepMult = targetMult;
+        const stepMult = metaReportResolveScenarioStepMultiplier(step, targetMult);
         const spend = metaReportRoundMoney(baseSpend * stepMult);
         const trendAdj = Math.exp(trendRate * step);
         const metrics = metaReportProjectBudgetAtSpend({

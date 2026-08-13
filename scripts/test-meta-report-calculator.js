@@ -157,6 +157,17 @@ function testBudgetScenarioProjection() {
   approx(result.projected.leads, 74, 2);
 }
 
+function testScenarioSpendRampAboveDouble() {
+  const { resolveScenarioStepMultiplier } = require('../lib/meta-report-scenario-projection');
+  approx(resolveScenarioStepMultiplier(1, 2), 2);
+  approx(resolveScenarioStepMultiplier(2, 2), 2);
+  approx(resolveScenarioStepMultiplier(1, 3), 2);
+  approx(resolveScenarioStepMultiplier(2, 3), 3);
+  approx(resolveScenarioStepMultiplier(4, 3), 3);
+  approx(resolveScenarioStepMultiplier(1, 2.5), 2);
+  approx(resolveScenarioStepMultiplier(2, 2.5), 2.5);
+}
+
 function testScenarioProjectionStepsMatchTargetMultiplier() {
   const series = [{
     spend: 9000,
@@ -184,7 +195,9 @@ function testScenarioProjectionStepsMatchTargetMultiplier() {
 
   const steps = buildScenarioProjectionSteps(projection, { hasBottomline: false });
   assert.strictEqual(steps.length, 4);
-  steps.forEach((step) => {
+  approx(steps[0].spend, 18000);
+  approx(steps[0].spendMultiplier, 2);
+  steps.slice(1).forEach((step) => {
     approx(step.spend, 27000);
     approx(step.spendMultiplier, 3);
   });
@@ -697,6 +710,7 @@ function main() {
   testEmptyMonth();
   testLeadActionParsing();
   testBudgetScenarioProjection();
+  testScenarioSpendRampAboveDouble();
   testScenarioProjectionStepsMatchTargetMultiplier();
   testScenarioMultiplierMatchesProjectedSpend();
   testShortAdHistoryUsesAvailableMonths();
