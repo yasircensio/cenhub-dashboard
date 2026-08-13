@@ -4773,8 +4773,11 @@
     .meta-reports-page--public .meta-report-toolbar {
       align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
     }
+    .meta-reports-page--public .meta-report-toolbar-left {
+      padding-left: 15px;
+    }
     .meta-reports-page--public .meta-report-toolbar-actions {
-      display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto;
+      display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto; padding-right: 15px;
     }
     .meta-reports-page--public .meta-report-toolbar-actions:empty { display: none; }
     @media (max-width: 820px) {
