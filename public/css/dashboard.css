@@ -4681,6 +4681,17 @@
     .meta-report-topline-extra-actions {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px; padding: 0 2px;
     }
+    .meta-report-topline-summary--stacked {
+      align-items: stretch; flex-direction: column; gap: 0;
+    }
+    .meta-report-topline-summary-main {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px 14px;
+      justify-content: space-between; width: 100%;
+    }
+    .meta-report-topline-summary-footer {
+      border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 10px; padding-top: 10px; width: 100%;
+    }
     .meta-report-share-summary[hidden] { display: none !important; }
     .meta-report-share-summary-main,
     .meta-report-excel-sheet-summary-main,
