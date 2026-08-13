@@ -16644,7 +16644,7 @@
     function openMetaReportToplineChangeModal(payload) {
       const currentMode = resolveClientToplineMode(payload?.settings || {});
       metaReportsState.clientToplineModalPayload = payload;
-      openMetaReportModal(renderMetaReportToplineChangeModal(payload, currentMode), { wizard: true });
+      openMetaReportModal(renderMetaReportToplineChangeModal(payload, currentMode), { wizard: true, wide: true });
       bindMetaReportToplineChangeModal(payload);
       updateMetaReportToplineApplyState();
     }
@@ -16652,7 +16652,10 @@
     function openMetaCvToplineChangeModal(client) {
       const payload = {
         clientId: client.clientId,
-        settings: { metaReportToplineMode: client.metaReportToplineMode },
+        settings: {
+          metaReportToplineMode: client.metaReportToplineMode,
+          hasGhl: client.hasGhl !== false,
+        },
         reload: async () => {
           await refreshMetaCvOverviewSilently();
           refreshMetaCvListAndEditor();
