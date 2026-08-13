@@ -5704,24 +5704,38 @@
     .meta-topline-status-badge.is-manual { background: #fff7ed; color: #9a3412; }
     .meta-topline-status-badge.is-cenhub-empty { background: #fef3c7; color: #92400e; }
     .meta-topline-source-pill {
-      border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-      line-height: 1; padding: 6px 12px; text-transform: uppercase; white-space: nowrap;
+      align-items: center; background: #fff; border: 1px solid var(--border);
+      border-radius: 999px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      display: inline-flex; flex-shrink: 0; font-size: 12px; font-weight: 600;
+      gap: 7px; letter-spacing: 0; line-height: 1.2; padding: 6px 12px 6px 9px;
+      text-transform: none; white-space: nowrap;
+    }
+    .meta-topline-source-pill-dot {
+      border-radius: 50%; flex-shrink: 0; height: 8px; width: 8px;
     }
     .meta-topline-source-pill.is-meta {
-      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af;
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+      background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.22); color: #1d4ed8;
+    }
+    .meta-topline-source-pill.is-meta .meta-topline-source-pill-dot {
+      background: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
     }
     .meta-topline-source-pill.is-cenhub {
-      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46;
-      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25);
+      background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.22); color: #047857;
+    }
+    .meta-topline-source-pill.is-cenhub .meta-topline-source-pill-dot {
+      background: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
     }
     .meta-topline-source-pill.is-manual {
-      background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #9a3412;
-      box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.25);
+      background: rgba(249, 115, 22, 0.08); border-color: rgba(249, 115, 22, 0.22); color: #c2410c;
+    }
+    .meta-topline-source-pill.is-manual .meta-topline-source-pill-dot {
+      background: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.16);
     }
     .meta-topline-source-pill.is-cenhub-empty {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #92400e;
-      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25);
+      background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.22); color: #b45309;
+    }
+    .meta-topline-source-pill.is-cenhub-empty .meta-topline-source-pill-dot {
+      background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16);
     }
     .meta-topline-source-panel {
       margin: 0; padding: 0;
@@ -5732,8 +5746,8 @@
     }
     .meta-topline-source-loading[hidden] { display: none !important; }
     .meta-report-edit-panel-head {
-      align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
-      justify-content: space-between; margin: 0 0 8px;
+      align-items: center; display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: space-between; margin: 0 0 10px;
     }
     .meta-report-edit-panel-head h3 { margin: 0; }
     .meta-topline-manual-pill-btn {
