@@ -5858,9 +5858,16 @@
     }
     .meta-report-modal.is-wizard {
       box-shadow: 0 10px 28px rgba(220, 100, 10, 0.14), 0 0 0 1.5px var(--selected-line);
+      padding-bottom: 14px;
     }
     .meta-report-modal.is-wide {
       max-width: min(720px, calc(100vw - 32px));
+    }
+    .meta-report-modal .metrics-model-actions {
+      margin-bottom: 0; margin-top: 16px;
+    }
+    .meta-report-modal-save-row:not(:has(.meta-report-save-indicator.is-visible)) {
+      display: none;
     }
     .meta-report-modal-head {
       align-items: flex-start; display: flex; gap: 12px; justify-content: space-between;
