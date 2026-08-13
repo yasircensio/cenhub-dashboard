@@ -5640,6 +5640,26 @@
     .meta-topline-subsection {
       border-top: 1px solid var(--border); margin: 4px 0 0; padding: 16px 0 0;
     }
+    .meta-report-topline-source-bar {
+      align-items: center; border-top: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 0; padding: 14px 0 0;
+    }
+    .meta-report-topline-source-field {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 0;
+    }
+    .meta-report-topline-source-field > span {
+      color: var(--text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .meta-report-topline-source-field .admin-select { min-width: 168px; }
+    .meta-topline-source-note {
+      color: var(--text-muted); font-size: 12px; font-weight: 500; line-height: 1.4;
+    }
+    .meta-report-month-manual-row {
+      align-items: center; border-top: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
+      margin: 4px 0 0; padding: 14px 0 0;
+    }
     .meta-topline-subsection-head {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px;
       justify-content: space-between; margin: 0 0 12px;
@@ -5656,24 +5676,6 @@
     .meta-topline-status-badge.is-cenhub { background: #ecfdf5; color: #047857; }
     .meta-topline-status-badge.is-manual { background: #fff7ed; color: #9a3412; }
     .meta-topline-status-badge.is-cenhub-empty { background: #fef3c7; color: #92400e; }
-    .meta-topline-switcher {
-      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 999px;
-      display: inline-flex; gap: 2px; margin: 0 0 10px; padding: 3px; width: 100%; max-width: 360px;
-    }
-    .meta-topline-switcher-btn {
-      background: transparent; border: 0; border-radius: 999px; color: var(--text-soft);
-      cursor: pointer; flex: 1 1 0; font: inherit; font-size: 13px; font-weight: 600;
-      min-width: 0; padding: 9px 14px; text-align: center;
-      transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
-    }
-    .meta-topline-switcher-btn:hover:not(:disabled) { color: var(--text); }
-    .meta-topline-switcher-btn.is-active {
-      background: var(--primary); box-shadow: 0 1px 4px rgba(255, 106, 0, 0.25); color: #fff;
-    }
-    .meta-topline-switcher-btn:disabled { cursor: default; opacity: 0.55; }
-    .meta-topline-hint {
-      color: var(--text-muted); font-size: 12px; line-height: 1.45; margin: 0 0 12px;
-    }
     .meta-report-edit-note {
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 12px;
     }

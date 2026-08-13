@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   meta_report_default_avg_lead_value NUMERIC,
   meta_report_default_avg_profit_per_won NUMERIC,
   meta_report_ghl_data_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  meta_report_topline_mode TEXT NOT NULL DEFAULT 'meta',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
