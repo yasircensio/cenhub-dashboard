@@ -702,7 +702,7 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(a?setFbL
         </div>
       </div>
     </div>
-  `}function resolveMetaReportExcelSheetUrl(e={}){return String(e?.metaReportExcelSheetUrl||"").trim()||null}function renderMetaReportExcelSheetButton(e={},{prominent:t=!1,hero:a=!1}={}){const n=resolveMetaReportExcelSheetUrl(e);return n?`<a class="${["admin-btn","admin-btn--primary",t?"meta-report-excel-sheet-btn":"",a?"meta-report-public-excel-cta":""].filter(Boolean).join(" ")}" href="${esc(n)}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>`:""}function updateMetaReportPublicExcelSheetButton(e={}){const t=document.getElementById("meta-report-public-excel-sheet-btn");t&&(t.innerHTML=renderMetaReportExcelSheetButton(e,{prominent:!0,hero:!0}))}function describeMetaReportExcelSheetLabel(e){if(!e)return"Not set";try{const t=new URL(e),a=t.pathname.length>24?`${t.pathname.slice(0,24)}\u2026`:t.pathname;return`${t.hostname}${a}`}catch{return e.length>40?`${e.slice(0,40)}\u2026`:e}}function renderMetaReportExcelSheetSummary(e={}){const t=resolveMetaReportExcelSheetUrl(e),a=describeMetaReportExcelSheetLabel(t);return`
+  `}function resolveMetaReportExcelSheetUrl(e={}){return String(e?.metaReportExcelSheetUrl||"").trim()||null}function renderMetaReportExcelSheetButton(e={},{variant:t="primary"}={}){const a=resolveMetaReportExcelSheetUrl(e);return a?`<a class="${t==="secondary"?"admin-btn admin-btn--secondary":"admin-btn admin-btn--primary meta-report-excel-sheet-btn"}" href="${esc(a)}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>`:""}function updateMetaReportPublicExcelSheetButton(e={}){const t=document.getElementById("meta-report-public-excel-sheet-btn");t&&(t.innerHTML=renderMetaReportExcelSheetButton(e,{variant:"secondary"}))}function describeMetaReportExcelSheetLabel(e){if(!e)return"Not set";try{const t=new URL(e),a=t.pathname.length>24?`${t.pathname.slice(0,24)}\u2026`:t.pathname;return`${t.hostname}${a}`}catch{return e.length>40?`${e.slice(0,40)}\u2026`:e}}function renderMetaReportExcelSheetSummary(e={}){const t=resolveMetaReportExcelSheetUrl(e),a=describeMetaReportExcelSheetLabel(t);return`
     <div class="meta-report-excel-sheet-summary" id="meta-report-excel-sheet-summary">
       <div class="meta-report-excel-sheet-summary-main">
         <div class="meta-report-excel-sheet-summary-row">
@@ -740,7 +740,7 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(a?setFbL
         </div>
       </div>
     </div>
-  `}function openMetaReportExcelSheetModal(e){metaReportsState.clientExcelSheetExpanded=!0,syncMetaReportControlPanelUi(),openMetaReportModal(renderMetaReportExcelSheetModalContent(e),{wide:!0}),bindMetaReportExcelSheetModalEvents(e)}function updateMetaReportExcelSheetSummary(e={}){const t=document.getElementById("meta-report-excel-sheet-summary");if(!t)return;const a=document.createElement("div");a.innerHTML=renderMetaReportExcelSheetSummary(e).trim();const n=a.firstElementChild;n&&(t.replaceWith(n),bindMetaReportExcelSheetSummaryEvents(metaReportsState.clientPayload))}function bindMetaReportExcelSheetSummaryEvents(e){const t=document.getElementById("meta-report-excel-sheet-edit");!t||!e||(t.onclick=()=>openMetaReportExcelSheetModal(e))}function bindMetaReportExcelSheetModalEvents(e){const t=e.clientId,a=document.getElementById("meta-report-excel-sheet-url"),n=document.getElementById("meta-report-excel-sheet-save");if(!a||!n)return;const o=async()=>{const r=resolveMetaReportExcelSheetUrl(metaReportsState.clientPayload?.settings||{}),s=a.value.trim();n.disabled=!0;try{await saveMetaReportClientSettings(t,{metaReportExcelSheetUrl:s||null},()=>{a.value=r||""}),syncMetaReportExcelSheetUi(metaReportsState.clientPayload?.settings||{}),closeMetaReportModal()}finally{n.disabled=!1}};n.onclick=o,a.onkeydown=r=>{r.key==="Enter"&&(r.preventDefault(),o())}}function syncMetaReportExcelSheetUi(e={}){const t=resolveMetaReportExcelSheetUrl(e),a=document.getElementById("meta-report-excel-sheet-summary-value");a&&(a.textContent=describeMetaReportExcelSheetLabel(t),a.classList.toggle("is-on",!!t),a.classList.toggle("is-off",!t));const n=document.getElementById("meta-report-excel-sheet-toolbar-btn");n&&(t?(n.href=t,n.hidden=!1):n.hidden=!0);const o=document.getElementById("meta-report-public-excel-sheet-btn");o&&(o.innerHTML=renderMetaReportExcelSheetButton(e,{prominent:!0,hero:!0}))}function renderMetaReportClientControlPanel(e){const t=e.settings||{},a=metaReportsState.clientShareExpanded,n=metaReportsState.clientReportSettingsExpanded,o=metaReportsState.clientExcelSheetExpanded,r=!!e.reportUrl,s=a||n||o,i=metaReportMonthsNeedingBackfill(e),l=i.length?`${ICON_SYNC} Backfill ${i.length} month${i.length===1?"":"s"} from Meta`:`${ICON_SYNC} Re-sync year from Meta`;return`
+  `}function openMetaReportExcelSheetModal(e){metaReportsState.clientExcelSheetExpanded=!0,syncMetaReportControlPanelUi(),openMetaReportModal(renderMetaReportExcelSheetModalContent(e),{wide:!0}),bindMetaReportExcelSheetModalEvents(e)}function updateMetaReportExcelSheetSummary(e={}){const t=document.getElementById("meta-report-excel-sheet-summary");if(!t)return;const a=document.createElement("div");a.innerHTML=renderMetaReportExcelSheetSummary(e).trim();const n=a.firstElementChild;n&&(t.replaceWith(n),bindMetaReportExcelSheetSummaryEvents(metaReportsState.clientPayload))}function bindMetaReportExcelSheetSummaryEvents(e){const t=document.getElementById("meta-report-excel-sheet-edit");!t||!e||(t.onclick=()=>openMetaReportExcelSheetModal(e))}function bindMetaReportExcelSheetModalEvents(e){const t=e.clientId,a=document.getElementById("meta-report-excel-sheet-url"),n=document.getElementById("meta-report-excel-sheet-save");if(!a||!n)return;const o=async()=>{const r=resolveMetaReportExcelSheetUrl(metaReportsState.clientPayload?.settings||{}),s=a.value.trim();n.disabled=!0;try{await saveMetaReportClientSettings(t,{metaReportExcelSheetUrl:s||null},()=>{a.value=r||""}),syncMetaReportExcelSheetUi(metaReportsState.clientPayload?.settings||{}),closeMetaReportModal()}finally{n.disabled=!1}};n.onclick=o,a.onkeydown=r=>{r.key==="Enter"&&(r.preventDefault(),o())}}function syncMetaReportExcelSheetUi(e={}){const t=resolveMetaReportExcelSheetUrl(e),a=document.getElementById("meta-report-excel-sheet-summary-value");a&&(a.textContent=describeMetaReportExcelSheetLabel(t),a.classList.toggle("is-on",!!t),a.classList.toggle("is-off",!t));const n=document.getElementById("meta-report-excel-sheet-toolbar-btn");n&&(t?(n.href=t,n.hidden=!1):n.hidden=!0);const o=document.getElementById("meta-report-public-excel-sheet-btn");o&&(o.innerHTML=renderMetaReportExcelSheetButton(e,{variant:"secondary"}))}function renderMetaReportClientControlPanel(e){const t=e.settings||{},a=metaReportsState.clientShareExpanded,n=metaReportsState.clientReportSettingsExpanded,o=metaReportsState.clientExcelSheetExpanded,r=!!e.reportUrl,s=a||n||o,i=metaReportMonthsNeedingBackfill(e),l=i.length?`${ICON_SYNC} Backfill ${i.length} month${i.length===1?"":"s"} from Meta`:`${ICON_SYNC} Re-sync year from Meta`;return`
     <div class="meta-report-control-panel${a?" is-editing-share":""}${n?" is-editing-report":""}${t.metaReportEnabled?"":" is-share-disabled"}" id="meta-report-control-panel">
       <div class="meta-report-control-bar">
         <div class="meta-report-control-bar-left meta-report-toolbar-left">
@@ -1376,15 +1376,8 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(a?setFbL
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
       <div class="meta-premium-page-hero-inner">
-        <div class="meta-report-public-hero-head">
-          <div class="meta-report-public-hero-copy">
-            <h1>${esc(t)}</h1>
-            <p class="meta-report-public-subtitle">Meta ads performance report</p>
-          </div>
-          <div class="meta-report-public-hero-actions" id="meta-report-public-excel-sheet-btn">
-            ${renderMetaReportExcelSheetButton(e.settings||{},{prominent:!0,hero:!0})}
-          </div>
-        </div>
+        <h1>${esc(t)}</h1>
+        <p class="meta-report-public-subtitle">Meta ads performance report</p>
       </div>
     </div>
     <div class="meta-reports-page meta-reports-page--public">
@@ -1396,6 +1389,9 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(a?setFbL
             </select>
           </label>
           <span class="meta-report-year-loading-banner" id="meta-report-public-year-loading-banner" hidden aria-live="polite"></span>
+        </div>
+        <div class="meta-report-toolbar-actions" id="meta-report-public-excel-sheet-btn">
+          ${renderMetaReportExcelSheetButton(e.settings||{},{variant:"secondary"})}
         </div>
       </div>
       <div class="meta-report-tabs" role="tablist">${r}</div>
