@@ -5853,6 +5853,13 @@
       cursor: pointer; font-size: 18px; height: 32px; line-height: 1; width: 32px;
     }
     .meta-report-modal-close:hover { color: var(--text); }
+    .meta-report-modal-save-row {
+      display: flex; justify-content: flex-end; margin-top: 12px; min-height: 20px;
+    }
+    .meta-report-modal.is-saving .meta-report-share-panel,
+    .meta-report-modal.is-saving .meta-report-bottomline-editor {
+      opacity: 0.72; pointer-events: none;
+    }
     body.meta-report-modal-open { overflow: hidden; }
     .meta-report-edit-note {
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 12px;

@@ -5862,6 +5862,13 @@
       cursor: pointer; font-size: 18px; height: 32px; line-height: 1; width: 32px;
     }
     .meta-report-modal-close:hover { color: var(--text); }
+    .meta-report-modal-save-row {
+      display: flex; justify-content: flex-end; margin-top: 12px; min-height: 20px;
+    }
+    .meta-report-modal.is-saving .meta-report-share-panel,
+    .meta-report-modal.is-saving .meta-report-bottomline-editor {
+      opacity: 0.72; pointer-events: none;
+    }
     body.meta-report-modal-open { overflow: hidden; }
     .meta-report-edit-note {
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0 0 12px;
@@ -9056,6 +9063,9 @@
         <div class="meta-report-modal-backdrop" data-meta-report-modal-close aria-hidden="true"></div>
         <div class="${modalClass}" role="dialog" aria-modal="true">
           ${contentHtml}
+          <div class="meta-report-modal-save-row">
+            ${renderMetaReportSaveIndicator('meta-report-modal-save-indicator')}
+          </div>
         </div>
       `;
       document.body.appendChild(root);
@@ -15732,6 +15742,12 @@
     }
 
     function setMetaReportSavingState(isSaving) {
+      const modalIndicator = document.getElementById('meta-report-modal-save-indicator');
+      if (modalIndicator) {
+        modalIndicator.closest('.meta-report-modal')?.classList.toggle('is-saving', isSaving);
+        modalIndicator.classList.toggle('is-visible', isSaving);
+        return;
+      }
       const panel = document.getElementById('meta-report-month-panel');
       const topIndicator = document.getElementById('meta-report-save-indicator');
       if (panel) panel.classList.toggle('is-loading', isSaving);
