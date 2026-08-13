@@ -15000,7 +15000,7 @@
       const resolvedSettings = settings || yearPayload?.settings || {};
       const isGhlListClient = isMetaReportGhlListClient(resolvedSettings);
       const globalMode = resolveClientToplineMode(resolvedSettings);
-      const toplineSource = resolveMetaToplineSource(monthPayload);
+      const toplineSource = resolveMetaToplineSource(monthPayload, resolvedSettings);
       const isGhlReadOnly = isGhlListClient && globalMode === 'cenhub' && toplineSource === 'ghl';
       let editPanelHtml = '';
       if (editable && monthPayload && !monthPayload.meta?.emptyMonth && tabBounds) {
@@ -15849,7 +15849,7 @@
             const monthPayload = payload?.months?.[monthKey];
             const settings = payload?.settings || {};
             const globalMode = resolveClientToplineMode(settings);
-            const toplineSource = resolveMetaToplineSource(monthPayload);
+            const toplineSource = resolveMetaToplineSource(monthPayload, settings);
             const manualMode = isMetaReportGhlListClient(settings)
               && (toplineSource === 'manual' || (globalMode === 'cenhub' && toplineSource !== 'ghl'));
             const body = {
@@ -16134,8 +16134,13 @@
       return Boolean(settings.metaReportGhlDataEnabled);
     }
 
-    function resolveMetaToplineSource(monthPayload) {
-      return monthPayload?.dataSource || monthPayload?.toplineSource || 'meta';
+    function resolveMetaToplineSource(monthPayload, settings = {}) {
+      const raw = monthPayload?.dataSource || monthPayload?.toplineSource || 'meta';
+      if (!isMetaReportGhlListClient(settings)) return raw;
+      if (resolveClientToplineMode(settings) === 'meta' && (raw === 'manual' || raw === 'ghl')) {
+        return 'meta';
+      }
+      return raw;
     }
 
     function classifyMetaReportMonthInputStatus(monthPayload, requireProfit = false) {
@@ -16166,9 +16171,9 @@
 
     function renderMetaMonthSourcePill(monthPayload, settings = {}) {
       if (!isMetaReportGhlListClient(settings)) return '';
-      const source = resolveMetaToplineSource(monthPayload);
+      const source = resolveMetaToplineSource(monthPayload, settings);
       const globalMode = resolveClientToplineMode(settings);
-      if (source === 'manual') {
+      if (globalMode === 'cenhub' && source === 'manual') {
         return renderMetaToplineSourcePillHtml('Manual this month', 'manual');
       }
       if (globalMode === 'meta' || source === 'meta') {
@@ -16402,7 +16407,7 @@
     function renderMetaReportMonthManualRow(monthPayload, settings = {}, { prefix = 'meta-report' } = {}) {
       if (!isMetaReportGhlListClient(settings)) return '';
       if (resolveClientToplineMode(settings) !== 'cenhub') return '';
-      const source = resolveMetaToplineSource(monthPayload);
+      const source = resolveMetaToplineSource(monthPayload, settings);
       const isManual = source === 'manual';
 
       if (!isManual) {
@@ -17129,8 +17134,15 @@
       const monthPayload = state.editorPayload?.months?.[monthKey] || null;
       const showProfit = client.metaReportShowBottomline;
       const isGhlListClient = Boolean(client.metaReportGhlDataEnabled);
-      const globalMode = client.metaReportToplineMode === 'cenhub' ? 'cenhub' : 'meta';
-      const toplineSource = monthStatus.toplineSource || monthPayload?.dataSource || 'meta';
+      const cvSettings = {
+        metaReportGhlDataEnabled: client.metaReportGhlDataEnabled,
+        metaReportToplineMode: client.metaReportToplineMode,
+      };
+      const globalMode = resolveClientToplineMode(cvSettings);
+      const toplineSource = resolveMetaToplineSource(
+        monthPayload || { dataSource: monthStatus.toplineSource },
+        cvSettings,
+      );
       const isGhlReadOnly = isGhlListClient && globalMode === 'cenhub' && toplineSource === 'ghl';
 
       const wonValue = monthStatus.wonLeads != null
@@ -17156,10 +17168,6 @@
       const toplineControlHtml = isGhlListClient ? renderMetaCvToplineSourceControl(client, overview) : '';
       const manualRowHtml = renderMetaCvMonthManualRow(monthPayload || { dataSource: toplineSource }, client);
 
-      const cvSettings = {
-        metaReportGhlDataEnabled: client.metaReportGhlDataEnabled,
-        metaReportToplineMode: client.metaReportToplineMode,
-      };
       const monthSourcePill = isGhlListClient
         ? renderMetaMonthSourcePill(monthPayload || { dataSource: toplineSource }, cvSettings)
         : '';
@@ -17438,10 +17446,18 @@
       const client = metaReportsState.customValues.overview?.clients?.find((row) => row.clientId === clientId);
       const month = client?.months?.[monthKey];
       const monthPayload = metaReportsState.customValues.editorPayload?.months?.[monthKey] || null;
-      const toplineSource = month?.toplineSource || monthPayload?.dataSource || 'meta';
-      const globalMode = client?.metaReportToplineMode === 'cenhub' ? 'cenhub' : 'meta';
+      const cvSettings = {
+        metaReportGhlDataEnabled: client?.metaReportGhlDataEnabled,
+        metaReportToplineMode: client?.metaReportToplineMode,
+      };
+      const globalMode = resolveClientToplineMode(cvSettings);
+      const toplineSource = resolveMetaToplineSource(
+        monthPayload || { dataSource: month?.toplineSource },
+        cvSettings,
+      );
       const manualMode = Boolean(client?.metaReportGhlDataEnabled)
-        && (toplineSource === 'manual' || (globalMode === 'cenhub' && toplineSource !== 'ghl'));
+        && globalMode === 'cenhub'
+        && (toplineSource === 'manual' || toplineSource !== 'ghl');
       const body = {
         wonLeads: document.getElementById('meta-cv-won-leads')?.value === ''
           ? null
