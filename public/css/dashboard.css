@@ -4616,21 +4616,24 @@
       display: flex; flex-direction: column; gap: 10px; margin: 0;
     }
     .meta-report-control-status-rows[hidden] { display: none !important; }
-    .meta-report-control-status-stack {
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .meta-report-control-status-rows > .meta-report-excel-sheet-summary,
-    .meta-report-control-status-grid > .meta-report-share-summary,
-    .meta-report-control-status-grid > .meta-report-bottomline-summary,
-    .meta-report-topline-source-wrap > .meta-report-topline-summary {
-      min-height: 52px;
-    }
     .meta-report-control-status-grid {
       align-items: stretch; display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr));
     }
     .meta-report-control-status-grid > .meta-report-share-summary,
-    .meta-report-control-status-grid > .meta-report-bottomline-summary {
-      height: 100%;
+    .meta-report-control-status-grid > .meta-report-bottomline-summary,
+    .meta-report-control-status-grid > .meta-report-excel-sheet-summary,
+    .meta-report-topline-source-wrap > .meta-report-topline-summary {
+      height: 100%; min-height: 52px;
+    }
+    #meta-report-topline-source-host {
+      display: flex; flex-direction: column; min-width: 0;
+    }
+    #meta-report-topline-source-host[hidden] { display: none !important; }
+    #meta-report-topline-source-host[hidden] + .meta-report-excel-sheet-summary {
+      grid-column: 1 / -1;
+    }
+    #meta-report-topline-source-host .meta-report-topline-source-wrap {
+      flex: 1; height: 100%;
     }
     .meta-report-control-editors {
       display: flex; flex-direction: column; gap: 12px;
