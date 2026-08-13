@@ -1670,13 +1670,33 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!b
           </span>
           <span class="meta-report-fee-mode-card-radio" aria-hidden="true">${ICON_CHECK}</span>
         </label>`).join(""),b=n?`
-        <div class="meta-report-fee-editor-actions">
-          <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-meta-report-modal-close>Done</button>
-          <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${t}-fee-save">Save fee settings</button>
-        </div>`:`
+    <div class="meta-report-fee-editor-actions">
+      <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-meta-report-modal-close>Done</button>
+      <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${t}-fee-save">Save fee settings</button>
+    </div>`:`
         <div class="meta-report-fee-save-row">
           <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${t}-fee-save">Save fee settings</button>
-        </div>`;return`
+        </div>`;return n?`
+    <div class="meta-report-bottomline-editor meta-report-bottomline-editor--modal" id="${t}-fee-editor">
+      <div class="meta-report-bottomline-panel">
+        <div class="meta-report-bottomline-row">
+          <div class="meta-report-bottomline-row-text">
+            <span class="meta-report-bottomline-row-title">Show bottomline</span>
+            <span class="meta-report-bottomline-row-desc">Adds profit, ROAS and Censio fee breakdown to this report</span>
+          </div>
+          ${renderMetaReportSwitch(`${t}-setting-bottomline`,o,"Show bottomline",!1,{hideLabel:!0})}
+        </div>
+        <div class="meta-report-fee-nested${o?"":" is-hidden"}" id="${t}-fee-nested" ${u}>
+          <div class="meta-report-fee-status" id="${t}-fee-status" aria-live="polite">
+            <span class="meta-report-fee-status-value is-active">${esc(p)}</span>
+          </div>
+          <div class="meta-report-fee-mode-grid meta-report-fee-mode-grid--list">${h}
+          </div>
+          <div class="meta-report-fee-value" id="${t}-fee-value">${metaReportFeeValueBlockHtml(t,i,l,c,{inline:d})}</div>
+        </div>
+      </div>
+      ${b}
+    </div>`:`
     <div class="meta-report-bottomline-editor" id="${t}-fee-editor">
       <div class="meta-report-bottomline-row">
         <div class="meta-report-bottomline-row-text">
@@ -1689,7 +1709,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!b
         <div class="meta-report-fee-status" id="${t}-fee-status" aria-live="polite">
           <span class="meta-report-fee-status-value is-active">${esc(p)}</span>
         </div>
-        <div class="meta-report-fee-mode-grid${a||n?" meta-report-fee-mode-grid--rows":""}">${h}
+        <div class="meta-report-fee-mode-grid${a?" meta-report-fee-mode-grid--rows":""}">${h}
         </div>
         <div class="meta-report-fee-value" id="${t}-fee-value">${metaReportFeeValueBlockHtml(t,i,l,c,{inline:d})}</div>
         ${b}

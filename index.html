@@ -5862,40 +5862,58 @@
     .meta-report-modal-save-row {
       display: flex; justify-content: flex-end; margin-top: 12px; min-height: 20px;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) {
+    .meta-report-modal:has(.meta-report-bottomline-editor--modal) {
       padding: 16px 18px 14px;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-modal-head {
-      margin-bottom: 8px;
+    .meta-report-modal:has(.meta-report-bottomline-editor--modal) .meta-report-modal-head {
+      margin-bottom: 10px;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-share-panel {
-      gap: 0; padding: 12px 14px;
+    .meta-report-modal:has(.meta-report-bottomline-editor--modal) .meta-report-share-panel {
+      background: transparent; border: 0; gap: 0; padding: 0;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-bottomline-row-desc {
+    .meta-report-bottomline-editor--modal .meta-report-bottomline-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden;
+    }
+    .meta-report-bottomline-editor--modal .meta-report-bottomline-row {
+      background: transparent; border: 0; border-radius: 0; margin-bottom: 0; padding: 12px 14px;
+    }
+    .meta-report-bottomline-editor--modal:not(:has(.meta-report-fee-nested.is-hidden)) .meta-report-bottomline-row {
+      border-bottom: 1px solid var(--border);
+    }
+    .meta-report-bottomline-editor--modal .meta-report-bottomline-row-desc {
       display: none;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-bottomline-editor .meta-report-bottomline-row {
-      margin-bottom: 8px; padding: 10px 12px;
+    .meta-report-bottomline-editor--modal .meta-report-fee-nested {
+      background: transparent; border: 0; border-radius: 0; padding: 10px 14px 12px;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-fee-nested {
-      padding: 10px 12px;
+    .meta-report-bottomline-editor--modal .meta-report-fee-status {
+      display: none;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-fee-status {
-      margin-bottom: 6px;
+    .meta-report-bottomline-editor--modal .meta-report-fee-mode-grid--list {
+      gap: 0;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-fee-mode-grid {
-      gap: 8px;
+    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card {
+      background: transparent; border: 0; border-radius: 0; box-shadow: none;
+      padding: 10px 2px;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-fee-mode-card {
-      padding: 9px 12px;
+    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card + .meta-report-fee-mode-card {
+      border-top: 1px solid var(--border);
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-fee-value {
-      margin-top: 8px; min-height: 0;
+    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card:hover {
+      background: rgba(15, 23, 42, 0.03);
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-fee-editor-actions {
-      margin-top: 10px; padding-top: 10px;
+    .meta-report-bottomline-editor--modal .meta-report-fee-mode-card:has(input:checked) {
+      background: #fff8f3; box-shadow: none;
     }
-    .meta-report-modal:has(.meta-report-bottomline-editor) .meta-report-modal-save-row {
+    .meta-report-bottomline-editor--modal .meta-report-fee-value {
+      margin-top: 10px; min-height: 0; padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .meta-report-bottomline-editor--modal .meta-report-fee-editor-actions {
+      border-top: 0; margin-top: 12px; padding-top: 0;
+    }
+    .meta-report-modal:has(.meta-report-bottomline-editor--modal) .meta-report-modal-save-row {
       margin-top: 8px; min-height: 16px;
     }
     .meta-report-modal.is-saving .meta-report-share-panel,
@@ -17169,13 +17187,37 @@
               <span class="meta-report-fee-mode-card-radio" aria-hidden="true">${ICON_CHECK}</span>
             </label>`).join('');
       const editorActions = modal ? `
-            <div class="meta-report-fee-editor-actions">
-              <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-meta-report-modal-close>Done</button>
-              <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee settings</button>
-            </div>` : `
+        <div class="meta-report-fee-editor-actions">
+          <button type="button" class="admin-btn admin-btn--ghost admin-btn--small" data-meta-report-modal-close>Done</button>
+          <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee settings</button>
+        </div>` : `
             <div class="meta-report-fee-save-row">
               <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="${prefix}-fee-save">Save fee settings</button>
             </div>`;
+
+      if (modal) {
+        return `
+        <div class="meta-report-bottomline-editor meta-report-bottomline-editor--modal" id="${prefix}-fee-editor">
+          <div class="meta-report-bottomline-panel">
+            <div class="meta-report-bottomline-row">
+              <div class="meta-report-bottomline-row-text">
+                <span class="meta-report-bottomline-row-title">Show bottomline</span>
+                <span class="meta-report-bottomline-row-desc">Adds profit, ROAS and Censio fee breakdown to this report</span>
+              </div>
+              ${renderMetaReportSwitch(`${prefix}-setting-bottomline`, showBottomline, 'Show bottomline', false, { hideLabel: true })}
+            </div>
+            <div class="meta-report-fee-nested${showBottomline ? '' : ' is-hidden'}" id="${prefix}-fee-nested" ${feeDataAttrs}>
+              <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
+                <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
+              </div>
+              <div class="meta-report-fee-mode-grid meta-report-fee-mode-grid--list">${cards}
+              </div>
+              <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, displayMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
+            </div>
+          </div>
+          ${editorActions}
+        </div>`;
+      }
 
       return `
         <div class="meta-report-bottomline-editor" id="${prefix}-fee-editor">
@@ -17190,7 +17232,7 @@
             <div class="meta-report-fee-status" id="${prefix}-fee-status" aria-live="polite">
               <span class="meta-report-fee-status-value is-active">${esc(appliedLabel)}</span>
             </div>
-            <div class="meta-report-fee-mode-grid${compact || modal ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
+            <div class="meta-report-fee-mode-grid${compact ? ' meta-report-fee-mode-grid--rows' : ''}">${cards}
             </div>
             <div class="meta-report-fee-value" id="${prefix}-fee-value">${metaReportFeeValueBlockHtml(prefix, displayMode, feePercent, marketingFee, { inline: inlineFeeValue })}</div>
             ${editorActions}
