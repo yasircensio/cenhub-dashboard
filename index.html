@@ -10024,7 +10024,8 @@
       if (!monthPayload || monthPayload.meta?.emptyMonth) return false;
       if (!yearPayload) return false;
       const { series, demo } = resolveMetaReportChartSeries(yearPayload, { allowDemo: !editable });
-      if (series.length < META_REPORT_CHART_MIN_POINTS) return false;
+      const adMonths = series.filter((point) => point.hasData).length;
+      if (adMonths < META_REPORT_CHART_MIN_POINTS) return false;
       if (demo) return false;
       return true;
     }
@@ -10177,29 +10178,41 @@
 
       for (const monthKey of monthKeys) {
         const monthPayload = months[monthKey];
-        if (!monthPayload || monthPayload.meta?.emptyMonth) continue;
-        if (!monthHasChartData(monthPayload)) continue;
+        if (!monthPayload || monthPayload.meta?.emptyMonth) {
+          series.push({
+            monthKey,
+            label: metaMonthLabel(monthKey),
+            periodEnd: monthPayload?.periodEnd || null,
+            roasKr: null,
+            roasX: null,
+            poasKr: null,
+            poasX: null,
+            spend: 0,
+            leads: 0,
+            wonLeads: 0,
+            avgLeadValue: 0,
+            avgProfitPerWon: 0,
+            hasData: false,
+          });
+          continue;
+        }
 
-        const roasKr = Number(monthPayload.topline?.roasKr) || 0;
-        const roasX = Number(monthPayload.topline?.roasX) || 0;
         const hasBottomline = Boolean(monthPayload.bottomline);
-        const poasKr = hasBottomline ? Number(monthPayload.bottomline.poasKr) || 0 : null;
-        const poasX = hasBottomline ? Number(monthPayload.bottomline.poasX) || 0 : null;
 
         series.push({
           monthKey,
           label: metaMonthLabel(monthKey),
           periodEnd: monthPayload.periodEnd || null,
-          roasKr,
-          roasX,
-          poasKr,
-          poasX,
+          roasKr: Number(monthPayload.topline?.roasKr) || 0,
+          roasX: Number(monthPayload.topline?.roasX) || 0,
+          poasKr: hasBottomline ? (Number(monthPayload.bottomline.poasKr) || 0) : null,
+          poasX: hasBottomline ? (Number(monthPayload.bottomline.poasX) || 0) : null,
           spend: Number(monthPayload.meta?.spend) || 0,
           leads: Number(monthPayload.topline?.leads) || 0,
           wonLeads: Number(monthPayload.topline?.wonLeads) || 0,
           avgLeadValue: Number(monthPayload.topline?.avgLeadValue) || 0,
           avgProfitPerWon: Number(monthPayload.inputs?.avgProfitPerWon) || 0,
-          hasData: true,
+          hasData: monthHasChartData(monthPayload),
         });
       }
 
@@ -10277,7 +10290,8 @@
 
     function resolveMetaReportChartSeries(payload, { allowDemo = true } = {}) {
       const real = buildMetaReportChartSeries(payload);
-      if (real.length >= META_REPORT_CHART_MIN_POINTS) {
+      const adMonths = real.filter((point) => point.hasData).length;
+      if (adMonths >= META_REPORT_CHART_MIN_POINTS) {
         return { series: real, demo: false };
       }
       if (allowDemo && isMetaReportCensioClient(payload)) {
@@ -13624,8 +13638,11 @@
     }
 
     function metaReportChartValue(point, mode, krKey, xKey) {
+      if (point?.hasData === false) return null;
       const raw = mode === 'x' ? point[xKey] : point[krKey];
-      return Number(raw) || 0;
+      if (raw == null) return null;
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? parsed : null;
     }
 
     function metaReportChartTooltipLabel(value, mode) {
@@ -13661,6 +13678,7 @@
             pointHoverRadius: 5,
             fill: true,
             tension: 0.3,
+            spanGaps: false,
           }],
         },
         options: {
@@ -13678,6 +13696,7 @@
               padding: 10,
               callbacks: {
                 label(context) {
+                  if (context.parsed.y == null) return 'No data';
                   return metaReportChartTooltipLabel(context.parsed.y, mode);
                 },
               },
@@ -14178,16 +14197,18 @@
 
       const krKey = kind === 'roas' ? 'roasKr' : 'poasKr';
       const xKey = kind === 'roas' ? 'roasX' : 'poasX';
-      const chartSeries = kind === 'poas'
-        ? series.filter((point) => point.poasKr != null && point.poasX != null)
-        : series;
+      const chartSeries = series;
+      const pointsWithValues = chartSeries.filter((point) => {
+        const value = metaReportChartValue(point, mode, krKey, xKey);
+        return value != null;
+      });
 
       if (metaReportsState.chartInstances[kind]) {
         metaReportsState.chartInstances[kind].destroy();
         metaReportsState.chartInstances[kind] = null;
       }
 
-      if (chartSeries.length < META_REPORT_CHART_MIN_POINTS || typeof Chart === 'undefined') {
+      if (pointsWithValues.length < META_REPORT_CHART_MIN_POINTS || typeof Chart === 'undefined') {
         canvas.hidden = true;
         emptyEl.hidden = false;
         return;
