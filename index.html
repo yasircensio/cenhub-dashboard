@@ -4742,6 +4742,11 @@
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
     }
     .meta-report-client-page .meta-report-toolbar-actions { margin-left: auto; }
+    .meta-report-excel-sheet-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      margin-top: 14px; padding: 14px 16px;
+    }
+    .meta-report-excel-sheet-panel .meta-report-settings-card-head { margin-bottom: 0; }
     .meta-report-excel-sheet-row {
       align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;
     }
@@ -9274,12 +9279,6 @@
       const url = resolveMetaReportExcelSheetUrl(settings) || '';
       return `
         <div class="meta-report-excel-sheet-settings">
-          <div class="meta-report-bottomline-row">
-            <div class="meta-report-bottomline-row-text">
-              <span class="meta-report-bottomline-row-title">Excel sheet link</span>
-              <span class="meta-report-bottomline-row-desc">Optional link for a “See Excel sheet” button on the client report</span>
-            </div>
-          </div>
           <div class="meta-report-excel-sheet-row">
             <input
               type="url"
@@ -9292,8 +9291,9 @@
               aria-label="Excel sheet URL"
             />
             <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-excel-sheet-save">Save link</button>
-            ${url ? `<a class="meta-report-excel-sheet-preview" href="${esc(url)}" target="_blank" rel="noopener noreferrer" id="meta-report-excel-sheet-preview">Preview</a>` : '<span class="meta-report-excel-sheet-preview" id="meta-report-excel-sheet-preview" hidden></span>'}
+            ${url ? `<a class="admin-btn admin-btn--secondary admin-btn--small meta-report-excel-sheet-preview" href="${esc(url)}" target="_blank" rel="noopener noreferrer" id="meta-report-excel-sheet-preview">Preview</a>` : '<span class="meta-report-excel-sheet-preview" id="meta-report-excel-sheet-preview" hidden></span>'}
           </div>
+          <p class="meta-report-share-field-hint">Paste a Google Sheets or Excel Online link. Clients see a “See Excel sheet” button on their report.</p>
         </div>
       `;
     }
@@ -9309,10 +9309,12 @@
           preview.href = url;
           preview.textContent = 'Preview';
           preview.removeAttribute('aria-hidden');
+          preview.classList.add('admin-btn', 'admin-btn--secondary', 'admin-btn--small');
         } else {
           preview.hidden = true;
           preview.removeAttribute('href');
           preview.textContent = '';
+          preview.classList.remove('admin-btn', 'admin-btn--secondary', 'admin-btn--small');
         }
       }
       const controlBarBtn = document.getElementById('meta-report-excel-sheet-toolbar-btn');
@@ -9389,6 +9391,12 @@
               ${resolveMetaReportExcelSheetUrl(settings) ? `<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="${esc(resolveMetaReportExcelSheetUrl(settings))}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>` : '<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="#" target="_blank" rel="noopener noreferrer" hidden>See Excel sheet</a>'}
             </div>
           </div>
+          <div class="meta-report-excel-sheet-panel" id="meta-report-excel-sheet-panel">
+            <div class="meta-report-settings-card-head">
+              <span class="meta-report-settings-card-title">Excel sheet link</span>
+            </div>
+            ${renderMetaReportExcelSheetSettings(settings)}
+          </div>
           ${hasLink ? `
             <div class="meta-report-control-status"${statusHidden ? ' hidden' : ''} id="meta-report-control-status">
               <div class="meta-report-control-status-grid">
@@ -9408,7 +9416,6 @@
                 <span class="meta-report-settings-card-title">Report settings</span>
               </div>
               <div class="meta-report-settings-group meta-report-settings-group--stacked">
-                ${renderMetaReportExcelSheetSettings(settings)}
                 ${renderMetaReportBottomlineFeeSettings(settings, 'meta-report', { compact: false, collapsible: true, externalSummary: true })}
               </div>
             </div>

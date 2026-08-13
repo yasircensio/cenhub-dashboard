@@ -4733,10 +4733,36 @@
       color: var(--text-soft); font-size: 12px; line-height: 1.45; margin: 0;
     }
     .meta-report-client-page .meta-report-toolbar-actions { margin-left: auto; }
+    .meta-report-excel-sheet-panel {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 14px;
+      margin-top: 14px; padding: 14px 16px;
+    }
+    .meta-report-excel-sheet-panel .meta-report-settings-card-head { margin-bottom: 0; }
+    .meta-report-excel-sheet-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;
+    }
+    .meta-report-excel-sheet-row .admin-input { flex: 1 1 280px; min-width: 0; }
+    .meta-report-excel-sheet-preview {
+      color: var(--text-soft); font-size: 12px; text-decoration: none;
+    }
+    .meta-report-excel-sheet-preview:hover { color: var(--text); text-decoration: underline; }
+    .meta-report-excel-sheet-btn {
+      font-size: 14px; font-weight: 700; min-height: 40px; padding: 10px 18px; white-space: nowrap;
+    }
+    .meta-reports-page--public .meta-report-toolbar {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+    }
+    .meta-reports-page--public .meta-report-toolbar-actions {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-left: auto;
+    }
     @media (max-width: 820px) {
       .meta-report-control-status-grid { grid-template-columns: 1fr; }
       .meta-report-control-bar { align-items: stretch; }
       .meta-report-control-bar-actions { margin-left: 0; width: 100%; }
+      .meta-reports-page--public .meta-report-toolbar-actions {
+        margin-left: 0; width: 100%;
+      }
+      .meta-reports-page--public .meta-report-excel-sheet-btn { flex: 1 1 auto; text-align: center; }
     }
     .meta-report-client-page .meta-report-tabs { margin: 20px 0 20px; }
     .meta-report-client-page .meta-report-month-panel {

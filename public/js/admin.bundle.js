@@ -704,12 +704,6 @@ Resume the interrupted ${S}?`)&&(l=w.id,c=Number(w.batchOffset)||0)}}if(a?setFbL
     </div>
   `}function resolveMetaReportExcelSheetUrl(e={}){return String(e?.metaReportExcelSheetUrl||"").trim()||null}function renderMetaReportExcelSheetButton(e={},{prominent:t=!1}={}){const a=resolveMetaReportExcelSheetUrl(e);return a?`<a class="admin-btn admin-btn--primary${t?" meta-report-excel-sheet-btn":""}" href="${esc(a)}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>`:""}function renderMetaReportExcelSheetSettings(e={}){const t=resolveMetaReportExcelSheetUrl(e)||"";return`
     <div class="meta-report-excel-sheet-settings">
-      <div class="meta-report-bottomline-row">
-        <div class="meta-report-bottomline-row-text">
-          <span class="meta-report-bottomline-row-title">Excel sheet link</span>
-          <span class="meta-report-bottomline-row-desc">Optional link for a \u201CSee Excel sheet\u201D button on the client report</span>
-        </div>
-      </div>
       <div class="meta-report-excel-sheet-row">
         <input
           type="url"
@@ -722,10 +716,11 @@ Resume the interrupted ${S}?`)&&(l=w.id,c=Number(w.batchOffset)||0)}}if(a?setFbL
           aria-label="Excel sheet URL"
         />
         <button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-report-excel-sheet-save">Save link</button>
-        ${t?`<a class="meta-report-excel-sheet-preview" href="${esc(t)}" target="_blank" rel="noopener noreferrer" id="meta-report-excel-sheet-preview">Preview</a>`:'<span class="meta-report-excel-sheet-preview" id="meta-report-excel-sheet-preview" hidden></span>'}
+        ${t?`<a class="admin-btn admin-btn--secondary admin-btn--small meta-report-excel-sheet-preview" href="${esc(t)}" target="_blank" rel="noopener noreferrer" id="meta-report-excel-sheet-preview">Preview</a>`:'<span class="meta-report-excel-sheet-preview" id="meta-report-excel-sheet-preview" hidden></span>'}
       </div>
+      <p class="meta-report-share-field-hint">Paste a Google Sheets or Excel Online link. Clients see a \u201CSee Excel sheet\u201D button on their report.</p>
     </div>
-  `}function syncMetaReportExcelSheetUi(e={}){const t=resolveMetaReportExcelSheetUrl(e),a=document.getElementById("meta-report-excel-sheet-url");a&&(a.value=t||"");const n=document.getElementById("meta-report-excel-sheet-preview");n&&(t?(n.hidden=!1,n.href=t,n.textContent="Preview",n.removeAttribute("aria-hidden")):(n.hidden=!0,n.removeAttribute("href"),n.textContent=""));const o=document.getElementById("meta-report-excel-sheet-toolbar-btn");o&&(t?(o.href=t,o.hidden=!1):o.hidden=!0);const r=document.getElementById("meta-report-public-excel-sheet-btn");r&&(r.innerHTML=renderMetaReportExcelSheetButton(e,{prominent:!0}))}function bindMetaReportExcelSheetEvents(e){const t=document.getElementById("meta-report-excel-sheet-url"),a=document.getElementById("meta-report-excel-sheet-save");if(!t||!a)return;const n=async()=>{const o=resolveMetaReportExcelSheetUrl(metaReportsState.clientPayload?.settings||{}),r=t.value.trim();a.disabled=!0;try{await saveMetaReportClientSettings(e,{metaReportExcelSheetUrl:r||null},()=>{t.value=o||""}),syncMetaReportExcelSheetUi(metaReportsState.clientPayload?.settings||{})}finally{a.disabled=!1}};a.onclick=n,t.onkeydown=o=>{o.key==="Enter"&&(o.preventDefault(),n())}}function renderMetaReportClientControlPanel(e){const t=e.settings||{},a=metaReportsState.clientShareExpanded,n=metaReportsState.clientReportSettingsExpanded,o=!!e.reportUrl,r=a||n,s=metaReportMonthsNeedingBackfill(e),i=s.length?`${ICON_SYNC} Backfill ${s.length} month${s.length===1?"":"s"} from Meta`:`${ICON_SYNC} Re-sync year from Meta`;return`
+  `}function syncMetaReportExcelSheetUi(e={}){const t=resolveMetaReportExcelSheetUrl(e),a=document.getElementById("meta-report-excel-sheet-url");a&&(a.value=t||"");const n=document.getElementById("meta-report-excel-sheet-preview");n&&(t?(n.hidden=!1,n.href=t,n.textContent="Preview",n.removeAttribute("aria-hidden"),n.classList.add("admin-btn","admin-btn--secondary","admin-btn--small")):(n.hidden=!0,n.removeAttribute("href"),n.textContent="",n.classList.remove("admin-btn","admin-btn--secondary","admin-btn--small")));const o=document.getElementById("meta-report-excel-sheet-toolbar-btn");o&&(t?(o.href=t,o.hidden=!1):o.hidden=!0);const r=document.getElementById("meta-report-public-excel-sheet-btn");r&&(r.innerHTML=renderMetaReportExcelSheetButton(e,{prominent:!0}))}function bindMetaReportExcelSheetEvents(e){const t=document.getElementById("meta-report-excel-sheet-url"),a=document.getElementById("meta-report-excel-sheet-save");if(!t||!a)return;const n=async()=>{const o=resolveMetaReportExcelSheetUrl(metaReportsState.clientPayload?.settings||{}),r=t.value.trim();a.disabled=!0;try{await saveMetaReportClientSettings(e,{metaReportExcelSheetUrl:r||null},()=>{t.value=o||""}),syncMetaReportExcelSheetUi(metaReportsState.clientPayload?.settings||{})}finally{a.disabled=!1}};a.onclick=n,t.onkeydown=o=>{o.key==="Enter"&&(o.preventDefault(),n())}}function renderMetaReportClientControlPanel(e){const t=e.settings||{},a=metaReportsState.clientShareExpanded,n=metaReportsState.clientReportSettingsExpanded,o=!!e.reportUrl,r=a||n,s=metaReportMonthsNeedingBackfill(e),i=s.length?`${ICON_SYNC} Backfill ${s.length} month${s.length===1?"":"s"} from Meta`:`${ICON_SYNC} Re-sync year from Meta`;return`
     <div class="meta-report-control-panel${a?" is-editing-share":""}${n?" is-editing-report":""}${t.metaReportEnabled?"":" is-share-disabled"}" id="meta-report-control-panel">
       <div class="meta-report-control-bar">
         <div class="meta-report-control-bar-left meta-report-toolbar-left">
@@ -744,6 +739,12 @@ Resume the interrupted ${S}?`)&&(l=w.id,c=Number(w.batchOffset)||0)}}if(a?setFbL
           ${o?`<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(e.reportUrl)}"${t.metaReportEnabled?"":" disabled"}>Copy link</button>`:""}
           ${resolveMetaReportExcelSheetUrl(t)?`<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="${esc(resolveMetaReportExcelSheetUrl(t))}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>`:'<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="#" target="_blank" rel="noopener noreferrer" hidden>See Excel sheet</a>'}
         </div>
+      </div>
+      <div class="meta-report-excel-sheet-panel" id="meta-report-excel-sheet-panel">
+        <div class="meta-report-settings-card-head">
+          <span class="meta-report-settings-card-title">Excel sheet link</span>
+        </div>
+        ${renderMetaReportExcelSheetSettings(t)}
       </div>
       ${o?`
         <div class="meta-report-control-status"${r?" hidden":""} id="meta-report-control-status">
@@ -764,7 +765,6 @@ Resume the interrupted ${S}?`)&&(l=w.id,c=Number(w.batchOffset)||0)}}if(a?setFbL
             <span class="meta-report-settings-card-title">Report settings</span>
           </div>
           <div class="meta-report-settings-group meta-report-settings-group--stacked">
-            ${renderMetaReportExcelSheetSettings(t)}
             ${renderMetaReportBottomlineFeeSettings(t,"meta-report",{compact:!1,collapsible:!0,externalSummary:!0})}
           </div>
         </div>
