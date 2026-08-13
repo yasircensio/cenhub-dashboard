@@ -65,4 +65,11 @@ assert.strictEqual(cenhubPayload.dataSource, 'manual');
 assert.strictEqual(cenhubPayload.manualOverride, true);
 assert.strictEqual(cenhubPayload.topline.wonLeads, 9);
 
+const metaFallbackPayload = buildMonthPayload(
+  { ...account, metaReportToplineMode: 'cenhub' },
+  { ...monthRecord, toplineSource: 'meta', manualOverride: false, wonLeads: 3, avgLeadValue: 51000 },
+  { includeUnpublished: true },
+);
+assert.strictEqual(metaFallbackPayload.dataSource, 'meta');
+
 console.log('Meta report topline mode tests passed.');
