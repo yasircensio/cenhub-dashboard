@@ -15475,7 +15475,8 @@
             <div class="meta-report-edit-grid">
               <label>Period start<input type="date" id="meta-report-period-start" value="${esc(tabBounds.start)}" /></label>
               <label>Period end<input type="date" id="meta-report-period-end" value="${esc(tabBounds.end)}" /></label>
-              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}"${readOnlyAttr} /></label>
+              <label class="meta-cv-value-field${isGhlReadOnly ? ' is-locked' : ''}">Number of leads<input type="number" step="any" id="meta-report-leads" value="${esc(isGhlReadOnly ? (monthPayload.ghlTotals?.leads ?? monthPayload.topline?.leads ?? '') : (monthPayload.topline?.leads ?? ''))}"${readOnlyAttr}${isGhlReadOnly ? ' disabled tabindex="-1" aria-readonly="true"' : ''} /></label>
+              <label class="meta-cv-value-field${isGhlReadOnly ? ' is-locked' : ''}">Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}"${readOnlyAttr}${isGhlReadOnly ? ' disabled tabindex="-1" aria-readonly="true"' : ''} /></label>
               <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}"${readOnlyAttr} /></label>
               <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}"${readOnlyAttr} /></label>
             </div>
@@ -16341,6 +16342,9 @@
             if (manualMode) {
               body.toplineSource = 'manual';
               body.manualOverride = true;
+              body.manualLeads = document.getElementById('meta-report-leads')?.value === ''
+                ? null
+                : Number(document.getElementById('meta-report-leads')?.value);
             }
             const result = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`, {
               method: 'PUT',
@@ -16929,7 +16933,7 @@
           <div class="meta-report-month-manual-row">
             <div class="meta-report-month-manual-row-copy">
               <p class="meta-report-month-manual-row-title">Month data source</p>
-              <p class="meta-report-month-manual-row-desc">This month uses Cenhub values. Switch to manual if you need to override won leads, average lead value, or profit.</p>
+              <p class="meta-report-month-manual-row-desc">This month uses Cenhub values (leads, won leads, average lead value, and profit). Switch to manual if you need to override them.</p>
             </div>
             <div class="meta-report-month-manual-row-actions">
               <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="${prefix}-use-manual-month">Use manual values</button>
@@ -17686,10 +17690,16 @@
       const avgProfit = monthStatus.avgProfitPerWon != null
         ? monthStatus.avgProfitPerWon
         : (monthPayload?.inputs?.avgProfitPerWon ?? '');
-      const ghlLeads = monthStatus.ghlLeads ?? monthPayload?.ghlTotals?.leads ?? '';
+      const ghlLeads = monthStatus.ghlLeads ?? monthPayload?.ghlTotals?.leads ?? monthPayload?.topline?.leads ?? '';
       const ghlRevenue = monthStatus.ghlTotalRevenue ?? monthPayload?.ghlTotals?.totalRevenue ?? '';
       const ghlProfit = monthStatus.ghlTotalProfit ?? monthPayload?.ghlTotals?.totalProfit ?? '';
       const draft = metaReportsState.customValues.draftInputs;
+      const manualMode = isGhlListClient && globalMode === 'cenhub' && toplineSource === 'manual';
+      const displayLeads = isGhlReadOnly
+        ? ghlLeads
+        : (draft?.manualLeads ?? (manualMode
+          ? (monthStatus.manualLeads ?? monthPayload?.topline?.leads ?? '')
+          : (monthPayload?.topline?.leads ?? monthStatus.manualLeads ?? '')));
       const displayWon = draft?.wonLeads ?? wonValue;
       const displayAvgLead = draft?.avgLeadValue ?? avgLeadValue;
       const displayAvgProfit = draft?.avgProfitPerWon ?? avgProfit;
@@ -17732,6 +17742,9 @@
                 <option value="${esc(key)}"${key === monthKey ? ' selected' : ''}>${esc(metaMonthLabel(key))}</option>
               `).join('')}
             </select>
+          </label>
+          <label class="meta-cv-value-field${lockedLabelClass}">Number of leads
+            <input type="number" step="any" id="meta-cv-leads" value="${esc(displayLeads)}"${readOnlyAttr} />
           </label>
           <label class="meta-cv-value-field${lockedLabelClass}">Won leads
             <input type="number" step="any" id="meta-cv-won-leads" value="${esc(displayWon)}"${readOnlyAttr} />
@@ -17999,6 +18012,9 @@
       if (manualMode) {
         body.toplineSource = 'manual';
         body.manualOverride = true;
+        body.manualLeads = document.getElementById('meta-cv-leads')?.value === ''
+          ? null
+          : Number(document.getElementById('meta-cv-leads')?.value);
       }
       return body;
     }
