@@ -5964,7 +5964,19 @@
     .meta-cv-editor-grid label {
       display: flex; flex-direction: column; font-size: 12px; font-weight: 600; gap: 4px;
     }
+    .meta-cv-editor-grid label.is-locked {
+      color: var(--text-muted);
+    }
     .meta-cv-editor-grid input, .meta-cv-editor-grid select { font: inherit; padding: 7px 9px; }
+    .meta-cv-editor-grid input:disabled,
+    .meta-cv-editor-grid input[readonly] {
+      background: var(--panel-soft); border-color: rgba(148, 163, 184, 0.35); color: var(--text-muted);
+      cursor: not-allowed; opacity: 0.82; pointer-events: none; user-select: none;
+    }
+    .meta-cv-editor-grid input:disabled:focus,
+    .meta-cv-editor-grid input[readonly]:focus {
+      box-shadow: none; outline: none;
+    }
     .meta-cv-editor-actions {
       align-items: center; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between;
       margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
