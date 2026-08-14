@@ -56,6 +56,7 @@
     body[data-dashboard-mode="admin"],
     body[data-dashboard-mode="sync-history-ghl"],
     body[data-dashboard-mode="sync-history-meta"],
+    body[data-dashboard-mode="sync-history-meta-reports"],
     body[data-dashboard-mode="fb-lead-sync"],
     body[data-dashboard-mode="meta-reports"],
     body[data-dashboard-mode="meta-reports-client"],

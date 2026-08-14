@@ -17,6 +17,12 @@ async function main() {
   assert(Array.isArray(ghl.runs), 'ghl runs array');
   assert(ghl.summary.schedule.includes('3:00 Copenhagen'), 'ghl schedule');
 
+  const { listMetaReportGhlSyncRuns } = require('../lib/meta-report-ghl-sync-history');
+  const metaReportGhl = await listMetaReportGhlSyncRuns({ limit: 5 });
+  assert(metaReportGhl.type === 'meta-report-ghl', 'meta-report-ghl type');
+  assert(Array.isArray(metaReportGhl.runs), 'meta-report-ghl runs array');
+  assert(metaReportGhl.summary.schedule.includes('Webhook'), 'meta report ghl schedule');
+
   console.log('Sync history tests passed.');
 }
 

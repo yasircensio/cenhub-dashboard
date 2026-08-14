@@ -65,6 +65,7 @@
     body[data-dashboard-mode="admin"],
     body[data-dashboard-mode="sync-history-ghl"],
     body[data-dashboard-mode="sync-history-meta"],
+    body[data-dashboard-mode="sync-history-meta-reports"],
     body[data-dashboard-mode="fb-lead-sync"],
     body[data-dashboard-mode="meta-reports"],
     body[data-dashboard-mode="meta-reports-client"],
@@ -6162,8 +6163,10 @@
         return;
       }
       if (parts[0] === 'admin') {
-        if (parts[1] === 'sync-history' && (parts[2] === 'ghl' || parts[2] === 'meta')) {
-          document.body.dataset.dashboardMode = `sync-history-${parts[2]}`;
+        if (parts[1] === 'sync-history' && (parts[2] === 'ghl' || parts[2] === 'meta' || parts[2] === 'meta-reports')) {
+          document.body.dataset.dashboardMode = parts[2] === 'meta-reports'
+            ? 'sync-history-meta-reports'
+            : `sync-history-${parts[2]}`;
           delete document.body.dataset.clientSlug;
           return;
         }
@@ -6216,6 +6219,7 @@
     const IS_ADMIN_CLIENT = DASHBOARD_MODE === 'admin';
     const IS_ADMIN_SYNC_HISTORY_GHL = DASHBOARD_MODE === 'sync-history-ghl';
     const IS_ADMIN_SYNC_HISTORY_META = DASHBOARD_MODE === 'sync-history-meta';
+    const IS_ADMIN_SYNC_HISTORY_META_REPORTS = DASHBOARD_MODE === 'sync-history-meta-reports';
     const IS_ADMIN_FB_LEAD_SYNC = DASHBOARD_MODE === 'fb-lead-sync';
     const IS_ADMIN_META_REPORTS = DASHBOARD_MODE === 'meta-reports';
     const IS_ADMIN_META_REPORTS_CLIENT = DASHBOARD_MODE === 'meta-reports-client';
@@ -6223,7 +6227,8 @@
     const IS_ADMIN_META_REPORTS_GHL_CLIENTS = DASHBOARD_MODE === 'meta-reports-ghl-clients';
     const IS_REPORT_VIEW = DASHBOARD_MODE === 'report';
     const REPORT_TOKEN = document.body.dataset.reportToken || '';
-    const IS_ADMIN_SYNC_HISTORY = IS_ADMIN_SYNC_HISTORY_GHL || IS_ADMIN_SYNC_HISTORY_META;
+    const IS_ADMIN_SYNC_HISTORY = IS_ADMIN_SYNC_HISTORY_GHL || IS_ADMIN_SYNC_HISTORY_META
+      || IS_ADMIN_SYNC_HISTORY_META_REPORTS;
     const IS_CLIENT_VIEW = DASHBOARD_MODE === 'client';
     const IS_PREVIEW = IS_CLIENT_VIEW && Boolean(new URLSearchParams(window.location.search).get('client'));
     const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN_FB_LEAD_SYNC
@@ -6556,7 +6561,8 @@
 
     function renderStaffAdminChrome(activeTab) {
       if (!currentStaffUser) return '';
-      const syncActive = activeTab === 'ghl-sync' || activeTab === 'meta-sync' || activeTab === 'fb-lead-sync';
+      const syncActive = activeTab === 'ghl-sync' || activeTab === 'meta-sync'
+        || activeTab === 'meta-report-sync' || activeTab === 'fb-lead-sync';
       const metaReportsActive = activeTab === 'meta-reports' || activeTab === 'meta-reports-custom'
         || activeTab === 'meta-reports-ghl-clients';
       const nav = `
@@ -6567,6 +6573,7 @@
             <div class="staff-nav-dropdown-menu" role="menu">
               <a href="/admin/sync-history/ghl" class="staff-nav-dropdown-item${activeTab === 'ghl-sync' ? ' is-active' : ''}" role="menuitem">GHL sync</a>
               <a href="/admin/sync-history/meta" class="staff-nav-dropdown-item${activeTab === 'meta-sync' ? ' is-active' : ''}" role="menuitem">Meta sync</a>
+              <a href="/admin/sync-history/meta-reports" class="staff-nav-dropdown-item${activeTab === 'meta-report-sync' ? ' is-active' : ''}" role="menuitem">Meta report sync</a>
               <a href="/admin/fb-lead-sync" class="staff-nav-dropdown-item${activeTab === 'fb-lead-sync' ? ' is-active' : ''}" role="menuitem">FB lead sync</a>
             </div>
           </div>
@@ -7321,6 +7328,10 @@
         label = 'Interrupted';
       }
       else if (normalized === 'skipped') modifier = 'skipped';
+      else if (normalized === 'partial') {
+        modifier = 'running';
+        label = 'Partial';
+      }
       else if (normalized === 'applying') {
         modifier = 'running';
         label = 'Applying';
@@ -7340,11 +7351,43 @@
         admin: 'Manual (admin)',
         'vercel-cron': 'Scheduled (Vercel cron)',
         manual: 'Manual (admin)',
+        'full-ghl-sync': 'After GHL snapshot sync',
         inngest: 'Scheduled (legacy)',
         'auto-refresh': 'Dashboard auto-refresh',
         unknown: 'Unknown',
       };
       return labels[source] || source;
+    }
+
+    function formatMetaReportGhlSyncDetail(run) {
+      const detail = run.detail || {};
+      if (run.status === 'skipped' && detail.skipReason) {
+        return `Skipped (${detail.skipReason})`;
+      }
+      const parts = [];
+      const synced = detail.synced || [];
+      const skipped = detail.skipped || [];
+      const errors = detail.errors || [];
+      if (synced.length) {
+        parts.push(`${synced.length} synced${synced.length <= 3 ? ` (${synced.join(', ')})` : ''}`);
+      }
+      if (skipped.length) {
+        const manualCount = skipped.filter((row) => row.reason === 'manual_override').length;
+        const suffix = manualCount ? ` (${manualCount} manual)` : '';
+        parts.push(`${skipped.length} skipped${suffix}`);
+      }
+      if (errors.length) {
+        parts.push(`${errors.length} error${errors.length === 1 ? '' : 's'}`);
+      }
+      if (run.errorMessage && !parts.length) parts.push(run.errorMessage);
+      if (detail.opportunityId) parts.push(`opp ${detail.opportunityId}`);
+      return parts.join(' · ') || '—';
+    }
+
+    function getSyncHistoryNavTab(kind) {
+      if (kind === 'meta') return 'meta-sync';
+      if (kind === 'meta-report-ghl') return 'meta-report-sync';
+      return 'ghl-sync';
     }
 
     function renderSyncHistorySummary(summary, kind) {
@@ -7359,7 +7402,9 @@
             <div class="sync-history-stat-value">${esc(formatSyncHistoryTimestamp(summary?.lastSuccessAt))}</div>
           </div>
           <div class="sync-history-stat">
-            <div class="sync-history-stat-label">${kind === 'meta' ? 'Meta cron schedule' : 'GHL cron schedule'}</div>
+            <div class="sync-history-stat-label">${kind === 'meta'
+    ? 'Meta cron schedule'
+    : (kind === 'meta-report-ghl' ? 'Sync triggers' : 'GHL cron schedule')}</div>
             <div class="sync-history-stat-value" style="font-size:13px;font-family:monospace">${esc(summary?.schedule || '—')}</div>
           </div>
         </div>
@@ -7371,10 +7416,14 @@
         return '<div class="sync-history-empty">No sync runs logged yet.</div>';
       }
 
-      const detailHeader = kind === 'meta' ? 'Spend / details' : 'Details';
+      const detailHeader = kind === 'meta'
+        ? 'Spend / details'
+        : (kind === 'meta-report-ghl' ? 'Months / details' : 'Details');
       const rows = runs.map((run) => {
         let detail = '—';
-        if (kind === 'meta') {
+        if (kind === 'meta-report-ghl') {
+          detail = formatMetaReportGhlSyncDetail(run);
+        } else if (kind === 'meta') {
           const parts = [];
           if (run.thisMonthSpend != null) parts.push(`${fmtDkk(run.thisMonthSpend)} DKK this month`);
           if (run.spendDateStop) {
@@ -7420,16 +7469,30 @@
     }
 
     function renderSyncHistoryPage(kind, data) {
-      const title = kind === 'meta' ? 'Meta ad spend sync history' : 'GHL / Cenhub sync history';
-      const subtitle = kind === 'meta'
-        ? 'Every Meta metrics sync — scheduled, manual, and dashboard auto-refresh. Logs older than 3 days are auto-deleted.'
-        : 'Every GHL snapshot sync — scheduled Vercel cron and manual admin syncs. Logs older than 3 days are auto-deleted.';
-      const otherKind = kind === 'meta' ? 'ghl' : 'meta';
-      const otherLabel = kind === 'meta' ? 'GHL sync log' : 'Meta sync log';
-      const otherLogLink = kind === 'ghl'
-        ? `<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/${otherKind}">${esc(otherLabel)}</a>`
-        : '';
-      const navTab = kind === 'meta' ? 'meta-sync' : 'ghl-sync';
+      const pageMeta = {
+        ghl: {
+          title: 'GHL / Cenhub sync history',
+          subtitle: 'Every GHL snapshot sync — scheduled Vercel cron and manual admin syncs. Logs older than 3 days are auto-deleted.',
+        },
+        meta: {
+          title: 'Meta ad spend sync history',
+          subtitle: 'Every Meta metrics sync — scheduled, manual, and dashboard auto-refresh. Logs older than 3 days are auto-deleted.',
+        },
+        'meta-report-ghl': {
+          title: 'Meta report Cenhub sync history',
+          subtitle: 'Cenhub topline sync into Meta reports — GHL webhooks, post-snapshot auto-sync, and manual admin syncs. Logs older than 3 days are auto-deleted.',
+        },
+      };
+      const meta = pageMeta[kind] || pageMeta.ghl;
+      const navTab = getSyncHistoryNavTab(kind);
+      const crossLinks = kind === 'meta-report-ghl'
+        ? `<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/ghl">GHL sync log</a>
+           <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta ad sync log</a>`
+        : (kind === 'ghl'
+          ? `<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
+             <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta-reports">Meta report sync log</a>`
+          : `<a class="admin-btn admin-btn--secondary" href="/admin/sync-history/ghl">GHL sync log</a>
+             <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta-reports">Meta report sync log</a>`);
 
       return `
         ${renderBrandTopbar(renderStaffAdminChrome(navTab))}
@@ -7438,16 +7501,16 @@
           <div class="admin-breadcrumb">
             <a href="/admin">Clients</a>
             <span aria-hidden="true"> / </span>
-            <span>${esc(title)}</span>
+            <span>${esc(meta.title)}</span>
           </div>
-          <h1>${esc(title)}</h1>
-          <p>${esc(subtitle)}${data.summary?.totalShown ? ` · ${data.summary.totalShown} run(s) shown` : ''}</p>
+          <h1>${esc(meta.title)}</h1>
+          <p>${esc(meta.subtitle)}${data.summary?.totalShown ? ` · ${data.summary.totalShown} run(s) shown` : ''}</p>
         </div>
         <div class="sync-history-page">
           <div class="sync-history-toolbar">
             <div class="sync-history-toolbar-actions">
               <a class="admin-btn admin-btn--secondary" href="/admin">← Back to clients</a>
-              ${otherLogLink}
+              ${crossLinks}
             </div>
             <div class="sync-history-toolbar-actions">
               <button class="admin-btn admin-btn--secondary" type="button" id="sync-history-refresh">${ICON_SYNC} Refresh</button>
@@ -7465,10 +7528,14 @@
 
     async function clearSyncHistoryLog(kind) {
       if (!isStaffAdmin()) return;
-      const label = kind === 'meta' ? 'Meta' : 'GHL';
+      const label = kind === 'meta'
+        ? 'Meta ad'
+        : (kind === 'meta-report-ghl' ? 'Meta report Cenhub' : 'GHL');
       const note = kind === 'meta'
         ? 'This only clears the history table. It does not change ad spend data or client sync status.'
-        : 'This only clears the history table. It does not change GHL snapshot data or client sync status.';
+        : (kind === 'meta-report-ghl'
+          ? 'This only clears the history table. It does not change Meta report month values or Cenhub snapshots.'
+          : 'This only clears the history table. It does not change GHL snapshot data or client sync status.');
       const confirmed = window.confirm(`Delete all ${label} sync log entries?\n\n${note}`);
       if (!confirmed) return;
 
@@ -7482,7 +7549,9 @@
     }
 
     function renderSyncHistoryLoginPrompt(kind) {
-      const title = kind === 'meta' ? 'Meta sync log' : 'GHL sync log';
+      const title = kind === 'meta'
+        ? 'Meta sync log'
+        : (kind === 'meta-report-ghl' ? 'Meta report sync log' : 'GHL sync log');
       return `
         ${renderBrandTopbar('')}
         ${wrapDashboardShell(`
@@ -7515,7 +7584,7 @@
 
       if (!silent) {
         dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome(kind === 'meta' ? 'meta-sync' : 'ghl-sync'))}
+          ${renderBrandTopbar(renderStaffAdminChrome(getSyncHistoryNavTab(kind)))}
           ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading sync history...</p></div>')}
         `;
       }
@@ -7540,7 +7609,7 @@
         }, 60_000);
       } catch (error) {
         dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome(kind === 'meta' ? 'meta-sync' : 'ghl-sync'))}
+          ${renderBrandTopbar(renderStaffAdminChrome(getSyncHistoryNavTab(kind)))}
           ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
         `;
       }
@@ -18278,6 +18347,7 @@
       const count = clients.length;
       const syncLogActions = currentStaffUser ? `
               <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
+              <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta-reports">Meta report sync log</a>
       ` : '';
       const adminActions = isStaffAdmin() ? `
               ${syncLogActions}
@@ -19036,6 +19106,7 @@
                 <span class="status-badge status-${account.metaSyncStatus === 'ok' ? 'ready' : account.metaSyncStatus === 'error' ? 'sync_error' : 'needs_sync'}">${account.metaSyncStatus === 'ok' ? 'Meta synced' : account.metaSyncStatus === 'error' ? 'Meta sync error' : 'Meta not synced'}</span>
                 ${account.metaLastSyncedAt ? `<span class="setup-section-sync-time">Last Meta sync: ${formatRelativeSync(account.metaLastSyncedAt)}</span>` : ''}
                 <a class="setup-section-sync-time" href="/admin/sync-history/meta" style="margin-left:12px">View Meta sync log →</a>
+                <a class="setup-section-sync-time" href="/admin/sync-history/meta-reports" style="margin-left:12px">View Meta report sync log →</a>
                 ${account.metaSyncError ? `<span class="setup-meta-sync-error">${esc(account.metaSyncError)}</span>` : ''}
               </div>
             </div>
@@ -21857,6 +21928,11 @@
 
       if (IS_ADMIN_SYNC_HISTORY_META) {
         loadSyncHistoryPage('meta');
+        return;
+      }
+
+      if (IS_ADMIN_SYNC_HISTORY_META_REPORTS) {
+        loadSyncHistoryPage('meta-report-ghl');
         return;
       }
 

@@ -69,7 +69,7 @@ function createLocalResponse(serverResponse) {
 
 function serveDashboardHtml(response, mode, clientSlug = null, extraAttrs = {}) {
   const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team'
-    || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'fb-lead-sync'
+    || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'sync-history-meta-reports' || mode === 'fb-lead-sync'
     || mode === 'meta-reports' || mode === 'meta-reports-client' || mode === 'meta-reports-custom'
     || mode === 'meta-reports-ghl-clients'
     || mode === 'report';
@@ -419,6 +419,11 @@ const server = http.createServer(async (request, response) => {
 
   if (url === '/admin/sync-history/meta') {
     serveDashboardHtml(response, 'sync-history-meta');
+    return;
+  }
+
+  if (url === '/admin/sync-history/meta-reports') {
+    serveDashboardHtml(response, 'sync-history-meta-reports');
     return;
   }
 
