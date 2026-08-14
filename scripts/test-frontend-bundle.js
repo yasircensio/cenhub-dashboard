@@ -106,6 +106,8 @@ function main() {
     'switch-topline-source',
     'IS_ADMIN_META_REPORTS',
     'loadMetaReportsHubPage',
+    'IS_ADMIN_SYNC_HISTORY_META_REPORTS',
+    'loadSyncHistoryPage("meta-report-ghl")',
   ];
 
   assertIncludes('client.bundle.js', client, clientRequired);

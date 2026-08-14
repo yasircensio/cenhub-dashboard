@@ -6250,10 +6250,11 @@
     function resolveClientSlug() {
       if (document.body.dataset.clientSlug) return document.body.dataset.clientSlug;
       const parts = window.location.pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
+      const adminReserved = new Set(['meta-reports', 'sync-history', 'fb-lead-sync']);
       if (parts[0] === 'admin' && parts[1] === 'meta-reports' && parts[2] && parts[2] !== 'custom-values' && parts[2] !== 'ghl-clients') {
         return parts[2];
       }
-      if (parts[0] === 'admin' && parts[1] && parts[1] !== 'meta-reports') return parts[1];
+      if (parts[0] === 'admin' && parts[1] && !adminReserved.has(parts[1])) return parts[1];
       if (parts[0] && parts[0] !== 'admin' && parts[0] !== 'index.html' && parts[0] !== 'report') return parts[0];
       return new URLSearchParams(window.location.search).get('client') || 'suntech-nordic';
     }

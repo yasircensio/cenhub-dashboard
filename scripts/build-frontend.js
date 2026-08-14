@@ -109,6 +109,10 @@ async function bootAdminApp() {
     await loadSyncHistoryPage('meta');
     return;
   }
+  if (IS_ADMIN_SYNC_HISTORY_META_REPORTS) {
+    await loadSyncHistoryPage('meta-report-ghl');
+    return;
+  }
   if (IS_ADMIN_FB_LEAD_SYNC) {
     await loadFbLeadSyncPage();
     return;
