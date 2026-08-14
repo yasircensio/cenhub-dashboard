@@ -16636,9 +16636,9 @@
 
     function resolveMetaReportHubTypeLabel(client = {}) {
       if (client.metaReportGhlDataEnabled && resolveClientToplineMode(client) === 'cenhub') {
-        return 'Cenhub + Meta';
+        return 'Cenhub';
       }
-      return 'Meta only';
+      return 'Meta';
     }
 
     function clientUsesCenhubMetaReportTopline(client = {}) {
