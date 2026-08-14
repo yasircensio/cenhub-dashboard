@@ -6582,7 +6582,7 @@
             <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${metaReportsActive ? ' is-active' : ''}" aria-expanded="false" aria-haspopup="true" onclick="toggleStaffNavDropdown(this, event)">Meta reports</button>
             <div class="staff-nav-dropdown-menu" role="menu">
               <a href="/admin/meta-reports" class="staff-nav-dropdown-item${activeTab === 'meta-reports' ? ' is-active' : ''}" role="menuitem">All clients</a>
-              <a href="/admin/meta-reports/ghl-clients" class="staff-nav-dropdown-item${activeTab === 'meta-reports-ghl-clients' ? ' is-active' : ''}" role="menuitem">GHL clients</a>
+              <a href="/admin/meta-reports/ghl-clients" class="staff-nav-dropdown-item${activeTab === 'meta-reports-ghl-clients' ? ' is-active' : ''}" role="menuitem">Cenhub clients</a>
               <a href="/admin/meta-reports/custom-values" class="staff-nav-dropdown-item${activeTab === 'meta-reports-custom' ? ' is-active' : ''}" role="menuitem">Custom values</a>
             </div>
           </div>
@@ -9121,7 +9121,7 @@
     function filterMetaReportsClients(clients, filter, searchQuery = '') {
       let list = clients || [];
       if (filter === 'enabled') list = list.filter((client) => client.metaReportEnabled);
-      if (filter === 'meta-only') list = list.filter((client) => !client.hasGhl);
+      if (filter === 'meta-only') list = list.filter((client) => !clientUsesCenhubMetaReportTopline(client));
       if (filter === 'needs-setup') list = list.filter((client) => client.needsSetup);
       const query = String(searchQuery || '').trim().toLowerCase();
       if (query) {
@@ -9836,7 +9836,7 @@
         : (client.metaReportEnabled
           ? '<span class="meta-report-badge meta-report-badge--on">Report live</span>'
           : '<span class="meta-report-badge meta-report-badge--off">Report off</span>');
-      const typeLabel = client.hasGhl ? 'GHL + Meta' : 'Meta only';
+      const typeLabel = resolveMetaReportHubTypeLabel(client);
       const nameMarkup = canEdit
         ? `<a href="/admin/meta-reports/${encodeURIComponent(client.clientId)}" class="meta-hub-card-name">${esc(client.accountName)}</a>`
         : `<span class="meta-hub-card-name">${esc(client.accountName)}</span>`;
@@ -15559,7 +15559,7 @@
                 <div class="meta-hub-filters" id="meta-reports-filters" role="tablist" aria-label="Filter clients">
                   ${renderMetaHubFiltersHtml(metaReportsState.filter)}
                 </div>
-                <a class="admin-btn admin-btn--secondary" href="/admin/meta-reports/ghl-clients">GHL clients</a>
+                <a class="admin-btn admin-btn--secondary" href="/admin/meta-reports/ghl-clients">Cenhub clients</a>
                 <a class="admin-btn admin-btn--secondary" href="/admin/meta-reports/custom-values">Custom values</a>
                 <button class="admin-btn admin-btn--secondary" type="button" id="meta-reports-refresh">${ICON_SYNC} Refresh</button>
               </div>
@@ -16634,6 +16634,17 @@
       return settings.metaReportToplineMode === 'cenhub' ? 'cenhub' : 'meta';
     }
 
+    function resolveMetaReportHubTypeLabel(client = {}) {
+      if (client.metaReportGhlDataEnabled && resolveClientToplineMode(client) === 'cenhub') {
+        return 'Cenhub + Meta';
+      }
+      return 'Meta only';
+    }
+
+    function clientUsesCenhubMetaReportTopline(client = {}) {
+      return Boolean(client.metaReportGhlDataEnabled) && resolveClientToplineMode(client) === 'cenhub';
+    }
+
     function metaMonthAllowsManualControls(monthPayload, settings = {}) {
       if (!isMetaReportGhlListClient(settings)) return false;
       if (resolveClientToplineMode(settings) !== 'cenhub') return false;
@@ -16738,7 +16749,7 @@
               <span class="meta-report-topline-sync-strip-title">Sync from Cenhub</span>
               <span class="meta-report-topline-sync-strip-desc">Re-pull all months in ${esc(metaReportsState.selectedYear)} from Cenhub snapshots.</span>
             </div>
-            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-topline-modal-sync-ghl-year"${!hasGhl ? ' disabled title="GHL not connected"' : ''}>Sync year from Cenhub</button>
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-topline-modal-sync-ghl-year"${!hasGhl ? ' disabled title="Cenhub not connected"' : ''}>Sync year from Cenhub</button>
           </div>
         ` : ''}
         <p class="meta-report-edit-note" id="meta-report-topline-no-change-hint"${draftMode !== currentMode ? ' hidden' : ''}>Select a different source above to switch.</p>
@@ -17764,7 +17775,7 @@
         <div class="meta-cv-editor-actions">
           <div class="meta-cv-editor-actions-left">
             <a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Open full editor</a>
-            ${isGhlListClient ? '<a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/ghl-clients">GHL clients</a>' : ''}
+            ${isGhlListClient ? '<a class="admin-btn admin-btn--ghost" href="/admin/meta-reports/ghl-clients">Cenhub clients</a>' : ''}
             ${renderMetaReportSaveIndicator('meta-cv-save-indicator', state.saving)}
           </div>
           <button type="button" class="admin-btn admin-btn--primary" id="meta-cv-save"${state.saving || state.loadingEditor || state.settingsSaving || isGhlReadOnly ? ' disabled' : ''}${disabledAttr}>
@@ -18209,7 +18220,7 @@
           <td>
             <label style="display:inline-flex;align-items:center;gap:8px">
               <input type="checkbox" data-ghl-list-toggle="${esc(client.clientId)}"${client.onGhlList ? ' checked' : ''}${!client.hasGhl ? ' disabled' : ''} />
-              On GHL list
+              On Cenhub list
             </label>
           </td>
           <td>${client.snapshotFetchedAt ? esc(metaCvFormatUpdatedAt(client.snapshotFetchedAt)) : '—'}${client.snapshotStale ? ' · stale' : ''}</td>
@@ -18229,24 +18240,24 @@
               <span aria-hidden="true"> / </span>
               <a href="/admin/meta-reports">Meta reports</a>
               <span aria-hidden="true"> / </span>
-              <span>GHL clients</span>
+              <span>Cenhub clients</span>
             </div>
-            <h1>GHL clients</h1>
+            <h1>Cenhub clients</h1>
             <p class="meta-premium-page-hero-copy">Choose which Meta report clients pull leads, revenue, and profit from Cenhub snapshots.</p>
           </div>
         </div>
         <div class="sync-history-page meta-reports-page">
           <div class="meta-cv-summary">
-            <span class="meta-cv-summary-pill">${summary.ghlConnected || 0} GHL connected</span>
-            <span class="meta-cv-summary-pill is-complete">${summary.onGhlList || 0} on GHL list</span>
+            <span class="meta-cv-summary-pill">${summary.ghlConnected || 0} Cenhub connected</span>
+            <span class="meta-cv-summary-pill is-complete">${summary.onGhlList || 0} on Cenhub list</span>
             <span class="meta-cv-summary-pill">${summary.totalClients || 0} Meta report clients</span>
           </div>
           <table class="meta-ghl-clients-table">
             <thead>
               <tr>
                 <th>Client</th>
-                <th>GHL</th>
-                <th>GHL list</th>
+                <th>Cenhub</th>
+                <th>Cenhub list</th>
                 <th>Last snapshot</th>
                 <th></th>
               </tr>
@@ -18272,7 +18283,7 @@
             });
             const row = metaReportsState.ghlClients.data?.clients?.find((entry) => entry.clientId === clientId);
             if (row) row.onGhlList = enabled;
-            showToast(enabled ? 'Added to GHL list' : 'Removed from GHL list', 'success');
+            showToast(enabled ? 'Added to Cenhub list' : 'Removed from Cenhub list', 'success');
           } catch (error) {
             input.checked = previous;
             showToast(error.message || 'Update failed', 'error');
@@ -18295,7 +18306,7 @@
       if (!metaReportsState.ghlClients.mounted) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ghl-clients'))}
-          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading GHL clients...</p></div>')}
+          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading Cenhub clients...</p></div>')}
         `;
       }
       try {
