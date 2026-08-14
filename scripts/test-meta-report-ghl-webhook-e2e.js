@@ -37,7 +37,9 @@ function buildOpportunity({ id, createdAt, status, monetaryValue, profit, lastSt
 function writeFixture({ monthKey, monthRecord, opportunities }) {
   const tenantStore = fs.existsSync(DATA_FILE)
     ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))
-    : { accounts: {}, snapshots: {} };
+    : {};
+  tenantStore.accounts = tenantStore.accounts || {};
+  tenantStore.snapshots = tenantStore.snapshots || {};
 
   tenantStore.accounts[TEST_CLIENT] = {
     client_id: TEST_CLIENT,
@@ -74,7 +76,8 @@ function writeFixture({ monthKey, monthRecord, opportunities }) {
 
   const metaStore = fs.existsSync(META_REPORTS_FILE)
     ? JSON.parse(fs.readFileSync(META_REPORTS_FILE, 'utf8'))
-    : { months: {} };
+    : {};
+  metaStore.months = metaStore.months || {};
 
   const bounds = monthKey === CLEANUP_MONTH_KEY
     ? { start: '2026-01-01', end: '2026-01-31' }
