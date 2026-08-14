@@ -26,6 +26,14 @@
       ${`
     <nav class="staff-nav" aria-label="Admin navigation">
       <a href="/admin" class="staff-nav-link${e==="clients"?" is-active":""}">Cenhub clients</a>
+      <div class="staff-nav-dropdown" data-staff-nav-dropdown="meta-reports">
+        <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${e==="meta-reports"||e==="meta-reports-custom"||e==="meta-reports-ghl-clients"?" is-active":""}" aria-expanded="false" aria-haspopup="true" onclick="toggleStaffNavDropdown(this, event)">Meta reports</button>
+        <div class="staff-nav-dropdown-menu" role="menu">
+          <a href="/admin/meta-reports" class="staff-nav-dropdown-item${e==="meta-reports"?" is-active":""}" role="menuitem">All clients</a>
+          <a href="/admin/meta-reports/ghl-clients" class="staff-nav-dropdown-item${e==="meta-reports-ghl-clients"?" is-active":""}" role="menuitem">Cenhub clients</a>
+          <a href="/admin/meta-reports/custom-values" class="staff-nav-dropdown-item${e==="meta-reports-custom"?" is-active":""}" role="menuitem">Custom values</a>
+        </div>
+      </div>
       <div class="staff-nav-dropdown" data-staff-nav-dropdown="sync">
         <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${e==="ghl-sync"||e==="meta-sync"||e==="meta-report-sync"||e==="fb-lead-sync"?" is-active":""}" aria-expanded="false" aria-haspopup="true" onclick="toggleStaffNavDropdown(this, event)">Sync</button>
         <div class="staff-nav-dropdown-menu" role="menu">
@@ -33,14 +41,6 @@
           <a href="/admin/sync-history/meta" class="staff-nav-dropdown-item${e==="meta-sync"?" is-active":""}" role="menuitem">Meta sync</a>
           <a href="/admin/sync-history/meta-reports" class="staff-nav-dropdown-item${e==="meta-report-sync"?" is-active":""}" role="menuitem">Meta report sync</a>
           <a href="/admin/fb-lead-sync" class="staff-nav-dropdown-item${e==="fb-lead-sync"?" is-active":""}" role="menuitem">FB lead sync</a>
-        </div>
-      </div>
-      <div class="staff-nav-dropdown" data-staff-nav-dropdown="meta-reports">
-        <button type="button" class="staff-nav-link staff-nav-dropdown-trigger${e==="meta-reports"||e==="meta-reports-custom"||e==="meta-reports-ghl-clients"?" is-active":""}" aria-expanded="false" aria-haspopup="true" onclick="toggleStaffNavDropdown(this, event)">Meta reports</button>
-        <div class="staff-nav-dropdown-menu" role="menu">
-          <a href="/admin/meta-reports" class="staff-nav-dropdown-item${e==="meta-reports"?" is-active":""}" role="menuitem">All clients</a>
-          <a href="/admin/meta-reports/ghl-clients" class="staff-nav-dropdown-item${e==="meta-reports-ghl-clients"?" is-active":""}" role="menuitem">Cenhub clients</a>
-          <a href="/admin/meta-reports/custom-values" class="staff-nav-dropdown-item${e==="meta-reports-custom"?" is-active":""}" role="menuitem">Custom values</a>
         </div>
       </div>
       ${isStaffAdmin()?`<a href="/team" class="staff-nav-link${e==="team"?" is-active":""}">Team</a>`:""}
