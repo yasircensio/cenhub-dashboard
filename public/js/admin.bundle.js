@@ -493,9 +493,6 @@ ${s} contact(s) will get Fb Lead id written in GHL. This writes live data.`)&&(f
       <p>Match Meta Lead Ads to GHL contacts and write the <code>Fb Lead id</code> custom field. Run logs older than 3 days are auto-deleted.</p>
     </div>
     <div class="sync-history-page">
-      <div class="fb-lead-banner">
-        Meta only stores Lead Ads for roughly the last <strong>90 days</strong>. Backfill cannot match older GHL contacts to leads outside that window.
-      </div>
       <div class="sync-history-toolbar">
         <div class="sync-history-toolbar-actions">
           <a class="admin-btn admin-btn--secondary" href="/admin">\u2190 Back to clients</a>
