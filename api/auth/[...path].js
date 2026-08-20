@@ -12,6 +12,10 @@ module.exports = async function authPathHandler(request, response) {
   const queryIndex = rawUrl.indexOf('?');
   let queryString = queryIndex >= 0 ? rawUrl.slice(queryIndex) : '';
 
+  // #region agent log
+  fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',location:'api/auth/[...path].js:A-entry',message:'catch-all entry',data:{rawUrl,queryFromRawUrl:queryString,queryKeys:Object.keys(request.query||{}),queryCode:(request.query||{}).code,queryState:(request.query||{}).state},timestamp:Date.now(),hypothesisId:'A-C'})}).catch(()=>{});
+  // #endregion
+
   if (!queryString && request.query && typeof request.query === 'object') {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(request.query)) {
@@ -36,6 +40,10 @@ module.exports = async function authPathHandler(request, response) {
     }
   }
   request.url = suffix ? `/api/auth/${suffix}${queryString}` : `/api/auth${queryString}`;
+
+  // #region agent log
+  fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',location:'api/auth/[...path].js:B-after-set',message:'after url set',data:{finalUrl:request.url,queryStringBuilt:queryString,queryCode:(request.query||{}).code,queryState:(request.query||{}).state,urlWritable:request.url.includes('?')},timestamp:Date.now(),hypothesisId:'B-D'})}).catch(()=>{});
+  // #endregion
 
   await handleAuthRequest(request, response);
 };
