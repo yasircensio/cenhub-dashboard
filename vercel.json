@@ -36,14 +36,16 @@
     "api/meta-reports/[...path].js": {
       "maxDuration": 60
     },
-    "api/google-ads/oauth/start.js": {
+    "api/google-ads-oauth-start.js": {
       "maxDuration": 60
     },
-    "api/google-ads/oauth/callback.js": {
+    "api/google-ads-oauth-callback.js": {
       "maxDuration": 60
     }
   },
   "rewrites": [
+    { "source": "/api/google-ads/oauth/start", "destination": "/api/google-ads-oauth-start" },
+    { "source": "/api/google-ads/oauth/callback", "destination": "/api/google-ads-oauth-callback" },
     { "source": "/api/meta-sync-cron", "destination": "/api/sync-history?__cron=meta" },
     { "source": "/api/cron/meta-sync", "destination": "/api/sync-history?__cron=meta" },
     { "source": "/api/ghl-sync-cron", "destination": "/api/sync-history?__cron=ghl" },

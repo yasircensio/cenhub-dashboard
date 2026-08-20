@@ -1,4 +1,4 @@
-const { handleGoogleAdsOAuthStart } = require('../../../lib/google-ads-oauth-handler');
+const { handleGoogleAdsOAuthStart } = require('../lib/google-ads-oauth-handler');
 
 module.exports = async function googleAdsOAuthStartHandler(request, response) {
   if (request.method === 'OPTIONS') {
