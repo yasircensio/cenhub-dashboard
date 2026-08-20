@@ -6,10 +6,10 @@
 
 | Step | URL |
 |------|-----|
-| **Start OAuth** (logged into admin first) | https://analytics.censio.dk/api/google-ads-oauth-start |
-| **Redirect URI** (Google Cloud + Vercel) | https://analytics.censio.dk/api/google-ads-oauth-callback |
+| **Start OAuth** (logged into admin first) | https://analytics.censio.dk/api/auth/google-ads/start |
+| **Redirect URI** (Google Cloud + Vercel) | https://analytics.censio.dk/api/auth/google-ads/callback |
 
-Legacy paths `/api/auth/google-ads/*` and `/api/google-ads/oauth/*` rewrite to the URLs above.
+Do not use `/api/google-ads/oauth/*` or `/api/google-ads-oauth-callback` — those 404 on the custom domain.
 
 ---
 
@@ -22,7 +22,7 @@ Settings → Environment Variables → **Production**:
 | `GOOGLE_ADS_DEVELOPER_TOKEN` | API Center → View token |
 | `GOOGLE_ADS_CLIENT_ID` | OAuth client ID |
 | `GOOGLE_ADS_CLIENT_SECRET` | OAuth client secret |
-| `GOOGLE_ADS_OAUTH_REDIRECT_URI` | `https://analytics.censio.dk/api/google-ads-oauth-callback` |
+| `GOOGLE_ADS_OAUTH_REDIRECT_URI` | `https://analytics.censio.dk/api/auth/google-ads/callback` |
 | `GOOGLE_ADS_REFRESH_TOKEN` | After OAuth (step below) |
 
 Redeploy after adding or changing vars.
@@ -34,8 +34,6 @@ Redeploy after adding or changing vars.
 **Authorized redirect URIs:**
 
 ```
-https://analytics.censio.dk/api/google-ads-oauth-callback
-https://analytics.censio.dk/api/google-ads/oauth/callback
 https://analytics.censio.dk/api/auth/google-ads/callback
 ```
 
@@ -50,7 +48,7 @@ https://analytics.censio.dk
 ## Get refresh token
 
 1. Log into https://analytics.censio.dk/admin
-2. Open https://analytics.censio.dk/api/google-ads-oauth-start
+2. Open https://analytics.censio.dk/api/auth/google-ads/start
 3. Sign in as `marketing@censio.dk` → approve Google Ads access
 4. Copy `GOOGLE_ADS_REFRESH_TOKEN` from the success page
 5. Add to Vercel → redeploy
