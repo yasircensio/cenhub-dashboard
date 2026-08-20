@@ -14,5 +14,5 @@ module.exports = async function healthHandler(request, response) {
     });
     return;
   }
-  await handleHealthRequest(response);
+  await handleHealthRequest(response, request);
 };
