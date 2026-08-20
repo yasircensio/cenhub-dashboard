@@ -16617,6 +16617,16 @@
       return raw;
     }
 
+    function resolveMetaCvMonthToplineSource(monthPayload, monthStatus, settings = {}) {
+      return resolveMetaToplineSource(
+        {
+          ...(monthPayload || {}),
+          dataSource: monthStatus?.toplineSource ?? monthPayload?.dataSource,
+        },
+        settings,
+      );
+    }
+
     function classifyMetaReportMonthInputStatus(monthPayload, requireProfit = false) {
       if (!monthPayload) return 'empty';
       const hasWon = monthPayload.topline?.wonLeads != null || monthPayload.inputs?.wonLeads != null;
@@ -17683,10 +17693,7 @@
         metaReportToplineMode: client.metaReportToplineMode,
       };
       const globalMode = resolveClientToplineMode(cvSettings);
-      const toplineSource = resolveMetaToplineSource(
-        monthPayload || { dataSource: monthStatus.toplineSource },
-        cvSettings,
-      );
+      const toplineSource = resolveMetaCvMonthToplineSource(monthPayload, monthStatus, cvSettings);
       const isGhlReadOnly = isGhlListClient && globalMode === 'cenhub' && toplineSource === 'ghl';
 
       const wonValue = monthStatus.wonLeads != null
@@ -17999,10 +18006,7 @@
         metaReportToplineMode: client?.metaReportToplineMode,
       };
       const globalMode = resolveClientToplineMode(cvSettings);
-      const toplineSource = resolveMetaToplineSource(
-        monthPayload || { dataSource: month?.toplineSource },
-        cvSettings,
-      );
+      const toplineSource = resolveMetaCvMonthToplineSource(monthPayload, month, cvSettings);
       const manualMode = Boolean(client?.metaReportGhlDataEnabled)
         && globalMode === 'cenhub'
         && toplineSource === 'manual';
@@ -18142,22 +18146,30 @@
         saveBtn.onclick = async () => {
           const clientId = metaReportsState.customValues.selectedClientId;
           const monthKey = metaReportsState.customValues.selectedMonthKey;
-          if (!clientId || !monthKey) return;
+          if (!clientId || !monthKey || metaReportsState.customValues.saving) return;
           const body = collectMetaCvSaveBody();
           setMetaCvSavePending(true);
           try {
-            const result = await adminFetch(
+            const result = await adminFetchWithRetry(
               `/api/meta-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`,
               { method: 'PUT', body: JSON.stringify(body) },
+              { retries: 2, timeoutMs: 30000 },
             );
             applyMetaCvSaveResult(clientId, monthKey, body, result);
             metaReportsState.customValues.draftInputs = body;
             setMetaCvSavePending(false);
             refreshMetaCvListAndEditor();
             showToast('Custom values saved', 'success');
-            await refreshMetaCvOverviewSilently();
+            try {
+              await refreshMetaCvOverviewSilently();
+            } catch (refreshError) {
+              console.warn('Custom values overview refresh failed after save', refreshError);
+            }
           } catch (error) {
-            showToast(error.message || 'Save failed', 'error');
+            const message = error?.name === 'AbortError'
+              ? 'Save timed out — try again'
+              : (error.message || 'Save failed');
+            showToast(message, 'error');
             setMetaCvSavePending(false);
           }
         };
