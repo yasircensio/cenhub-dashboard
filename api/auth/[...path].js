@@ -28,6 +28,13 @@ module.exports = async function authPathHandler(request, response) {
     if (built) queryString = `?${built}`;
   }
 
+  if (queryString) {
+    const params = new URLSearchParams(queryString.startsWith('?') ? queryString.slice(1) : queryString);
+    request.query = { ...(request.query || {}) };
+    for (const [key, value] of params.entries()) {
+      request.query[key] = value;
+    }
+  }
   request.url = suffix ? `/api/auth/${suffix}${queryString}` : `/api/auth${queryString}`;
 
   await handleAuthRequest(request, response);

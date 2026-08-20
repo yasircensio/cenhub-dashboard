@@ -38,8 +38,10 @@
     }
   },
   "rewrites": [
-    { "source": "/api/google-ads/oauth/start", "destination": "/api/auth/google-ads/start" },
-    { "source": "/api/google-ads/oauth/callback", "destination": "/api/auth/google-ads/callback" },
+    { "source": "/api/google-ads/oauth/start", "destination": "/api/google-ads-oauth-start" },
+    { "source": "/api/google-ads/oauth/callback", "destination": "/api/google-ads-oauth-callback" },
+    { "source": "/api/auth/google-ads/start", "destination": "/api/google-ads-oauth-start" },
+    { "source": "/api/auth/google-ads/callback", "destination": "/api/google-ads-oauth-callback" },
     { "source": "/api/meta-sync-cron", "destination": "/api/sync-history?__cron=meta" },
     { "source": "/api/cron/meta-sync", "destination": "/api/sync-history?__cron=meta" },
     { "source": "/api/ghl-sync-cron", "destination": "/api/sync-history?__cron=ghl" },
