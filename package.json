@@ -39,6 +39,8 @@
     "test:metrics-model": "node scripts/test-metrics-model.js",
     "test:sync": "node scripts/test-sync.js",
     "test:meta-capi": "node scripts/test-meta-capi-event.js",
+    "google-ads:oauth": "node scripts/google-ads-oauth.js",
+    "test:google-ads": "node scripts/test-google-ads-insights.js",
     "sync:fb-lead-ids": "node scripts/sync-meta-lead-ids-to-ghl.js"
   },
   "dependencies": {

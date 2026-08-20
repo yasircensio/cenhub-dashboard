@@ -35,6 +35,9 @@
     },
     "api/meta-reports/[...path].js": {
       "maxDuration": 60
+    },
+    "api/google-ads/oauth/[...path].js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
