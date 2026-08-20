@@ -8,7 +8,10 @@ module.exports = async function authPathHandler(request, response) {
 
   const segments = request.query.path || [];
   const suffix = Array.isArray(segments) ? segments.join('/') : String(segments || '');
-  request.url = suffix ? `/api/auth/${suffix}` : '/api/auth';
+  const rawUrl = String(request.url || '');
+  const queryIndex = rawUrl.indexOf('?');
+  const query = queryIndex >= 0 ? rawUrl.slice(queryIndex) : '';
+  request.url = suffix ? `/api/auth/${suffix}${query}` : `/api/auth${query}`;
 
   await handleAuthRequest(request, response);
 };
