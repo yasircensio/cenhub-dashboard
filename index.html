@@ -12562,14 +12562,22 @@
     }
 
     function metaReportComparisonPeriodsFromState(payload) {
+      const mode = metaReportsState.comparisonMode || 'mom';
+      if (mode === 'mom' || mode === 'ytd') {
+        const resolved = metaReportResolveComparisonPresetDates(payload, mode);
+        if (resolved.periodA) metaReportsState.comparisonPeriodA = { ...resolved.periodA };
+        if (resolved.periodB) metaReportsState.comparisonPeriodB = { ...resolved.periodB };
+        return { periodA: resolved.periodA, periodB: resolved.periodB, mode };
+      }
+
       let periodA = metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodA);
       let periodB = metaReportComparisonNormalizePeriod(metaReportsState.comparisonPeriodB);
       if (!periodA || !periodB) {
-        const resolved = metaReportApplyComparisonPresetDefaults(payload, metaReportsState.comparisonMode);
+        const resolved = metaReportApplyComparisonPresetDefaults(payload, mode);
         periodA = resolved.periodA;
         periodB = resolved.periodB;
       }
-      return { periodA, periodB, mode: metaReportsState.comparisonMode };
+      return { periodA, periodB, mode };
     }
 
     function metaReportComparisonMaps(payload, periodA, periodB) {
@@ -13910,12 +13918,27 @@
       });
     }
 
+    function syncMetaReportComparisonPeriodControls(payload, comparison, { editable = false } = {}) {
+      const rangeWrap = document.getElementById('meta-report-comparison-range-wrap');
+      if (!rangeWrap) return;
+      const { periodA, periodB } = metaReportComparisonPeriodsFromState(payload);
+      rangeWrap.innerHTML = renderMetaReportComparisonPeriodControls(periodA, periodB, payload, comparison);
+      const mode = metaReportsState.comparisonMode || 'mom';
+      if (mode === 'custom') {
+        bindMetaReportComparisonDateInputs(payload, { editable });
+      } else if (mode === 'months') {
+        bindMetaReportComparisonMonthInputs(payload, { editable });
+      }
+    }
+
     function syncMetaReportComparisonUi(payload, { editable = false } = {}) {
       const view = document.getElementById('meta-report-comparison-view');
       if (!view) return;
 
       const comparison = computeMetaReportComparison(payload);
       metaReportsState.comparisonResult = comparison;
+
+      syncMetaReportComparisonPeriodControls(payload, comparison, { editable });
 
       const headlineWrap = document.getElementById('meta-report-comparison-headline-wrap');
       if (headlineWrap) headlineWrap.remove();
