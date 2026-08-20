@@ -36,7 +36,10 @@
     "api/meta-reports/[...path].js": {
       "maxDuration": 60
     },
-    "api/google-ads/oauth/[...path].js": {
+    "api/google-ads/oauth/start.js": {
+      "maxDuration": 60
+    },
+    "api/google-ads/oauth/callback.js": {
       "maxDuration": 60
     }
   },
