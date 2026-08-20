@@ -10,8 +10,25 @@ module.exports = async function authPathHandler(request, response) {
   const suffix = Array.isArray(segments) ? segments.join('/') : String(segments || '');
   const rawUrl = String(request.url || '');
   const queryIndex = rawUrl.indexOf('?');
-  const query = queryIndex >= 0 ? rawUrl.slice(queryIndex) : '';
-  request.url = suffix ? `/api/auth/${suffix}${query}` : `/api/auth${query}`;
+  let queryString = queryIndex >= 0 ? rawUrl.slice(queryIndex) : '';
+
+  if (!queryString && request.query && typeof request.query === 'object') {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(request.query)) {
+      if (key === 'path') continue;
+      if (Array.isArray(value)) {
+        value.forEach((entry) => {
+          if (entry != null && entry !== '') params.append(key, String(entry));
+        });
+        continue;
+      }
+      if (value != null && value !== '') params.set(key, String(value));
+    }
+    const built = params.toString();
+    if (built) queryString = `?${built}`;
+  }
+
+  request.url = suffix ? `/api/auth/${suffix}${queryString}` : `/api/auth${queryString}`;
 
   await handleAuthRequest(request, response);
 };
