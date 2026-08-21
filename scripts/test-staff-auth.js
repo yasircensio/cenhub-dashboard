@@ -12,6 +12,7 @@ function testReservedTeamSlug() {
   assert(RESERVED_SLUGS.has('team'), 'team slug should be reserved');
   assert(RESERVED_SLUGS.has('staff'), 'staff slug should be reserved');
   assert(RESERVED_SLUGS.has('users'), 'users slug should be reserved');
+  assert(RESERVED_SLUGS.has('google-ads'), 'google-ads slug should be reserved');
 }
 
 async function testPasswordHashing() {

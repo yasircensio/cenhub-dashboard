@@ -72,6 +72,7 @@ function serveDashboardHtml(response, mode, clientSlug = null, extraAttrs = {}) 
     || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'sync-history-meta-reports' || mode === 'fb-lead-sync'
     || mode === 'meta-reports' || mode === 'meta-reports-client' || mode === 'meta-reports-custom'
     || mode === 'meta-reports-ghl-clients'
+    || mode === 'google-ads' || mode === 'google-ads-client'
     || mode === 'report';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
   let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
@@ -350,6 +351,27 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/api/google-ads-reports' || url.startsWith('/api/google-ads-reports/')) {
+    try {
+      const localResponse = createLocalResponse(response);
+      let rawBody = '';
+      if (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH') {
+        rawBody = await readRequestBody(request);
+      }
+      await require('./lib/google-ads-reports-handler').handleGoogleAdsReportsRequest({
+        method: request.method,
+        headers: request.headers,
+        url,
+        query: Object.fromEntries(requestUrl.searchParams),
+        body: rawBody,
+      }, localResponse);
+    } catch (error) {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message || 'Google Ads reports API failed.' }));
+    }
+    return;
+  }
+
   if (url === '/api/meta-reports' || url.startsWith('/api/meta-reports/')) {
     try {
       const localResponse = createLocalResponse(response);
@@ -429,6 +451,17 @@ const server = http.createServer(async (request, response) => {
 
   if (url === '/admin/fb-lead-sync') {
     serveDashboardHtml(response, 'fb-lead-sync');
+    return;
+  }
+
+  if (url === '/admin/google-ads') {
+    serveDashboardHtml(response, 'google-ads');
+    return;
+  }
+
+  const googleAdsClientMatch = url.match(/^\/admin\/google-ads\/([^/]+)\/?$/);
+  if (googleAdsClientMatch) {
+    serveDashboardHtml(response, 'google-ads-client', googleAdsClientMatch[1]);
     return;
   }
 

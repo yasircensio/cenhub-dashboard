@@ -133,6 +133,14 @@ async function bootAdminApp() {
     await loadMetaReportsClientPage();
     return;
   }
+  if (IS_ADMIN_GOOGLE_ADS) {
+    await loadGoogleAdsHubPage();
+    return;
+  }
+  if (IS_ADMIN_GOOGLE_ADS_CLIENT) {
+    await loadGoogleAdsClientPage();
+    return;
+  }
   if (IS_TEAM_PAGE) {
     loadTeamPage();
     return;

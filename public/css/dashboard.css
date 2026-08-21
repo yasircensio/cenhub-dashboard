@@ -6118,3 +6118,17 @@
       .meta-cv-layout { grid-template-columns: 1fr; }
       .meta-cv-editor { position: static; }
     }
+    .google-ads-table-wrap { overflow-x: auto; }
+    .google-ads-table {
+      border-collapse: collapse; font-size: 13px; min-width: 1100px; width: 100%;
+    }
+    .google-ads-table th, .google-ads-table td {
+      border-bottom: 1px solid var(--border); padding: 8px 10px; text-align: right; white-space: nowrap;
+    }
+    .google-ads-table th:first-child, .google-ads-table td:first-child { text-align: left; }
+    .google-ads-table tr.is-active td { background: var(--primary-soft); }
+    .google-ads-table thead th { color: var(--text-muted); font-size: 11px; letter-spacing: 0.03em; text-transform: uppercase; }
+    .google-ads-control-grid {
+      display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    .google-ads-chart-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; }

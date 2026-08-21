@@ -93,6 +93,8 @@ function main() {
     'loadMetaReportsHubPage',
     'loadMetaReportsCustomValuesPage',
     'loadMetaReportsClientPage',
+    'loadGoogleAdsHubPage',
+    'loadGoogleAdsClientPage',
   ];
 
     const adminBootRoutes = [
@@ -106,6 +108,10 @@ function main() {
     'switch-topline-source',
     'IS_ADMIN_META_REPORTS',
     'loadMetaReportsHubPage',
+    'IS_ADMIN_GOOGLE_ADS',
+    'loadGoogleAdsHubPage',
+    'IS_ADMIN_GOOGLE_ADS_CLIENT',
+    'loadGoogleAdsClientPage',
     'IS_ADMIN_SYNC_HISTORY_META_REPORTS',
     'loadSyncHistoryPage("meta-report-ghl")',
   ];
