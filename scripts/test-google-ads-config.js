@@ -1,6 +1,7 @@
 const assert = require('assert');
 const {
   DEFAULT_GOOGLE_ADS_API_VERSION,
+  describeGoogleAdsDeveloperTokenProblem,
   getGoogleAdsConfig,
   normalizeGoogleAdsApiVersion,
 } = require('../lib/google-ads-config');
@@ -21,6 +22,11 @@ function main() {
   if (previous == null) delete process.env.GOOGLE_ADS_API_VERSION;
   else process.env.GOOGLE_ADS_API_VERSION = previous;
 
+  assert.strictEqual(
+    describeGoogleAdsDeveloperTokenProblem({ developerToken: 'x'.repeat(20) }).includes('20 characters'),
+    true,
+  );
+  assert.strictEqual(describeGoogleAdsDeveloperTokenProblem({ developerToken: 'x'.repeat(22) }), null);
   console.log('google-ads-config version tests passed');
 }
 

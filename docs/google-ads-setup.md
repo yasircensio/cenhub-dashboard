@@ -19,7 +19,7 @@ Settings → Environment Variables → **Production**:
 
 | Variable | Value |
 |----------|--------|
-| `GOOGLE_ADS_DEVELOPER_TOKEN` | API Center → View token |
+| `GOOGLE_ADS_DEVELOPER_TOKEN` | API Center → View token (**22 characters**, no spaces) |
 | `GOOGLE_ADS_CLIENT_ID` | OAuth client ID |
 | `GOOGLE_ADS_CLIENT_SECRET` | OAuth client secret |
 | `GOOGLE_ADS_OAUTH_REDIRECT_URI` | `https://analytics.censio.dk/api/auth/google-ads/callback` |
