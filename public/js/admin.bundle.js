@@ -1368,7 +1368,7 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(n?setFbL
           <div class="meta-report-public-topbar-brand">
             <img
               class="meta-report-public-logo"
-              src="/censio-analytics-logo.png"
+              src="/censio-analytics-logo.png?v=2"
               alt="Censio Analytics"
               height="34"
             />
