@@ -4547,6 +4547,16 @@
     }
     .meta-hub-card-actions .admin-btn { justify-content: center; text-align: center; width: 100%; }
     .meta-hub-card-actions--single { grid-template-columns: 1fr; }
+    .meta-hub-card .client-card-actions {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 4px;
+      padding-top: 4px;
+    }
+    .meta-hub-card .client-card-actions .admin-btn {
+      font-size: 12px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
 
     .meta-report-badge {
       align-items: center; border-radius: 999px; display: inline-flex; flex-shrink: 0; font-size: 12px;
@@ -4574,7 +4584,7 @@
     .meta-report-banner-warn { margin-bottom: 0; }
 
     @media (max-width: 600px) {
-      .meta-hub-card-actions { grid-template-columns: 1fr; }
+      .meta-hub-card-actions:not(.client-card-actions) { grid-template-columns: 1fr; }
       .meta-report-toolbar { align-items: stretch; flex-direction: column; }
       .meta-report-toolbar-left, .meta-report-toolbar-actions { width: 100%; }
       .meta-report-toolbar-actions .admin-btn, .meta-report-toolbar-actions .meta-report-backfill-wrap { flex: 1 1 auto; }
