@@ -703,6 +703,44 @@ function testProjectionStepsMatchSummaryMetrics() {
   });
 }
 
+function testBaselineSpendUsesAdSpendWithoutWonLeads() {
+  const asOfDate = new Date('2026-08-24T12:00:00.000Z');
+  const series = [
+    { monthKey: '2026-06', spend: 6737.24, leads: 0, wonLeads: 0, avgLeadValue: 0, periodEnd: '2026-06-30' },
+    { monthKey: '2026-07', spend: 6687.5, leads: 0, wonLeads: 0, avgLeadValue: 0, periodEnd: '2026-07-31' },
+    { monthKey: '2026-08', spend: 2812.17, leads: 0, wonLeads: 0, avgLeadValue: 0, periodEnd: '2026-08-31' },
+  ];
+
+  const {
+    prepareBaselineSpendWindow,
+    resolveLastMonthBaseline,
+    resolveScenarioBaselineSpend,
+    resolveWindowAverageBaselineSpend,
+    prepareScenarioSeries,
+  } = require('../lib/meta-report-scenario-projection');
+
+  const prepared = prepareScenarioSeries(series, { windowMonths: '6', asOfDate });
+  assert.strictEqual(prepared.months.length, 0, 'efficiency model should ignore months without won leads');
+
+  const spendWindow = prepareBaselineSpendWindow(series, { windowMonths: '6', asOfDate });
+  assert.strictEqual(spendWindow.length, 2, 'baseline window should still include completed spend months');
+
+  approx(resolveWindowAverageBaselineSpend(spendWindow), (6737.24 + 6687.5) / 2);
+  approx(resolveLastMonthBaseline(series, { activeMonthKey: '2026-08', asOfDate }).spend, 6687.5);
+  approx(resolveScenarioBaselineSpend(series, prepared.months, {
+    baselineMode: 'last',
+    activeMonthKey: '2026-08',
+    asOfDate,
+    monthWindow: '6',
+  }), 6687.5);
+  approx(resolveScenarioBaselineSpend(series, prepared.months, {
+    baselineMode: 'year',
+    activeMonthKey: '2026-08',
+    asOfDate,
+    monthWindow: '6',
+  }), (6737.24 + 6687.5) / 2);
+}
+
 function main() {
   testSheetExample();
   testFeeNotNegativeOnLoss();
@@ -731,6 +769,7 @@ function main() {
   testLastMonthBaselineRequiresExactPreviousMonth();
   testScenarioHistoryWindowWithFourMonths();
   testBaselineModesMatchProjectionSpend();
+  testBaselineSpendUsesAdSpendWithoutWonLeads();
   testEfficiencyInsight();
   testLinearRegression();
   console.log('Meta report calculator tests passed.');

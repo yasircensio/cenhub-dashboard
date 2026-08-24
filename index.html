@@ -10378,8 +10378,10 @@
       const start = String(monthPayload.periodStart || '').slice(0, 10);
       const end = String(monthPayload.periodEnd || '').slice(0, 10);
       if (start === bounds.start && end === bounds.end) return true;
-      // Trust fetched Meta snapshots when the API already normalized the period.
-      if (monthPayload.metaFetchedAt && Number(monthPayload.meta?.spend) > 0) return true;
+      const spend = Number(monthPayload.meta?.spend ?? monthPayload.google?.spend) || 0;
+      // Trust fetched ad snapshots when the API already normalized the period.
+      if (monthPayload.metaFetchedAt && spend > 0) return true;
+      if (monthPayload.googleFetchedAt && spend > 0) return true;
       return false;
     }
 
@@ -11183,11 +11185,34 @@
       if (!monthKey) return 0;
       const monthPayload = payload?.months?.[monthKey];
       if (monthPayload && !monthPayload.meta?.emptyMonth && metaReportMonthPeriodAligned(monthPayload)) {
-        const spend = metaReportParseAmount(monthPayload.meta?.spend);
+        const spend = metaReportParseAmount(monthPayload.meta?.spend ?? monthPayload.google?.spend);
         if (spend > 0) return spend;
       }
       const point = series.find((entry) => entry.monthKey === monthKey);
       return point ? metaReportParseAmount(point.spend) : 0;
+    }
+
+    function metaReportPrepareBaselineSpendWindow(series = [], {
+      windowMonths = '6',
+      asOfDate = new Date(),
+    } = {}) {
+      const windowLimit = normalizeMetaReportScenarioMonthWindow(windowMonths) === 'all'
+        ? Infinity
+        : Number.parseInt(normalizeMetaReportScenarioMonthWindow(windowMonths), 10) || 6;
+      const today = asOfDate.toISOString().slice(0, 10);
+      const withSpend = series
+        .filter((point) => metaReportParseAmount(point.spend) > 0)
+        .filter((point) => {
+          const periodEnd = String(point.periodEnd || '').slice(0, 10);
+          return !periodEnd || periodEnd < today;
+        });
+      return windowLimit === Infinity ? withSpend : withSpend.slice(-windowLimit);
+    }
+
+    function resolveMetaReportWindowAverageBaselineSpend(spendMonths = []) {
+      if (!spendMonths.length) return 0;
+      const total = spendMonths.reduce((sum, point) => sum + metaReportParseAmount(point.spend), 0);
+      return total > 0 ? metaReportRoundMoney(total / spendMonths.length) : 0;
     }
 
     function buildMetaReportScenarioProjection(series, payload) {
@@ -11295,26 +11320,31 @@
       asOfDate = new Date(),
       payload = null,
     } = {}) {
-      const sorted = series
-        .filter((point) => metaReportParseAmount(point.spend) > 0)
-        .sort((left, right) => String(left.monthKey).localeCompare(String(right.monthKey)));
-
-      if (!sorted.length) return null;
-
       const referenceKey = activeMonthKey || metaReportMonthKeyFromDate(asOfDate);
       if (!referenceKey) return null;
 
-      const previousKey = referenceKey ? metaReportAddMonthsToMonthKey(referenceKey, -1) : null;
+      const previousKey = metaReportAddMonthsToMonthKey(referenceKey, -1);
       if (!previousKey) return null;
 
+      const spendFromPayload = metaReportSpendFromMonthKey(series, payload, previousKey);
+      if (spendFromPayload > 0) {
+        return {
+          monthKey: previousKey,
+          label: metaMonthLabel(previousKey),
+          spend: spendFromPayload,
+        };
+      }
+
+      const sorted = series
+        .filter((point) => metaReportParseAmount(point.spend) > 0)
+        .sort((left, right) => String(left.monthKey).localeCompare(String(right.monthKey)));
       const previous = sorted.find((point) => point.monthKey === previousKey);
-      const spend = metaReportSpendFromMonthKey(series, payload, previousKey);
-      if (!previous && spend <= 0) return null;
+      if (!previous) return null;
 
       return {
         monthKey: previousKey,
         label: metaMonthLabel(previousKey),
-        spend: spend > 0 ? spend : metaReportParseAmount(previous.spend),
+        spend: metaReportParseAmount(previous.spend),
       };
     }
 
@@ -11353,7 +11383,12 @@
         const lastMonth = resolveMetaReportLastMonthBaseline(series, { activeMonthKey, asOfDate, payload });
         if (lastMonth?.spend > 0) spend = lastMonth.spend;
       } else if (baselineMode === 'year') {
-        spend = resolveMetaReportPreparedWindowAverageSpend(preparedMonths);
+        const spendWindow = metaReportPrepareBaselineSpendWindow(series, {
+          windowMonths: metaReportsState.scenarioMonthWindow,
+          asOfDate,
+        });
+        spend = resolveMetaReportWindowAverageBaselineSpend(spendWindow);
+        if (spend <= 0) spend = resolveMetaReportPreparedWindowAverageSpend(preparedMonths);
       }
 
       if (spend <= 0) spend = resolveMetaReportPreparedWindowAverageSpend(preparedMonths);
@@ -11659,9 +11694,10 @@
 
     function resolveMetaReportScenarioBaselineHints(series = [], projection = null, payload = null) {
       const activePayload = payload || metaReportsState.clientPayload || null;
+      const baselineSeries = metaReportsState.chartSeries?.length ? metaReportsState.chartSeries : series;
       const pills = getMetaReportScenarioPillsFromState();
       const hasBottomline = payloadHasMetaReportBottomline(activePayload);
-      const prepared = projection?.prepared || metaReportPrepareScenarioSeries(series, {
+      const prepared = projection?.prepared || metaReportPrepareScenarioSeries(baselineSeries, {
         windowMonths: metaReportsState.scenarioMonthWindow,
         smoothOutliers: pills.smoothUneven,
         hasBottomline,
@@ -11672,17 +11708,18 @@
         || activePayload?.year || metaReportsState.selectedYear
         || (activeKey ? Number(String(activeKey).slice(0, 4)) : null);
       const spendArgs = { activeMonthKey: activeKey, asOfDate: new Date(), payload: activePayload };
-
-      const lastMonthMeta = resolveMetaReportLastMonthBaseline(series, spendArgs);
-      const windowAverage = resolveMetaReportScenarioBaselineSpend(series, prepared, {
-        baselineMode: 'year',
-        ...spendArgs,
+      const spendWindow = metaReportPrepareBaselineSpendWindow(baselineSeries, {
+        windowMonths: metaReportsState.scenarioMonthWindow,
+        asOfDate: new Date(),
       });
-      const lastMonthSpend = resolveMetaReportScenarioBaselineSpend(series, prepared, {
+
+      const lastMonthMeta = resolveMetaReportLastMonthBaseline(baselineSeries, spendArgs);
+      const windowAverage = resolveMetaReportWindowAverageBaselineSpend(spendWindow);
+      const lastMonthSpend = resolveMetaReportScenarioBaselineSpend(baselineSeries, prepared, {
         baselineMode: 'last',
         ...spendArgs,
       });
-      const selectedMonthSpend = resolveMetaReportScenarioBaselineSpend(series, prepared, {
+      const selectedMonthSpend = resolveMetaReportScenarioBaselineSpend(baselineSeries, prepared, {
         baselineMode: 'month',
         ...spendArgs,
       });
@@ -11695,12 +11732,12 @@
 
       return {
         windowAverage,
-        windowMonthCount: prepared.monthsUsed || prepared.months.length || 0,
+        windowMonthCount: spendWindow.length || prepared.monthsUsed || prepared.months.length || 0,
         selectedMonthSpend,
         selectedMonthLabel: activeKey ? metaMonthLabel(activeKey) : '',
         activeKey,
         currentMonthSpend: currentInReportYear
-          ? metaReportSpendFromMonthKey(series, activePayload, currentKey)
+          ? metaReportSpendFromMonthKey(baselineSeries, activePayload, currentKey)
           : 0,
         currentMonthLabel: currentInReportYear ? metaMonthLabel(currentKey) : '',
         currentKey: currentInReportYear ? currentKey : null,
@@ -15364,7 +15401,7 @@
       const scenarioSeries = filterMetaReportScenarioSeries(series, { hasBottomline });
       const projection = buildMetaReportScenarioProjection(series, payload);
       metaReportsState.chartProjection = projection;
-      syncMetaReportBaselineUi(scenarioSeries, projection, scenarioPayload);
+      syncMetaReportBaselineUi(metaReportsState.chartSeries || series, projection, scenarioPayload);
 
       const scenarioCard = document.getElementById('meta-report-scenario-card');
       if (!scenarioCard) return;
