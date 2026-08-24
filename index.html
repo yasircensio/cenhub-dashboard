@@ -4556,6 +4556,7 @@
     }
     .meta-hub-card-actions .admin-btn { justify-content: center; text-align: center; width: 100%; }
     .meta-hub-card-actions--single { grid-template-columns: 1fr; }
+    .meta-hub-card-actions--triple { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
     .meta-report-badge {
       align-items: center; border-radius: 999px; display: inline-flex; flex-shrink: 0; font-size: 12px;
@@ -9877,11 +9878,18 @@
         actionButtons.push(`<button type="button" class="admin-btn admin-btn--primary" data-meta-provision="${esc(client.metaAdAccountId)}" data-meta-provision-name="${esc(client.accountName)}">Add client</button>`);
       } else if (canEdit) {
         actionButtons.push(`<a class="admin-btn" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Edit report</a>`);
+        if (client.reportUrl && client.metaReportEnabled) {
+          actionButtons.push(`<a class="admin-btn admin-btn--primary" href="${esc(client.reportUrl)}" target="_blank" rel="noopener noreferrer" title="Open client report">View Report</a>`);
+        }
         actionButtons.push(client.reportUrl
           ? `<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`
           : `<a class="admin-btn admin-btn--secondary" href="/admin/meta-reports/${encodeURIComponent(client.clientId)}">Enable report</a>`);
       }
-      const actionsClass = actionButtons.length === 1 ? 'meta-hub-card-actions meta-hub-card-actions--single' : 'meta-hub-card-actions';
+      const actionsClass = actionButtons.length === 1
+        ? 'meta-hub-card-actions meta-hub-card-actions--single'
+        : (actionButtons.length >= 3
+          ? 'meta-hub-card-actions meta-hub-card-actions--triple'
+          : 'meta-hub-card-actions');
 
       return `
         <article class="meta-hub-card ${cardClass}" data-meta-hub-row="${esc(rowKey)}">
