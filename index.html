@@ -16799,7 +16799,7 @@
       try {
         const data = await adminFetch('/api/google-ads-reports?filter=all');
         // #region agent log
-        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',runId:'token-shape',hypothesisId:'H',location:'index.html:loadGoogleAdsHubPage',message:'Google Ads hub API payload',data:{partnerFetchError:data?.google?.partnerFetchError||null,debug:data?.google?.debug||null,accountCount:(data?.clients||[]).length},timestamp:Date.now()})}).catch(()=>{});
+        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',runId:'mcc-probe',hypothesisId:'L',location:'index.html:loadGoogleAdsHubPage',message:'Google Ads hub API payload',data:{partnerFetchError:data?.google?.partnerFetchError||null,debug:data?.google?.debug||null,accountCount:(data?.clients||[]).length},timestamp:Date.now()})}).catch(()=>{});
         // #endregion
         googleAdsReportsState.dashboardData = data;
         const viewData = getGoogleAdsHubView(data, googleAdsReportsState.filter, googleAdsReportsState.searchQuery);
