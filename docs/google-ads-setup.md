@@ -24,6 +24,7 @@ Settings → Environment Variables → **Production**:
 | `GOOGLE_ADS_CLIENT_SECRET` | OAuth client secret |
 | `GOOGLE_ADS_OAUTH_REDIRECT_URI` | `https://analytics.censio.dk/api/auth/google-ads/callback` |
 | `GOOGLE_ADS_REFRESH_TOKEN` | After OAuth (step below) |
+| `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | Optional MCC id `9103268801` (auto-detected if unset) |
 
 Redeploy after adding or changing vars.
 
