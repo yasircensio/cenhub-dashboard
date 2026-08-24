@@ -4370,35 +4370,14 @@
     .meta-report-public-topbar-brand {
       align-items: center;
       display: flex;
-      gap: 10px;
     }
-    .meta-report-public-brand-mark {
+    .meta-report-public-logo {
       display: block;
-      filter: drop-shadow(0 2px 7px rgba(255, 106, 0, 0.16));
-      flex: 0 0 24px;
-      height: 24px;
+      height: 34px;
+      max-width: min(100%, 220px);
       object-fit: contain;
-      transform: translateY(-0.5px);
-      width: 24px;
+      width: auto;
     }
-    .meta-report-public-wordmark {
-      align-items: baseline;
-      background: linear-gradient(135deg, #ffb45f 0%, #ff6a00 48%, #dc4f00 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      display: inline-flex;
-      filter: drop-shadow(0 2px 7px rgba(255, 106, 0, 0.14));
-      font-family: 'Poppins', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      gap: 0.3em;
-      letter-spacing: -0.03em;
-      line-height: 1;
-      white-space: nowrap;
-    }
-    .meta-report-public-wordmark-censio,
-    .meta-report-public-wordmark-analytics { color: inherit; }
     .meta-report-public-subtitle {
       color: rgba(255, 255, 255, 0.72);
       font-size: 13px;
@@ -15733,16 +15712,11 @@
             <div class="brand-topbar-left">
               <div class="meta-report-public-topbar-brand">
                 <img
-                  class="meta-report-public-brand-mark"
-                  src="/censio-mark-orange.png"
-                  alt=""
-                  width="180"
-                  height="180"
+                  class="meta-report-public-logo"
+                  src="/censio-analytics-logo.png"
+                  alt="Censio Analytics"
+                  height="34"
                 />
-                <span class="meta-report-public-wordmark">
-                  <span class="meta-report-public-wordmark-censio">Censio</span>
-                  <span class="meta-report-public-wordmark-analytics">Analytics</span>
-                </span>
               </div>
             </div>
           </div>
