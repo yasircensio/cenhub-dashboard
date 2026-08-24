@@ -9228,9 +9228,16 @@
       return match ? match[1] : '';
     }
 
+    function resolveMetaReportModalBottomlineSettings() {
+      if (IS_ADMIN_GOOGLE_ADS_CLIENT && googleAdsReportsState.clientPayload) {
+        return googleAdsSettingsToMetaUx(googleAdsReportsState.clientPayload.settings || {});
+      }
+      return metaReportsState.clientPayload?.settings || {};
+    }
+
     function closeMetaReportModal() {
       if (metaReportsState.clientReportSettingsExpanded && document.getElementById('meta-report-fee-editor')) {
-        syncMetaReportBottomlineFeeDom(metaReportsState.clientPayload?.settings || {}, 'meta-report');
+        syncMetaReportBottomlineFeeDom(resolveMetaReportModalBottomlineSettings(), 'meta-report');
       }
       document.getElementById('meta-report-modal-root')?.remove();
       document.body.classList.remove('meta-report-modal-open');
@@ -11252,12 +11259,16 @@
       }
       const currentYear = getMetaReportCalendarYear(payload);
       const clientId = payload.clientId;
+      const isGoogleAds = payload.reportKind === 'google-ads';
       try {
         if (editable && clientId) {
+          const reportsPath = isGoogleAds ? '/api/google-ads-reports' : '/api/meta-reports';
           const currentPayload = await adminFetch(
-            `/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(currentYear)}`,
+            `${reportsPath}/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(currentYear)}`,
           );
-          updateMetaReportScenarioSource(currentPayload);
+          updateMetaReportScenarioSource(
+            isGoogleAds ? googleAdsPayloadToMetaUiShape(currentPayload) : currentPayload,
+          );
           return;
         }
         if (REPORT_TOKEN) {
@@ -11268,7 +11279,11 @@
             if (!response.ok) throw new Error(body.error || 'Report not found');
             return body;
           });
-          updateMetaReportScenarioSource(currentPayload);
+          updateMetaReportScenarioSource(
+            currentPayload.reportKind === 'google-ads'
+              ? googleAdsPayloadToMetaUiShape(currentPayload)
+              : currentPayload,
+          );
         }
       } catch (_) {
         /* keep table/chart view usable even if scenario prefetch fails */
@@ -17198,6 +17213,9 @@
     }
 
     function switchGoogleAdsReportMonthTab(monthKey) {
+      if (metaReportsState.reportViewMode === 'comparison') {
+        metaReportsState.reportViewMode = 'monthly';
+      }
       googleAdsReportsState.activeMonthKey = monthKey;
       metaReportsState.activeMonthKey = monthKey;
       const payload = googleAdsReportsState.clientPayload;
@@ -17255,6 +17273,7 @@
       bindGoogleAdsReportShareEvents(payload);
       bindGoogleAdsReportBottomlineSummaryEvents(payload);
       bindGoogleAdsReportExcelSheetSummaryEvents(payload);
+      void ensureMetaReportScenarioSource(metaReportsState.clientPayload, { editable: true });
     }
 
     function bindGoogleAdsReportsClientChromeEvents(payload) {
@@ -17620,9 +17639,11 @@
           googleAdsReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
         metaReportsState.activeMonthKey = googleAdsReportsState.activeMonthKey;
+        const uiPayload = googleAdsPayloadToMetaUiShape(payload);
+        await ensureMetaReportScenarioSource(uiPayload, { editable: true });
         if (!googleAdsReportsState.clientPageMounted) {
           googleAdsReportsState.clientPayload = payload;
-          metaReportsState.clientPayload = googleAdsPayloadToMetaUiShape(payload);
+          metaReportsState.clientPayload = uiPayload;
           metaReportsState.clientShareExpanded = false;
           metaReportsState.clientReportSettingsExpanded = false;
           metaReportsState.clientExcelSheetExpanded = false;
@@ -17632,7 +17653,7 @@
           googleAdsReportsState.clientPageMounted = true;
           bindGoogleAdsReportsClientEvents(payload);
           requestAnimationFrame(() => {
-            mountMetaReportCharts(googleAdsPayloadToMetaUiShape(payload), { editable: true, clientId });
+            mountMetaReportCharts(uiPayload, { editable: true, clientId });
           });
         } else {
           updateGoogleAdsReportsClientContent(payload);
