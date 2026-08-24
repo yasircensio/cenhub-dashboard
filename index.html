@@ -10260,19 +10260,23 @@
 
     function updatePublicMetaReportContent(payload) {
       metaReportsState.publicPayload = payload;
+      const isGoogleAds = payload.reportKind === 'google-ads';
+      const uiPayload = isGoogleAds ? googleAdsPayloadToMetaUiShape(payload) : payload;
       syncMetaReportPublicBranding(payload);
-      updateMetaReportPublicExcelSheetButton(payload.settings || {});
-      const monthKeys = payload.monthKeys || [];
+      if (!isGoogleAds) {
+        updateMetaReportPublicExcelSheetButton(uiPayload.settings || {});
+      }
+      const monthKeys = uiPayload.monthKeys || [];
       if (!metaReportsState.activeMonthKey) {
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
       } else if (!monthKeys.includes(metaReportsState.activeMonthKey)) {
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
       }
 
-      syncMetaReportSelectedYear(payload, { disableUnavailable: true });
+      syncMetaReportSelectedYear(uiPayload, { disableUnavailable: true });
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
-        yearSelect.innerHTML = renderMetaReportYearSelectOptions(payload, { disableUnavailable: true });
+        yearSelect.innerHTML = renderMetaReportYearSelectOptions(uiPayload, { disableUnavailable: true });
       }
 
       const tabsEl = document.querySelector('.meta-report-tabs');
@@ -10285,11 +10289,21 @@
 
       const panel = document.getElementById('meta-report-month-panel');
       if (panel) {
-        syncMetaReportMonthPanelDom(
-          payload.months?.[metaReportsState.activeMonthKey],
-          getMetaReportMonthBodyOptions(payload.settings, { editable: false }),
-          payload,
-        );
+        if (isGoogleAds) {
+          panel.innerHTML = renderGoogleAdsReportMonthBody(
+            uiPayload.months?.[metaReportsState.activeMonthKey],
+            { editable: false, yearPayload: uiPayload, activeMonthKey: metaReportsState.activeMonthKey },
+          );
+          requestAnimationFrame(() => {
+            mountMetaReportCharts(uiPayload, { editable: false });
+          });
+        } else {
+          syncMetaReportMonthPanelDom(
+            uiPayload.months?.[metaReportsState.activeMonthKey],
+            getMetaReportMonthBodyOptions(uiPayload.settings, { editable: false }),
+            uiPayload,
+          );
+        }
       }
     }
 
@@ -15439,7 +15453,7 @@
       `;
     }
 
-    function renderMetaReportMonthTables(monthPayload, { editable = false } = {}) {
+    function renderMetaReportMonthTables(monthPayload, { editable = false, adGroupTitle = 'Meta ads' } = {}) {
       if (!monthPayload) {
         return '<div class="meta-report-empty">No data for this month yet.</div>';
       }
@@ -15470,7 +15484,7 @@
       ];
 
       let groupsHtml = '';
-      groupsHtml += renderMetaReportMetricTable('Meta ads', metaRows, 'meta');
+      groupsHtml += renderMetaReportMetricTable(adGroupTitle, metaRows, 'meta');
       groupsHtml += renderMetaReportMetricTable('Topline KPI\'er', toplineRows, 'topline', { highlightLastN: 2 });
 
       if (monthPayload.bottomline) {
@@ -15675,12 +15689,18 @@
 
     function renderPublicMetaReportPage(payload) {
       const clientName = metaReportClientDisplayName(payload);
-      const monthKeys = payload.monthKeys || [];
+      const isGoogleAds = payload.reportKind === 'google-ads';
+      const uiPayload = isGoogleAds ? googleAdsPayloadToMetaUiShape(payload) : payload;
+      const monthKeys = uiPayload.monthKeys || [];
       const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
-      const monthPayload = payload.months?.[activeKey] || null;
+      const monthPayload = uiPayload.months?.[activeKey] || null;
+      const monthBody = isGoogleAds
+        ? renderGoogleAdsReportMonthBody(monthPayload, { editable: false, yearPayload: uiPayload, activeMonthKey: activeKey })
+        : renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(uiPayload.settings, { editable: false, yearPayload: uiPayload }));
       const tabs = monthKeys.map((key) => `
         <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
       `).join('');
+      const subtitle = isGoogleAds ? 'Google Ads performance report' : 'Meta ads performance report';
 
       return `
         <header class="brand-topbar">
@@ -15706,7 +15726,7 @@
         <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
           <div class="meta-premium-page-hero-inner">
             <h1>${esc(clientName)}</h1>
-            <p class="meta-report-public-subtitle">Meta ads performance report</p>
+            <p class="meta-report-public-subtitle">${esc(subtitle)}</p>
           </div>
         </div>
         <div class="meta-reports-page meta-reports-page--public">
@@ -15714,18 +15734,18 @@
             <div class="meta-report-toolbar-left">
               <label class="meta-report-year-field">Year
                 <select id="meta-report-year" class="admin-select">
-                  ${renderMetaReportYearSelectOptions(payload, { disableUnavailable: true })}
+                  ${renderMetaReportYearSelectOptions(uiPayload, { disableUnavailable: true })}
                 </select>
               </label>
               <span class="meta-report-year-loading-banner" id="meta-report-public-year-loading-banner" hidden aria-live="polite"></span>
             </div>
-            <div class="meta-report-toolbar-actions" id="meta-report-public-excel-sheet-btn">
-              ${renderMetaReportExcelSheetButton(payload.settings || {}, { variant: 'secondary' })}
+            <div class="meta-report-toolbar-actions" id="meta-report-public-excel-sheet-btn"${isGoogleAds ? ' hidden' : ''}>
+              ${renderMetaReportExcelSheetButton(uiPayload.settings || {}, { variant: 'secondary' })}
             </div>
           </div>
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
           <div class="meta-report-month-panel" id="meta-report-month-panel">
-            ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(payload.settings, { editable: false, yearPayload: payload }))}
+            ${monthBody}
           </div>
         </div>
         <div class="brand-footer brand-footer--public-report">
@@ -16567,8 +16587,582 @@
       clientPayload: null,
       activeMonthKey: null,
       selectedYear: new Date().getFullYear(),
-      chart: null,
+      reportViewMode: 'monthly',
     };
+
+    function googleAdsSettingsToMetaUx(settings = {}) {
+      return {
+        metaReportEnabled: settings.googleAdsReportEnabled,
+        metaReportShowBottomline: settings.googleAdsReportShowBottomline,
+        metaReportFeeEnabled: settings.googleAdsReportFeeEnabled,
+        metaReportFeeMode: settings.googleAdsReportFeeMode,
+        metaReportFeePercent: settings.googleAdsReportFeePercent,
+        metaReportMarketingFeeAmount: settings.googleAdsReportMarketingFeeAmount,
+        metaReportSlug: settings.googleAdsReportSlug,
+        metaReportAccessToken: settings.googleAdsReportAccessToken,
+      };
+    }
+
+    function metaUxPatchToGoogleAds(patch = {}) {
+      const out = {};
+      if (patch.metaReportEnabled !== undefined) out.googleAdsReportEnabled = patch.metaReportEnabled;
+      if (patch.metaReportShowBottomline !== undefined) out.googleAdsReportShowBottomline = patch.metaReportShowBottomline;
+      if (patch.metaReportFeeEnabled !== undefined) out.googleAdsReportFeeEnabled = patch.metaReportFeeEnabled;
+      if (patch.metaReportFeeMode !== undefined) out.googleAdsReportFeeMode = patch.metaReportFeeMode;
+      if (patch.metaReportFeePercent !== undefined) out.googleAdsReportFeePercent = patch.metaReportFeePercent;
+      if (patch.metaReportMarketingFeeAmount !== undefined) {
+        out.googleAdsReportMarketingFeeAmount = patch.metaReportMarketingFeeAmount;
+      }
+      if (patch.metaReportSlug !== undefined) out.googleAdsReportSlug = patch.metaReportSlug;
+      if (patch.rotateAccessToken) out.rotateAccessToken = true;
+      return out;
+    }
+
+    function googleAdsMonthToMetaUiShape(month) {
+      if (!month) return null;
+      const google = month.google || {};
+      const spend = Number(google.spend) || 0;
+      const impressions = Number(google.impressions) || 0;
+      const emptyMonth = !month.googleFetchedAt && spend <= 0 && impressions <= 0;
+      const cpm = google.cpm != null
+        ? Number(google.cpm)
+        : (impressions > 0 ? Math.round((spend / impressions) * 100000) / 100 : 0);
+      return {
+        ...month,
+        meta: {
+          spend,
+          cpm,
+          impressions,
+          reach: 0,
+          clicks: Number(google.clicks) || 0,
+          conversionRatePercent: Number(google.ctr) || 0,
+          emptyMonth,
+        },
+        metaFetchedAt: month.googleFetchedAt || null,
+        inputs: month.inputs || {
+          wonLeads: month.topline?.wonLeads,
+          avgLeadValue: month.topline?.avgLeadValue,
+          avgProfitPerWon: month.topline?.avgProfitPerWon,
+        },
+      };
+    }
+
+    function googleAdsPayloadToMetaUiShape(payload) {
+      if (!payload) return payload;
+      const settings = payload.settings || {};
+      return {
+        ...payload,
+        reportUrl: payload.reportUrl || null,
+        settings: googleAdsSettingsToMetaUx(settings),
+        months: Object.fromEntries(
+          Object.entries(payload.months || {}).map(([key, month]) => [key, googleAdsMonthToMetaUiShape(month)]),
+        ),
+      };
+    }
+
+    function googleAdsMonthsNeedingBackfill(payload) {
+      const monthKeys = payload?.monthKeys || [];
+      return monthKeys.filter((key) => !payload.months?.[key]?.googleFetchedAt);
+    }
+
+    async function patchGoogleAdsReportSettings(clientId, patch, { fast = false } = {}) {
+      const path = `/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/settings`;
+      const body = metaUxPatchToGoogleAds(patch);
+      const options = { method: 'PATCH', body: JSON.stringify(body) };
+      if (fast) return adminFetch(path, options);
+      return adminFetchWithRetry(path, options, { retries: 2, timeoutMs: 20000 });
+    }
+
+    function renderGoogleAdsReportYearSelectOptions(payload, { disableUnavailable = false } = {}) {
+      const selectedYear = Number(googleAdsReportsState.selectedYear) || Number(payload?.year);
+      return getMetaReportYearOptions(payload).map(({ year, available }) => {
+        const disabled = disableUnavailable && !available;
+        return `<option value="${year}"${Number(selectedYear) === year ? ' selected' : ''}${disabled ? ' disabled' : ''}>${year}${!available ? ' (no data)' : ''}</option>`;
+      }).join('');
+    }
+
+    function renderGoogleAdsReportClientControlPanel(payload) {
+      const uiPayload = googleAdsPayloadToMetaUiShape(payload);
+      const settings = uiPayload.settings || {};
+      const shareExpanded = metaReportsState.clientShareExpanded;
+      const reportExpanded = metaReportsState.clientReportSettingsExpanded;
+      const hasLink = Boolean(uiPayload.reportUrl);
+      const statusHidden = shareExpanded || reportExpanded;
+      const missing = googleAdsMonthsNeedingBackfill(payload);
+      const resyncLabel = missing.length
+        ? `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Google Ads`
+        : `${ICON_SYNC} Re-sync year from Google Ads`;
+
+      return `
+        <div class="meta-report-control-panel${shareExpanded ? ' is-editing-share' : ''}${reportExpanded ? ' is-editing-report' : ''}${settings.metaReportEnabled ? '' : ' is-share-disabled'}" id="meta-report-control-panel">
+          <div class="meta-report-control-bar">
+            <div class="meta-report-control-bar-left meta-report-toolbar-left">
+              <label class="meta-report-year-field">Year
+                <select id="meta-report-year" class="admin-select">
+                  ${renderGoogleAdsReportYearSelectOptions(payload, { disableUnavailable: true })}
+                </select>
+              </label>
+              <div class="meta-report-backfill-wrap">
+                <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="meta-report-backfill">${resyncLabel}</button>
+                <span class="meta-report-backfill-progress" id="meta-report-backfill-progress"></span>
+              </div>
+            </div>
+            <div class="meta-report-control-bar-actions meta-report-toolbar-actions">
+              <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
+              ${hasLink ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(uiPayload.reportUrl)}"${settings.metaReportEnabled ? '' : ' disabled'}>Copy link</button>` : ''}
+            </div>
+          </div>
+          ${hasLink ? `
+            <div class="meta-report-control-status-rows"${statusHidden ? ' hidden' : ''} id="meta-report-control-status">
+              <div class="meta-report-control-status-grid">
+                ${renderMetaReportShareSummary(uiPayload)}
+                ${renderMetaReportBottomlineFeeSummary(settings, 'meta-report')}
+              </div>
+            </div>
+          ` : `
+            <p class="meta-report-share-empty">Share link will appear once this client is enabled.</p>
+          `}
+        </div>
+      `;
+    }
+
+    function refreshGoogleAdsReportClientShareUi(payload) {
+      const uiPayload = googleAdsPayloadToMetaUiShape(payload);
+      refreshMetaReportClientShareUi(uiPayload);
+    }
+
+    function bindGoogleAdsReportShareEvents(payload) {
+      const uiPayload = googleAdsPayloadToMetaUiShape(payload);
+      const clientId = payload.clientId;
+
+      bindMetaReportCopyButtons();
+
+      const rotateBtn = document.getElementById('meta-report-rotate-token');
+      if (rotateBtn) {
+        rotateBtn.onclick = async () => {
+          if (!window.confirm('Rotate the share link? The old link will stop working.')) return;
+          rotateBtn.disabled = true;
+          try {
+            const result = await patchGoogleAdsReportSettings(clientId, { rotateAccessToken: true });
+            const settings = result.settings || {};
+            const currentPayload = googleAdsReportsState.clientPayload || payload;
+            currentPayload.reportUrl = settings.reportUrl || currentPayload.reportUrl;
+            if (settings) currentPayload.settings = { ...currentPayload.settings, ...settings };
+            googleAdsReportsState.clientPayload = currentPayload;
+            refreshGoogleAdsReportClientShareUi(currentPayload);
+            showToast('Share link rotated', 'success');
+          } catch (error) {
+            showToast(error.message || 'Rotate failed', 'error');
+          } finally {
+            const btn = document.getElementById('meta-report-rotate-token');
+            if (btn) btn.disabled = false;
+          }
+        };
+      }
+
+      const editBtn = document.getElementById('meta-report-share-edit');
+      if (editBtn) {
+        editBtn.onclick = () => openGoogleAdsReportShareModal(payload);
+      }
+
+      const saveBtn = document.getElementById('meta-report-share-save');
+      if (saveBtn) {
+        saveBtn.onclick = async () => {
+          const input = document.getElementById('meta-report-share-slug');
+          const normalized = normalizeMetaReportSlugInput(input?.value);
+          if (!normalized || normalized.length < 2) {
+            showToast('Enter a valid slug (at least 2 characters).', 'error');
+            return;
+          }
+          saveBtn.disabled = true;
+          try {
+            const result = await patchGoogleAdsReportSettings(clientId, { metaReportSlug: normalized });
+            const settings = result.settings || {};
+            const currentPayload = googleAdsReportsState.clientPayload || payload;
+            currentPayload.settings = { ...currentPayload.settings, ...settings };
+            currentPayload.reportUrl = settings.reportUrl || null;
+            googleAdsReportsState.clientPayload = currentPayload;
+            refreshGoogleAdsReportClientShareUi(currentPayload);
+            closeMetaReportModal();
+            showToast('Share link slug saved', 'success');
+          } catch (error) {
+            showToast(error.message || 'Save failed', 'error');
+          } finally {
+            const btn = document.getElementById('meta-report-share-save');
+            if (btn) btn.disabled = false;
+          }
+        };
+      }
+
+      const slugInput = document.getElementById('meta-report-share-slug');
+      if (slugInput) {
+        slugInput.oninput = () => {
+          slugInput.value = normalizeMetaReportSlugInput(slugInput.value);
+        };
+      }
+
+      const previewToggle = document.querySelector('[data-meta-client-preview]');
+      if (previewToggle) {
+        let previewSaveSeq = 0;
+        previewToggle.onchange = async () => {
+          const seq = ++previewSaveSeq;
+          const enabled = previewToggle.checked;
+          const previous = !enabled;
+          const currentPayload = googleAdsReportsState.clientPayload || payload;
+          applyMetaReportEnabledUi(googleAdsPayloadToMetaUiShape(currentPayload), enabled);
+          const switchEl = previewToggle.closest('.meta-hub-switch');
+          switchEl?.classList.add('is-saving');
+          try {
+            const result = await patchGoogleAdsReportSettings(clientId, { metaReportEnabled: enabled }, { fast: true });
+            if (seq !== previewSaveSeq) return;
+            const settings = result.settings || {};
+            currentPayload.settings = { ...currentPayload.settings, ...settings };
+            currentPayload.reportUrl = settings.reportUrl ?? currentPayload.reportUrl;
+            googleAdsReportsState.clientPayload = currentPayload;
+            applyMetaReportEnabledUi(googleAdsPayloadToMetaUiShape(currentPayload), Boolean(settings.googleAdsReportEnabled));
+            showToast(enabled ? 'Client preview enabled' : 'Client preview disabled', 'success');
+          } catch (error) {
+            if (seq !== previewSaveSeq) return;
+            applyMetaReportEnabledUi(googleAdsPayloadToMetaUiShape(currentPayload), previous);
+            previewToggle.checked = previous;
+            showToast(error.message || 'Update failed', 'error');
+          } finally {
+            if (seq === previewSaveSeq) switchEl?.classList.remove('is-saving');
+          }
+        };
+      }
+
+      bindGoogleAdsReportBottomlineSummaryEvents(payload);
+    }
+
+    function openGoogleAdsReportShareModal(payload) {
+      metaReportsState.clientShareExpanded = true;
+      openMetaReportModal(renderMetaReportShareModalContent(googleAdsPayloadToMetaUiShape(payload)));
+      bindGoogleAdsReportShareEvents(payload);
+    }
+
+    function openGoogleAdsReportBottomlineModal(payload) {
+      metaReportsState.clientReportSettingsExpanded = true;
+      syncMetaReportControlPanelUi();
+      const uiPayload = googleAdsPayloadToMetaUiShape(payload);
+      openMetaReportModal(renderMetaReportBottomlineModalContent(uiPayload));
+      bindMetaReportBottomlineFeeEvents(payload.clientId, 'meta-report', async (patch, revert) => {
+        try {
+          const result = await patchGoogleAdsReportSettings(payload.clientId, patch);
+          const settings = result.settings || {};
+          const currentPayload = googleAdsReportsState.clientPayload || payload;
+          currentPayload.settings = { ...currentPayload.settings, ...settings };
+          googleAdsReportsState.clientPayload = currentPayload;
+          updateMetaReportBottomlineFeeSummary(googleAdsSettingsToMetaUx(currentPayload.settings), 'meta-report');
+          bindGoogleAdsReportBottomlineSummaryEvents(currentPayload);
+          closeMetaReportModal();
+          await loadGoogleAdsClientPage({ silent: true });
+          showToast('Bottomline settings saved', 'success');
+        } catch (error) {
+          if (typeof revert === 'function') revert();
+          showToast(error.message || 'Save failed', 'error');
+        }
+      });
+    }
+
+    function bindGoogleAdsReportBottomlineSummaryEvents(payload) {
+      const editBtn = document.getElementById('meta-report-fee-edit');
+      if (!editBtn || !payload) return;
+      editBtn.onclick = () => openGoogleAdsReportBottomlineModal(payload);
+    }
+
+    function bindGoogleAdsReportBackfillButton(clientId) {
+      const backfillBtn = document.getElementById('meta-report-backfill');
+      if (!backfillBtn) return;
+      backfillBtn.onclick = async () => {
+        const payload = googleAdsReportsState.clientPayload;
+        const missing = googleAdsMonthsNeedingBackfill(payload);
+        const targets = missing.length ? missing : (payload?.monthKeys || []);
+        if (!targets.length) return;
+        backfillBtn.disabled = true;
+        const progressEl = document.getElementById('meta-report-backfill-progress');
+        let done = 0;
+        let failed = 0;
+        for (const monthKey of targets) {
+          done += 1;
+          if (progressEl) {
+            progressEl.textContent = `Fetching ${metaMonthLabel(monthKey)} ${monthKey.slice(0, 4)}… (${done}/${targets.length})`;
+          }
+          try {
+            await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
+              method: 'POST',
+            });
+          } catch (error) {
+            failed += 1;
+          }
+        }
+        if (progressEl) progressEl.textContent = '';
+        if (failed) {
+          showToast(`Synced ${done - failed}/${targets.length} months. ${failed} failed (check Google Ads access).`, 'error');
+        } else {
+          showToast(`Synced ${targets.length} month${targets.length === 1 ? '' : 's'} from Google Ads`, 'success');
+        }
+        await loadGoogleAdsClientPage({ silent: true });
+      };
+    }
+
+    function renderGoogleAdsReportMonthBody(monthPayload, { editable = false, yearPayload = null, activeMonthKey = null } = {}) {
+      const tabMonthKey = activeMonthKey || monthPayload?.monthKey || null;
+      let editPanelHtml = '';
+      if (editable && monthPayload && !monthPayload.meta?.emptyMonth && tabMonthKey) {
+        editPanelHtml = `
+          <div class="meta-report-edit-panel" id="meta-report-edit-panel">
+            <div class="meta-report-edit-panel-head">
+              <h3>Edit month inputs · ${esc(metaMonthLabel(tabMonthKey))}</h3>
+            </div>
+            <p class="meta-report-edit-note">These fields drive Topline and Bottomline KPI'er. Ad spend comes from Google Ads.</p>
+            <div class="meta-report-edit-grid">
+              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
+              <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
+              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
+            </div>
+            <div class="meta-report-edit-actions">
+              <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Google Ads</button>
+              <button type="button" class="admin-btn admin-btn--primary" id="meta-report-save-month">Save month</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const previewMonthKey = activeMonthKey || monthPayload?.monthKey || null;
+      const previewLabel = editable
+        ? (previewMonthKey ? `Report preview · ${metaMonthLabel(previewMonthKey)}` : 'Report preview')
+        : (previewMonthKey ? `Report · ${metaMonthLabel(previewMonthKey)}` : 'Report');
+      const viewMode = googleAdsReportsState.reportViewMode || 'monthly';
+      const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
+      const previewHtml = monthPayload && !monthPayload.meta?.emptyMonth ? `
+        <div class="meta-report-preview-card">
+          <div class="meta-report-preview-card-label">${previewLabel}</div>
+          ${renderMetaReportHighlightStrip(monthPayload)}
+        </div>
+      ` : '';
+
+      const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable, adGroupTitle: 'Google ads' });
+      const chartsPanel = showYearVisuals ? renderMetaReportChartsPanel({ editable }) : '';
+      const scenarioCard = editable && showYearVisuals ? renderMetaReportScenarioCard() : '';
+      const viewTabsHtml = showYearVisuals ? renderMetaReportViewModeTabs() : '';
+
+      let bodyHtml;
+      if (showYearVisuals) {
+        bodyHtml = `
+          <div class="meta-report-view-panel${viewMode === 'monthly' ? ' is-active' : ''}" data-report-view-panel="monthly" role="tabpanel"${viewMode === 'monthly' ? '' : ' hidden'}>
+            <div class="meta-report-content-layout">
+              <div class="meta-report-content-main">${tablesHtml}</div>
+              ${chartsPanel}
+            </div>
+          </div>
+          <div class="meta-report-view-panel${viewMode === 'comparison' ? ' is-active' : ''}" data-report-view-panel="comparison" role="tabpanel"${viewMode === 'comparison' ? '' : ' hidden'}>
+            ${renderMetaReportComparisonView()}
+          </div>
+          ${scenarioCard}
+        `;
+      } else {
+        bodyHtml = `<div class="meta-report-content-main">${tablesHtml}</div>`;
+      }
+
+      return `${editPanelHtml}${previewHtml}${viewTabsHtml}${bodyHtml}`;
+    }
+
+    function syncGoogleAdsReportMonthPanelDom(monthPayload, options = {}, yearPayload = null) {
+      const payload = yearPayload || googleAdsReportsState.clientPayload;
+      const uiMonth = googleAdsMonthToMetaUiShape(monthPayload);
+      const uiPayload = payload ? googleAdsPayloadToMetaUiShape(payload) : null;
+      const panel = document.getElementById('meta-report-month-panel');
+      if (!panel) return;
+      if (uiPayload) {
+        hydrateMetaReportSpendChartType(uiPayload);
+        hydrateMetaReportScenarioSettings(uiPayload);
+      }
+      panel.innerHTML = renderGoogleAdsReportMonthBody(uiMonth, {
+        ...options,
+        yearPayload: uiPayload,
+        activeMonthKey: googleAdsReportsState.activeMonthKey || uiMonth?.monthKey || null,
+      });
+      requestAnimationFrame(() => {
+        const prevViewMode = metaReportsState.reportViewMode;
+        metaReportsState.reportViewMode = googleAdsReportsState.reportViewMode || 'monthly';
+        mountMetaReportCharts(uiPayload, {
+          editable: Boolean(options.editable),
+          clientId: payload?.clientId || null,
+        });
+        metaReportsState.reportViewMode = prevViewMode;
+      });
+    }
+
+    function refreshGoogleAdsReportMonthPanel(monthPayload) {
+      const payload = googleAdsReportsState.clientPayload;
+      if (!payload || !googleAdsReportsState.activeMonthKey) return;
+      payload.months = payload.months || {};
+      payload.months[googleAdsReportsState.activeMonthKey] = monthPayload;
+      syncGoogleAdsReportMonthPanelDom(
+        monthPayload,
+        { editable: true, yearPayload: googleAdsPayloadToMetaUiShape(payload) },
+        payload,
+      );
+      bindGoogleAdsReportMonthEditEvents(payload.clientId, payload);
+    }
+
+    function bindGoogleAdsReportMonthEditEvents(clientId, payload) {
+      const refreshBtn = document.getElementById('meta-report-refresh-meta');
+      if (refreshBtn) {
+        refreshBtn.onclick = async () => {
+          refreshBtn.disabled = true;
+          try {
+            const monthKey = googleAdsReportsState.activeMonthKey;
+            const result = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
+              method: 'POST',
+            });
+            googleAdsReportsState.clientPayload = result;
+            const monthPayload = result.months?.[monthKey];
+            if (monthPayload) refreshGoogleAdsReportMonthPanel(monthPayload);
+            showToast('Google Ads data refreshed', 'success');
+          } catch (error) {
+            showToast(error.message || 'Google Ads refresh failed', 'error');
+          } finally {
+            refreshBtn.disabled = false;
+          }
+        };
+      }
+
+      const saveBtn = document.getElementById('meta-report-save-month');
+      if (saveBtn) {
+        saveBtn.onclick = async () => {
+          saveBtn.disabled = true;
+          try {
+            const monthKey = googleAdsReportsState.activeMonthKey;
+            const body = {
+              wonLeads: document.getElementById('meta-report-won-leads')?.value === ''
+                ? null
+                : Number(document.getElementById('meta-report-won-leads')?.value),
+              avgLeadValue: document.getElementById('meta-report-avg-lead-value')?.value === ''
+                ? null
+                : Number(document.getElementById('meta-report-avg-lead-value')?.value),
+              avgProfitPerWon: document.getElementById('meta-report-avg-profit')?.value === ''
+                ? null
+                : Number(document.getElementById('meta-report-avg-profit')?.value),
+            };
+            const result = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`, {
+              method: 'PUT',
+              body: JSON.stringify(body),
+            });
+            googleAdsReportsState.clientPayload = result;
+            const monthPayload = result.months?.[monthKey];
+            if (monthPayload) refreshGoogleAdsReportMonthPanel(monthPayload);
+            showToast('Month saved', 'success');
+          } catch (error) {
+            showToast(error.message || 'Save failed', 'error');
+          } finally {
+            saveBtn.disabled = false;
+          }
+        };
+      }
+    }
+
+    function switchGoogleAdsReportMonthTab(monthKey) {
+      googleAdsReportsState.activeMonthKey = monthKey;
+      const payload = googleAdsReportsState.clientPayload;
+      if (!payload) return;
+      document.querySelectorAll('[data-google-ads-month-tab]').forEach((button) => {
+        button.classList.toggle('is-active', button.getAttribute('data-google-ads-month-tab') === monthKey);
+      });
+      syncGoogleAdsReportMonthPanelDom(
+        payload.months?.[monthKey],
+        { editable: true, yearPayload: googleAdsPayloadToMetaUiShape(payload) },
+        payload,
+      );
+      bindGoogleAdsReportMonthEditEvents(payload.clientId, payload);
+    }
+
+    function updateGoogleAdsReportsClientContent(payload) {
+      googleAdsReportsState.clientPayload = payload;
+      metaReportsState.chartProjection = null;
+      const monthKeys = payload.monthKeys || [];
+      if (!googleAdsReportsState.activeMonthKey) {
+        googleAdsReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
+      } else if (!monthKeys.includes(googleAdsReportsState.activeMonthKey)) {
+        googleAdsReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
+      }
+
+      googleAdsReportsState.selectedYear = Number(payload.year) || googleAdsReportsState.selectedYear;
+      metaReportsState.selectedYear = googleAdsReportsState.selectedYear;
+
+      const yearSelect = document.getElementById('meta-report-year');
+      if (yearSelect) {
+        yearSelect.innerHTML = renderGoogleAdsReportYearSelectOptions(payload, { disableUnavailable: true });
+      }
+
+      refreshGoogleAdsReportClientShareUi(payload);
+
+      const tabsEl = document.querySelector('.meta-report-tabs');
+      if (tabsEl) {
+        tabsEl.innerHTML = monthKeys.map((key) => `
+          <button type="button" class="meta-report-tab${key === googleAdsReportsState.activeMonthKey ? ' is-active' : ''}" data-google-ads-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
+        `).join('');
+        document.querySelectorAll('[data-google-ads-month-tab]').forEach((button) => {
+          button.onclick = () => switchGoogleAdsReportMonthTab(button.getAttribute('data-google-ads-month-tab'));
+        });
+      }
+
+      syncGoogleAdsReportMonthPanelDom(
+        payload.months?.[googleAdsReportsState.activeMonthKey],
+        { editable: true, yearPayload: googleAdsPayloadToMetaUiShape(payload) },
+        payload,
+      );
+      bindGoogleAdsReportMonthEditEvents(payload.clientId, payload);
+      bindGoogleAdsReportBackfillButton(payload.clientId);
+      bindGoogleAdsReportShareEvents(payload);
+      bindGoogleAdsReportBottomlineSummaryEvents(payload);
+    }
+
+    function bindGoogleAdsReportsClientChromeEvents(payload) {
+      const clientId = payload.clientId;
+      const yearSelect = document.getElementById('meta-report-year');
+      if (yearSelect) {
+        yearSelect.onchange = async () => {
+          const option = yearSelect.selectedOptions?.[0];
+          if (option?.disabled) {
+            yearSelect.value = String(googleAdsReportsState.selectedYear);
+            return;
+          }
+          const previousYear = googleAdsReportsState.selectedYear;
+          const newYear = Number(yearSelect.value);
+          if (newYear === previousYear) return;
+          googleAdsReportsState.selectedYear = newYear;
+          metaReportsState.selectedYear = newYear;
+          googleAdsReportsState.activeMonthKey = null;
+          metaReportsState.comparisonYearCache = {};
+          setMetaReportClientYearLoading(newYear, true);
+          try {
+            await loadGoogleAdsClientPage({ silent: true });
+          } catch (error) {
+            googleAdsReportsState.selectedYear = previousYear;
+            metaReportsState.selectedYear = previousYear;
+            if (yearSelect) yearSelect.value = String(previousYear);
+            await loadGoogleAdsClientPage({ silent: true });
+            showToast(error.message || 'Load failed', 'error');
+          } finally {
+            setMetaReportClientYearLoading(newYear, false);
+          }
+        };
+      }
+      bindMetaReportCopyButtons();
+      bindGoogleAdsReportBackfillButton(clientId);
+      bindGoogleAdsReportBottomlineSummaryEvents(payload);
+      bindGoogleAdsReportShareEvents(payload);
+    }
+
+    function bindGoogleAdsReportsClientEvents(payload) {
+      bindGoogleAdsReportsClientChromeEvents(payload);
+      document.querySelectorAll('[data-google-ads-month-tab]').forEach((button) => {
+        button.onclick = () => switchGoogleAdsReportMonthTab(button.getAttribute('data-google-ads-month-tab'));
+      });
+      bindGoogleAdsReportMonthEditEvents(payload.clientId, payload);
+    }
 
     const GOOGLE_ADS_HUB_FILTERS = [
       { value: 'all', label: 'All' },
@@ -16634,6 +17228,9 @@
         actionButtons.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(client.googleCustomerId)}" data-google-ads-name="${esc(client.accountName)}">Enable</button>`);
       } else if (canEdit) {
         actionButtons.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(client.clientId)}">Edit report</a>`);
+        if (client.reportUrl && client.googleAdsReportEnabled) {
+          actionButtons.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`);
+        }
       }
       return `
         <article class="meta-hub-card ${client.needsSetup ? 'is-setup' : ''}" data-google-ads-row="${esc(rowKey)}">
@@ -16720,6 +17317,7 @@
           : '<div class="sync-history-empty" style="padding:24px">No Google Ads accounts found.</div>';
       }
       bindGoogleAdsHubRowEvents();
+      bindMetaReportCopyButtons(document.getElementById('google-ads-cards'));
     }
 
     function bindGoogleAdsHubRowEvents() {
@@ -16815,136 +17413,14 @@
       }
     }
 
-    function googleAdsMonthValue(monthPayload, path) {
-      if (!monthPayload) return 0;
-      const parts = path.split('.');
-      let value = monthPayload;
-      for (const part of parts) value = value?.[part];
-      return Number(value) || 0;
-    }
-
-    function renderGoogleAdsYearTable(payload) {
-      const monthKeys = payload.monthKeys || [];
-      const activeKey = googleAdsReportsState.activeMonthKey;
-      const rows = monthKeys.map((key) => {
-        const month = payload.months?.[key];
-        const google = month?.google || {};
-        const topline = month?.topline || {};
-        const bottom = month?.bottomline || {};
-        return `
-          <tr class="${key === activeKey ? 'is-active' : ''}" data-google-ads-month-row="${esc(key)}">
-            <td>${esc(metaMonthLabel(key))}</td>
-            <td>${metaFmtKr(google.budget)}</td>
-            <td>${metaFmtNum(google.impressions)}</td>
-            <td>${metaFmtNum(google.clicks)}</td>
-            <td>${metaFmtKr(google.cpc)}</td>
-            <td>${metaFmtNum(google.ctr, 2)}%</td>
-            <td>${metaFmtKr(google.spend)}</td>
-            <td>${metaFmtNum(google.conversions, 1)}</td>
-            <td>${metaFmtNum(google.sales, 1)}</td>
-            <td>${metaFmtKr(google.conversionsValue)}</td>
-            <td>${metaFmtKr(google.costPerLead || topline.cpl)}</td>
-            <td>${metaFmtKr(topline.roasKr)}</td>
-            <td>${metaFmtX(topline.roasX)}</td>
-            <td>${metaFmtKr(bottom.totalProfit)}</td>
-            <td>${metaFmtKr(bottom.censioFee)}</td>
-            <td>${metaFmtKr(bottom.poiKr)}</td>
-          </tr>
-        `;
-      }).join('');
-      return `
-        <div class="google-ads-table-wrap">
-          <table class="google-ads-table">
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th>Budget</th>
-                <th>Impressions</th>
-                <th>Clicks</th>
-                <th>CPC</th>
-                <th>CTR</th>
-                <th>Spend</th>
-                <th>Conversion / Results</th>
-                <th>Sales</th>
-                <th>Value</th>
-                <th>Cost per lead</th>
-                <th>ROAS</th>
-                <th>ROAS %</th>
-                <th>Profit</th>
-                <th>Censio fee</th>
-                <th>Bottomline</th>
-              </tr>
-            </thead>
-            <tbody>${rows || '<tr><td colspan="16">No months yet.</td></tr>'}</tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    function renderGoogleAdsControlPanel(payload) {
-      const settings = payload.settings || {};
-      const monthKey = googleAdsReportsState.activeMonthKey;
-      const month = payload.months?.[monthKey] || {};
-      const feeMode = settings.googleAdsReportFeeMode || (settings.googleAdsReportFeeEnabled ? 'performance' : '');
-      return `
-        <div class="meta-report-control-panel" id="google-ads-control-panel">
-          <div class="google-ads-control-grid">
-            <label class="meta-report-year-field">Year
-              <select id="google-ads-year" class="admin-select">
-                ${(payload.years || []).map((entry) => `<option value="${entry.year}"${Number(payload.year) === Number(entry.year) ? ' selected' : ''}>${entry.year}</option>`).join('')}
-              </select>
-            </label>
-            <label>Won leads
-              <input type="number" class="admin-input" id="google-ads-won-leads" value="${month.inputs?.wonLeads ?? ''}" min="0" step="1" />
-            </label>
-            <label>Avg lead value
-              <input type="number" class="admin-input" id="google-ads-avg-lead-value" value="${month.inputs?.avgLeadValue ?? ''}" min="0" step="0.01" />
-            </label>
-            <label>Avg profit per won
-              <input type="number" class="admin-input" id="google-ads-avg-profit" value="${month.inputs?.avgProfitPerWon ?? ''}" min="0" step="0.01" />
-            </label>
-          </div>
-          <div class="hub-toolbar-actions" style="margin-top:12px;gap:12px;flex-wrap:wrap">
-            <label class="meta-hub-switch">
-              <span class="meta-hub-switch-label">Report</span>
-              <span class="meta-hub-switch-track">
-                <input type="checkbox" class="meta-hub-switch-input" id="google-ads-enabled" ${settings.googleAdsReportEnabled ? 'checked' : ''} />
-                <span class="meta-hub-switch-thumb"></span>
-              </span>
-            </label>
-            <label class="meta-hub-switch">
-              <span class="meta-hub-switch-label">Bottomline</span>
-              <span class="meta-hub-switch-track">
-                <input type="checkbox" class="meta-hub-switch-input" id="google-ads-bottomline" ${settings.googleAdsReportShowBottomline ? 'checked' : ''} />
-                <span class="meta-hub-switch-thumb"></span>
-              </span>
-            </label>
-            <label>Fee
-              <select id="google-ads-fee-mode" class="admin-select">
-                <option value=""${!feeMode ? ' selected' : ''}>Off</option>
-                <option value="performance"${feeMode === 'performance' ? ' selected' : ''}>Performance %</option>
-                <option value="marketing"${feeMode === 'marketing' ? ' selected' : ''}>Marketing amount</option>
-              </select>
-            </label>
-            <label>Fee %
-              <input type="number" class="admin-input" id="google-ads-fee-percent" value="${settings.googleAdsReportFeePercent ?? 20}" min="0" step="0.1" />
-            </label>
-            <label>Marketing fee
-              <input type="number" class="admin-input" id="google-ads-marketing-fee" value="${settings.googleAdsReportMarketingFeeAmount ?? 0}" min="0" step="0.01" />
-            </label>
-            <button type="button" class="admin-btn admin-btn--secondary" id="google-ads-save-values">Save values</button>
-            <button type="button" class="admin-btn admin-btn--primary" id="google-ads-refresh-month">${ICON_SYNC} Refresh month</button>
-          </div>
-        </div>
-      `;
-    }
-
     function renderGoogleAdsClientPage(payload) {
       const monthKeys = payload.monthKeys || [];
       const activeKey = googleAdsReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
+      const monthPayload = googleAdsMonthToMetaUiShape(payload.months?.[activeKey] || null);
       const tabs = monthKeys.map((key) => `
         <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-google-ads-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
       `).join('');
+
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('google-ads'))}
         ${wrapDashboardShell(`
@@ -16962,170 +17438,21 @@
           </div>
         </div>
         <div class="sync-history-page meta-reports-page meta-report-client-page">
-          ${renderGoogleAdsControlPanel(payload)}
+          ${renderGoogleAdsReportClientControlPanel(payload)}
           <div class="meta-report-tabs" role="tablist">${tabs}</div>
-          <div class="google-ads-chart-wrap">
-            <canvas id="google-ads-year-chart" height="110"></canvas>
-          </div>
-          <div id="google-ads-table-host" style="margin-top:18px">
-            ${renderGoogleAdsYearTable(payload)}
+          <div class="meta-report-month-panel" id="meta-report-month-panel">
+            ${renderGoogleAdsReportMonthBody(monthPayload, {
+              editable: true,
+              yearPayload: googleAdsPayloadToMetaUiShape(payload),
+              activeMonthKey: activeKey,
+            })}
           </div>
         </div>
         `)}
       `;
     }
 
-    function mountGoogleAdsChart(payload) {
-      const canvas = document.getElementById('google-ads-year-chart');
-      if (!canvas || typeof Chart === 'undefined') return;
-      const monthKeys = payload.monthKeys || [];
-      const spend = monthKeys.map((key) => googleAdsMonthValue(payload.months?.[key], 'google.spend'));
-      const conversions = monthKeys.map((key) => googleAdsMonthValue(payload.months?.[key], 'google.conversions'));
-      if (googleAdsReportsState.chart) {
-        googleAdsReportsState.chart.destroy();
-        googleAdsReportsState.chart = null;
-      }
-      googleAdsReportsState.chart = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: monthKeys.map(metaMonthLabel),
-          datasets: [
-            {
-              label: 'Spend',
-              data: spend,
-              borderColor: '#ff6a00',
-              backgroundColor: 'rgba(255,106,0,0.12)',
-              yAxisID: 'y',
-              tension: 0.3,
-              fill: true,
-            },
-            {
-              label: 'Conversions',
-              data: conversions,
-              borderColor: '#0085f2',
-              backgroundColor: 'rgba(0,133,242,0.08)',
-              yAxisID: 'y1',
-              tension: 0.3,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          interaction: { mode: 'index', intersect: false },
-          scales: {
-            y: { position: 'left', ticks: { callback: (value) => `Dkr ${value}` } },
-            y1: { position: 'right', grid: { drawOnChartArea: false } },
-          },
-        },
-      });
-    }
-
-    function bindGoogleAdsClientEvents(payload) {
-      document.querySelectorAll('[data-google-ads-month-tab]').forEach((button) => {
-        button.onclick = () => {
-          googleAdsReportsState.activeMonthKey = button.getAttribute('data-google-ads-month-tab');
-          dashboardReplaceGoogleAdsClient(googleAdsReportsState.clientPayload || payload);
-        };
-      });
-      document.querySelectorAll('[data-google-ads-month-row]').forEach((row) => {
-        row.onclick = () => {
-          googleAdsReportsState.activeMonthKey = row.getAttribute('data-google-ads-month-row');
-          dashboardReplaceGoogleAdsClient(googleAdsReportsState.clientPayload || payload);
-        };
-      });
-      const yearSelect = document.getElementById('google-ads-year');
-      if (yearSelect) {
-        yearSelect.onchange = () => {
-          googleAdsReportsState.selectedYear = Number(yearSelect.value);
-          googleAdsReportsState.activeMonthKey = null;
-          loadGoogleAdsClientPage();
-        };
-      }
-      const saveBtn = document.getElementById('google-ads-save-values');
-      if (saveBtn) saveBtn.onclick = () => saveGoogleAdsMonthValues(payload.clientId);
-      const refreshBtn = document.getElementById('google-ads-refresh-month');
-      if (refreshBtn) refreshBtn.onclick = () => refreshGoogleAdsMonth(payload.clientId);
-      ['google-ads-enabled', 'google-ads-bottomline', 'google-ads-fee-mode', 'google-ads-fee-percent', 'google-ads-marketing-fee'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.onchange = () => saveGoogleAdsClientSettings(payload.clientId);
-      });
-    }
-
-    function dashboardReplaceGoogleAdsClient(payload) {
-      const dashboard = document.getElementById('dashboard');
-      if (!dashboard || !payload) return;
-      googleAdsReportsState.clientPayload = payload;
-      dashboard.innerHTML = renderGoogleAdsClientPage(payload);
-      bindGoogleAdsClientEvents(payload);
-      mountGoogleAdsChart(payload);
-    }
-
-    async function saveGoogleAdsMonthValues(clientId) {
-      const monthKey = googleAdsReportsState.activeMonthKey;
-      if (!clientId || !monthKey) return;
-      try {
-        const payload = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            wonLeads: document.getElementById('google-ads-won-leads')?.value || null,
-            avgLeadValue: document.getElementById('google-ads-avg-lead-value')?.value || null,
-            avgProfitPerWon: document.getElementById('google-ads-avg-profit')?.value || null,
-          }),
-        });
-        googleAdsReportsState.clientPayload = payload;
-        dashboardReplaceGoogleAdsClient(payload);
-        showToast('Values saved', 'success');
-      } catch (error) {
-        showToast(error.message || 'Save failed', 'error');
-      }
-    }
-
-    async function refreshGoogleAdsMonth(clientId) {
-      const monthKey = googleAdsReportsState.activeMonthKey;
-      if (!clientId || !monthKey) return;
-      try {
-        const payload = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: '{}',
-        });
-        googleAdsReportsState.clientPayload = payload;
-        dashboardReplaceGoogleAdsClient(payload);
-        showToast('Google Ads month refreshed', 'success');
-      } catch (error) {
-        showToast(error.message || 'Refresh failed', 'error');
-      }
-    }
-
-    async function saveGoogleAdsClientSettings(clientId) {
-      const feeMode = document.getElementById('google-ads-fee-mode')?.value || null;
-      try {
-        const result = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/settings`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            googleAdsReportEnabled: Boolean(document.getElementById('google-ads-enabled')?.checked),
-            googleAdsReportShowBottomline: Boolean(document.getElementById('google-ads-bottomline')?.checked),
-            googleAdsReportFeeMode: feeMode,
-            googleAdsReportFeePercent: Number(document.getElementById('google-ads-fee-percent')?.value || 20),
-            googleAdsReportMarketingFeeAmount: Number(document.getElementById('google-ads-marketing-fee')?.value || 0),
-          }),
-        });
-        if (googleAdsReportsState.clientPayload) {
-          googleAdsReportsState.clientPayload.settings = {
-            ...googleAdsReportsState.clientPayload.settings,
-            ...(result.settings || {}),
-          };
-        }
-        showToast('Settings saved', 'success');
-        await loadGoogleAdsClientPage();
-      } catch (error) {
-        showToast(error.message || 'Settings failed', 'error');
-      }
-    }
-
-    async function loadGoogleAdsClientPage() {
+    async function loadGoogleAdsClientPage({ silent = false } = {}) {
       const dashboard = document.getElementById('dashboard');
       if (!dashboard) return;
       const user = await fetchStaffMe();
@@ -17135,26 +17462,49 @@
       }
       currentStaffUser = user;
       const clientId = CLIENT_SLUG;
+
       if (!googleAdsReportsState.clientPageMounted) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('google-ads'))}
           ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading Google Ads report...</p></div>')}
         `;
+      } else if (!silent) {
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.add('is-loading');
       }
+
       try {
         const payload = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(googleAdsReportsState.selectedYear)}`);
-        googleAdsReportsState.selectedYear = payload.year || googleAdsReportsState.selectedYear;
+        googleAdsReportsState.selectedYear = Number(payload.year) || googleAdsReportsState.selectedYear;
+        metaReportsState.selectedYear = googleAdsReportsState.selectedYear;
         if (!googleAdsReportsState.activeMonthKey || !(payload.monthKeys || []).includes(googleAdsReportsState.activeMonthKey)) {
           googleAdsReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
-        googleAdsReportsState.clientPayload = payload;
-        googleAdsReportsState.clientPageMounted = true;
-        dashboardReplaceGoogleAdsClient(payload);
+        if (!googleAdsReportsState.clientPageMounted) {
+          googleAdsReportsState.clientPayload = payload;
+          metaReportsState.clientShareExpanded = false;
+          metaReportsState.clientReportSettingsExpanded = false;
+          dashboard.innerHTML = renderGoogleAdsClientPage(payload);
+          googleAdsReportsState.clientPageMounted = true;
+          bindGoogleAdsReportsClientEvents(payload);
+          requestAnimationFrame(() => {
+            mountMetaReportCharts(googleAdsPayloadToMetaUiShape(payload), { editable: true, clientId });
+          });
+        } else {
+          updateGoogleAdsReportsClientContent(payload);
+        }
       } catch (error) {
-        dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome('google-ads'))}
-          ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
-        `;
+        if (!googleAdsReportsState.clientPageMounted) {
+          dashboard.innerHTML = `
+            ${renderBrandTopbar(renderStaffAdminChrome('google-ads'))}
+            ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message)}</div>`)}
+          `;
+        } else if (!silent) {
+          showToast(error.message || 'Load failed', 'error');
+        }
+      } finally {
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) panel.classList.remove('is-loading');
       }
     }
 
@@ -17185,15 +17535,18 @@
           metaReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
         await ensureMetaReportScenarioSource(payload, { editable: false });
+        const chartPayload = payload.reportKind === 'google-ads'
+          ? googleAdsPayloadToMetaUiShape(payload)
+          : payload;
         if (!metaReportsState.publicPageMounted) {
           metaReportsState.publicPayload = payload;
-          hydrateMetaReportSpendChartType(payload);
-          hydrateMetaReportScenarioSettings(payload);
+          hydrateMetaReportSpendChartType(chartPayload);
+          hydrateMetaReportScenarioSettings(chartPayload);
           dashboard.innerHTML = renderPublicMetaReportPage(payload);
           metaReportsState.publicPageMounted = true;
           syncMetaReportPublicBranding(payload);
           bindPublicMetaReportEvents(payload);
-          mountMetaReportCharts(payload, { editable: false });
+          mountMetaReportCharts(chartPayload, { editable: false });
         } else {
           updatePublicMetaReportContent(payload);
         }
