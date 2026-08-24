@@ -15372,10 +15372,16 @@
       destroyMetaReportComparisonChart();
       if (!payload) return;
 
-      const viewMode = metaReportsState.reportViewMode || 'monthly';
-      bindMetaReportViewModeTabs(payload, { editable });
+      if (!editable) {
+        metaReportsState.reportViewMode = 'monthly';
+      }
 
-      if (viewMode === 'monthly') {
+      const viewMode = metaReportsState.reportViewMode || 'monthly';
+      if (editable) {
+        bindMetaReportViewModeTabs(payload, { editable });
+      }
+
+      if (viewMode === 'monthly' || !editable) {
         mountMetaReportTrendCharts(payload, { editable, clientId });
         return;
       }
@@ -15564,6 +15570,7 @@
         : (previewMonthKey ? `Report · ${metaMonthLabel(previewMonthKey)}` : 'Report');
       const viewMode = metaReportsState.reportViewMode || 'monthly';
       const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
+      const showComparison = editable && showYearVisuals;
       const previewHtml = monthPayload && !monthPayload.meta?.emptyMonth ? `
         <div class="meta-report-preview-card">
           <div class="meta-report-preview-card-label">${previewLabel}</div>
@@ -15574,20 +15581,21 @@
       const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable });
       const chartsPanel = showYearVisuals ? renderMetaReportChartsPanel({ editable }) : '';
       const scenarioCard = editable && showYearVisuals ? renderMetaReportScenarioCard() : '';
-      const viewTabsHtml = showYearVisuals ? renderMetaReportViewModeTabs() : '';
+      const viewTabsHtml = showComparison ? renderMetaReportViewModeTabs() : '';
 
       let bodyHtml;
       if (showYearVisuals) {
         bodyHtml = `
-          <div class="meta-report-view-panel${viewMode === 'monthly' ? ' is-active' : ''}" data-report-view-panel="monthly" role="tabpanel"${viewMode === 'monthly' ? '' : ' hidden'}>
+          <div class="meta-report-view-panel${!showComparison || viewMode === 'monthly' ? ' is-active' : ''}" data-report-view-panel="monthly" role="tabpanel"${!showComparison || viewMode === 'monthly' ? '' : ' hidden'}>
             <div class="meta-report-content-layout">
               <div class="meta-report-content-main">${tablesHtml}</div>
               ${chartsPanel}
             </div>
           </div>
+          ${showComparison ? `
           <div class="meta-report-view-panel${viewMode === 'comparison' ? ' is-active' : ''}" data-report-view-panel="comparison" role="tabpanel"${viewMode === 'comparison' ? '' : ' hidden'}>
             ${renderMetaReportComparisonView()}
-          </div>
+          </div>` : ''}
           ${scenarioCard}
         `;
       } else {
@@ -16935,6 +16943,7 @@
         : (previewMonthKey ? `Report · ${metaMonthLabel(previewMonthKey)}` : 'Report');
       const viewMode = googleAdsReportsState.reportViewMode || 'monthly';
       const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
+      const showComparison = editable && showYearVisuals;
       const previewHtml = monthPayload && !monthPayload.meta?.emptyMonth ? `
         <div class="meta-report-preview-card">
           <div class="meta-report-preview-card-label">${previewLabel}</div>
@@ -16945,20 +16954,21 @@
       const tablesHtml = renderMetaReportMonthTables(monthPayload, { editable, adGroupTitle: 'Google ads' });
       const chartsPanel = showYearVisuals ? renderMetaReportChartsPanel({ editable }) : '';
       const scenarioCard = editable && showYearVisuals ? renderMetaReportScenarioCard() : '';
-      const viewTabsHtml = showYearVisuals ? renderMetaReportViewModeTabs() : '';
+      const viewTabsHtml = showComparison ? renderMetaReportViewModeTabs() : '';
 
       let bodyHtml;
       if (showYearVisuals) {
         bodyHtml = `
-          <div class="meta-report-view-panel${viewMode === 'monthly' ? ' is-active' : ''}" data-report-view-panel="monthly" role="tabpanel"${viewMode === 'monthly' ? '' : ' hidden'}>
+          <div class="meta-report-view-panel${!showComparison || viewMode === 'monthly' ? ' is-active' : ''}" data-report-view-panel="monthly" role="tabpanel"${!showComparison || viewMode === 'monthly' ? '' : ' hidden'}>
             <div class="meta-report-content-layout">
               <div class="meta-report-content-main">${tablesHtml}</div>
               ${chartsPanel}
             </div>
           </div>
+          ${showComparison ? `
           <div class="meta-report-view-panel${viewMode === 'comparison' ? ' is-active' : ''}" data-report-view-panel="comparison" role="tabpanel"${viewMode === 'comparison' ? '' : ' hidden'}>
             ${renderMetaReportComparisonView()}
-          </div>
+          </div>` : ''}
           ${scenarioCard}
         `;
       } else {
@@ -17511,6 +17521,8 @@
     async function loadPublicMetaReportPage({ silent = false } = {}) {
       const dashboard = document.getElementById('dashboard');
       if (!dashboard || !REPORT_TOKEN) return;
+
+      metaReportsState.reportViewMode = 'monthly';
 
       if (!metaReportsState.publicPageMounted) {
         dashboard.innerHTML = wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading report...</p></div>');
