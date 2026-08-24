@@ -17085,19 +17085,13 @@
       const monthKey = googleAdsReportsState.activeMonthKey;
       if (!clientId || !monthKey) return;
       try {
-        const response = await fetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
+        const payload = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}/months/${encodeURIComponent(monthKey)}/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: '{}',
         });
-        const data = await response.json().catch(() => ({}));
-        // #region agent log
-        fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',runId:'pre-fix',hypothesisId:'A',location:'index.html:refreshGoogleAdsMonth',message:'refresh month response',data:{ok:response.ok,status:response.status,clientId:String(clientId||''),monthKey:String(monthKey||''),error:data.error||null,debug:data.debug||null,errorMeta:data.errorMeta||null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        if (!response.ok) throw new Error(data.error || 'Refresh failed');
-        googleAdsReportsState.clientPayload = data;
-        dashboardReplaceGoogleAdsClient(data);
+        googleAdsReportsState.clientPayload = payload;
+        dashboardReplaceGoogleAdsClient(payload);
         showToast('Google Ads month refreshed', 'success');
       } catch (error) {
         showToast(error.message || 'Refresh failed', 'error');
