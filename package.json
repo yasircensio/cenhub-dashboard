@@ -16,6 +16,7 @@
     "migrate:fb-lead-sync-retries": "node scripts/migrate-fb-lead-sync-retries.js",
     "migrate:meta-reports": "node scripts/migrate-meta-reports.js",
     "migrate:google-ads-reports": "node scripts/migrate-google-ads-reports.js",
+    "migrate:google-ads-report-editor-settings": "node scripts/migrate-google-ads-report-editor-settings.js",
     "migrate:meta-report-slug": "node scripts/migrate-meta-report-slug.js",
     "migrate:meta-report-spend-chart-type": "node scripts/migrate-meta-report-spend-chart-type.js",
     "migrate:meta-report-scenario-settings": "node scripts/migrate-meta-report-scenario-settings.js",

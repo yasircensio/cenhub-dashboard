@@ -10272,9 +10272,7 @@
       const isGoogleAds = payload.reportKind === 'google-ads';
       const uiPayload = isGoogleAds ? googleAdsPayloadToMetaUiShape(payload) : payload;
       syncMetaReportPublicBranding(payload);
-      if (!isGoogleAds) {
-        updateMetaReportPublicExcelSheetButton(uiPayload.settings || {});
-      }
+      updateMetaReportPublicExcelSheetButton(uiPayload.settings || {});
       const monthKeys = uiPayload.monthKeys || [];
       if (!metaReportsState.activeMonthKey) {
         metaReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
@@ -12653,7 +12651,10 @@
         try {
           let fetched;
           if (editable && payload?.clientId) {
-            fetched = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(payload.clientId)}?year=${encodeURIComponent(year)}`);
+            const reportsPath = payload.reportKind === 'google-ads'
+              ? '/api/google-ads-reports'
+              : '/api/meta-reports';
+            fetched = await adminFetch(`${reportsPath}/clients/${encodeURIComponent(payload.clientId)}?year=${encodeURIComponent(year)}`);
           } else if (REPORT_TOKEN) {
             fetched = await fetch(`/api/meta-reports/public/${encodeURIComponent(REPORT_TOKEN)}?year=${encodeURIComponent(year)}`)
               .then(async (response) => {
@@ -12663,7 +12664,9 @@
               });
           }
           if (fetched) {
-            metaReportsState.comparisonYearCache[year] = fetched;
+            metaReportsState.comparisonYearCache[year] = fetched.reportKind === 'google-ads'
+              ? googleAdsPayloadToMetaUiShape(fetched)
+              : fetched;
           }
         } catch (_) {
           /* leave cache empty for unavailable years */
@@ -15207,11 +15210,17 @@
           if (!clientId) return;
 
           try {
-            const result = await patchMetaReportSettings(clientId, {
+            const patch = {
               metaReportSpendChartType: normalizeMetaReportSpendChartType(nextType),
-            });
+            };
+            const result = payload?.reportKind === 'google-ads'
+              ? await patchGoogleAdsReportSettings(clientId, patch)
+              : await patchMetaReportSettings(clientId, patch);
             if (result?.settings && payload) {
-              payload.settings = { ...payload.settings, ...result.settings };
+              const savedSettings = payload.reportKind === 'google-ads'
+                ? googleAdsSettingsToMetaUx(result.settings)
+                : result.settings;
+              payload.settings = { ...payload.settings, ...savedSettings };
               if (metaReportsState.clientPayload?.clientId === payload.clientId) {
                 metaReportsState.clientPayload.settings = payload.settings;
               }
@@ -15240,18 +15249,22 @@
       });
     }
 
-    function scheduleMetaReportScenarioSettingsPersist(clientId) {
+    function scheduleMetaReportScenarioSettingsPersist(clientId, reportKind = 'meta') {
       if (!clientId) return;
       clearTimeout(metaReportsState._scenarioSettingsTimer);
       metaReportsState._scenarioSettingsTimer = setTimeout(() => {
-        patchMetaReportSettings(clientId, {
+        const patch = {
           metaReportBudgetMultiplier: metaReportsState.budgetMultiplier,
           metaReportBudgetBaseline: metaReportsState.budgetBaseline,
           metaReportScenarioMonthWindow: metaReportsState.scenarioMonthWindow,
           metaReportScenarioSmoothUneven: metaReportsState.scenarioSmoothUneven,
           metaReportScenarioBlendHistory: metaReportsState.scenarioBlendHistory,
           metaReportScenarioIncludeTrend: metaReportsState.scenarioIncludeTrend,
-        }, { fast: true }).catch(() => {});
+        };
+        const save = reportKind === 'google-ads'
+          ? patchGoogleAdsReportSettings(clientId, patch, { fast: true })
+          : patchMetaReportSettings(clientId, patch, { fast: true });
+        save.catch(() => {});
       }, 350);
     }
 
@@ -15280,7 +15293,10 @@
       const output = document.getElementById('meta-report-budget-multiplier-value');
       const baselineSelect = document.getElementById('meta-report-budget-baseline');
       const windowSelect = document.getElementById('meta-report-scenario-month-window');
-      const persist = () => scheduleMetaReportScenarioSettingsPersist(clientId);
+      const persist = () => scheduleMetaReportScenarioSettingsPersist(
+        clientId,
+        payload?.reportKind || 'meta',
+      );
       const refresh = () => syncMetaReportScenario(payload);
 
       if (slider) {
@@ -15750,7 +15766,7 @@
               </label>
               <span class="meta-report-year-loading-banner" id="meta-report-public-year-loading-banner" hidden aria-live="polite"></span>
             </div>
-            <div class="meta-report-toolbar-actions" id="meta-report-public-excel-sheet-btn"${isGoogleAds ? ' hidden' : ''}>
+            <div class="meta-report-toolbar-actions" id="meta-report-public-excel-sheet-btn">
               ${renderMetaReportExcelSheetButton(uiPayload.settings || {}, { variant: 'secondary' })}
             </div>
           </div>
@@ -16611,6 +16627,14 @@
         metaReportMarketingFeeAmount: settings.googleAdsReportMarketingFeeAmount,
         metaReportSlug: settings.googleAdsReportSlug,
         metaReportAccessToken: settings.googleAdsReportAccessToken,
+        metaReportExcelSheetUrl: settings.googleAdsReportExcelSheetUrl,
+        metaReportSpendChartType: settings.googleAdsReportSpendChartType,
+        metaReportScenarioMonthWindow: settings.googleAdsReportScenarioMonthWindow,
+        metaReportScenarioSmoothUneven: settings.googleAdsReportScenarioSmoothUneven,
+        metaReportScenarioBlendHistory: settings.googleAdsReportScenarioBlendHistory,
+        metaReportScenarioIncludeTrend: settings.googleAdsReportScenarioIncludeTrend,
+        metaReportBudgetMultiplier: settings.googleAdsReportBudgetMultiplier,
+        metaReportBudgetBaseline: settings.googleAdsReportBudgetBaseline,
       };
     }
 
@@ -16625,6 +16649,30 @@
         out.googleAdsReportMarketingFeeAmount = patch.metaReportMarketingFeeAmount;
       }
       if (patch.metaReportSlug !== undefined) out.googleAdsReportSlug = patch.metaReportSlug;
+      if (patch.metaReportExcelSheetUrl !== undefined) {
+        out.googleAdsReportExcelSheetUrl = patch.metaReportExcelSheetUrl;
+      }
+      if (patch.metaReportSpendChartType !== undefined) {
+        out.googleAdsReportSpendChartType = patch.metaReportSpendChartType;
+      }
+      if (patch.metaReportScenarioMonthWindow !== undefined) {
+        out.googleAdsReportScenarioMonthWindow = patch.metaReportScenarioMonthWindow;
+      }
+      if (patch.metaReportScenarioSmoothUneven !== undefined) {
+        out.googleAdsReportScenarioSmoothUneven = patch.metaReportScenarioSmoothUneven;
+      }
+      if (patch.metaReportScenarioBlendHistory !== undefined) {
+        out.googleAdsReportScenarioBlendHistory = patch.metaReportScenarioBlendHistory;
+      }
+      if (patch.metaReportScenarioIncludeTrend !== undefined) {
+        out.googleAdsReportScenarioIncludeTrend = patch.metaReportScenarioIncludeTrend;
+      }
+      if (patch.metaReportBudgetMultiplier !== undefined) {
+        out.googleAdsReportBudgetMultiplier = patch.metaReportBudgetMultiplier;
+      }
+      if (patch.metaReportBudgetBaseline !== undefined) {
+        out.googleAdsReportBudgetBaseline = patch.metaReportBudgetBaseline;
+      }
       if (patch.rotateAccessToken) out.rotateAccessToken = true;
       return out;
     }
@@ -16697,8 +16745,9 @@
       const settings = uiPayload.settings || {};
       const shareExpanded = metaReportsState.clientShareExpanded;
       const reportExpanded = metaReportsState.clientReportSettingsExpanded;
+      const excelExpanded = metaReportsState.clientExcelSheetExpanded;
       const hasLink = Boolean(uiPayload.reportUrl);
-      const statusHidden = shareExpanded || reportExpanded;
+      const statusHidden = shareExpanded || reportExpanded || excelExpanded;
       const missing = googleAdsMonthsNeedingBackfill(payload);
       const resyncLabel = missing.length
         ? `${ICON_SYNC} Backfill ${missing.length} month${missing.length === 1 ? '' : 's'} from Google Ads`
@@ -16721,6 +16770,7 @@
             <div class="meta-report-control-bar-actions meta-report-toolbar-actions">
               <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
               ${hasLink ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(uiPayload.reportUrl)}"${settings.metaReportEnabled ? '' : ' disabled'}>Copy link</button>` : ''}
+              ${resolveMetaReportExcelSheetUrl(settings) ? `<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="${esc(resolveMetaReportExcelSheetUrl(settings))}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>` : '<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="#" target="_blank" rel="noopener noreferrer" hidden>See Excel sheet</a>'}
             </div>
           </div>
           ${hasLink ? `
@@ -16728,6 +16778,9 @@
               <div class="meta-report-control-status-grid">
                 ${renderMetaReportShareSummary(uiPayload)}
                 ${renderMetaReportBottomlineFeeSummary(settings, 'meta-report')}
+              </div>
+              <div class="meta-report-control-status-grid">
+                ${renderMetaReportExcelSheetSummary(settings)}
               </div>
             </div>
           ` : `
@@ -16864,11 +16917,17 @@
           const currentPayload = googleAdsReportsState.clientPayload || payload;
           currentPayload.settings = { ...currentPayload.settings, ...settings };
           googleAdsReportsState.clientPayload = currentPayload;
-          updateMetaReportBottomlineFeeSummary(googleAdsSettingsToMetaUx(currentPayload.settings), 'meta-report');
+          const uiSettings = googleAdsSettingsToMetaUx(currentPayload.settings);
+          metaReportsState.clientPayload = googleAdsPayloadToMetaUiShape(currentPayload);
+          syncMetaReportBottomlineFeeDom(uiSettings, 'meta-report');
+          updateMetaReportBottomlineFeeSummary(uiSettings, 'meta-report');
           bindGoogleAdsReportBottomlineSummaryEvents(currentPayload);
-          closeMetaReportModal();
-          await loadGoogleAdsClientPage({ silent: true });
-          showToast('Bottomline settings saved', 'success');
+          showToast(
+            Object.prototype.hasOwnProperty.call(patch, 'metaReportShowBottomline')
+              ? (patch.metaReportShowBottomline ? 'Bottomline enabled' : 'Bottomline disabled')
+              : 'Bottomline settings saved',
+            'success',
+          );
         } catch (error) {
           if (typeof revert === 'function') revert();
           showToast(error.message || 'Save failed', 'error');
@@ -16880,6 +16939,64 @@
       const editBtn = document.getElementById('meta-report-fee-edit');
       if (!editBtn || !payload) return;
       editBtn.onclick = () => openGoogleAdsReportBottomlineModal(payload);
+    }
+
+    function openGoogleAdsReportExcelSheetModal(payload) {
+      metaReportsState.clientExcelSheetExpanded = true;
+      syncMetaReportControlPanelUi();
+      openMetaReportModal(
+        renderMetaReportExcelSheetModalContent(googleAdsPayloadToMetaUiShape(payload)),
+        { wide: true },
+      );
+      bindGoogleAdsReportExcelSheetModalEvents(payload);
+    }
+
+    function bindGoogleAdsReportExcelSheetSummaryEvents(payload) {
+      const editBtn = document.getElementById('meta-report-excel-sheet-edit');
+      if (!editBtn || !payload) return;
+      editBtn.onclick = () => openGoogleAdsReportExcelSheetModal(payload);
+    }
+
+    function bindGoogleAdsReportExcelSheetModalEvents(payload) {
+      const input = document.getElementById('meta-report-excel-sheet-url');
+      const saveBtn = document.getElementById('meta-report-excel-sheet-save');
+      if (!input || !saveBtn) return;
+
+      const save = async () => {
+        const previous = resolveMetaReportExcelSheetUrl(
+          googleAdsSettingsToMetaUx(googleAdsReportsState.clientPayload?.settings || {}),
+        );
+        const nextValue = input.value.trim();
+        saveBtn.disabled = true;
+        try {
+          const result = await patchGoogleAdsReportSettings(payload.clientId, {
+            metaReportExcelSheetUrl: nextValue || null,
+          });
+          const settings = result.settings || {};
+          const currentPayload = googleAdsReportsState.clientPayload || payload;
+          currentPayload.settings = { ...currentPayload.settings, ...settings };
+          googleAdsReportsState.clientPayload = currentPayload;
+          metaReportsState.clientPayload = googleAdsPayloadToMetaUiShape(currentPayload);
+          updateMetaReportExcelSheetSummary(metaReportsState.clientPayload.settings);
+          syncMetaReportExcelSheetUi(metaReportsState.clientPayload.settings);
+          bindGoogleAdsReportExcelSheetSummaryEvents(currentPayload);
+          closeMetaReportModal();
+          showToast(nextValue ? 'Excel sheet link saved' : 'Excel sheet link removed', 'success');
+        } catch (error) {
+          input.value = previous || '';
+          showToast(error.message || 'Could not save Excel sheet link', 'error');
+        } finally {
+          saveBtn.disabled = false;
+        }
+      };
+
+      saveBtn.onclick = save;
+      input.onkeydown = (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          save();
+        }
+      };
     }
 
     function bindGoogleAdsReportBackfillButton(clientId) {
@@ -16919,8 +17036,9 @@
 
     function renderGoogleAdsReportMonthBody(monthPayload, { editable = false, yearPayload = null, activeMonthKey = null } = {}) {
       const tabMonthKey = activeMonthKey || monthPayload?.monthKey || null;
+      const tabBounds = tabMonthKey ? metaReportMonthBounds(tabMonthKey) : null;
       let editPanelHtml = '';
-      if (editable && monthPayload && !monthPayload.meta?.emptyMonth && tabMonthKey) {
+      if (editable && monthPayload && !monthPayload.meta?.emptyMonth && tabBounds) {
         editPanelHtml = `
           <div class="meta-report-edit-panel" id="meta-report-edit-panel">
             <div class="meta-report-edit-panel-head">
@@ -16928,6 +17046,9 @@
             </div>
             <p class="meta-report-edit-note">These fields drive Topline and Bottomline KPI'er. Ad spend comes from Google Ads.</p>
             <div class="meta-report-edit-grid">
+              <label>Period start<input type="date" id="meta-report-period-start" value="${esc(tabBounds.start)}" /></label>
+              <label>Period end<input type="date" id="meta-report-period-end" value="${esc(tabBounds.end)}" /></label>
+              <label class="meta-cv-value-field is-locked">Number of leads<input type="number" step="any" id="meta-report-leads" value="${esc(monthPayload.topline?.leads ?? '')}" readonly disabled tabindex="-1" aria-readonly="true" /></label>
               <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
               <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
               <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
@@ -16944,7 +17065,7 @@
       const previewLabel = editable
         ? (previewMonthKey ? `Report preview · ${metaMonthLabel(previewMonthKey)}` : 'Report preview')
         : (previewMonthKey ? `Report · ${metaMonthLabel(previewMonthKey)}` : 'Report');
-      const viewMode = googleAdsReportsState.reportViewMode || 'monthly';
+      const viewMode = metaReportsState.reportViewMode || 'monthly';
       const showYearVisuals = shouldShowMetaReportYearVisuals(monthPayload, yearPayload, { editable });
       const showComparison = editable && showYearVisuals;
       const previewHtml = monthPayload && !monthPayload.meta?.emptyMonth ? `
@@ -16988,6 +17109,7 @@
       const panel = document.getElementById('meta-report-month-panel');
       if (!panel) return;
       if (uiPayload) {
+        metaReportsState.clientPayload = uiPayload;
         hydrateMetaReportSpendChartType(uiPayload);
         hydrateMetaReportScenarioSettings(uiPayload);
       }
@@ -16997,13 +17119,10 @@
         activeMonthKey: googleAdsReportsState.activeMonthKey || uiMonth?.monthKey || null,
       });
       requestAnimationFrame(() => {
-        const prevViewMode = metaReportsState.reportViewMode;
-        metaReportsState.reportViewMode = googleAdsReportsState.reportViewMode || 'monthly';
         mountMetaReportCharts(uiPayload, {
           editable: Boolean(options.editable),
           clientId: payload?.clientId || null,
         });
-        metaReportsState.reportViewMode = prevViewMode;
       });
     }
 
@@ -17049,6 +17168,8 @@
           try {
             const monthKey = googleAdsReportsState.activeMonthKey;
             const body = {
+              periodStart: document.getElementById('meta-report-period-start')?.value,
+              periodEnd: document.getElementById('meta-report-period-end')?.value,
               wonLeads: document.getElementById('meta-report-won-leads')?.value === ''
                 ? null
                 : Number(document.getElementById('meta-report-won-leads')?.value),
@@ -17078,6 +17199,7 @@
 
     function switchGoogleAdsReportMonthTab(monthKey) {
       googleAdsReportsState.activeMonthKey = monthKey;
+      metaReportsState.activeMonthKey = monthKey;
       const payload = googleAdsReportsState.clientPayload;
       if (!payload) return;
       document.querySelectorAll('[data-google-ads-month-tab]').forEach((button) => {
@@ -17093,6 +17215,7 @@
 
     function updateGoogleAdsReportsClientContent(payload) {
       googleAdsReportsState.clientPayload = payload;
+      metaReportsState.clientPayload = googleAdsPayloadToMetaUiShape(payload);
       metaReportsState.chartProjection = null;
       const monthKeys = payload.monthKeys || [];
       if (!googleAdsReportsState.activeMonthKey) {
@@ -17100,6 +17223,7 @@
       } else if (!monthKeys.includes(googleAdsReportsState.activeMonthKey)) {
         googleAdsReportsState.activeMonthKey = monthKeys[monthKeys.length - 1] || null;
       }
+      metaReportsState.activeMonthKey = googleAdsReportsState.activeMonthKey;
 
       googleAdsReportsState.selectedYear = Number(payload.year) || googleAdsReportsState.selectedYear;
       metaReportsState.selectedYear = googleAdsReportsState.selectedYear;
@@ -17130,6 +17254,7 @@
       bindGoogleAdsReportBackfillButton(payload.clientId);
       bindGoogleAdsReportShareEvents(payload);
       bindGoogleAdsReportBottomlineSummaryEvents(payload);
+      bindGoogleAdsReportExcelSheetSummaryEvents(payload);
     }
 
     function bindGoogleAdsReportsClientChromeEvents(payload) {
@@ -17166,6 +17291,7 @@
       bindMetaReportCopyButtons();
       bindGoogleAdsReportBackfillButton(clientId);
       bindGoogleAdsReportBottomlineSummaryEvents(payload);
+      bindGoogleAdsReportExcelSheetSummaryEvents(payload);
       bindGoogleAdsReportShareEvents(payload);
     }
 
@@ -17493,10 +17619,15 @@
         if (!googleAdsReportsState.activeMonthKey || !(payload.monthKeys || []).includes(googleAdsReportsState.activeMonthKey)) {
           googleAdsReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
+        metaReportsState.activeMonthKey = googleAdsReportsState.activeMonthKey;
         if (!googleAdsReportsState.clientPageMounted) {
           googleAdsReportsState.clientPayload = payload;
+          metaReportsState.clientPayload = googleAdsPayloadToMetaUiShape(payload);
           metaReportsState.clientShareExpanded = false;
           metaReportsState.clientReportSettingsExpanded = false;
+          metaReportsState.clientExcelSheetExpanded = false;
+          metaReportsState.reportViewMode = 'monthly';
+          metaReportsState.comparisonYearCache = {};
           dashboard.innerHTML = renderGoogleAdsClientPage(payload);
           googleAdsReportsState.clientPageMounted = true;
           bindGoogleAdsReportsClientEvents(payload);
