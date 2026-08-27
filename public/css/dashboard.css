@@ -4496,6 +4496,62 @@
       display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
 
+    .hub-skeleton-line {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%;
+      border-radius: 8px;
+      display: block;
+    }
+    .hub-skeleton-avatar {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%;
+      border-radius: 10px;
+      flex-shrink: 0;
+      height: 40px;
+      width: 40px;
+    }
+    .hub-skeleton-name { height: 18px; margin-bottom: 8px; width: 62%; }
+    .hub-skeleton-slug { height: 12px; width: 42%; }
+    .hub-skeleton-meta { height: 22px; width: 74%; }
+    .hub-skeleton-stat { height: 52px; }
+    .hub-skeleton-btn { height: 38px; }
+    .hub-skeleton-search { height: 42px; width: 100%; }
+    .hub-skeleton-count { height: 14px; width: 84px; }
+    .hub-skeleton-filter { border-radius: 999px; height: 36px; width: 92px; }
+    .hub-skeleton-action { border-radius: 10px; height: 38px; width: 108px; }
+    .hub-skeleton-stats {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .hub-skeleton-toggles .hub-skeleton-toggle {
+      height: 44px;
+      width: 100%;
+    }
+    .hub-skeleton-card {
+      pointer-events: none;
+    }
+    .hub-skeleton-card:hover {
+      box-shadow: var(--shadow-sm);
+      transform: none;
+    }
+    .hub-skeleton-toolbar {
+      pointer-events: none;
+    }
+    .sr-only {
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+
     .meta-hub-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
       box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px;

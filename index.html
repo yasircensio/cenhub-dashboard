@@ -4505,6 +4505,62 @@
       display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
 
+    .hub-skeleton-line {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%;
+      border-radius: 8px;
+      display: block;
+    }
+    .hub-skeleton-avatar {
+      animation: pulse 1.4s ease-in-out infinite;
+      background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%;
+      border-radius: 10px;
+      flex-shrink: 0;
+      height: 40px;
+      width: 40px;
+    }
+    .hub-skeleton-name { height: 18px; margin-bottom: 8px; width: 62%; }
+    .hub-skeleton-slug { height: 12px; width: 42%; }
+    .hub-skeleton-meta { height: 22px; width: 74%; }
+    .hub-skeleton-stat { height: 52px; }
+    .hub-skeleton-btn { height: 38px; }
+    .hub-skeleton-search { height: 42px; width: 100%; }
+    .hub-skeleton-count { height: 14px; width: 84px; }
+    .hub-skeleton-filter { border-radius: 999px; height: 36px; width: 92px; }
+    .hub-skeleton-action { border-radius: 10px; height: 38px; width: 108px; }
+    .hub-skeleton-stats {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .hub-skeleton-toggles .hub-skeleton-toggle {
+      height: 44px;
+      width: 100%;
+    }
+    .hub-skeleton-card {
+      pointer-events: none;
+    }
+    .hub-skeleton-card:hover {
+      box-shadow: var(--shadow-sm);
+      transform: none;
+    }
+    .hub-skeleton-toolbar {
+      pointer-events: none;
+    }
+    .sr-only {
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+
     .meta-hub-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
       box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px;
@@ -6474,6 +6530,120 @@
 
     function wrapDashboardShell(content) {
       return `<div class="dashboard-shell">${content}</div>`;
+    }
+
+    function hubSkeletonLine(extraClass = '') {
+      return `<span class="hub-skeleton-line ${extraClass}" aria-hidden="true"></span>`;
+    }
+
+    function renderHubSkeletonCards(kind, count = 6) {
+      return Array.from({ length: count }, () => {
+        if (kind === 'client') {
+          return `
+            <article class="client-card hub-skeleton-card" aria-hidden="true">
+              <div class="client-card-header">
+                <span class="hub-skeleton-avatar"></span>
+                <div class="client-card-title-block">
+                  ${hubSkeletonLine('hub-skeleton-name')}
+                  ${hubSkeletonLine('hub-skeleton-slug')}
+                </div>
+              </div>
+              ${hubSkeletonLine('hub-skeleton-meta')}
+              <div class="hub-skeleton-stats">
+                ${hubSkeletonLine('hub-skeleton-stat')}
+                ${hubSkeletonLine('hub-skeleton-stat')}
+                ${hubSkeletonLine('hub-skeleton-stat')}
+              </div>
+              <div class="client-card-actions">
+                ${hubSkeletonLine('hub-skeleton-btn')}
+                ${hubSkeletonLine('hub-skeleton-btn')}
+                ${hubSkeletonLine('hub-skeleton-btn')}
+              </div>
+            </article>
+          `;
+        }
+        const toggles = kind === 'meta'
+          ? `<div class="meta-hub-card-toggles hub-skeleton-toggles">
+              ${hubSkeletonLine('hub-skeleton-toggle')}
+              ${hubSkeletonLine('hub-skeleton-toggle')}
+              ${hubSkeletonLine('hub-skeleton-toggle')}
+            </div>`
+          : '';
+        return `
+          <article class="meta-hub-card hub-skeleton-card" aria-hidden="true">
+            <div class="meta-hub-card-head">
+              <span class="hub-skeleton-avatar"></span>
+              <div class="meta-hub-card-title">
+                ${hubSkeletonLine('hub-skeleton-name')}
+                ${hubSkeletonLine('hub-skeleton-slug')}
+              </div>
+            </div>
+            ${hubSkeletonLine('hub-skeleton-meta')}
+            ${toggles}
+            <div class="meta-hub-card-actions">
+              ${hubSkeletonLine('hub-skeleton-btn')}
+              ${hubSkeletonLine('hub-skeleton-btn')}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderAdminHubSkeletonPage(kind) {
+      const isClients = kind === 'clients';
+      const isGoogle = kind === 'google-ads';
+      const chromeTab = isClients ? 'clients' : (isGoogle ? 'google-ads' : 'meta-reports');
+      const title = isClients ? 'Client administration' : (isGoogle ? 'Google Ads reports' : 'Meta client reports');
+      const crumb = isGoogle ? 'Google Ads' : 'Meta reports';
+      const copy = isClients
+        ? '<p>Manage dashboard accounts, sync GHL data, and preview client views.</p>'
+        : '';
+      const hero = isClients
+        ? `<div class="page-hero admin-hub-hero">
+            <h1>${title}</h1>
+            ${copy}
+          </div>`
+        : `<div class="page-hero admin-hub-hero meta-premium-page-hero">
+            <div class="meta-premium-page-hero-inner">
+              <div class="admin-breadcrumb">
+                <a href="/admin">Clients</a>
+                <span aria-hidden="true"> / </span>
+                <span>${crumb}</span>
+              </div>
+              <h1>${title}</h1>
+            </div>
+          </div>`;
+      const filterCount = isClients ? 0 : (isGoogle ? 3 : 4);
+      const filters = filterCount
+        ? `<div class="meta-hub-filters">${Array.from({ length: filterCount }, () => hubSkeletonLine('hub-skeleton-filter')).join('')}</div>`
+        : '';
+      const extraActions = isClients
+        ? `${hubSkeletonLine('hub-skeleton-action')}${hubSkeletonLine('hub-skeleton-action')}`
+        : (isGoogle
+          ? hubSkeletonLine('hub-skeleton-action')
+          : `${hubSkeletonLine('hub-skeleton-action')}${hubSkeletonLine('hub-skeleton-action')}${hubSkeletonLine('hub-skeleton-action')}`);
+      const gridClass = isClients ? 'client-grid' : 'meta-hub-cards';
+      const cardKind = isClients ? 'client' : (isGoogle ? 'google' : 'meta');
+      return `
+        ${renderBrandTopbar(renderStaffAdminChrome(chromeTab))}
+        ${wrapDashboardShell(`
+        ${hero}
+        <div class="admin-hub${isClients ? '' : ' meta-reports-page'}" aria-busy="true">
+          <p class="sr-only">Loading ${esc(title)}…</p>
+          <div class="hub-toolbar-row hub-skeleton-toolbar">
+            <div class="hub-search">${hubSkeletonLine('hub-skeleton-search')}</div>
+            ${hubSkeletonLine('hub-skeleton-count')}
+            <div class="hub-toolbar-actions">
+              ${filters}
+              ${extraActions}
+            </div>
+          </div>
+          <div class="${gridClass}">
+            ${renderHubSkeletonCards(cardKind)}
+          </div>
+        </div>
+        `)}
+      `;
     }
 
     function showToast(message, type = 'info') {
@@ -17260,10 +17430,7 @@
       currentStaffUser = user;
 
       if (!metaReportsState.hubMounted) {
-        dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
-          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading Meta reports...</p></div>')}
-        `;
+        dashboard.innerHTML = renderAdminHubSkeletonPage('meta-reports');
       }
 
       try {
@@ -18340,10 +18507,7 @@
       }
       currentStaffUser = user;
       if (!googleAdsReportsState.hubMounted) {
-        dashboard.innerHTML = `
-          ${renderBrandTopbar(renderStaffAdminChrome('google-ads'))}
-          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading Google Ads reports...</p></div>')}
-        `;
+        dashboard.innerHTML = renderAdminHubSkeletonPage('google-ads');
       }
       try {
         const data = await adminFetch('/api/google-ads-reports?filter=all');
@@ -20560,14 +20724,7 @@
       const user = await requireStaffAuth();
       if (!user) return;
 
-      dashboard.innerHTML = `
-        ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
-        ${wrapDashboardShell(`
-          <div class="loading-state">
-            <div class="spinner"></div>
-            Loading clients...
-          </div>
-        `)}`;
+      dashboard.innerHTML = renderAdminHubSkeletonPage('clients');
 
       try {
         const data = await adminFetch('/api/clients');
