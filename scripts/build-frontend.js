@@ -7,7 +7,7 @@ const ROOT = path.join(__dirname, '..');
 const APP_SOURCE = path.join(ROOT, 'frontend', 'source', 'app.js');
 const OUT_DIR = path.join(ROOT, 'public', 'js');
 
-const ADMIN_START = 'async function fetchStaffMe() {';
+const ADMIN_START = 'async function requireStaffAuth() {';
 const DASHBOARD_START = '(function initDashboardCharts(global) {';
 const INIT_START = 'async function initDashboardApp() {';
 
@@ -42,6 +42,10 @@ function validateClientBundle(bundleSource, dashboardSource) {
     'loadDashboard',
     'esc',
     'showToast',
+    'fetchStaffMe',
+    'renderStaffAdminChrome',
+    'probeStaffPreviewSession',
+    'bindStaffChromeEvents',
   ];
 
   for (const name of requiredFunctions) {
@@ -89,7 +93,9 @@ async function main() {
 
   const adminInit = `
 async function bootAdminApp() {
+  bindStaffChromeEvents();
   if (IS_REPORT_VIEW) {
+    await probeStaffPreviewSession();
     await loadPublicMetaReportPage();
     return;
   }
@@ -149,7 +155,7 @@ async function bootAdminApp() {
     tenantParams = await resolveTenantParams();
   } catch (error) {
     document.getElementById('dashboard').innerHTML =
-      '<div class="error-state" style="padding:24px">' + esc(error.message) + '</div>';
+      renderAppTopbar() + wrapDashboardShell('<div class="error-state" style="padding:24px">' + esc(error.message) + '</div>');
     return;
   }
   if (IS_ADMIN_CLIENT) {
@@ -164,45 +170,6 @@ async function bootAdminApp() {
 }
 
 bootAdminApp();
-
-document.addEventListener('click', function (event) {
-  const toggle = event.target.closest('#staff-nav-toggle');
-  if (toggle) {
-    event.stopPropagation();
-    toggleStaffTopbarNav(toggle);
-    return;
-  }
-  if (event.target.closest('.staff-nav-dropdown-item')) {
-    closeStaffTopbarNav();
-    closeStaffNavDropdowns();
-    return;
-  }
-  if (event.target.closest('.staff-nav-link') && !event.target.closest('.staff-nav-dropdown-trigger')) {
-    closeStaffTopbarNav();
-  } else if (!event.target.closest('.brand-topbar-right') && !event.target.closest('.staff-nav-dropdown-menu')) {
-    closeStaffTopbarNav();
-  }
-  if (
-    !event.target.closest('.staff-nav-dropdown')
-    && !event.target.closest('.staff-nav-dropdown-menu')
-  ) {
-    closeStaffNavDropdowns();
-  }
-  closeCardMenus();
-  closeStaffUserMenu();
-});
-
-window.addEventListener('resize', function () {
-  document.querySelectorAll('.staff-nav-dropdown.is-open').forEach(function (dropdown) {
-    positionStaffNavDropdown(dropdown);
-  });
-});
-
-window.addEventListener('scroll', function () {
-  if (document.querySelector('.staff-nav-dropdown.is-open')) {
-    closeStaffNavDropdowns();
-  }
-}, { passive: true });
 
 document.addEventListener('visibilitychange', function () {
   if (document.visibilityState !== 'visible') return;
@@ -219,6 +186,8 @@ document.addEventListener('visibilitychange', function () {
 
   const clientInit = `
 async function bootClientApp() {
+  bindStaffChromeEvents();
+  await probeStaffPreviewSession();
   if (IS_REPORT_VIEW) {
     await loadPublicMetaReportPage();
     return;
@@ -227,7 +196,7 @@ async function bootClientApp() {
     tenantParams = await resolveTenantParams();
   } catch (error) {
     document.getElementById('dashboard').innerHTML =
-      '<div class="error-state" style="padding:24px">' + esc(error.message) + '</div>';
+      renderAppTopbar() + wrapDashboardShell('<div class="error-state" style="padding:24px">' + esc(error.message) + '</div>');
     return;
   }
   ensureChartsVisible();

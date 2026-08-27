@@ -6501,14 +6501,23 @@
         .replace(/'/g, '&#39;');
     }
 
-    function renderBrandTopbar(rightHtml = '') {
+    function renderCensioAnalyticsLogoMarkup(href = '') {
+      const img = `<img class="meta-report-public-logo" src="/censio-analytics-logo.png?v=3" alt="Censio Analytics" />`;
+      if (!href) return img;
+      return `<a href="${href}" class="brand-logo-link" aria-label="Censio Analytics">${img}</a>`;
+    }
+
+    function renderBrandTopbar(rightHtml = '', options = {}) {
+      const logoKind = options.logo === 'analytics' ? 'analytics' : 'cenhub';
       const hasCollapsibleNav = Boolean(rightHtml && rightHtml.includes('staff-admin-chrome'));
       const logoHref = hasCollapsibleNav || (rightHtml && rightHtml.includes('admin-topbar-link'))
         ? '/admin'
         : '';
-      const logoMarkup = logoHref
-        ? `<a href="${logoHref}" class="brand-logo-link" aria-label="Cenhub home"><img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" /></a>`
-        : `<img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />`;
+      const logoMarkup = logoKind === 'analytics'
+        ? renderCensioAnalyticsLogoMarkup(logoHref)
+        : (logoHref
+          ? `<a href="${logoHref}" class="brand-logo-link" aria-label="Cenhub home"><img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" /></a>`
+          : `<img class="brand-logo" src="/cenhub-logo-white.png" alt="Cenhub" width="167" height="41" />`);
       const toggle = hasCollapsibleNav
         ? `<button type="button" class="staff-nav-toggle" id="staff-nav-toggle" aria-expanded="false" aria-controls="staff-topbar-panel" aria-label="Open menu">
             <span class="staff-nav-toggle-bar" aria-hidden="true"></span>
@@ -6533,6 +6542,39 @@
           </div>
         </header>
       `;
+    }
+
+    function clientFacingStaffNavTab() {
+      if (IS_REPORT_VIEW) {
+        if (typeof linkedReportsState !== 'undefined' && linkedReportsState.activePlatform === 'google-ads') {
+          return 'google-ads';
+        }
+        return 'meta-reports';
+      }
+      return 'clients';
+    }
+
+    function renderAppTopbar(fallbackRightHtml) {
+      if (currentStaffUser && (IS_REPORT_VIEW || IS_CLIENT_VIEW)) {
+        return renderBrandTopbar(renderStaffAdminChrome(clientFacingStaffNavTab()), { logo: 'analytics' });
+      }
+      if (IS_REPORT_VIEW) {
+        return renderBrandTopbar('', { logo: 'analytics' });
+      }
+      if (fallbackRightHtml !== undefined) {
+        return renderBrandTopbar(fallbackRightHtml);
+      }
+      return renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '');
+    }
+
+    function refreshClientFacingTopbar() {
+      if (!IS_REPORT_VIEW && !IS_CLIENT_VIEW) return;
+      const existing = document.querySelector('#dashboard > .brand-topbar');
+      if (!existing) return;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = renderAppTopbar().trim();
+      const header = wrap.firstElementChild;
+      if (header) existing.replaceWith(header);
     }
 
     function wrapDashboardShell(content) {
@@ -6711,100 +6753,16 @@
       return data.user || null;
     }
 
-    async function requireStaffAuth() {
-      const user = await fetchStaffMe();
-      if (!user) {
-        redirectToLogin();
-        return null;
-      }
-      currentStaffUser = user;
-      return user;
-    }
-
-    async function adminFetch(path, options = {}) {
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-      };
-      const legacyKey = getAdminApiKey();
-      if (legacyKey) headers['x-api-key'] = legacyKey;
-
-      let response;
+    let staffPreviewSessionProbed = false;
+    async function probeStaffPreviewSession() {
+      if (staffPreviewSessionProbed) return currentStaffUser;
+      staffPreviewSessionProbed = true;
       try {
-        response = await fetch(path, {
-          ...options,
-          headers,
-          credentials: 'include',
-        });
-      } catch (networkError) {
-        throw networkError;
+        currentStaffUser = await fetchStaffMe();
+      } catch {
+        currentStaffUser = null;
       }
-      const data = await response.json().catch(() => ({}));
-      if (response.status === 401 && ADMIN_UI) {
-        redirectToLogin();
-        throw new Error(data.error || 'Unauthorized.');
-      }
-      if (!response.ok) {
-        throw new Error(data.error || `Request failed (${response.status})`);
-      }
-      return data;
-    }
-
-    function sleepMs(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
-    async function adminFetchWithRetry(path, options = {}, { retries = 3, timeoutMs = 130000 } = {}) {
-      let lastError = null;
-      for (let attempt = 1; attempt <= retries; attempt += 1) {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), timeoutMs);
-        try {
-          const headers = {
-            'Content-Type': 'application/json',
-            ...(options.headers || {}),
-          };
-          const legacyKey = getAdminApiKey();
-          if (legacyKey) headers['x-api-key'] = legacyKey;
-
-          const response = await fetch(path, {
-            ...options,
-            headers,
-            credentials: 'include',
-            signal: controller.signal,
-          });
-          clearTimeout(timer);
-          const data = await response.json().catch(() => ({}));
-          if (response.status === 401 && ADMIN_UI) {
-            redirectToLogin();
-            throw new Error(data.error || 'Unauthorized.');
-          }
-          if (!response.ok) {
-            const err = new Error(data.error || `Request failed (${response.status})`);
-            if (response.status >= 500 && attempt < retries) {
-              lastError = err;
-              await sleepMs(1200 * attempt);
-              continue;
-            }
-            throw err;
-          }
-          return data;
-        } catch (error) {
-          clearTimeout(timer);
-          lastError = error;
-          const retryable = error.name === 'AbortError'
-            || /fetch failed|network|timeout|timed out|502|503|504/i.test(String(error.message || ''));
-          if (retryable && attempt < retries) {
-            await sleepMs(1200 * attempt);
-            continue;
-          }
-          if (error.name === 'AbortError') {
-            throw new Error('Request timed out — the server may still be processing. Try Resume if a partial run exists.');
-          }
-          throw error;
-        }
-      }
-      throw lastError || new Error('Request failed after retries.');
+      return currentStaffUser;
     }
 
     async function staffLogout() {
@@ -7012,6 +6970,144 @@
         toggle.setAttribute('aria-label', 'Open menu');
         toggle.classList.remove('is-active');
       }
+    }
+
+    let staffChromeEventsBound = false;
+    function bindStaffChromeEvents() {
+      if (staffChromeEventsBound) return;
+      staffChromeEventsBound = true;
+      document.addEventListener('click', function (event) {
+        const toggle = event.target.closest('#staff-nav-toggle');
+        if (toggle) {
+          event.stopPropagation();
+          toggleStaffTopbarNav(toggle);
+          return;
+        }
+        if (event.target.closest('.staff-nav-dropdown-item')) {
+          closeStaffTopbarNav();
+          closeStaffNavDropdowns();
+          return;
+        }
+        if (event.target.closest('.staff-nav-link') && !event.target.closest('.staff-nav-dropdown-trigger')) {
+          closeStaffTopbarNav();
+        } else if (!event.target.closest('.brand-topbar-right') && !event.target.closest('.staff-nav-dropdown-menu')) {
+          closeStaffTopbarNav();
+        }
+        if (
+          !event.target.closest('.staff-nav-dropdown')
+          && !event.target.closest('.staff-nav-dropdown-menu')
+        ) {
+          closeStaffNavDropdowns();
+        }
+        if (typeof closeCardMenus === 'function') closeCardMenus();
+        closeStaffUserMenu();
+      });
+      window.addEventListener('resize', function () {
+        document.querySelectorAll('.staff-nav-dropdown.is-open').forEach(function (dropdown) {
+          positionStaffNavDropdown(dropdown);
+        });
+      });
+      window.addEventListener('scroll', function () {
+        if (document.querySelector('.staff-nav-dropdown.is-open')) {
+          closeStaffNavDropdowns();
+        }
+      }, { passive: true });
+    }
+
+    async function requireStaffAuth() {
+      const user = await fetchStaffMe();
+      if (!user) {
+        redirectToLogin();
+        return null;
+      }
+      currentStaffUser = user;
+      return user;
+    }
+
+    async function adminFetch(path, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      };
+      const legacyKey = getAdminApiKey();
+      if (legacyKey) headers['x-api-key'] = legacyKey;
+
+      let response;
+      try {
+        response = await fetch(path, {
+          ...options,
+          headers,
+          credentials: 'include',
+        });
+      } catch (networkError) {
+        throw networkError;
+      }
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401 && ADMIN_UI) {
+        redirectToLogin();
+        throw new Error(data.error || 'Unauthorized.');
+      }
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    function sleepMs(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function adminFetchWithRetry(path, options = {}, { retries = 3, timeoutMs = 130000 } = {}) {
+      let lastError = null;
+      for (let attempt = 1; attempt <= retries; attempt += 1) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const headers = {
+            'Content-Type': 'application/json',
+            ...(options.headers || {}),
+          };
+          const legacyKey = getAdminApiKey();
+          if (legacyKey) headers['x-api-key'] = legacyKey;
+
+          const response = await fetch(path, {
+            ...options,
+            headers,
+            credentials: 'include',
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+          const data = await response.json().catch(() => ({}));
+          if (response.status === 401 && ADMIN_UI) {
+            redirectToLogin();
+            throw new Error(data.error || 'Unauthorized.');
+          }
+          if (!response.ok) {
+            const err = new Error(data.error || `Request failed (${response.status})`);
+            if (response.status >= 500 && attempt < retries) {
+              lastError = err;
+              await sleepMs(1200 * attempt);
+              continue;
+            }
+            throw err;
+          }
+          return data;
+        } catch (error) {
+          clearTimeout(timer);
+          lastError = error;
+          const retryable = error.name === 'AbortError'
+            || /fetch failed|network|timeout|timed out|502|503|504/i.test(String(error.message || ''));
+          if (retryable && attempt < retries) {
+            await sleepMs(1200 * attempt);
+            continue;
+          }
+          if (error.name === 'AbortError') {
+            throw new Error('Request timed out — the server may still be processing. Try Resume if a partial run exists.');
+          }
+          throw error;
+        }
+      }
+      throw lastError || new Error('Request failed after retries.');
     }
 
     function formatStaffLastLogin(value) {
@@ -11048,6 +11144,7 @@
         tab.classList.toggle('is-active', on);
         tab.setAttribute('aria-selected', on ? 'true' : 'false');
       });
+      refreshClientFacingTopbar();
       updateMetaReportPublicExcelSheetButton(uiPayload.settings || {});
       const monthKeys = uiPayload.monthKeys || [];
       if (!metaReportsState.activeMonthKey) {
@@ -16568,15 +16665,7 @@
       const subtitle = isGoogleAds ? 'Google Ads performance report' : 'Meta ads performance report';
 
       return `
-        <header class="brand-topbar">
-          <div class="brand-topbar-inner">
-            <div class="brand-topbar-left">
-              <div class="meta-report-public-topbar-brand">
-                <img class="meta-report-public-logo" src="/censio-analytics-logo.png?v=3" alt="Censio Analytics" />
-              </div>
-            </div>
-          </div>
-        </header>
+        ${renderAppTopbar()}
         ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
           <div class="meta-premium-page-hero-inner">
@@ -18587,7 +18676,11 @@
       metaReportsState.reportViewMode = 'monthly';
 
       if (!metaReportsState.publicPageMounted) {
-        dashboard.innerHTML = wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading report...</p></div>');
+        await probeStaffPreviewSession();
+        dashboard.innerHTML = `
+          ${renderAppTopbar()}
+          ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading report...</p></div>')}
+        `;
       } else if (!silent) {
         const panel = document.getElementById('meta-report-month-panel');
         if (panel) panel.classList.add('is-loading');
@@ -18628,7 +18721,10 @@
         }
       } catch (error) {
         if (!metaReportsState.publicPageMounted) {
-          dashboard.innerHTML = wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message || 'Report not found')}</div>`);
+          dashboard.innerHTML = `
+            ${renderAppTopbar()}
+            ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(error.message || 'Report not found')}</div>`)}
+          `;
         } else if (silent) {
           throw error;
         } else {
@@ -23693,7 +23789,7 @@
       }
 
       dashboard.innerHTML = `
-        ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+        ${renderAppTopbar()}
         ${wrapDashboardShell(`
         ${IS_ADMIN_CLIENT ? `
         <div id="setup-panel-mount"></div>
@@ -23808,7 +23904,7 @@
 
         if (!hasLayout) {
           dashboard.innerHTML = `
-            ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+            ${renderAppTopbar()}
             ${wrapDashboardShell(`
               <div class="loading-state">
                 <div class="spinner"></div>
@@ -23871,7 +23967,7 @@
           if (error.name === 'AbortError') {
             if (!hasLayout) {
               dashboard.innerHTML = `
-                ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+                ${renderAppTopbar()}
                 ${wrapDashboardShell(`
                   <div class="error-state">
                     <div>Fejl ved hentning af data</div>
@@ -23897,7 +23993,7 @@
             }
           } else if (!hasLayout) {
             dashboard.innerHTML = `
-              ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+              ${renderAppTopbar()}
               ${wrapDashboardShell(`
                 <div class="error-state">
                   <div>Fejl ved hentning af data</div>
@@ -23938,7 +24034,7 @@
       } catch (error) {
         resetFetchUiState();
         dashboard.innerHTML = `
-          ${renderBrandTopbar(IS_ADMIN ? '<a class="admin-topbar-link" href="/admin">Admin hub</a>' : '')}
+          ${renderAppTopbar()}
           ${wrapDashboardShell(`
             <div class="error-state">
               <div>Fejl ved visning af dashboard</div>

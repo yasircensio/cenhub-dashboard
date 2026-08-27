@@ -77,6 +77,10 @@ function main() {
     'fmtDkk',
     'CLIENT_SLUG',
     'tenantParams',
+    'fetchStaffMe',
+    'renderStaffAdminChrome',
+    'probeStaffPreviewSession',
+    'bindStaffChromeEvents',
   ];
 
   const adminRequired = [
