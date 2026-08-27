@@ -4644,14 +4644,27 @@
     .meta-hub-switch--inline {
       align-items: center;
       flex-direction: row;
-      gap: 8px;
+      gap: 10px;
       justify-content: flex-end;
       min-height: 0;
-      padding: 0;
+      padding: 2px 0;
     }
     .meta-hub-switch--inline .meta-hub-switch-label {
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: 13px;
+    }
+    .meta-hub-switch--inline .meta-hub-switch-track {
+      height: 28px;
+      width: 48px;
+    }
+    .meta-hub-switch--inline .meta-hub-switch-thumb {
+      height: 22px;
+      left: 3px;
+      top: 3px;
+      width: 22px;
+    }
+    .meta-hub-switch--inline .meta-hub-switch-input:checked + .meta-hub-switch-thumb {
+      transform: translateX(20px);
     }
     .meta-hub-card-head .meta-hub-switch--inline,
     .meta-hub-card-head .card-menu {
