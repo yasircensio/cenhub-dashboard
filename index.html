@@ -4563,7 +4563,35 @@
     .meta-report-badge::before { background: currentColor; border-radius: 50%; content: ''; height: 6px; width: 6px; }
     .meta-report-badge--on { background: var(--status-ok-bg); color: var(--status-ok-text); }
     .meta-report-badge--off { background: #f3ece4; color: var(--text-soft); }
-    .meta-report-badge--setup { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; font-weight: 700; }
+    .meta-report-badge--linked { background: #eef6ff; color: #1d4ed8; }
+    .linked-report-platform-tabs {
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px;
+    }
+    .linked-report-platform-tab {
+      background: var(--panel); border: 1px solid var(--border-strong); border-radius: 999px;
+      color: var(--text); cursor: pointer; font: inherit; font-size: 13px; font-weight: 650;
+      padding: 8px 16px;
+    }
+    .linked-report-platform-tab.is-active {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    .linked-report-link-btn { white-space: nowrap; }
+    .linked-report-picker-search { margin: 12px 0 10px; width: 100%; }
+    .linked-report-picker-list {
+      display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow: auto;
+    }
+    .linked-report-picker-item {
+      align-items: flex-start; background: var(--panel); border: 1px solid var(--border-strong);
+      border-radius: 12px; color: inherit; cursor: pointer; display: flex; flex-direction: column;
+      font: inherit; gap: 2px; padding: 10px 12px; text-align: left; width: 100%;
+    }
+    .linked-report-picker-item:hover, .linked-report-picker-item.is-current {
+      border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary);
+    }
+    .linked-report-picker-item-name { font-size: 14px; font-weight: 650; }
+    .linked-report-picker-item-id { color: var(--text-soft); font-size: 12px; }
+    .linked-report-picker-empty { color: var(--text-muted); font-size: 13px; padding: 12px 4px; }
+    .linked-report-unlink-row { margin: 0 0 4px; }
 
     .meta-hub-empty {
       background: var(--panel); border: 1.5px dashed var(--border-strong); border-radius: 16px;
@@ -9139,6 +9167,471 @@
       clientToplineSaving: false,
     };
 
+    const linkedReportsState = {
+      origin: null,
+      activePlatform: null,
+      pair: null,
+      metaPayload: null,
+      googlePayload: null,
+      publicDual: null,
+    };
+
+    function isGoogleAdsEditorActive() {
+      if (IS_REPORT_VIEW) return false;
+      if (linkedReportsState.activePlatform) {
+        return linkedReportsState.activePlatform === 'google-ads';
+      }
+      return IS_ADMIN_GOOGLE_ADS_CLIENT;
+    }
+
+    function resetLinkedReportsState() {
+      linkedReportsState.origin = null;
+      linkedReportsState.activePlatform = null;
+      linkedReportsState.pair = null;
+      linkedReportsState.metaPayload = null;
+      linkedReportsState.googlePayload = null;
+      linkedReportsState.publicDual = null;
+    }
+
+    function linkedReportPairFromPayload(payload) {
+      return payload?.linkedPair || payload?.pair || null;
+    }
+
+    function captureDualPublicPayload(payload) {
+      if (!payload || payload.reportKind !== 'dual') {
+        linkedReportsState.publicDual = null;
+        if (!IS_ADMIN_META_REPORTS_CLIENT && !IS_ADMIN_GOOGLE_ADS_CLIENT) {
+          linkedReportsState.pair = payload?.linkedPair || null;
+        }
+        return payload;
+      }
+      linkedReportsState.publicDual = payload;
+      linkedReportsState.origin = payload.origin === 'google-ads' ? 'google-ads' : 'meta';
+      linkedReportsState.pair = payload.pair || null;
+      linkedReportsState.metaPayload = payload.meta || null;
+      linkedReportsState.googlePayload = payload.google || null;
+      if (!linkedReportsState.activePlatform || !(payload.platforms || []).includes(linkedReportsState.activePlatform)) {
+        linkedReportsState.activePlatform = payload.origin === 'google-ads' ? 'google-ads' : 'meta';
+      }
+      return resolveLinkedActivePayload();
+    }
+
+    function resolveLinkedActivePayload() {
+      if (linkedReportsState.activePlatform === 'google-ads') {
+        return linkedReportsState.googlePayload || linkedReportsState.publicDual?.google || null;
+      }
+      if (linkedReportsState.activePlatform === 'meta') {
+        return linkedReportsState.metaPayload || linkedReportsState.publicDual?.meta || null;
+      }
+      return null;
+    }
+
+    function hydrateAdminLinkedReports({ origin, metaPayload = null, googlePayload = null }) {
+      linkedReportsState.origin = origin;
+      linkedReportsState.metaPayload = metaPayload;
+      linkedReportsState.googlePayload = googlePayload;
+      linkedReportsState.pair = linkedReportPairFromPayload(metaPayload)
+        || linkedReportPairFromPayload(googlePayload)
+        || null;
+      if (!linkedReportsState.activePlatform) {
+        linkedReportsState.activePlatform = origin;
+      }
+      if (linkedReportsState.pair) {
+        if (linkedReportsState.activePlatform === 'google-ads' && !googlePayload) {
+          linkedReportsState.activePlatform = 'meta';
+        }
+        if (linkedReportsState.activePlatform === 'meta' && !metaPayload) {
+          linkedReportsState.activePlatform = 'google-ads';
+        }
+      } else {
+        linkedReportsState.activePlatform = origin;
+      }
+    }
+
+    function renderLinkedReportPlatformTabs({ platforms = [], activePlatform = 'meta' } = {}) {
+      if (!platforms.includes('meta') || !platforms.includes('google-ads')) return '';
+      return `
+        <div class="linked-report-platform-tabs" role="tablist" aria-label="Ad platforms">
+          <button type="button" class="linked-report-platform-tab${activePlatform === 'meta' ? ' is-active' : ''}" data-linked-platform="meta" role="tab" aria-selected="${activePlatform === 'meta'}">Meta Ads</button>
+          <button type="button" class="linked-report-platform-tab${activePlatform === 'google-ads' ? ' is-active' : ''}" data-linked-platform="google-ads" role="tab" aria-selected="${activePlatform === 'google-ads'}">Google Ads</button>
+        </div>
+      `;
+    }
+
+    function renderLinkedReportLinkControl() {
+      const pair = linkedReportsState.pair;
+      const origin = linkedReportsState.origin || (IS_ADMIN_GOOGLE_ADS_CLIENT ? 'google-ads' : 'meta');
+      if (pair) {
+        const partnerName = origin === 'meta' ? pair.googleAccountName : pair.metaAccountName;
+        return `<button type="button" class="admin-btn admin-btn--secondary admin-btn--small linked-report-link-btn" id="linked-report-link-btn">Linked · ${esc(partnerName || 'partner')}</button>`;
+      }
+      const label = origin === 'meta' ? 'Link Google Ads' : 'Link Meta report';
+      return `<button type="button" class="admin-btn admin-btn--secondary admin-btn--small linked-report-link-btn" id="linked-report-link-btn">${esc(label)}</button>`;
+    }
+
+    function linkedAdminOrigin() {
+      return linkedReportsState.origin
+        || (IS_ADMIN_GOOGLE_ADS_CLIENT ? 'google-ads' : 'meta');
+    }
+
+    function renderLinkedAdminPlatformTabsHtml() {
+      const platforms = [];
+      if (linkedReportsState.metaPayload) platforms.push('meta');
+      if (linkedReportsState.googlePayload) platforms.push('google-ads');
+      return renderLinkedReportPlatformTabs({
+        platforms,
+        activePlatform: linkedReportsState.activePlatform || linkedAdminOrigin(),
+      });
+    }
+
+    function renderLinkedPublicPlatformTabsHtml() {
+      const dual = linkedReportsState.publicDual;
+      if (!dual?.platforms) return '';
+      return renderLinkedReportPlatformTabs({
+        platforms: dual.platforms,
+        activePlatform: linkedReportsState.activePlatform || dual.origin || 'meta',
+      });
+    }
+
+    function renderLinkedAdminEditorInner() {
+      if (isGoogleAdsEditorActive() && linkedReportsState.googlePayload) {
+        const payload = linkedReportsState.googlePayload;
+        const uiPayload = googleAdsPayloadToMetaUiShape(payload);
+        const monthKeys = payload.monthKeys || [];
+        const activeKey = googleAdsReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
+        const monthPayload = googleAdsMonthToMetaUiShape(payload.months?.[activeKey] || null);
+        const tabs = monthKeys.map((key) => `
+          <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-google-ads-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
+        `).join('');
+        return `
+          ${renderLinkedAdminPlatformTabsHtml()}
+          ${renderGoogleAdsReportClientControlPanel(payload)}
+          <div class="meta-report-tabs" role="tablist">${tabs}</div>
+          <div class="meta-report-month-panel" id="meta-report-month-panel">
+            ${renderGoogleAdsReportMonthBody(monthPayload, {
+              editable: true,
+              yearPayload: uiPayload,
+              activeMonthKey: activeKey,
+            })}
+          </div>
+        `;
+      }
+
+      const payload = linkedReportsState.metaPayload || metaReportsState.clientPayload;
+      const monthKeys = payload?.monthKeys || [];
+      const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
+      const monthPayload = payload?.months?.[activeKey] || null;
+      const settings = payload?.settings || {};
+      const tabs = monthKeys.map((key) => `
+        <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
+      `).join('');
+      return `
+        ${renderLinkedAdminPlatformTabsHtml()}
+        ${renderMetaReportClientControlPanel(payload)}
+        <div class="meta-report-tabs" role="tablist">${tabs}</div>
+        <div class="meta-report-month-panel" id="meta-report-month-panel">
+          ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(settings, { editable: true, yearPayload: payload }))}
+        </div>
+      `;
+    }
+
+    function applyLinkedAdminPlatformState(platform) {
+      linkedReportsState.activePlatform = platform;
+      metaReportsState.clientShareExpanded = false;
+      metaReportsState.clientReportSettingsExpanded = false;
+      metaReportsState.clientExcelSheetExpanded = false;
+      metaReportsState.reportViewMode = 'monthly';
+      metaReportsState.chartProjection = null;
+      if (platform === 'google-ads' && linkedReportsState.googlePayload) {
+        const payload = linkedReportsState.googlePayload;
+        const uiPayload = googleAdsPayloadToMetaUiShape(payload);
+        googleAdsReportsState.clientPayload = payload;
+        metaReportsState.clientPayload = uiPayload;
+        googleAdsReportsState.selectedYear = Number(payload.year) || googleAdsReportsState.selectedYear;
+        metaReportsState.selectedYear = googleAdsReportsState.selectedYear;
+        if (!googleAdsReportsState.activeMonthKey || !(payload.monthKeys || []).includes(googleAdsReportsState.activeMonthKey)) {
+          googleAdsReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
+        }
+        metaReportsState.activeMonthKey = googleAdsReportsState.activeMonthKey;
+        hydrateMetaReportSpendChartType(uiPayload);
+        hydrateMetaReportScenarioSettings(uiPayload);
+        return uiPayload;
+      }
+      const payload = linkedReportsState.metaPayload;
+      metaReportsState.clientPayload = payload;
+      if (payload?.year) metaReportsState.selectedYear = Number(payload.year);
+      if (!metaReportsState.activeMonthKey || !(payload?.monthKeys || []).includes(metaReportsState.activeMonthKey)) {
+        metaReportsState.activeMonthKey = payload?.monthKeys?.[payload.monthKeys.length - 1] || null;
+      }
+      hydrateMetaReportSpendChartType(payload);
+      hydrateMetaReportScenarioSettings(payload);
+      return payload;
+    }
+
+    function bindLinkedReportChrome({ publicView = false } = {}) {
+      document.querySelectorAll('[data-linked-platform]').forEach((button) => {
+        button.onclick = () => {
+          const platform = button.getAttribute('data-linked-platform');
+          if (!platform || platform === linkedReportsState.activePlatform) return;
+          if (publicView) switchLinkedPublicPlatform(platform);
+          else switchLinkedAdminPlatform(platform);
+        };
+      });
+      const linkBtn = document.getElementById('linked-report-link-btn');
+      if (linkBtn) linkBtn.onclick = () => openLinkedReportPickerModal();
+    }
+
+    function bindLinkedAdminEditorEvents() {
+      bindLinkedReportChrome();
+      if (isGoogleAdsEditorActive() && linkedReportsState.googlePayload) {
+        bindGoogleAdsReportsClientEvents(linkedReportsState.googlePayload);
+        return;
+      }
+      const payload = linkedReportsState.metaPayload || metaReportsState.clientPayload;
+      if (payload) bindMetaReportsClientEvents(payload);
+    }
+
+    function switchLinkedAdminPlatform(platform) {
+      const payload = applyLinkedAdminPlatformState(platform);
+      const page = document.querySelector('.meta-report-client-page');
+      if (!page || !payload) return;
+      page.innerHTML = renderLinkedAdminEditorInner();
+      bindLinkedAdminEditorEvents();
+      const clientId = isGoogleAdsEditorActive()
+        ? (linkedReportsState.googlePayload?.clientId || payload.clientId)
+        : payload.clientId;
+      void ensureMetaReportScenarioSource(payload, { editable: true }).then(() => {
+        mountMetaReportCharts(payload, { editable: true, clientId });
+      });
+    }
+
+    function publicLinkedActiveRawPayload() {
+      if (linkedReportsState.activePlatform === 'google-ads') {
+        return linkedReportsState.googlePayload || linkedReportsState.publicDual?.google || null;
+      }
+      if (linkedReportsState.publicDual) {
+        return linkedReportsState.metaPayload || linkedReportsState.publicDual?.meta || null;
+      }
+      return metaReportsState.publicPayload;
+    }
+
+    function switchLinkedPublicPlatform(platform) {
+      linkedReportsState.activePlatform = platform;
+      const raw = publicLinkedActiveRawPayload();
+      if (!raw) return;
+      metaReportsState.activeMonthKey = null;
+      metaReportsState.selectedYear = Number(raw.year) || metaReportsState.selectedYear;
+      metaReportsState.comparisonYearCache = {};
+      const chartPayload = raw.reportKind === 'google-ads' ? googleAdsPayloadToMetaUiShape(raw) : raw;
+      hydrateMetaReportSpendChartType(chartPayload);
+      hydrateMetaReportScenarioSettings(chartPayload);
+      void ensureMetaReportScenarioSource(chartPayload, { editable: false }).then(() => {
+        updatePublicMetaReportContent(raw);
+        bindLinkedReportChrome({ publicView: true });
+        const yearSelect = document.getElementById('meta-report-year');
+        if (yearSelect && !yearSelect.onchange) bindPublicMetaReportEvents(raw);
+      });
+    }
+
+    function renderLinkedReportPickerItems(candidates, query = '') {
+      const needle = String(query || '').trim().toLowerCase();
+      const pair = linkedReportsState.pair;
+      const origin = linkedAdminOrigin();
+      const currentId = origin === 'meta' ? pair?.googleClientId : pair?.metaClientId;
+      const filtered = candidates.filter((row) => {
+        if (!needle) return true;
+        const haystack = [row.name, row.id, row.sub].filter(Boolean).join(' ').toLowerCase();
+        return haystack.includes(needle);
+      });
+      if (!filtered.length) {
+        return '<p class="linked-report-picker-empty">No matching accounts.</p>';
+      }
+      return filtered.map((row) => `
+        <button type="button" class="linked-report-picker-item${row.id === currentId ? ' is-current' : ''}" data-linked-pick-id="${esc(row.id)}">
+          <span class="linked-report-picker-item-name">${esc(row.name)}</span>
+          <span class="linked-report-picker-item-id">${esc(row.sub || row.id)}</span>
+        </button>
+      `).join('');
+    }
+
+    async function saveLinkedReportPair(googleClientId, metaClientId) {
+      const path = `/api/google-ads-reports/clients/${encodeURIComponent(googleClientId)}/settings`;
+      return adminFetch(path, {
+        method: 'PATCH',
+        body: JSON.stringify({ linkedMetaClientId: metaClientId }),
+      });
+    }
+
+    async function reloadLinkedAdminPairAndRender() {
+      const origin = linkedAdminOrigin();
+      if (origin === 'google-ads') {
+        googleAdsReportsState.clientPageMounted = false;
+        await loadGoogleAdsClientPage({ silent: true });
+        return;
+      }
+      metaReportsState.clientPageMounted = false;
+      await loadMetaReportsClientPage({ silent: true });
+    }
+
+    async function reloadCurrentLinkedEditor() {
+      if (isGoogleAdsEditorActive() && linkedReportsState.googlePayload) {
+        if (linkedReportsState.origin === 'meta') {
+          const googleClientId = linkedReportsState.googlePayload.clientId;
+          const nextPayload = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(googleClientId)}?year=${encodeURIComponent(googleAdsReportsState.selectedYear)}`);
+          linkedReportsState.googlePayload = nextPayload;
+          googleAdsReportsState.clientPayload = nextPayload;
+          googleAdsReportsState.selectedYear = Number(nextPayload.year) || googleAdsReportsState.selectedYear;
+          applyLinkedAdminPlatformState('google-ads');
+          const page = document.querySelector('.meta-report-client-page');
+          if (page) page.innerHTML = renderLinkedAdminEditorInner();
+          bindLinkedAdminEditorEvents();
+          const uiPayload = googleAdsPayloadToMetaUiShape(nextPayload);
+          requestAnimationFrame(() => {
+            mountMetaReportCharts(uiPayload, { editable: true, clientId: googleClientId });
+          });
+          return;
+        }
+        await loadGoogleAdsClientPage({ silent: true });
+        return;
+      }
+      if (linkedReportsState.origin === 'google-ads' && linkedReportsState.metaPayload) {
+        const clientId = linkedReportsState.metaPayload.clientId;
+        const nextPayload = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`);
+        linkedReportsState.metaPayload = nextPayload;
+        applyLinkedAdminPlatformState('meta');
+        const page = document.querySelector('.meta-report-client-page');
+        if (page) page.innerHTML = renderLinkedAdminEditorInner();
+        bindLinkedAdminEditorEvents();
+        requestAnimationFrame(() => {
+          mountMetaReportCharts(nextPayload, { editable: true, clientId });
+        });
+        return;
+      }
+      await loadMetaReportsClientPage({ silent: true });
+    }
+
+    async function openLinkedReportPickerModal() {
+      const origin = linkedAdminOrigin();
+      const pair = linkedReportsState.pair;
+      const title = origin === 'meta' ? 'Link Google Ads account' : 'Link Meta report';
+      openMetaReportModal(`
+        <div class="meta-report-modal-head">
+          <h2 class="meta-report-modal-title">${esc(title)}</h2>
+          <button type="button" class="meta-report-modal-close" aria-label="Close">&times;</button>
+        </div>
+        <p class="metrics-model-copy">One Meta report maps to one Google Ads report. Spend, leads, and share links stay independent.</p>
+        ${pair ? `<div class="linked-report-unlink-row"><button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="linked-report-unlink-btn">Unlink</button></div>` : ''}
+        <input type="search" class="admin-input linked-report-picker-search" id="linked-report-picker-search" placeholder="Search accounts" autocomplete="off" />
+        <div class="linked-report-picker-list" id="linked-report-picker-list">Loading…</div>
+      `, { wide: true });
+
+      const listEl = document.getElementById('linked-report-picker-list');
+      const searchEl = document.getElementById('linked-report-picker-search');
+      const unlinkBtn = document.getElementById('linked-report-unlink-btn');
+      const originMetaId = linkedReportsState.metaPayload?.clientId
+        || (origin === 'meta' ? CLIENT_SLUG : pair?.metaClientId);
+      const originGoogleId = linkedReportsState.googlePayload?.clientId
+        || (origin === 'google-ads' ? CLIENT_SLUG : pair?.googleClientId);
+
+      const bindPicker = (candidates) => {
+        if (!listEl) return;
+        const render = () => {
+          listEl.innerHTML = renderLinkedReportPickerItems(candidates, searchEl?.value);
+          listEl.querySelectorAll('[data-linked-pick-id]').forEach((button) => {
+            button.onclick = async () => {
+              const pickedId = button.getAttribute('data-linked-pick-id');
+              button.disabled = true;
+              try {
+                if (origin === 'meta') {
+                  await saveLinkedReportPair(pickedId, originMetaId);
+                } else {
+                  await saveLinkedReportPair(originGoogleId, pickedId);
+                }
+                closeMetaReportModal();
+                showToast('Reports linked', 'success');
+                await reloadLinkedAdminPairAndRender();
+              } catch (error) {
+                showToast(error.message || 'Could not link reports', 'error');
+                button.disabled = false;
+              }
+            };
+          });
+        };
+        if (searchEl) searchEl.oninput = render;
+        render();
+      };
+
+      if (unlinkBtn) {
+        unlinkBtn.onclick = async () => {
+          if (!originGoogleId) return;
+          unlinkBtn.disabled = true;
+          try {
+            await saveLinkedReportPair(originGoogleId, null);
+            closeMetaReportModal();
+            showToast('Reports unlinked', 'success');
+            linkedReportsState.pair = null;
+            if (origin === 'meta') linkedReportsState.googlePayload = null;
+            else linkedReportsState.metaPayload = null;
+            linkedReportsState.activePlatform = origin;
+            await reloadLinkedAdminPairAndRender();
+          } catch (error) {
+            showToast(error.message || 'Could not unlink', 'error');
+            unlinkBtn.disabled = false;
+          }
+        };
+      }
+
+      try {
+        if (origin === 'meta') {
+          const data = await adminFetch('/api/google-ads-reports?filter=enabled');
+          const candidates = (data.clients || [])
+            .filter((client) => client.clientId && client.googleAdsReportEnabled && !client.needsSetup)
+            .filter((client) => !client.linkedMetaClientId || String(client.linkedMetaClientId) === String(originMetaId))
+            .map((client) => ({
+              id: client.clientId,
+              name: client.accountName,
+              sub: client.googleCustomerLabel || client.googleCustomerId || client.clientId,
+            }));
+          bindPicker(candidates);
+        } else {
+          const data = await adminFetch('/api/meta-reports?filter=enabled');
+          const candidates = (data.clients || [])
+            .filter((client) => client.clientId && client.metaReportEnabled && !client.needsSetup)
+            .filter((client) => !client.linkedGoogleClientId || String(client.linkedGoogleClientId) === String(originGoogleId))
+            .map((client) => ({
+              id: client.clientId,
+              name: client.accountName,
+              sub: client.clientId,
+            }));
+          bindPicker(candidates);
+        }
+      } catch (error) {
+        if (listEl) listEl.innerHTML = `<p class="linked-report-picker-empty">${esc(error.message || 'Could not load accounts')}</p>`;
+      }
+    }
+
+    async function fetchLinkedPartnerPayload(payload, origin) {
+      const pair = linkedReportPairFromPayload(payload);
+      if (!pair) return null;
+      try {
+        if (origin === 'meta' && pair.googleClientId) {
+          const year = linkedReportsState.googlePayload?.year
+            || googleAdsReportsState.selectedYear
+            || payload.year;
+          return await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(pair.googleClientId)}?year=${encodeURIComponent(year)}`);
+        }
+        if (origin === 'google-ads' && pair.metaClientId) {
+          const year = linkedReportsState.metaPayload?.year
+            || metaReportsState.selectedYear
+            || payload.year;
+          return await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(pair.metaClientId)}?year=${encodeURIComponent(year)}`);
+        }
+      } catch (error) {
+        console.warn('Linked partner report failed to load', error);
+      }
+      return null;
+    }
+
     const META_HUB_FILTER_OPTIONS = [
       { value: 'all', label: 'All' },
       { value: 'enabled', label: 'Live reports' },
@@ -9229,7 +9722,7 @@
     }
 
     function resolveMetaReportModalBottomlineSettings() {
-      if (IS_ADMIN_GOOGLE_ADS_CLIENT && googleAdsReportsState.clientPayload) {
+      if (isGoogleAdsEditorActive() && googleAdsReportsState.clientPayload) {
         return googleAdsSettingsToMetaUx(googleAdsReportsState.clientPayload.settings || {});
       }
       return metaReportsState.clientPayload?.settings || {};
@@ -9695,6 +10188,7 @@
               <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
               ${hasLink ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(payload.reportUrl)}"${settings.metaReportEnabled ? '' : ' disabled'}>Copy link</button>` : ''}
               ${resolveMetaReportExcelSheetUrl(settings) ? `<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="${esc(resolveMetaReportExcelSheetUrl(settings))}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>` : '<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="#" target="_blank" rel="noopener noreferrer" hidden>See Excel sheet</a>'}
+              ${renderLinkedReportLinkControl()}
             </div>
           </div>
           ${hasLink ? `
@@ -9910,6 +10404,7 @@
           </div>
           <div class="meta-hub-card-meta">
             ${statusBadge}
+            ${client.linkedGoogleAccountName ? `<span class="meta-report-badge meta-report-badge--linked">Linked · ${esc(client.linkedGoogleAccountName)}</span>` : ''}
             <span class="meta-hub-card-meta-dot" aria-hidden="true">·</span>
             <span>${esc(typeLabel)}</span>
           </div>
@@ -10275,10 +10770,21 @@
     }
 
     function updatePublicMetaReportContent(payload) {
-      metaReportsState.publicPayload = payload;
-      const isGoogleAds = payload.reportKind === 'google-ads';
-      const uiPayload = isGoogleAds ? googleAdsPayloadToMetaUiShape(payload) : payload;
-      syncMetaReportPublicBranding(payload);
+      const activePayload = payload?.reportKind === 'dual' ? captureDualPublicPayload(payload) : payload;
+      metaReportsState.publicPayload = activePayload;
+      const isGoogleAds = activePayload.reportKind === 'google-ads'
+        || linkedReportsState.activePlatform === 'google-ads';
+      const uiPayload = isGoogleAds ? googleAdsPayloadToMetaUiShape(activePayload) : activePayload;
+      syncMetaReportPublicBranding(uiPayload);
+      const subtitleEl = document.getElementById('meta-report-public-subtitle');
+      if (subtitleEl) {
+        subtitleEl.textContent = isGoogleAds ? 'Google Ads performance report' : 'Meta ads performance report';
+      }
+      document.querySelectorAll('[data-linked-platform]').forEach((tab) => {
+        const on = tab.getAttribute('data-linked-platform') === (linkedReportsState.activePlatform || (isGoogleAds ? 'google-ads' : 'meta'));
+        tab.classList.toggle('is-active', on);
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
       updateMetaReportPublicExcelSheetButton(uiPayload.settings || {});
       const monthKeys = uiPayload.monthKeys || [];
       if (!metaReportsState.activeMonthKey) {
@@ -10298,7 +10804,7 @@
         tabsEl.innerHTML = monthKeys.map((key) => `
           <button type="button" class="meta-report-tab${key === metaReportsState.activeMonthKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
         `).join('');
-        bindPublicMetaReportTabEvents(payload);
+        bindPublicMetaReportTabEvents(activePayload);
       }
 
       const panel = document.getElementById('meta-report-month-panel');
@@ -10405,6 +10911,28 @@
       document.querySelectorAll('[data-meta-month-tab]').forEach((tab) => {
         tab.classList.toggle('is-active', tab.getAttribute('data-meta-month-tab') === monthKey);
       });
+
+      const publicGoogle = !editable && (
+        payload.reportKind === 'google-ads'
+        || linkedReportsState.activePlatform === 'google-ads'
+      );
+      if (publicGoogle) {
+        const raw = payload.reportKind === 'google-ads'
+          ? payload
+          : (linkedReportsState.googlePayload || payload);
+        const uiPayload = googleAdsPayloadToMetaUiShape(raw);
+        const panel = document.getElementById('meta-report-month-panel');
+        if (panel) {
+          panel.innerHTML = renderGoogleAdsReportMonthBody(
+            uiPayload.months?.[monthKey],
+            { editable: false, yearPayload: uiPayload, activeMonthKey: monthKey },
+          );
+          requestAnimationFrame(() => {
+            mountMetaReportCharts(uiPayload, { editable: false });
+          });
+        }
+        return;
+      }
 
       if (editable) {
         /* topline section re-rendered via refreshMetaReportMonthPanel */
@@ -15727,14 +16255,6 @@
     }
 
     function renderMetaReportsClientPage(payload) {
-      const monthKeys = payload.monthKeys || [];
-      const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
-      const monthPayload = payload.months?.[activeKey] || null;
-      const settings = payload.settings || {};
-      const tabs = monthKeys.map((key) => `
-        <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-meta-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
-      `).join('');
-
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('meta-reports'))}
         ${wrapDashboardShell(`
@@ -15751,11 +16271,7 @@
           </div>
         </div>
         <div class="sync-history-page meta-reports-page meta-report-client-page">
-          ${renderMetaReportClientControlPanel(payload)}
-          <div class="meta-report-tabs" role="tablist">${tabs}</div>
-          <div class="meta-report-month-panel" id="meta-report-month-panel">
-            ${renderMetaReportMonthBody(monthPayload, getMetaReportMonthBodyOptions(settings, { editable: true, yearPayload: payload }))}
-          </div>
+          ${renderLinkedAdminEditorInner()}
         </div>
         `)}
       `;
@@ -15773,9 +16289,10 @@
     }
 
     function renderPublicMetaReportPage(payload) {
-      const clientName = metaReportClientDisplayName(payload);
-      const isGoogleAds = payload.reportKind === 'google-ads';
+      const isGoogleAds = payload.reportKind === 'google-ads'
+        || linkedReportsState.activePlatform === 'google-ads';
       const uiPayload = isGoogleAds ? googleAdsPayloadToMetaUiShape(payload) : payload;
+      const clientName = metaReportClientDisplayName(uiPayload);
       const monthKeys = uiPayload.monthKeys || [];
       const activeKey = metaReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
       const monthPayload = uiPayload.months?.[activeKey] || null;
@@ -15805,10 +16322,11 @@
         <div class="page-hero admin-hub-hero meta-premium-page-hero meta-report-public-hero">
           <div class="meta-premium-page-hero-inner">
             <h1>${esc(clientName)}</h1>
-            <p class="meta-report-public-subtitle">${esc(subtitle)}</p>
+            <p class="meta-report-public-subtitle" id="meta-report-public-subtitle">${esc(subtitle)}</p>
           </div>
         </div>
         <div class="meta-reports-page meta-reports-page--public">
+          ${renderLinkedPublicPlatformTabsHtml()}
           <div class="meta-report-toolbar">
             <div class="meta-report-toolbar-left">
               <label class="meta-report-year-field">Year
@@ -16203,7 +16721,7 @@
         } else {
           showToast(`Synced ${targets.length} month${targets.length === 1 ? '' : 's'} from Meta`, 'success');
         }
-        await loadMetaReportsClientPage({ silent: true });
+        await reloadCurrentLinkedEditor();
       };
     }
 
@@ -16418,11 +16936,35 @@
           metaReportsState.comparisonYearCache = {};
           setMetaReportClientYearLoading(newYear, true);
           try {
-            await loadMetaReportsClientPage({ silent: true });
+            if (linkedReportsState.origin === 'google-ads' && linkedReportsState.metaPayload) {
+              const clientId = linkedReportsState.metaPayload.clientId;
+              const nextPayload = await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(newYear)}`);
+              linkedReportsState.metaPayload = nextPayload;
+              syncMetaReportSelectedYear(nextPayload, { disableUnavailable: true });
+              if (Number(metaReportsState.selectedYear) !== Number(nextPayload.year)) {
+                metaReportsState.selectedYear = nextPayload.year;
+              }
+              applyLinkedAdminPlatformState('meta');
+              const page = document.querySelector('.meta-report-client-page');
+              if (page) page.innerHTML = renderLinkedAdminEditorInner();
+              bindLinkedAdminEditorEvents();
+              requestAnimationFrame(() => {
+                mountMetaReportCharts(nextPayload, { editable: true, clientId });
+              });
+            } else {
+              await loadMetaReportsClientPage({ silent: true });
+            }
           } catch (error) {
             metaReportsState.selectedYear = previousYear;
             if (yearSelect) yearSelect.value = String(previousYear);
-            await loadMetaReportsClientPage({ silent: true });
+            if (linkedReportsState.origin === 'google-ads' && linkedReportsState.metaPayload) {
+              applyLinkedAdminPlatformState('meta');
+              const page = document.querySelector('.meta-report-client-page');
+              if (page) page.innerHTML = renderLinkedAdminEditorInner();
+              bindLinkedAdminEditorEvents();
+            } else {
+              await loadMetaReportsClientPage({ silent: true });
+            }
             showToast(error.message || 'Load failed', 'error');
           } finally {
             setMetaReportClientYearLoading(newYear, false);
@@ -16444,6 +16986,7 @@
       if (isMetaReportGhlListClient(payload.settings || {})) {
         bindMetaReportToplineSourceControl(payload.clientId, payload);
       }
+      bindLinkedReportChrome();
     }
 
     function bindMetaReportsClientEditEvents(clientId, payload) {
@@ -16524,6 +17067,7 @@
 
     function bindPublicMetaReportEvents(payload) {
       bindPublicMetaReportTabEvents(payload);
+      bindLinkedReportChrome({ publicView: true });
       const yearSelect = document.getElementById('meta-report-year');
       if (yearSelect) {
         yearSelect.onchange = async () => {
@@ -16627,18 +17171,46 @@
           metaReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
         await ensureMetaReportScenarioSource(payload, { editable: true });
+        const googlePayload = await fetchLinkedPartnerPayload(payload, 'meta');
+        hydrateAdminLinkedReports({ origin: 'meta', metaPayload: payload, googlePayload });
+        if (googlePayload) {
+          googleAdsReportsState.clientPayload = googlePayload;
+          googleAdsReportsState.selectedYear = Number(googlePayload.year) || googleAdsReportsState.selectedYear;
+          if (!googleAdsReportsState.activeMonthKey || !(googlePayload.monthKeys || []).includes(googleAdsReportsState.activeMonthKey)) {
+            googleAdsReportsState.activeMonthKey = googlePayload.monthKeys?.[googlePayload.monthKeys.length - 1] || null;
+          }
+        }
+        const viewingGoogle = isGoogleAdsEditorActive() && googlePayload;
+        const activePayload = viewingGoogle ? googleAdsPayloadToMetaUiShape(googlePayload) : payload;
+        if (viewingGoogle) {
+          metaReportsState.clientPayload = activePayload;
+          metaReportsState.activeMonthKey = googleAdsReportsState.activeMonthKey;
+          hydrateMetaReportSpendChartType(activePayload);
+          hydrateMetaReportScenarioSettings(activePayload);
+        }
         if (!metaReportsState.clientPageMounted) {
-          metaReportsState.clientPayload = payload;
+          metaReportsState.clientPayload = viewingGoogle ? activePayload : payload;
           metaReportsState.clientReportSettingsExpanded = false;
           metaReportsState.clientShareExpanded = false;
-          hydrateMetaReportSpendChartType(payload);
-          hydrateMetaReportScenarioSettings(payload);
+          if (!viewingGoogle) {
+            hydrateMetaReportSpendChartType(payload);
+            hydrateMetaReportScenarioSettings(payload);
+          }
           dashboard.innerHTML = renderMetaReportsClientPage(payload);
           metaReportsState.clientPageMounted = true;
-          bindMetaReportsClientEvents(payload);
-          mountMetaReportCharts(payload, { editable: true });
+          bindLinkedAdminEditorEvents();
+          mountMetaReportCharts(activePayload, {
+            editable: true,
+            clientId: viewingGoogle ? googlePayload.clientId : payload.clientId,
+          });
+        } else if (viewingGoogle) {
+          const page = document.querySelector('.meta-report-client-page');
+          if (page) page.innerHTML = renderLinkedAdminEditorInner();
+          bindLinkedAdminEditorEvents();
         } else {
+          metaReportsState.clientPayload = payload;
           updateMetaReportsClientContent(payload);
+          bindLinkedReportChrome();
         }
       } catch (error) {
         if (!metaReportsState.clientPageMounted) {
@@ -16726,6 +17298,9 @@
         out.googleAdsReportBudgetBaseline = patch.metaReportBudgetBaseline;
       }
       if (patch.rotateAccessToken) out.rotateAccessToken = true;
+      if (Object.prototype.hasOwnProperty.call(patch, 'linkedMetaClientId')) {
+        out.linkedMetaClientId = patch.linkedMetaClientId;
+      }
       return out;
     }
 
@@ -16823,6 +17398,7 @@
               <span class="meta-report-save-indicator" id="meta-report-save-indicator"><span class="meta-report-save-indicator-spinner"></span> Saving…</span>
               ${hasLink ? `<button type="button" class="admin-btn admin-btn--secondary" id="meta-report-toolbar-copy-link" data-copy-report-url="${esc(uiPayload.reportUrl)}"${settings.metaReportEnabled ? '' : ' disabled'}>Copy link</button>` : ''}
               ${resolveMetaReportExcelSheetUrl(settings) ? `<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="${esc(resolveMetaReportExcelSheetUrl(settings))}" target="_blank" rel="noopener noreferrer">See Excel sheet</a>` : '<a class="admin-btn admin-btn--secondary" id="meta-report-excel-sheet-toolbar-btn" href="#" target="_blank" rel="noopener noreferrer" hidden>See Excel sheet</a>'}
+              ${renderLinkedReportLinkControl()}
             </div>
           </div>
           ${hasLink ? `
@@ -17082,7 +17658,7 @@
         } else {
           showToast(`Synced ${targets.length} month${targets.length === 1 ? '' : 's'} from Google Ads`, 'success');
         }
-        await loadGoogleAdsClientPage({ silent: true });
+        await reloadCurrentLinkedEditor();
       };
     }
 
@@ -17327,17 +17903,44 @@
           const newYear = Number(yearSelect.value);
           if (newYear === previousYear) return;
           googleAdsReportsState.selectedYear = newYear;
-          metaReportsState.selectedYear = newYear;
+          if (linkedReportsState.origin !== 'meta') {
+            metaReportsState.selectedYear = newYear;
+          }
           googleAdsReportsState.activeMonthKey = null;
           metaReportsState.comparisonYearCache = {};
           setMetaReportClientYearLoading(newYear, true);
           try {
-            await loadGoogleAdsClientPage({ silent: true });
+            if (linkedReportsState.origin === 'meta' && linkedReportsState.googlePayload) {
+              const googleClientId = linkedReportsState.googlePayload.clientId;
+              const nextPayload = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(googleClientId)}?year=${encodeURIComponent(newYear)}`);
+              linkedReportsState.googlePayload = nextPayload;
+              googleAdsReportsState.clientPayload = nextPayload;
+              googleAdsReportsState.selectedYear = Number(nextPayload.year) || newYear;
+              applyLinkedAdminPlatformState('google-ads');
+              const page = document.querySelector('.meta-report-client-page');
+              if (page) page.innerHTML = renderLinkedAdminEditorInner();
+              bindLinkedAdminEditorEvents();
+              const uiPayload = googleAdsPayloadToMetaUiShape(nextPayload);
+              requestAnimationFrame(() => {
+                mountMetaReportCharts(uiPayload, { editable: true, clientId: googleClientId });
+              });
+            } else {
+              await loadGoogleAdsClientPage({ silent: true });
+            }
           } catch (error) {
             googleAdsReportsState.selectedYear = previousYear;
-            metaReportsState.selectedYear = previousYear;
+            if (linkedReportsState.origin !== 'meta') {
+              metaReportsState.selectedYear = previousYear;
+            }
             if (yearSelect) yearSelect.value = String(previousYear);
-            await loadGoogleAdsClientPage({ silent: true });
+            if (linkedReportsState.origin === 'meta' && linkedReportsState.googlePayload) {
+              applyLinkedAdminPlatformState('google-ads');
+              const page = document.querySelector('.meta-report-client-page');
+              if (page) page.innerHTML = renderLinkedAdminEditorInner();
+              bindLinkedAdminEditorEvents();
+            } else {
+              await loadGoogleAdsClientPage({ silent: true });
+            }
             showToast(error.message || 'Load failed', 'error');
           } finally {
             setMetaReportClientYearLoading(newYear, false);
@@ -17357,6 +17960,7 @@
         button.onclick = () => switchGoogleAdsReportMonthTab(button.getAttribute('data-google-ads-month-tab'));
       });
       bindGoogleAdsReportMonthEditEvents(payload.clientId, payload);
+      bindLinkedReportChrome();
     }
 
     const GOOGLE_ADS_HUB_FILTERS = [
@@ -17438,6 +18042,7 @@
           </div>
           <div class="meta-hub-card-meta">
             ${statusBadge}
+            ${client.linkedMetaAccountName ? `<span class="meta-report-badge meta-report-badge--linked">Linked · ${esc(client.linkedMetaAccountName)}</span>` : ''}
             <span class="meta-hub-card-meta-dot" aria-hidden="true">·</span>
             <span>Google Ads</span>
           </div>
@@ -17609,13 +18214,6 @@
     }
 
     function renderGoogleAdsClientPage(payload) {
-      const monthKeys = payload.monthKeys || [];
-      const activeKey = googleAdsReportsState.activeMonthKey || monthKeys[monthKeys.length - 1] || '';
-      const monthPayload = googleAdsMonthToMetaUiShape(payload.months?.[activeKey] || null);
-      const tabs = monthKeys.map((key) => `
-        <button type="button" class="meta-report-tab${key === activeKey ? ' is-active' : ''}" data-google-ads-month-tab="${esc(key)}">${esc(metaMonthLabel(key))}</button>
-      `).join('');
-
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('google-ads'))}
         ${wrapDashboardShell(`
@@ -17633,15 +18231,7 @@
           </div>
         </div>
         <div class="sync-history-page meta-reports-page meta-report-client-page">
-          ${renderGoogleAdsReportClientControlPanel(payload)}
-          <div class="meta-report-tabs" role="tablist">${tabs}</div>
-          <div class="meta-report-month-panel" id="meta-report-month-panel">
-            ${renderGoogleAdsReportMonthBody(monthPayload, {
-              editable: true,
-              yearPayload: googleAdsPayloadToMetaUiShape(payload),
-              activeMonthKey: activeKey,
-            })}
-          </div>
+          ${renderLinkedAdminEditorInner()}
         </div>
         `)}
       `;
@@ -17678,22 +18268,47 @@
         metaReportsState.activeMonthKey = googleAdsReportsState.activeMonthKey;
         const uiPayload = googleAdsPayloadToMetaUiShape(payload);
         await ensureMetaReportScenarioSource(uiPayload, { editable: true });
+        const metaPayload = await fetchLinkedPartnerPayload(payload, 'google-ads');
+        hydrateAdminLinkedReports({ origin: 'google-ads', metaPayload, googlePayload: payload });
+        if (metaPayload) {
+          if (!metaReportsState.activeMonthKey || !(metaPayload.monthKeys || []).includes(metaReportsState.activeMonthKey)) {
+            metaReportsState.activeMonthKey = metaPayload.monthKeys?.[metaPayload.monthKeys.length - 1] || null;
+          }
+        }
+        const viewingMeta = linkedReportsState.activePlatform === 'meta' && metaPayload;
+        const activePayload = viewingMeta ? metaPayload : uiPayload;
+        if (viewingMeta) {
+          metaReportsState.clientPayload = metaPayload;
+          metaReportsState.selectedYear = Number(metaPayload.year) || metaReportsState.selectedYear;
+          hydrateMetaReportSpendChartType(metaPayload);
+          hydrateMetaReportScenarioSettings(metaPayload);
+        }
         if (!googleAdsReportsState.clientPageMounted) {
           googleAdsReportsState.clientPayload = payload;
-          metaReportsState.clientPayload = uiPayload;
-          metaReportsState.clientShareExpanded = false;
-          metaReportsState.clientReportSettingsExpanded = false;
-          metaReportsState.clientExcelSheetExpanded = false;
-          metaReportsState.reportViewMode = 'monthly';
-          metaReportsState.comparisonYearCache = {};
+          if (!viewingMeta) {
+            metaReportsState.clientPayload = uiPayload;
+            metaReportsState.clientShareExpanded = false;
+            metaReportsState.clientReportSettingsExpanded = false;
+            metaReportsState.clientExcelSheetExpanded = false;
+            metaReportsState.reportViewMode = 'monthly';
+            metaReportsState.comparisonYearCache = {};
+          }
           dashboard.innerHTML = renderGoogleAdsClientPage(payload);
           googleAdsReportsState.clientPageMounted = true;
-          bindGoogleAdsReportsClientEvents(payload);
+          bindLinkedAdminEditorEvents();
           requestAnimationFrame(() => {
-            mountMetaReportCharts(uiPayload, { editable: true, clientId });
+            mountMetaReportCharts(activePayload, {
+              editable: true,
+              clientId: viewingMeta ? metaPayload.clientId : clientId,
+            });
           });
+        } else if (viewingMeta) {
+          const page = document.querySelector('.meta-report-client-page');
+          if (page) page.innerHTML = renderLinkedAdminEditorInner();
+          bindLinkedAdminEditorEvents();
         } else {
           updateGoogleAdsReportsClientContent(payload);
+          bindLinkedReportChrome();
         }
       } catch (error) {
         if (!googleAdsReportsState.clientPageMounted) {
@@ -17724,35 +18339,37 @@
       }
 
       try {
-        const payload = await fetch(`/api/meta-reports/public/${encodeURIComponent(REPORT_TOKEN)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`)
+        const raw = await fetch(`/api/meta-reports/public/${encodeURIComponent(REPORT_TOKEN)}?year=${encodeURIComponent(metaReportsState.selectedYear)}`)
           .then(async (response) => {
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Report not found');
             return data;
           });
+        const payload = captureDualPublicPayload(raw);
         syncMetaReportSelectedYear(payload, { disableUnavailable: true });
         if (Number(metaReportsState.selectedYear) !== Number(payload.year)) {
           // Previous year has no data — reload the available year instead.
           return loadPublicMetaReportPage({ silent: true });
         }
-        if (!metaReportsState.activeMonthKey) {
+        if (!metaReportsState.activeMonthKey || !(payload.monthKeys || []).includes(metaReportsState.activeMonthKey)) {
           metaReportsState.activeMonthKey = payload.monthKeys?.[payload.monthKeys.length - 1] || null;
         }
-        await ensureMetaReportScenarioSource(payload, { editable: false });
         const chartPayload = payload.reportKind === 'google-ads'
           ? googleAdsPayloadToMetaUiShape(payload)
           : payload;
+        await ensureMetaReportScenarioSource(chartPayload, { editable: false });
         if (!metaReportsState.publicPageMounted) {
           metaReportsState.publicPayload = payload;
           hydrateMetaReportSpendChartType(chartPayload);
           hydrateMetaReportScenarioSettings(chartPayload);
           dashboard.innerHTML = renderPublicMetaReportPage(payload);
           metaReportsState.publicPageMounted = true;
-          syncMetaReportPublicBranding(payload);
+          syncMetaReportPublicBranding(chartPayload);
           bindPublicMetaReportEvents(payload);
           mountMetaReportCharts(chartPayload, { editable: false });
         } else {
           updatePublicMetaReportContent(payload);
+          bindLinkedReportChrome({ publicView: true });
         }
       } catch (error) {
         if (!metaReportsState.publicPageMounted) {

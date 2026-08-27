@@ -231,6 +231,10 @@ CREATE TABLE IF NOT EXISTS google_ads_report_clients (
 CREATE UNIQUE INDEX IF NOT EXISTS google_ads_report_clients_customer_idx
   ON google_ads_report_clients (google_customer_id);
 
+CREATE UNIQUE INDEX IF NOT EXISTS google_ads_report_clients_linked_meta_idx
+  ON google_ads_report_clients (linked_meta_client_id)
+  WHERE linked_meta_client_id IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS google_ads_report_months (
   id BIGSERIAL PRIMARY KEY,
   client_id TEXT NOT NULL REFERENCES google_ads_report_clients (id) ON DELETE CASCADE,
