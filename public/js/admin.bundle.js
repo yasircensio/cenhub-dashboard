@@ -886,13 +886,15 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(n?setFbL
       <div class="meta-hub-card-head">
         <span class="meta-hub-avatar" aria-hidden="true">${metaHubClientInitial(e.accountName)}</span>
         <div class="meta-hub-card-title">
-          ${s}
+          <div class="meta-hub-card-name-row">
+            ${s}
+            ${e.linkedGoogleAccountName?`<span class="meta-report-badge meta-report-badge--linked" title="${esc(e.linkedGoogleAccountName)}">Linked \xB7 ${esc(e.linkedGoogleAccountName)}</span>`:""}
+          </div>
           <div class="meta-hub-card-slug">act_${esc(e.metaAdAccountId||"\u2014")}</div>
         </div>
       </div>
       <div class="meta-hub-card-meta">
         ${o}
-        ${e.linkedGoogleAccountName?`<span class="meta-report-badge meta-report-badge--linked">Linked \xB7 ${esc(e.linkedGoogleAccountName)}</span>`:""}
         <span class="meta-hub-card-meta-dot" aria-hidden="true">\xB7</span>
         <span>${esc(r)}</span>
       </div>
@@ -1631,18 +1633,20 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(n?setFbL
       class="meta-hub-filter${e===t.value?" is-active":""}"
       data-google-ads-filter="${esc(t.value)}"
     >${esc(t.label)}</button>
-  `).join("")}function renderGoogleAdsHubCard(e){const t=!!e.clientId,n=e.clientId||e.googleCustomerId||"",a=e.needsSetup?'<span class="meta-report-badge meta-report-badge--setup">Needs setup</span>':e.googleAdsReportEnabled?'<span class="meta-report-badge meta-report-badge--on">Report live</span>':'<span class="meta-report-badge meta-report-badge--off">Report off</span>',o=t?`<a href="/admin/google-ads/${encodeURIComponent(e.clientId)}" class="meta-hub-card-name">${esc(e.accountName)}</a>`:`<span class="meta-hub-card-name">${esc(e.accountName)}</span>`,r=[];e.needsSetup?r.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(e.googleCustomerId)}" data-google-ads-name="${esc(e.accountName)}">Enable</button>`):t&&(r.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(e.clientId)}">Edit report</a>`),e.reportUrl&&e.googleAdsReportEnabled&&r.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(e.reportUrl)}">Copy link</button>`));const s=e.needsSetup?"meta-hub-card-actions meta-hub-card-actions--quiet":`meta-hub-card-actions${r.length===1?" meta-hub-card-actions--single":""}`;return`
+  `).join("")}function renderGoogleAdsHubCard(e){const t=!!e.clientId,n=e.clientId||e.googleCustomerId||"",a=e.needsSetup?'<span class="meta-report-badge meta-report-badge--setup">Needs setup</span>':e.googleAdsReportEnabled?'<span class="meta-report-badge meta-report-badge--on">Report live</span>':'<span class="meta-report-badge meta-report-badge--off">Report off</span>',o=t?`<a href="/admin/google-ads/${encodeURIComponent(e.clientId)}" class="meta-hub-card-name">${esc(e.accountName)}</a>`:`<span class="meta-hub-card-name">${esc(e.accountName)}</span>`,r=[];e.needsSetup?r.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(e.googleCustomerId)}" data-google-ads-name="${esc(e.accountName)}">Enable</button>`):t&&(r.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(e.clientId)}">Edit report</a>`),e.reportUrl&&e.googleAdsReportEnabled&&r.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(e.reportUrl)}">Copy link</button>`));const s=`meta-hub-card-actions${!e.needsSetup&&r.length===1?" meta-hub-card-actions--single":""}`;return`
     <article class="meta-hub-card ${e.needsSetup?"is-setup":""}" data-google-ads-row="${esc(n)}">
       <div class="meta-hub-card-head">
         <span class="meta-hub-avatar" aria-hidden="true">${metaHubClientInitial(e.accountName)}</span>
         <div class="meta-hub-card-title">
-          ${o}
+          <div class="meta-hub-card-name-row">
+            ${o}
+            ${e.linkedMetaAccountName?`<span class="meta-report-badge meta-report-badge--linked" title="${esc(e.linkedMetaAccountName)}">Linked \xB7 ${esc(e.linkedMetaAccountName)}</span>`:""}
+          </div>
           <div class="meta-hub-card-slug">${esc(e.googleCustomerLabel||e.googleCustomerId||"\u2014")}</div>
         </div>
       </div>
       <div class="meta-hub-card-meta">
         ${a}
-        ${e.linkedMetaAccountName?`<span class="meta-report-badge meta-report-badge--linked">Linked \xB7 ${esc(e.linkedMetaAccountName)}</span>`:""}
         <span class="meta-hub-card-meta-dot" aria-hidden="true">\xB7</span>
         <span>Google Ads</span>
       </div>

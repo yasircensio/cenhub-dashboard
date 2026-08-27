@@ -4578,20 +4578,27 @@
       letter-spacing: 0.02em; width: 40px;
     }
     .meta-hub-card-title { flex: 1; min-width: 0; }
+    .meta-hub-card-name-row {
+      align-items: center; display: flex; flex-wrap: wrap; gap: 8px;
+    }
     .meta-hub-card-name {
       color: var(--text); display: block; font-family: 'Poppins', sans-serif; font-size: 18px;
       font-weight: 600; line-height: 1.25; text-decoration: none;
     }
+    .meta-hub-card-name-row .meta-hub-card-name { min-width: 0; }
     a.meta-hub-card-name:hover { color: var(--primary); }
     .meta-hub-card-slug {
       color: var(--text-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px; margin-top: 4px;
     }
     .meta-hub-card-meta {
-      align-items: center; color: var(--text-muted); display: flex; flex-wrap: wrap; font-size: 12.5px;
-      gap: 8px; line-height: 1.45;
+      align-items: center; color: var(--text-muted); display: flex; flex-wrap: nowrap; font-size: 12.5px;
+      gap: 8px; line-height: 1.45; min-width: 0;
     }
     .meta-hub-card-meta-dot { color: var(--border); user-select: none; }
+    .meta-hub-card-name-row .meta-report-badge--linked {
+      max-width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .meta-hub-card-toggles {
       background: var(--panel-soft); border: 1px solid var(--border); border-radius: 10px;
       display: grid; gap: 4px; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 10px 8px;
@@ -4627,15 +4634,6 @@
     }
     .meta-hub-card-actions .admin-btn { justify-content: center; text-align: center; width: 100%; }
     .meta-hub-card-actions--single { grid-template-columns: 1fr; }
-    .meta-hub-card-actions--quiet {
-      display: flex;
-      justify-content: flex-start;
-      margin-top: 2px;
-    }
-    .meta-hub-card-actions--quiet .admin-btn {
-      padding: 8px 14px;
-      width: auto;
-    }
     .meta-hub-card .client-card-actions {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       margin-top: 4px;
