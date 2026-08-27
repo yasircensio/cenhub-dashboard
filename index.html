@@ -4505,6 +4505,99 @@
       display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
 
+    .google-ads-hub-table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: auto;
+    }
+    .google-ads-hub-table {
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 760px;
+      width: 100%;
+    }
+    .google-ads-hub-table th,
+    .google-ads-hub-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    .google-ads-hub-table th:first-child,
+    .google-ads-hub-table td:first-child { padding-left: 16px; }
+    .google-ads-hub-table th:last-child,
+    .google-ads-hub-table td:last-child { padding-right: 16px; }
+    .google-ads-hub-table th {
+      background: var(--panel-soft);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .google-ads-hub-table tbody tr:last-child td { border-bottom: none; }
+    .google-ads-hub-table tbody tr:hover td { background: var(--panel-soft); }
+    .google-ads-hub-table-account {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      min-width: 0;
+    }
+    .google-ads-hub-table-avatar {
+      align-items: center;
+      background: var(--hero-gradient);
+      border-radius: 8px;
+      color: #fff;
+      display: flex;
+      flex-shrink: 0;
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      height: 32px;
+      justify-content: center;
+      width: 32px;
+    }
+    .google-ads-hub-table-name {
+      color: var(--text);
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+      text-decoration: none;
+    }
+    a.google-ads-hub-table-name:hover { color: var(--primary); }
+    .google-ads-hub-table-id {
+      color: var(--text-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .google-ads-hub-table-linked {
+      color: #1d4ed8;
+      font-weight: 600;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .google-ads-hub-table-muted { color: var(--text-soft); }
+    .google-ads-hub-table-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .google-ads-hub-table-actions .admin-btn {
+      font-size: 12px;
+      padding: 7px 11px;
+      width: auto;
+    }
+    .google-ads-hub-table th:last-child,
+    .google-ads-hub-table td:last-child { text-align: right; }
+
     .meta-hub-card {
       background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
       box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 12px;
@@ -18160,17 +18253,21 @@
       `).join('');
     }
 
-    function renderGoogleAdsHubCard(client) {
+    function renderGoogleAdsHubRow(client) {
       const canEdit = Boolean(client.clientId);
       const rowKey = client.clientId || client.googleCustomerId || '';
+      const customerId = client.googleCustomerLabel || client.googleCustomerId || '—';
       const statusBadge = client.needsSetup
         ? '<span class="meta-report-badge meta-report-badge--setup">Needs setup</span>'
         : (client.googleAdsReportEnabled
           ? '<span class="meta-report-badge meta-report-badge--on">Report live</span>'
           : '<span class="meta-report-badge meta-report-badge--off">Report off</span>');
       const nameMarkup = canEdit
-        ? `<a href="/admin/google-ads/${encodeURIComponent(client.clientId)}" class="meta-hub-card-name">${esc(client.accountName)}</a>`
-        : `<span class="meta-hub-card-name">${esc(client.accountName)}</span>`;
+        ? `<a href="/admin/google-ads/${encodeURIComponent(client.clientId)}" class="google-ads-hub-table-name">${esc(client.accountName)}</a>`
+        : `<span class="google-ads-hub-table-name">${esc(client.accountName)}</span>`;
+      const linkedMarkup = client.linkedMetaAccountName
+        ? `<span class="google-ads-hub-table-linked" title="${esc(client.linkedMetaAccountName)}">${esc(client.linkedMetaAccountName)}</span>`
+        : '<span class="google-ads-hub-table-muted">—</span>';
       const actionButtons = [];
       if (client.needsSetup) {
         actionButtons.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(client.googleCustomerId)}" data-google-ads-name="${esc(client.accountName)}">Enable</button>`);
@@ -18181,24 +18278,44 @@
         }
       }
       return `
-        <article class="meta-hub-card ${client.needsSetup ? 'is-setup' : ''}" data-google-ads-row="${esc(rowKey)}">
-          <div class="meta-hub-card-head">
-            <span class="meta-hub-avatar" aria-hidden="true">${metaHubClientInitial(client.accountName)}</span>
-            <div class="meta-hub-card-title">
+        <tr data-google-ads-row="${esc(rowKey)}">
+          <td>
+            <div class="google-ads-hub-table-account">
+              <span class="google-ads-hub-table-avatar" aria-hidden="true">${metaHubClientInitial(client.accountName)}</span>
               ${nameMarkup}
-              <div class="meta-hub-card-slug">${esc(client.googleCustomerLabel || client.googleCustomerId || '—')}</div>
             </div>
-          </div>
-          <div class="meta-hub-card-meta">
-            ${statusBadge}
-            ${client.linkedMetaAccountName ? `<span class="meta-report-badge meta-report-badge--linked">Linked · ${esc(client.linkedMetaAccountName)}</span>` : ''}
-            <span class="meta-hub-card-meta-dot" aria-hidden="true">·</span>
-            <span>Google Ads</span>
-          </div>
-          <div class="meta-hub-card-actions${actionButtons.length === 1 ? ' meta-hub-card-actions--single' : ''}">
-            ${actionButtons.join('')}
-          </div>
-        </article>
+          </td>
+          <td class="google-ads-hub-table-id">${esc(customerId)}</td>
+          <td>${statusBadge}</td>
+          <td>${linkedMarkup}</td>
+          <td>
+            <div class="google-ads-hub-table-actions">${actionButtons.join('')}</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    function renderGoogleAdsHubList(clients) {
+      if (!clients.length) {
+        return '<div class="sync-history-empty" style="padding:24px">No Google Ads accounts found.</div>';
+      }
+      return `
+        <div class="google-ads-hub-table-wrap">
+          <table class="google-ads-hub-table">
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th>Customer ID</th>
+                <th>Status</th>
+                <th>Linked Meta</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${clients.map(renderGoogleAdsHubRow).join('')}
+            </tbody>
+          </table>
+        </div>
       `;
     }
 
@@ -18237,8 +18354,8 @@
                 <button class="admin-btn admin-btn--secondary" type="button" id="google-ads-refresh">${ICON_SYNC} Refresh</button>
               </div>
             </div>
-            <div class="meta-hub-cards" id="google-ads-cards">
-              ${clients.length ? clients.map(renderGoogleAdsHubCard).join('') : '<div class="sync-history-empty" style="padding:24px">No Google Ads accounts found.</div>'}
+            <div id="google-ads-list">
+              ${renderGoogleAdsHubList(clients)}
             </div>
           </div>
         </div>
@@ -18248,7 +18365,7 @@
 
     function updateGoogleAdsHubDom(viewData) {
       const banner = document.getElementById('google-ads-banner');
-      const cards = document.getElementById('google-ads-cards');
+      const list = document.getElementById('google-ads-list');
       const count = document.getElementById('google-ads-count');
       const googleInfo = viewData.google || {};
       if (banner) {
@@ -18260,13 +18377,9 @@
         const n = (viewData.clients || []).length;
         count.textContent = `${n} account${n === 1 ? '' : 's'}`;
       }
-      if (cards) {
-        cards.innerHTML = (viewData.clients || []).length
-          ? viewData.clients.map(renderGoogleAdsHubCard).join('')
-          : '<div class="sync-history-empty" style="padding:24px">No Google Ads accounts found.</div>';
-      }
+      if (list) list.innerHTML = renderGoogleAdsHubList(viewData.clients || []);
       bindGoogleAdsHubRowEvents();
-      bindMetaReportCopyButtons(document.getElementById('google-ads-cards'));
+      bindMetaReportCopyButtons(document.getElementById('google-ads-list'));
     }
 
     function bindGoogleAdsHubRowEvents() {
@@ -18323,6 +18436,7 @@
       const refreshBtn = document.getElementById('google-ads-refresh');
       if (refreshBtn) refreshBtn.onclick = () => loadGoogleAdsHubPage();
       bindGoogleAdsHubRowEvents();
+      bindMetaReportCopyButtons(document.getElementById('google-ads-list'));
     }
 
     async function loadGoogleAdsHubPage() {
