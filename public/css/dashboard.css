@@ -4605,7 +4605,7 @@
       padding: 14px 16px;
     }
     .linked-report-picker-current {
-      align-items: center; background: var(--status-ok-bg); border: 1px solid #a7f3d0; border-radius: 10px;
+      align-items: center; background: #eef6ff; border: 1px solid #bfdbfe; border-radius: 10px;
       display: flex; flex-wrap: wrap; gap: 10px 12px; justify-content: space-between; padding: 10px 12px;
     }
     .linked-report-picker-current-copy {
@@ -4643,7 +4643,7 @@
       background: var(--surface-hover); border-color: var(--border-strong);
     }
     .linked-report-picker-item.is-linked {
-      background: var(--status-ok-bg); border-color: #a7f3d0; cursor: default;
+      background: #eef6ff; border-color: #bfdbfe; cursor: default;
     }
     .linked-report-picker-item:disabled { cursor: wait; opacity: 0.65; }
     .linked-report-picker-avatar {
@@ -4652,7 +4652,7 @@
       font-weight: 600; height: 36px; justify-content: center; width: 36px;
     }
     .linked-report-picker-item.is-linked .linked-report-picker-avatar {
-      background: #047857;
+      background: #1d4ed8;
     }
     .linked-report-picker-item-copy {
       display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0;
@@ -4665,7 +4665,7 @@
       font-size: 12px;
     }
     .linked-report-picker-badge {
-      background: #d1fae5; border-radius: 999px; color: #047857; flex-shrink: 0;
+      background: #dbeafe; border-radius: 999px; color: #1d4ed8; flex-shrink: 0;
       font-size: 11px; font-weight: 700; letter-spacing: 0.02em; line-height: 1; padding: 5px 8px;
       text-transform: uppercase;
     }
