@@ -4583,6 +4583,9 @@
     .meta-hub-card.is-setup {
       border-color: rgba(234, 88, 12, 0.35); box-shadow: var(--shadow-sm), 0 0 0 1px rgba(234, 88, 12, 0.1);
     }
+    .meta-hub-card.is-just-enabled {
+      box-shadow: var(--shadow-lg), 0 0 0 2px rgba(255, 106, 0, 0.45);
+    }
     .meta-hub-card-head { align-items: flex-start; display: flex; gap: 12px; }
     .meta-hub-avatar {
       align-items: center; background: var(--hero-gradient); border-radius: 10px;
@@ -18546,6 +18549,28 @@
       bindMetaReportCopyButtons(document.getElementById('google-ads-cards'));
     }
 
+    function syncGoogleAdsHubFilterButtons() {
+      document.querySelectorAll('[data-google-ads-filter]').forEach((el) => {
+        el.classList.toggle('is-active', el.getAttribute('data-google-ads-filter') === googleAdsReportsState.filter);
+      });
+    }
+
+    function focusGoogleAdsHubCard(clientId) {
+      if (!clientId) return;
+      const card = document.querySelector(`[data-google-ads-row="${CSS.escape(clientId)}"]`);
+      if (!card) return;
+      card.classList.add('is-just-enabled');
+      card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      window.setTimeout(() => card.classList.remove('is-just-enabled'), 2200);
+    }
+
+    async function revealGoogleAdsHubAccount(clientId, { filter } = {}) {
+      if (filter) googleAdsReportsState.filter = filter;
+      await loadGoogleAdsHubPage();
+      syncGoogleAdsHubFilterButtons();
+      focusGoogleAdsHubCard(clientId);
+    }
+
     function bindGoogleAdsHubRowEvents() {
       document.querySelectorAll('[data-google-ads-enable]').forEach((input) => {
         input.onchange = async () => {
@@ -18566,11 +18591,10 @@
               body: JSON.stringify({ googleCustomerId, accountName }),
             });
             showToast(`Enabled ${accountName}`, 'success');
-            await loadGoogleAdsHubPage();
-            if (result?.clientId) {
-              const nextCard = document.querySelector(`[data-google-ads-row="${CSS.escape(result.clientId)}"]`);
-              nextCard?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            }
+            const nextFilter = (googleAdsReportsState.filter === 'not-enabled' || googleAdsReportsState.filter === 'needs-setup')
+              ? 'enabled'
+              : googleAdsReportsState.filter;
+            await revealGoogleAdsHubAccount(result?.clientId, { filter: nextFilter });
           } catch (error) {
             showToast(error.message || 'Enable failed', 'error');
             input.checked = false;
@@ -18594,7 +18618,10 @@
             if (seq !== saveSeq) return;
             const on = Boolean(result.settings?.googleAdsReportEnabled ?? enabled);
             showToast(on ? 'Report enabled' : 'Report disabled', 'success');
-            await loadGoogleAdsHubPage();
+            const nextFilter = on
+              ? ((googleAdsReportsState.filter === 'not-enabled' || googleAdsReportsState.filter === 'needs-setup') ? 'enabled' : googleAdsReportsState.filter)
+              : (googleAdsReportsState.filter === 'enabled' ? 'not-enabled' : googleAdsReportsState.filter);
+            await revealGoogleAdsHubAccount(clientId, { filter: nextFilter });
           } catch (error) {
             if (seq !== saveSeq) return;
             input.checked = previous;
@@ -18617,7 +18644,8 @@
           try {
             await patchGoogleAdsReportSettings(clientId, { metaReportEnabled: false }, { fast: true });
             showToast('Report disabled', 'success');
-            await loadGoogleAdsHubPage();
+            const nextFilter = googleAdsReportsState.filter === 'enabled' ? 'not-enabled' : googleAdsReportsState.filter;
+            await revealGoogleAdsHubAccount(clientId, { filter: nextFilter });
           } catch (error) {
             showToast(error.message || 'Update failed', 'error');
             button.disabled = false;

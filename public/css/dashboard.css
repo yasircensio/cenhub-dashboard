@@ -4574,6 +4574,9 @@
     .meta-hub-card.is-setup {
       border-color: rgba(234, 88, 12, 0.35); box-shadow: var(--shadow-sm), 0 0 0 1px rgba(234, 88, 12, 0.1);
     }
+    .meta-hub-card.is-just-enabled {
+      box-shadow: var(--shadow-lg), 0 0 0 2px rgba(255, 106, 0, 0.45);
+    }
     .meta-hub-card-head { align-items: flex-start; display: flex; gap: 12px; }
     .meta-hub-avatar {
       align-items: center; background: var(--hero-gradient); border-radius: 10px;
