@@ -4628,6 +4628,22 @@
     .meta-hub-switch-input:checked + .meta-hub-switch-thumb { transform: translateX(16px); }
     .meta-hub-switch-track:has(.meta-hub-switch-input:checked) { background: var(--primary); }
     .meta-hub-switch-track:has(.meta-hub-switch-input:disabled) { opacity: 0.5; }
+    .meta-hub-switch--inline {
+      align-items: center;
+      flex-direction: row;
+      gap: 8px;
+      justify-content: flex-end;
+      min-height: 0;
+      padding: 0;
+    }
+    .meta-hub-switch--inline .meta-hub-switch-label {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .meta-hub-card-head .meta-hub-switch--inline {
+      flex-shrink: 0;
+      margin-left: auto;
+    }
 
     .meta-hub-card-actions {
       display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 4px;

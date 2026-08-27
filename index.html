@@ -4637,6 +4637,22 @@
     .meta-hub-switch-input:checked + .meta-hub-switch-thumb { transform: translateX(16px); }
     .meta-hub-switch-track:has(.meta-hub-switch-input:checked) { background: var(--primary); }
     .meta-hub-switch-track:has(.meta-hub-switch-input:disabled) { opacity: 0.5; }
+    .meta-hub-switch--inline {
+      align-items: center;
+      flex-direction: row;
+      gap: 8px;
+      justify-content: flex-end;
+      min-height: 0;
+      padding: 0;
+    }
+    .meta-hub-switch--inline .meta-hub-switch-label {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .meta-hub-card-head .meta-hub-switch--inline {
+      flex-shrink: 0;
+      margin-left: auto;
+    }
 
     .meta-hub-card-actions {
       display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 4px;
@@ -10047,10 +10063,11 @@
       };
     }
 
-    function renderMetaHubSwitch({ label, attr, value, checked, disabled = false }) {
-      if (!value) return `<div class="meta-hub-switch is-disabled"><span class="meta-hub-switch-label">${esc(label)}</span><span class="meta-report-muted">—</span></div>`;
+    function renderMetaHubSwitch({ label, attr, value, checked, disabled = false, inline = false }) {
+      const inlineClass = inline ? ' meta-hub-switch--inline' : '';
+      if (!value) return `<div class="meta-hub-switch is-disabled${inlineClass}"><span class="meta-hub-switch-label">${esc(label)}</span><span class="meta-report-muted">—</span></div>`;
       return `
-        <label class="meta-hub-switch${disabled ? ' is-disabled' : ''}">
+        <label class="meta-hub-switch${disabled ? ' is-disabled' : ''}${inlineClass}">
           <span class="meta-hub-switch-label">${esc(label)}</span>
           <span class="meta-hub-switch-track">
             <input type="checkbox" class="meta-hub-switch-input" ${attr}="${esc(value)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} aria-label="${esc(label)}" />
@@ -18378,18 +18395,23 @@
       const nameMarkup = canEdit
         ? `<a href="/admin/google-ads/${encodeURIComponent(client.clientId)}" class="meta-hub-card-name">${esc(client.accountName)}</a>`
         : `<span class="meta-hub-card-name">${esc(client.accountName)}</span>`;
+      const enableSwitch = renderMetaHubSwitch({
+        label: client.needsSetup ? 'Enable' : 'Report',
+        attr: client.needsSetup ? 'data-google-ads-enable' : 'data-google-ads-report-enabled',
+        value: client.needsSetup ? client.googleCustomerId : client.clientId,
+        checked: Boolean(client.googleAdsReportEnabled),
+        inline: true,
+      });
       const actionButtons = [];
-      if (client.needsSetup) {
-        actionButtons.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(client.googleCustomerId)}" data-google-ads-name="${esc(client.accountName)}">Enable</button>`);
-      } else if (canEdit) {
+      if (canEdit) {
         actionButtons.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(client.clientId)}">Edit report</a>`);
         if (client.reportUrl && client.googleAdsReportEnabled) {
           actionButtons.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`);
         }
       }
-      const actionsClass = `meta-hub-card-actions${(!client.needsSetup && actionButtons.length === 1) ? ' meta-hub-card-actions--single' : ''}`;
+      const actionsClass = `meta-hub-card-actions${actionButtons.length === 1 ? ' meta-hub-card-actions--single' : ''}`;
       return `
-        <article class="meta-hub-card ${client.needsSetup ? 'is-setup' : ''}" data-google-ads-row="${esc(rowKey)}">
+        <article class="meta-hub-card ${client.needsSetup ? 'is-setup' : ''}" data-google-ads-row="${esc(rowKey)}" data-google-ads-name="${esc(client.accountName)}">
           <div class="meta-hub-card-head">
             <span class="meta-hub-avatar" aria-hidden="true">${metaHubClientInitial(client.accountName)}</span>
             <div class="meta-hub-card-title">
@@ -18399,15 +18421,14 @@
               </div>
               <div class="meta-hub-card-slug">${esc(client.googleCustomerLabel || client.googleCustomerId || '—')}</div>
             </div>
+            ${enableSwitch}
           </div>
           <div class="meta-hub-card-meta">
             ${statusBadge}
             <span class="meta-hub-card-meta-dot" aria-hidden="true">·</span>
             <span>Google Ads</span>
           </div>
-          <div class="${actionsClass}">
-            ${actionButtons.join('')}
-          </div>
+          ${actionButtons.length ? `<div class="${actionsClass}">${actionButtons.join('')}</div>` : ''}
         </article>
       `;
     }
@@ -18480,11 +18501,18 @@
     }
 
     function bindGoogleAdsHubRowEvents() {
-      document.querySelectorAll('[data-google-ads-enable]').forEach((button) => {
-        button.onclick = async () => {
-          const googleCustomerId = button.getAttribute('data-google-ads-enable');
-          const accountName = button.getAttribute('data-google-ads-name') || googleCustomerId;
-          button.disabled = true;
+      document.querySelectorAll('[data-google-ads-enable]').forEach((input) => {
+        input.onchange = async () => {
+          if (!input.checked) {
+            input.checked = false;
+            return;
+          }
+          const card = input.closest('[data-google-ads-row]');
+          const googleCustomerId = input.getAttribute('data-google-ads-enable');
+          const accountName = card?.getAttribute('data-google-ads-name') || googleCustomerId;
+          const switchEl = input.closest('.meta-hub-switch');
+          input.disabled = true;
+          switchEl?.classList.add('is-saving');
           try {
             const result = await adminFetch('/api/google-ads-reports/provision', {
               method: 'POST',
@@ -18492,14 +18520,41 @@
               body: JSON.stringify({ googleCustomerId, accountName }),
             });
             showToast(`Enabled ${accountName}`, 'success');
-            if (result?.clientId) {
-              window.location.href = `/admin/google-ads/${encodeURIComponent(result.clientId)}`;
-              return;
-            }
             await loadGoogleAdsHubPage();
+            if (result?.clientId) {
+              const nextCard = document.querySelector(`[data-google-ads-row="${CSS.escape(result.clientId)}"]`);
+              nextCard?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
           } catch (error) {
             showToast(error.message || 'Enable failed', 'error');
-            button.disabled = false;
+            input.checked = false;
+            input.disabled = false;
+            switchEl?.classList.remove('is-saving');
+          }
+        };
+      });
+
+      document.querySelectorAll('[data-google-ads-report-enabled]').forEach((input) => {
+        let saveSeq = 0;
+        input.onchange = async () => {
+          const clientId = input.getAttribute('data-google-ads-report-enabled');
+          const seq = ++saveSeq;
+          const enabled = input.checked;
+          const previous = !enabled;
+          const switchEl = input.closest('.meta-hub-switch');
+          switchEl?.classList.add('is-saving');
+          try {
+            const result = await patchGoogleAdsReportSettings(clientId, { metaReportEnabled: enabled }, { fast: true });
+            if (seq !== saveSeq) return;
+            const on = Boolean(result.settings?.googleAdsReportEnabled ?? enabled);
+            showToast(on ? 'Report enabled' : 'Report disabled', 'success');
+            await loadGoogleAdsHubPage();
+          } catch (error) {
+            if (seq !== saveSeq) return;
+            input.checked = previous;
+            showToast(error.message || 'Update failed', 'error');
+          } finally {
+            if (seq === saveSeq) switchEl?.classList.remove('is-saving');
           }
         };
       });
