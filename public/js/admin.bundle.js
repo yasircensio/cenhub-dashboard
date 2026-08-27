@@ -1612,39 +1612,26 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(n?setFbL
       class="meta-hub-filter${e===t.value?" is-active":""}"
       data-google-ads-filter="${esc(t.value)}"
     >${esc(t.label)}</button>
-  `).join("")}function renderGoogleAdsHubRow(e){const t=!!e.clientId,n=e.clientId||e.googleCustomerId||"",a=e.googleCustomerLabel||e.googleCustomerId||"\u2014",o=e.needsSetup?'<span class="meta-report-badge meta-report-badge--setup">Needs setup</span>':e.googleAdsReportEnabled?'<span class="meta-report-badge meta-report-badge--on">Report live</span>':'<span class="meta-report-badge meta-report-badge--off">Report off</span>',r=t?`<a href="/admin/google-ads/${encodeURIComponent(e.clientId)}" class="google-ads-hub-table-name">${esc(e.accountName)}</a>`:`<span class="google-ads-hub-table-name">${esc(e.accountName)}</span>`,s=e.linkedMetaAccountName?`<span class="google-ads-hub-table-linked" title="${esc(e.linkedMetaAccountName)}">${esc(e.linkedMetaAccountName)}</span>`:'<span class="google-ads-hub-table-muted">\u2014</span>',i=[];return e.needsSetup?i.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(e.googleCustomerId)}" data-google-ads-name="${esc(e.accountName)}">Enable</button>`):t&&(i.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(e.clientId)}">Edit report</a>`),e.reportUrl&&e.googleAdsReportEnabled&&i.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(e.reportUrl)}">Copy link</button>`)),`
-    <tr data-google-ads-row="${esc(n)}">
-      <td>
-        <div class="google-ads-hub-table-account">
-          <span class="google-ads-hub-table-avatar" aria-hidden="true">${metaHubClientInitial(e.accountName)}</span>
-          ${r}
+  `).join("")}function renderGoogleAdsHubCard(e){const t=!!e.clientId,n=e.clientId||e.googleCustomerId||"",a=e.needsSetup?'<span class="meta-report-badge meta-report-badge--setup">Needs setup</span>':e.googleAdsReportEnabled?'<span class="meta-report-badge meta-report-badge--on">Report live</span>':'<span class="meta-report-badge meta-report-badge--off">Report off</span>',o=t?`<a href="/admin/google-ads/${encodeURIComponent(e.clientId)}" class="meta-hub-card-name">${esc(e.accountName)}</a>`:`<span class="meta-hub-card-name">${esc(e.accountName)}</span>`,r=[];return e.needsSetup?r.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(e.googleCustomerId)}" data-google-ads-name="${esc(e.accountName)}">Enable</button>`):t&&(r.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(e.clientId)}">Edit report</a>`),e.reportUrl&&e.googleAdsReportEnabled&&r.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(e.reportUrl)}">Copy link</button>`)),`
+    <article class="meta-hub-card ${e.needsSetup?"is-setup":""}" data-google-ads-row="${esc(n)}">
+      <div class="meta-hub-card-head">
+        <span class="meta-hub-avatar" aria-hidden="true">${metaHubClientInitial(e.accountName)}</span>
+        <div class="meta-hub-card-title">
+          ${o}
+          <div class="meta-hub-card-slug">${esc(e.googleCustomerLabel||e.googleCustomerId||"\u2014")}</div>
         </div>
-      </td>
-      <td class="google-ads-hub-table-id">${esc(a)}</td>
-      <td>${o}</td>
-      <td>${s}</td>
-      <td>
-        <div class="google-ads-hub-table-actions">${i.join("")}</div>
-      </td>
-    </tr>
-  `}function renderGoogleAdsHubList(e){return e.length?`
-    <div class="google-ads-hub-table-wrap">
-      <table class="google-ads-hub-table">
-        <thead>
-          <tr>
-            <th>Account</th>
-            <th>Customer ID</th>
-            <th>Status</th>
-            <th>Linked Meta</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${e.map(renderGoogleAdsHubRow).join("")}
-        </tbody>
-      </table>
-    </div>
-  `:'<div class="sync-history-empty" style="padding:24px">No Google Ads accounts found.</div>'}function renderGoogleAdsHubPage(e){const t=e.clients||[],n=e.google||{},a=n.partnerFetchError?`<div class="admin-banner admin-banner--warn">${esc(n.partnerFetchError)}</div>`:"";return`
+      </div>
+      <div class="meta-hub-card-meta">
+        ${a}
+        ${e.linkedMetaAccountName?`<span class="meta-report-badge meta-report-badge--linked">Linked \xB7 ${esc(e.linkedMetaAccountName)}</span>`:""}
+        <span class="meta-hub-card-meta-dot" aria-hidden="true">\xB7</span>
+        <span>Google Ads</span>
+      </div>
+      <div class="meta-hub-card-actions${r.length===1?" meta-hub-card-actions--single":""}">
+        ${r.join("")}
+      </div>
+    </article>
+  `}function renderGoogleAdsHubPage(e){const t=e.clients||[],n=e.google||{},a=n.partnerFetchError?`<div class="admin-banner admin-banner--warn">${esc(n.partnerFetchError)}</div>`:"";return`
     ${renderBrandTopbar(renderStaffAdminChrome("google-ads"))}
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero meta-premium-page-hero">
@@ -1673,13 +1660,13 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(n?setFbL
             <button class="admin-btn admin-btn--secondary" type="button" id="google-ads-refresh">${ICON_SYNC} Refresh</button>
           </div>
         </div>
-        <div id="google-ads-list">
-          ${renderGoogleAdsHubList(t)}
+        <div class="meta-hub-cards" id="google-ads-cards">
+          ${t.length?t.map(renderGoogleAdsHubCard).join(""):'<div class="sync-history-empty" style="padding:24px">No Google Ads accounts found.</div>'}
         </div>
       </div>
     </div>
     `)}
-  `}function updateGoogleAdsHubDom(e){const t=document.getElementById("google-ads-banner"),n=document.getElementById("google-ads-list"),a=document.getElementById("google-ads-count"),o=e.google||{};if(t&&(t.innerHTML=o.partnerFetchError?`<div class="admin-banner admin-banner--warn">${esc(o.partnerFetchError)}</div>`:""),a){const r=(e.clients||[]).length;a.textContent=`${r} account${r===1?"":"s"}`}n&&(n.innerHTML=renderGoogleAdsHubList(e.clients||[])),bindGoogleAdsHubRowEvents(),bindMetaReportCopyButtons(document.getElementById("google-ads-list"))}function bindGoogleAdsHubRowEvents(){document.querySelectorAll("[data-google-ads-enable]").forEach(e=>{e.onclick=async()=>{const t=e.getAttribute("data-google-ads-enable"),n=e.getAttribute("data-google-ads-name")||t;e.disabled=!0;try{const a=await adminFetch("/api/google-ads-reports/provision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({googleCustomerId:t,accountName:n})});if(showToast(`Enabled ${n}`,"success"),a?.clientId){window.location.href=`/admin/google-ads/${encodeURIComponent(a.clientId)}`;return}await loadGoogleAdsHubPage()}catch(a){showToast(a.message||"Enable failed","error"),e.disabled=!1}}})}function bindGoogleAdsHubEvents(){const e=document.getElementById("google-ads-search");e&&(e.oninput=()=>{googleAdsReportsState.searchQuery=e.value,updateGoogleAdsHubDom(getGoogleAdsHubView(googleAdsReportsState.dashboardData,googleAdsReportsState.filter,googleAdsReportsState.searchQuery))}),document.querySelectorAll("[data-google-ads-filter]").forEach(n=>{n.onclick=()=>{googleAdsReportsState.filter=n.getAttribute("data-google-ads-filter")||"all",document.querySelectorAll("[data-google-ads-filter]").forEach(a=>{a.classList.toggle("is-active",a===n)}),updateGoogleAdsHubDom(getGoogleAdsHubView(googleAdsReportsState.dashboardData,googleAdsReportsState.filter,googleAdsReportsState.searchQuery))}});const t=document.getElementById("google-ads-refresh");t&&(t.onclick=()=>loadGoogleAdsHubPage()),bindGoogleAdsHubRowEvents(),bindMetaReportCopyButtons(document.getElementById("google-ads-list"))}async function loadGoogleAdsHubPage(){const e=document.getElementById("dashboard");if(!e)return;const t=await fetchStaffMe();if(!t){e.innerHTML=`
+  `}function updateGoogleAdsHubDom(e){const t=document.getElementById("google-ads-banner"),n=document.getElementById("google-ads-cards"),a=document.getElementById("google-ads-count"),o=e.google||{};if(t&&(t.innerHTML=o.partnerFetchError?`<div class="admin-banner admin-banner--warn">${esc(o.partnerFetchError)}</div>`:""),a){const r=(e.clients||[]).length;a.textContent=`${r} account${r===1?"":"s"}`}n&&(n.innerHTML=(e.clients||[]).length?e.clients.map(renderGoogleAdsHubCard).join(""):'<div class="sync-history-empty" style="padding:24px">No Google Ads accounts found.</div>'),bindGoogleAdsHubRowEvents(),bindMetaReportCopyButtons(document.getElementById("google-ads-cards"))}function bindGoogleAdsHubRowEvents(){document.querySelectorAll("[data-google-ads-enable]").forEach(e=>{e.onclick=async()=>{const t=e.getAttribute("data-google-ads-enable"),n=e.getAttribute("data-google-ads-name")||t;e.disabled=!0;try{const a=await adminFetch("/api/google-ads-reports/provision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({googleCustomerId:t,accountName:n})});if(showToast(`Enabled ${n}`,"success"),a?.clientId){window.location.href=`/admin/google-ads/${encodeURIComponent(a.clientId)}`;return}await loadGoogleAdsHubPage()}catch(a){showToast(a.message||"Enable failed","error"),e.disabled=!1}}})}function bindGoogleAdsHubEvents(){const e=document.getElementById("google-ads-search");e&&(e.oninput=()=>{googleAdsReportsState.searchQuery=e.value,updateGoogleAdsHubDom(getGoogleAdsHubView(googleAdsReportsState.dashboardData,googleAdsReportsState.filter,googleAdsReportsState.searchQuery))}),document.querySelectorAll("[data-google-ads-filter]").forEach(n=>{n.onclick=()=>{googleAdsReportsState.filter=n.getAttribute("data-google-ads-filter")||"all",document.querySelectorAll("[data-google-ads-filter]").forEach(a=>{a.classList.toggle("is-active",a===n)}),updateGoogleAdsHubDom(getGoogleAdsHubView(googleAdsReportsState.dashboardData,googleAdsReportsState.filter,googleAdsReportsState.searchQuery))}});const t=document.getElementById("google-ads-refresh");t&&(t.onclick=()=>loadGoogleAdsHubPage()),bindGoogleAdsHubRowEvents()}async function loadGoogleAdsHubPage(){const e=document.getElementById("dashboard");if(!e)return;const t=await fetchStaffMe();if(!t){e.innerHTML=`
       ${renderBrandTopbar("")}
       ${wrapDashboardShell('<div class="sync-history-empty" style="padding:24px;text-align:center"><a class="admin-btn admin-btn--primary" href="/login?next='+encodeURIComponent(window.location.pathname)+'">Sign in</a></div>')}
     `;return}currentStaffUser=t,googleAdsReportsState.hubMounted||(e.innerHTML=`
