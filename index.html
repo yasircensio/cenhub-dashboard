@@ -17379,7 +17379,7 @@
     }
 
     const googleAdsReportsState = {
-      filter: 'all',
+      filter: 'enabled',
       searchQuery: '',
       dashboardData: null,
       hubMounted: false,
@@ -18113,15 +18113,17 @@
     }
 
     const GOOGLE_ADS_HUB_FILTERS = [
-      { value: 'all', label: 'All' },
       { value: 'enabled', label: 'Live' },
-      { value: 'needs-setup', label: 'Needs setup' },
+      { value: 'not-enabled', label: 'Not enabled' },
+      { value: 'all', label: 'All' },
     ];
 
     function filterGoogleAdsClients(clients, filter, searchQuery = '') {
       let list = clients || [];
       if (filter === 'enabled') list = list.filter((client) => client.googleAdsReportEnabled);
-      if (filter === 'needs-setup') list = list.filter((client) => client.needsSetup);
+      if (filter === 'not-enabled' || filter === 'needs-setup') {
+        list = list.filter((client) => !client.googleAdsReportEnabled);
+      }
       const query = String(searchQuery || '').trim().toLowerCase();
       if (query) {
         list = list.filter((client) => {
@@ -18309,7 +18311,7 @@
       }
       document.querySelectorAll('[data-google-ads-filter]').forEach((button) => {
         button.onclick = () => {
-          googleAdsReportsState.filter = button.getAttribute('data-google-ads-filter') || 'all';
+          googleAdsReportsState.filter = button.getAttribute('data-google-ads-filter') || 'enabled';
           document.querySelectorAll('[data-google-ads-filter]').forEach((el) => {
             el.classList.toggle('is-active', el === button);
           });
