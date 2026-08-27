@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Admin</title>
   <!-- theme: warm-cream v27 -->
-  <link rel="stylesheet" href="/css/dashboard.css?v=295" />
+  <link rel="stylesheet" href="/css/dashboard.css?v=296" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
 </head>
 <body>
@@ -72,30 +72,19 @@
       var page = pages[mode];
       var shell = document.querySelector('#dashboard .dashboard-shell');
       if (!page || !shell) return;
-      var line = function (cls) { return '<span class="hub-skeleton-line ' + cls + '" aria-hidden="true"></span>'; };
-      var i;
       var cards = '';
-      for (i = 0; i < 6; i += 1) {
-        if (page.kind === 'client') {
-          cards += '<article class="client-card hub-skeleton-card" aria-hidden="true"><div class="client-card-header"><span class="hub-skeleton-avatar"></span><div class="client-card-title-block">' + line('hub-skeleton-name') + line('hub-skeleton-slug') + '</div></div>' + line('hub-skeleton-meta') + '<div class="hub-skeleton-stats">' + line('hub-skeleton-stat') + line('hub-skeleton-stat') + line('hub-skeleton-stat') + '</div><div class="client-card-actions">' + line('hub-skeleton-btn') + line('hub-skeleton-btn') + line('hub-skeleton-btn') + '</div></article>';
-        } else {
-          cards += '<article class="meta-hub-card hub-skeleton-card" aria-hidden="true"><div class="meta-hub-card-head"><span class="hub-skeleton-avatar"></span><div class="meta-hub-card-title">' + line('hub-skeleton-name') + line('hub-skeleton-slug') + '</div></div>' + line('hub-skeleton-meta') + (page.kind === 'meta' ? '<div class="meta-hub-card-toggles hub-skeleton-toggles">' + line('hub-skeleton-toggle') + line('hub-skeleton-toggle') + line('hub-skeleton-toggle') + '</div>' : '') + '<div class="meta-hub-card-actions">' + line('hub-skeleton-btn') + line('hub-skeleton-btn') + '</div></article>';
-        }
-      }
+      var i;
+      for (i = 0; i < 6; i += 1) cards += '<div class="hub-skeleton-card" aria-hidden="true"></div>';
       var hero = page.kind === 'client'
         ? '<div class="page-hero admin-hub-hero"><h1>' + page.title + '</h1><p>' + page.copy + '</p></div>'
         : '<div class="page-hero admin-hub-hero meta-premium-page-hero"><div class="meta-premium-page-hero-inner"><div class="admin-breadcrumb"><a href="/admin">Clients</a><span aria-hidden="true"> / </span><span>' + page.crumb + '</span></div><h1>' + page.title + '</h1></div></div>';
-      var filterCount = page.kind === 'client' ? 0 : (page.kind === 'google' ? 3 : 4);
-      var filters = '';
-      for (i = 0; i < filterCount; i += 1) filters += line('hub-skeleton-filter');
-      var actions = page.kind === 'google' ? line('hub-skeleton-action') : (line('hub-skeleton-action') + line('hub-skeleton-action') + (page.kind === 'meta' ? line('hub-skeleton-action') : ''));
-      shell.innerHTML = hero + '<div class="admin-hub' + (page.kind === 'client' ? '' : ' meta-reports-page') + '" aria-busy="true"><p class="sr-only">Loading ' + page.title + '…</p><div class="hub-toolbar-row hub-skeleton-toolbar"><div class="hub-search">' + line('hub-skeleton-search') + '</div>' + line('hub-skeleton-count') + '<div class="hub-toolbar-actions">' + (filters ? '<div class="meta-hub-filters">' + filters + '</div>' : '') + actions + '</div></div><div class="' + (page.kind === 'client' ? 'client-grid' : 'meta-hub-cards') + '">' + cards + '</div></div>';
+      shell.innerHTML = hero + '<div class="admin-hub' + (page.kind === 'client' ? '' : ' meta-reports-page') + '" aria-busy="true"><p class="sr-only">Loading ' + page.title + '…</p><div class="' + (page.kind === 'client' ? 'client-grid' : 'meta-hub-cards') + '">' + cards + '</div></div>';
     }());
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" defer></script>
   <script src="/lib/marketing-metrics.js" defer></script>
-  <script src="/js/admin.bundle.js?v=315" defer></script>
+  <script src="/js/admin.bundle.js?v=316" defer></script>
 </body>
 </html>
