@@ -18439,7 +18439,7 @@
         : (isLive
           ? '<span class="meta-report-badge meta-report-badge--on">Report live</span>'
           : '<span class="meta-report-badge meta-report-badge--off">Report off</span>');
-      const nameMarkup = canEdit
+      const nameMarkup = isLive
         ? `<a href="/admin/google-ads/${encodeURIComponent(client.clientId)}" class="meta-hub-card-name">${esc(client.accountName)}</a>`
         : `<span class="meta-hub-card-name">${esc(client.accountName)}</span>`;
       const headAction = isLive
@@ -18452,9 +18452,9 @@
           inline: true,
         });
       const actionButtons = [];
-      if (canEdit) {
+      if (isLive) {
         actionButtons.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(client.clientId)}">Edit report</a>`);
-        if (client.reportUrl && isLive) {
+        if (client.reportUrl) {
           actionButtons.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`);
         }
       }
@@ -18639,7 +18639,7 @@
           const card = button.closest('[data-google-ads-row]');
           const accountName = card?.getAttribute('data-google-ads-name') || clientId;
           closeCardMenus();
-          if (!confirm(`Disable the report for ${accountName}?`)) return;
+          if (!confirm(`Disable the report for ${accountName}?\n\nSaved values and settings are kept. You can enable it again later.`)) return;
           button.disabled = true;
           try {
             await patchGoogleAdsReportSettings(clientId, { metaReportEnabled: false }, { fast: true });
@@ -18765,6 +18765,30 @@
 
       try {
         const payload = await adminFetch(`/api/google-ads-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(googleAdsReportsState.selectedYear)}`);
+        if (payload?.settings?.googleAdsReportEnabled === false) {
+          dashboard.innerHTML = `
+            ${renderBrandTopbar(renderStaffAdminChrome('google-ads'))}
+            ${wrapDashboardShell(`
+              <div class="page-hero admin-hub-hero meta-premium-page-hero">
+                <div class="meta-premium-page-hero-inner">
+                  <div class="admin-breadcrumb">
+                    <a href="/admin">Clients</a>
+                    <span aria-hidden="true"> / </span>
+                    <a href="/admin/google-ads">Google Ads</a>
+                    <span aria-hidden="true"> / </span>
+                    <span>${esc(payload.accountName || 'Report')}</span>
+                  </div>
+                  <h1>${esc(payload.accountName || 'Google Ads report')}</h1>
+                  <p>This report is disabled. Saved values and settings are kept.</p>
+                </div>
+              </div>
+              <div class="sync-history-empty" style="padding:8px 0 24px">
+                <a class="admin-btn" href="/admin/google-ads">Back to Google Ads</a>
+              </div>
+            `)}
+          `;
+          return;
+        }
         googleAdsReportsState.selectedYear = Number(payload.year) || googleAdsReportsState.selectedYear;
         metaReportsState.selectedYear = googleAdsReportsState.selectedYear;
         if (!googleAdsReportsState.activeMonthKey || !(payload.monthKeys || []).includes(googleAdsReportsState.activeMonthKey)) {
