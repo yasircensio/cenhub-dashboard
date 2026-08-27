@@ -13,6 +13,7 @@
       --bg: #f7f5f2;
       --panel: #ffffff;
       --panel-soft: #faf8f6;
+      --surface: #faf8f6;
       --surface-muted: #faf8f6;
       --surface-hover: #f0ebe4;
       --border: #e8e0d8;
@@ -69,6 +70,9 @@
     body[data-dashboard-mode="fb-lead-sync"],
     body[data-dashboard-mode="meta-reports"],
     body[data-dashboard-mode="meta-reports-client"],
+    body[data-dashboard-mode="google-ads"],
+    body[data-dashboard-mode="google-ads-client"],
+    body[data-dashboard-mode="report"],
     body[data-dashboard-mode="team"],
     body[data-dashboard-mode="login"] {
       --text: #16120e;
@@ -2507,6 +2511,28 @@
       padding: 7px 11px;
     }
 
+    .admin-input {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      box-sizing: border-box;
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      line-height: 1.4;
+      min-height: 44px;
+      padding: 10px 12px;
+      width: 100%;
+    }
+    .admin-input::placeholder { color: var(--text-soft); }
+    .admin-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
+      outline: none;
+    }
+
     .admin-btn--secondary:disabled {
       background: var(--panel-soft);
       border-color: var(--border);
@@ -4565,33 +4591,76 @@
     .meta-report-badge--off { background: #f3ece4; color: var(--text-soft); }
     .meta-report-badge--linked { background: #eef6ff; color: #1d4ed8; }
     .linked-report-platform-tabs {
-      display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px;
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px;
     }
     .linked-report-platform-tab {
-      background: var(--panel); border: 1px solid var(--border-strong); border-radius: 999px;
-      color: var(--text); cursor: pointer; font: inherit; font-size: 13px; font-weight: 650;
-      padding: 8px 16px;
+      appearance: none; -webkit-appearance: none;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+      color: var(--text-soft); cursor: pointer; font: inherit; font-size: 13px; font-weight: 600;
+      line-height: 1.2; padding: 8px 14px;
     }
+    .linked-report-platform-tab:hover { color: var(--text); }
     .linked-report-platform-tab.is-active {
       background: var(--primary); border-color: var(--primary); color: #fff;
     }
-    .linked-report-link-btn { white-space: nowrap; }
-    .linked-report-picker-search { margin: 12px 0 10px; width: 100%; }
+    .linked-report-link-btn { flex: 0 0 auto; white-space: nowrap; }
+    .meta-report-modal:has(.linked-report-picker) {
+      display: flex; flex-direction: column; max-height: min(90vh, 680px); overflow: hidden;
+      padding-bottom: 18px;
+    }
+    .linked-report-picker {
+      background: var(--panel-soft); border: 1px solid var(--border); border-radius: 12px;
+      display: flex; flex: 1 1 auto; flex-direction: column; gap: 12px; min-height: 0;
+      padding: 14px 16px;
+    }
+    .linked-report-picker-current {
+      align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      display: flex; flex-wrap: wrap; gap: 10px 12px; justify-content: space-between; padding: 10px 12px;
+    }
+    .linked-report-picker-current-copy {
+      display: flex; flex: 1 1 160px; flex-direction: column; gap: 2px; min-width: 0;
+    }
+    .linked-report-picker-current-label {
+      color: var(--text-soft); font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .linked-report-picker-current-name {
+      color: var(--text); font-size: 14px; font-weight: 600; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .linked-report-picker-field {
+      display: flex; flex-direction: column; gap: 6px; width: 100%;
+    }
+    .linked-report-picker-field > span {
+      color: var(--text-soft); font-size: 12px; font-weight: 600;
+    }
     .linked-report-picker-list {
-      display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow: auto;
+      display: flex; flex: 1 1 auto; flex-direction: column; gap: 8px; max-height: 360px;
+      min-height: 120px; overflow: auto; padding-right: 2px;
     }
     .linked-report-picker-item {
-      align-items: flex-start; background: var(--panel); border: 1px solid var(--border-strong);
-      border-radius: 12px; color: inherit; cursor: pointer; display: flex; flex-direction: column;
-      font: inherit; gap: 2px; padding: 10px 12px; text-align: left; width: 100%;
+      appearance: none; -webkit-appearance: none; align-items: flex-start; background: #fff;
+      border: 1px solid var(--border); border-radius: 12px; box-sizing: border-box; color: var(--text);
+      cursor: pointer; display: flex; flex-direction: column; font: inherit; gap: 2px;
+      padding: 12px 14px; text-align: left; width: 100%;
     }
-    .linked-report-picker-item:hover, .linked-report-picker-item.is-current {
-      border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary);
+    .linked-report-picker-item:hover {
+      background: var(--primary-soft); border-color: var(--primary);
     }
-    .linked-report-picker-item-name { font-size: 14px; font-weight: 650; }
-    .linked-report-picker-item-id { color: var(--text-soft); font-size: 12px; }
-    .linked-report-picker-empty { color: var(--text-muted); font-size: 13px; padding: 12px 4px; }
-    .linked-report-unlink-row { margin: 0 0 4px; }
+    .linked-report-picker-item.is-current {
+      background: var(--primary-soft); border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+    .linked-report-picker-item:disabled { cursor: wait; opacity: 0.65; }
+    .linked-report-picker-item-name { font-size: 14px; font-weight: 600; }
+    .linked-report-picker-item-id {
+      color: var(--text-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+    .linked-report-picker-empty {
+      color: var(--text-muted); font-size: 13px; line-height: 1.45; margin: 0; padding: 16px 4px;
+      text-align: center;
+    }
 
     .meta-hub-empty {
       background: var(--panel); border: 1.5px dashed var(--border-strong); border-radius: 16px;
@@ -4806,7 +4875,7 @@
     }
     .meta-report-share-slug-input {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
-      max-width: 220px; min-width: 96px; width: auto;
+      max-width: 220px; min-height: 36px; min-width: 96px; padding: 8px 10px; width: auto;
     }
     .meta-report-share-url {
       background: #fff; border: 1px solid var(--border); border-radius: 10px;
@@ -9263,10 +9332,10 @@
       const origin = linkedReportsState.origin || (IS_ADMIN_GOOGLE_ADS_CLIENT ? 'google-ads' : 'meta');
       if (pair) {
         const partnerName = origin === 'meta' ? pair.googleAccountName : pair.metaAccountName;
-        return `<button type="button" class="admin-btn admin-btn--secondary admin-btn--small linked-report-link-btn" id="linked-report-link-btn">Linked · ${esc(partnerName || 'partner')}</button>`;
+        return `<button type="button" class="admin-btn admin-btn--secondary linked-report-link-btn" id="linked-report-link-btn">Linked · ${esc(partnerName || 'partner')}</button>`;
       }
       const label = origin === 'meta' ? 'Link Google Ads' : 'Link Meta report';
-      return `<button type="button" class="admin-btn admin-btn--secondary admin-btn--small linked-report-link-btn" id="linked-report-link-btn">${esc(label)}</button>`;
+      return `<button type="button" class="admin-btn admin-btn--secondary linked-report-link-btn" id="linked-report-link-btn">${esc(label)}</button>`;
     }
 
     function linkedAdminOrigin() {
@@ -9448,7 +9517,7 @@
       }
       return filtered.map((row) => `
         <button type="button" class="linked-report-picker-item${row.id === currentId ? ' is-current' : ''}" data-linked-pick-id="${esc(row.id)}">
-          <span class="linked-report-picker-item-name">${esc(row.name)}</span>
+          <span class="linked-report-picker-item-name">${esc(row.name)}${row.id === currentId ? ' · Linked' : ''}</span>
           <span class="linked-report-picker-item-id">${esc(row.sub || row.id)}</span>
         </button>
       `).join('');
@@ -9514,16 +9583,32 @@
       const origin = linkedAdminOrigin();
       const pair = linkedReportsState.pair;
       const title = origin === 'meta' ? 'Link Google Ads account' : 'Link Meta report';
+      const partnerName = origin === 'meta' ? pair?.googleAccountName : pair?.metaAccountName;
       openMetaReportModal(`
         <div class="meta-report-modal-head">
           <h2 class="meta-report-modal-title">${esc(title)}</h2>
           <button type="button" class="meta-report-modal-close" aria-label="Close">&times;</button>
         </div>
         <p class="metrics-model-copy">One Meta report maps to one Google Ads report. Spend, leads, and share links stay independent.</p>
-        ${pair ? `<div class="linked-report-unlink-row"><button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="linked-report-unlink-btn">Unlink</button></div>` : ''}
-        <input type="search" class="admin-input linked-report-picker-search" id="linked-report-picker-search" placeholder="Search accounts" autocomplete="off" />
-        <div class="linked-report-picker-list" id="linked-report-picker-list">Loading…</div>
-      `, { wide: true });
+        <div class="linked-report-picker">
+          ${pair ? `
+            <div class="linked-report-picker-current">
+              <div class="linked-report-picker-current-copy">
+                <span class="linked-report-picker-current-label">Currently linked</span>
+                <span class="linked-report-picker-current-name">${esc(partnerName || 'partner')}</span>
+              </div>
+              <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="linked-report-unlink-btn">Unlink</button>
+            </div>
+          ` : ''}
+          <label class="linked-report-picker-field">
+            <span>Search accounts</span>
+            <input type="text" class="admin-input" id="linked-report-picker-search" placeholder="Name or ID" autocomplete="off" spellcheck="false" />
+          </label>
+          <div class="linked-report-picker-list" id="linked-report-picker-list">
+            <p class="linked-report-picker-empty">Loading accounts…</p>
+          </div>
+        </div>
+      `);
 
       const listEl = document.getElementById('linked-report-picker-list');
       const searchEl = document.getElementById('linked-report-picker-search');
