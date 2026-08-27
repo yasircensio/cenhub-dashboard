@@ -10,7 +10,18 @@
         ${r}
       </div>
     </header>
-  `}function wrapDashboardShell(e){return`<div class="dashboard-shell">${e}</div>`}function renderHubSkeletonCards(e=6){return Array.from({length:e},()=>'<div class="hub-skeleton-card" aria-hidden="true"></div>').join("")}function renderAdminHubSkeletonPage(e){const t=e==="clients",n=e==="google-ads",a=t?"clients":n?"google-ads":"meta-reports",o=t?"Client administration":n?"Google Ads reports":"Meta client reports",s=t?`<div class="page-hero admin-hub-hero">
+  `}function wrapDashboardShell(e){return`<div class="dashboard-shell">${e}</div>`}function renderHubSkeletonCards(e=6){return Array.from({length:e},()=>`
+    <div class="hub-skeleton-card" aria-hidden="true">
+      <div class="hub-skeleton-card-head">
+        <span class="hub-skeleton-mark"></span>
+        <div class="hub-skeleton-copy">
+          <span class="hub-skeleton-bar hub-skeleton-bar--title"></span>
+          <span class="hub-skeleton-bar hub-skeleton-bar--sub"></span>
+        </div>
+      </div>
+      <span class="hub-skeleton-bar hub-skeleton-bar--foot"></span>
+    </div>
+  `).join("")}function renderAdminHubSkeletonPage(e){const t=e==="clients",n=e==="google-ads",a=t?"clients":n?"google-ads":"meta-reports",o=t?"Client administration":n?"Google Ads reports":"Meta client reports",s=t?`<div class="page-hero admin-hub-hero">
         <h1>${o}</h1>
         <p>Manage dashboard accounts, sync GHL data, and preview client views.</p>
       </div>`:`<div class="page-hero admin-hub-hero meta-premium-page-hero">

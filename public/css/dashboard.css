@@ -4501,7 +4501,11 @@
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
       min-height: 168px;
+      padding: 20px;
       pointer-events: none;
     }
     .hub-skeleton-card:nth-child(2) { animation-delay: 0.12s; }
@@ -4509,8 +4513,49 @@
     .hub-skeleton-card:nth-child(4) { animation-delay: 0.08s; }
     .hub-skeleton-card:nth-child(5) { animation-delay: 0.2s; }
     .hub-skeleton-card:nth-child(6) { animation-delay: 0.32s; }
+    .hub-skeleton-card-head {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+    }
+    .hub-skeleton-mark {
+      background: var(--skeleton-from);
+      border-radius: 10px;
+      flex-shrink: 0;
+      height: 40px;
+      width: 40px;
+    }
+    .hub-skeleton-copy {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+    .hub-skeleton-bar {
+      background: var(--skeleton-from);
+      border-radius: 6px;
+      display: block;
+      height: 10px;
+    }
+    .hub-skeleton-bar--title { height: 12px; width: 58%; }
+    .hub-skeleton-bar--sub { width: 34%; }
+    .hub-skeleton-bar--foot {
+      border-radius: 10px;
+      height: 36px;
+      margin-top: auto;
+      width: 100%;
+    }
+    .hub-skeleton-card:nth-child(2) .hub-skeleton-bar--title { width: 46%; }
+    .hub-skeleton-card:nth-child(3) .hub-skeleton-bar--title { width: 64%; }
+    .hub-skeleton-card:nth-child(4) .hub-skeleton-bar--title { width: 52%; }
+    .hub-skeleton-card:nth-child(5) .hub-skeleton-bar--title { width: 70%; }
+    .hub-skeleton-card:nth-child(6) .hub-skeleton-bar--title { width: 40%; }
+    .hub-skeleton-card:nth-child(2) .hub-skeleton-bar--sub { width: 28%; }
+    .hub-skeleton-card:nth-child(3) .hub-skeleton-bar--sub { width: 42%; }
+    .hub-skeleton-card:nth-child(5) .hub-skeleton-bar--sub { width: 22%; }
     @keyframes hub-skeleton-breathe {
-      0%, 100% { opacity: 0.42; }
+      0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
     }
     .sr-only {

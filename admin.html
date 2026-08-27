@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cenhub Admin</title>
   <!-- theme: warm-cream v27 -->
-  <link rel="stylesheet" href="/css/dashboard.css?v=296" />
+  <link rel="stylesheet" href="/css/dashboard.css?v=297" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
 </head>
 <body>
@@ -72,9 +72,10 @@
       var page = pages[mode];
       var shell = document.querySelector('#dashboard .dashboard-shell');
       if (!page || !shell) return;
+      var card = '<div class="hub-skeleton-card" aria-hidden="true"><div class="hub-skeleton-card-head"><span class="hub-skeleton-mark"></span><div class="hub-skeleton-copy"><span class="hub-skeleton-bar hub-skeleton-bar--title"></span><span class="hub-skeleton-bar hub-skeleton-bar--sub"></span></div></div><span class="hub-skeleton-bar hub-skeleton-bar--foot"></span></div>';
       var cards = '';
       var i;
-      for (i = 0; i < 6; i += 1) cards += '<div class="hub-skeleton-card" aria-hidden="true"></div>';
+      for (i = 0; i < 6; i += 1) cards += card;
       var hero = page.kind === 'client'
         ? '<div class="page-hero admin-hub-hero"><h1>' + page.title + '</h1><p>' + page.copy + '</p></div>'
         : '<div class="page-hero admin-hub-hero meta-premium-page-hero"><div class="meta-premium-page-hero-inner"><div class="admin-breadcrumb"><a href="/admin">Clients</a><span aria-hidden="true"> / </span><span>' + page.crumb + '</span></div><h1>' + page.title + '</h1></div></div>';
@@ -85,6 +86,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" defer></script>
   <script src="/lib/marketing-metrics.js" defer></script>
-  <script src="/js/admin.bundle.js?v=316" defer></script>
+  <script src="/js/admin.bundle.js?v=317" defer></script>
 </body>
 </html>
