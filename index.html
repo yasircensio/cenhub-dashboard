@@ -4614,7 +4614,7 @@
       padding: 14px 16px;
     }
     .linked-report-picker-current {
-      align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      align-items: center; background: var(--status-ok-bg); border: 1px solid #a7f3d0; border-radius: 10px;
       display: flex; flex-wrap: wrap; gap: 10px 12px; justify-content: space-between; padding: 10px 12px;
     }
     .linked-report-picker-current-copy {
@@ -4634,32 +4634,64 @@
     .linked-report-picker-field > span {
       color: var(--text-soft); font-size: 12px; font-weight: 600;
     }
+    .linked-report-picker .admin-input:focus {
+      border-color: var(--border-strong);
+      box-shadow: 0 0 0 3px rgba(26, 18, 8, 0.06);
+    }
     .linked-report-picker-list {
       display: flex; flex: 1 1 auto; flex-direction: column; gap: 8px; max-height: 360px;
       min-height: 120px; overflow: auto; padding-right: 2px;
     }
     .linked-report-picker-item {
-      appearance: none; -webkit-appearance: none; align-items: flex-start; background: #fff;
+      appearance: none; -webkit-appearance: none; align-items: center; background: #fff;
       border: 1px solid var(--border); border-radius: 12px; box-sizing: border-box; color: var(--text);
-      cursor: pointer; display: flex; flex-direction: column; font: inherit; gap: 2px;
-      padding: 12px 14px; text-align: left; width: 100%;
+      cursor: pointer; display: flex; flex-direction: row; font: inherit; gap: 12px;
+      padding: 10px 12px; text-align: left; width: 100%;
     }
-    .linked-report-picker-item:hover {
-      background: var(--primary-soft); border-color: var(--primary);
+    .linked-report-picker-item:hover:not(.is-linked) {
+      background: var(--surface-hover); border-color: var(--border-strong);
     }
-    .linked-report-picker-item.is-current {
-      background: var(--primary-soft); border-color: var(--primary);
-      box-shadow: 0 0 0 1px var(--primary);
+    .linked-report-picker-item.is-linked {
+      background: var(--status-ok-bg); border-color: #a7f3d0; cursor: default;
     }
     .linked-report-picker-item:disabled { cursor: wait; opacity: 0.65; }
-    .linked-report-picker-item-name { font-size: 14px; font-weight: 600; }
+    .linked-report-picker-avatar {
+      align-items: center; background: var(--hero-gradient); border-radius: 10px; color: #fff;
+      display: flex; flex-shrink: 0; font-family: 'Poppins', sans-serif; font-size: 14px;
+      font-weight: 600; height: 36px; justify-content: center; width: 36px;
+    }
+    .linked-report-picker-item.is-linked .linked-report-picker-avatar {
+      background: #047857;
+    }
+    .linked-report-picker-item-copy {
+      display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0;
+    }
+    .linked-report-picker-item-name {
+      font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .linked-report-picker-item-id {
       color: var(--text-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px;
     }
+    .linked-report-picker-badge {
+      background: #d1fae5; border-radius: 999px; color: #047857; flex-shrink: 0;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.02em; line-height: 1; padding: 5px 8px;
+      text-transform: uppercase;
+    }
     .linked-report-picker-empty {
       color: var(--text-muted); font-size: 13px; line-height: 1.45; margin: 0; padding: 16px 4px;
       text-align: center;
+    }
+    .linked-report-picker-skeleton {
+      align-items: center; background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      display: flex; gap: 12px; padding: 10px 12px;
+    }
+    .linked-report-picker-skeleton-avatar {
+      animation: pulse 1.4s ease-in-out infinite; background: linear-gradient(90deg, var(--skeleton-from) 25%, var(--skeleton-mid) 50%, var(--skeleton-from) 75%);
+      background-size: 200% 100%; border-radius: 10px; flex-shrink: 0; height: 36px; width: 36px;
+    }
+    .linked-report-picker-skeleton-copy {
+      display: flex; flex: 1 1 auto; flex-direction: column; gap: 8px;
     }
 
     .meta-hub-empty {
@@ -9502,6 +9534,18 @@
       });
     }
 
+    function renderLinkedReportPickerSkeleton(count = 5) {
+      return Array.from({ length: count }).map(() => `
+        <div class="linked-report-picker-skeleton" aria-hidden="true">
+          <span class="linked-report-picker-skeleton-avatar"></span>
+          <span class="linked-report-picker-skeleton-copy">
+            <span class="meta-cv-skeleton-line meta-cv-skeleton-line--md"></span>
+            <span class="meta-cv-skeleton-line meta-cv-skeleton-line--sm"></span>
+          </span>
+        </div>
+      `).join('');
+    }
+
     function renderLinkedReportPickerItems(candidates, query = '') {
       const needle = String(query || '').trim().toLowerCase();
       const pair = linkedReportsState.pair;
@@ -9515,12 +9559,26 @@
       if (!filtered.length) {
         return '<p class="linked-report-picker-empty">No matching accounts.</p>';
       }
-      return filtered.map((row) => `
-        <button type="button" class="linked-report-picker-item${row.id === currentId ? ' is-current' : ''}" data-linked-pick-id="${esc(row.id)}">
-          <span class="linked-report-picker-item-name">${esc(row.name)}${row.id === currentId ? ' · Linked' : ''}</span>
-          <span class="linked-report-picker-item-id">${esc(row.sub || row.id)}</span>
-        </button>
-      `).join('');
+      filtered.sort((a, b) => {
+        const aLinked = a.id === currentId ? 0 : 1;
+        const bLinked = b.id === currentId ? 0 : 1;
+        if (aLinked !== bLinked) return aLinked - bLinked;
+        return String(a.name || '').localeCompare(String(b.name || ''));
+      });
+      return filtered.map((row) => {
+        const linked = row.id === currentId;
+        const initial = String(row.name || row.id || '?').trim().charAt(0).toUpperCase();
+        return `
+          <button type="button" class="linked-report-picker-item${linked ? ' is-linked' : ''}" data-linked-pick-id="${esc(row.id)}"${linked ? ' aria-current="true"' : ''}>
+            <span class="linked-report-picker-avatar" aria-hidden="true">${esc(initial)}</span>
+            <span class="linked-report-picker-item-copy">
+              <span class="linked-report-picker-item-name">${esc(row.name)}</span>
+              <span class="linked-report-picker-item-id">${esc(row.sub || row.id)}</span>
+            </span>
+            ${linked ? '<span class="linked-report-picker-badge">Linked</span>' : ''}
+          </button>
+        `;
+      }).join('');
     }
 
     async function saveLinkedReportPair(googleClientId, metaClientId) {
@@ -9604,8 +9662,8 @@
             <span>Search accounts</span>
             <input type="text" class="admin-input" id="linked-report-picker-search" placeholder="Name or ID" autocomplete="off" spellcheck="false" />
           </label>
-          <div class="linked-report-picker-list" id="linked-report-picker-list">
-            <p class="linked-report-picker-empty">Loading accounts…</p>
+          <div class="linked-report-picker-list" id="linked-report-picker-list" aria-busy="true">
+            ${renderLinkedReportPickerSkeleton()}
           </div>
         </div>
       `);
@@ -9620,11 +9678,14 @@
 
       const bindPicker = (candidates) => {
         if (!listEl) return;
+        listEl.setAttribute('aria-busy', 'false');
+        const currentId = origin === 'meta' ? originGoogleId : originMetaId;
         const render = () => {
           listEl.innerHTML = renderLinkedReportPickerItems(candidates, searchEl?.value);
           listEl.querySelectorAll('[data-linked-pick-id]').forEach((button) => {
             button.onclick = async () => {
               const pickedId = button.getAttribute('data-linked-pick-id');
+              if (!pickedId || pickedId === currentId) return;
               button.disabled = true;
               try {
                 if (origin === 'meta') {
@@ -9691,7 +9752,10 @@
           bindPicker(candidates);
         }
       } catch (error) {
-        if (listEl) listEl.innerHTML = `<p class="linked-report-picker-empty">${esc(error.message || 'Could not load accounts')}</p>`;
+        if (listEl) {
+          listEl.setAttribute('aria-busy', 'false');
+          listEl.innerHTML = `<p class="linked-report-picker-empty">${esc(error.message || 'Could not load accounts')}</p>`;
+        }
       }
     }
 
