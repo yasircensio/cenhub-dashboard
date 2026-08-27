@@ -1522,6 +1522,10 @@
       color: #c62828 !important;
     }
 
+    .card-menu-dropdown button.card-menu-item--danger:first-child {
+      border-top: none;
+    }
+
     .card-menu-item--danger:hover {
       background: var(--danger-soft) !important;
     }
@@ -4649,7 +4653,8 @@
       color: var(--text-muted);
       font-size: 12px;
     }
-    .meta-hub-card-head .meta-hub-switch--inline {
+    .meta-hub-card-head .meta-hub-switch--inline,
+    .meta-hub-card-head .card-menu {
       flex-shrink: 0;
       margin-left: auto;
     }
@@ -10783,7 +10788,7 @@
             <div class="meta-hub-card-title">
               <div class="meta-hub-card-name-row">
                 ${nameMarkup}
-                ${client.linkedGoogleAccountName ? `<span class="meta-report-badge meta-report-badge--linked" title="${esc(client.linkedGoogleAccountName)}">Linked · ${esc(client.linkedGoogleAccountName)}</span>` : ''}
+                ${client.linkedGoogleAccountName ? `<span class="meta-report-badge meta-report-badge--linked" title="${esc(client.linkedGoogleAccountName)}">Linked</span>` : ''}
               </div>
               <div class="meta-hub-card-slug">act_${esc(client.metaAdAccountId || '—')}</div>
             </div>
@@ -18384,28 +18389,56 @@
       `).join('');
     }
 
+    function renderGoogleAdsCardMenu(clientId, accountName) {
+      const menuId = `google-${clientId}`;
+      return `
+        <div class="card-menu" id="card-menu-${esc(menuId)}">
+          <button
+            type="button"
+            class="icon-btn card-menu-trigger"
+            aria-label="More actions for ${esc(accountName)}"
+            title="More actions"
+            aria-haspopup="menu"
+            onclick="toggleCardMenu('${menuId}', event)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <circle cx="12" cy="5" r="1.75"></circle>
+              <circle cx="12" cy="12" r="1.75"></circle>
+              <circle cx="12" cy="19" r="1.75"></circle>
+            </svg>
+          </button>
+          <div class="card-menu-dropdown" role="menu">
+            <button type="button" role="menuitem" class="card-menu-item--danger" data-google-ads-disable="${esc(clientId)}">Disable report</button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderGoogleAdsHubCard(client) {
       const canEdit = Boolean(client.clientId);
+      const isLive = Boolean(canEdit && client.googleAdsReportEnabled);
       const rowKey = client.clientId || client.googleCustomerId || '';
       const statusBadge = client.needsSetup
         ? '<span class="meta-report-badge meta-report-badge--setup">Needs setup</span>'
-        : (client.googleAdsReportEnabled
+        : (isLive
           ? '<span class="meta-report-badge meta-report-badge--on">Report live</span>'
           : '<span class="meta-report-badge meta-report-badge--off">Report off</span>');
       const nameMarkup = canEdit
         ? `<a href="/admin/google-ads/${encodeURIComponent(client.clientId)}" class="meta-hub-card-name">${esc(client.accountName)}</a>`
         : `<span class="meta-hub-card-name">${esc(client.accountName)}</span>`;
-      const enableSwitch = renderMetaHubSwitch({
-        label: client.needsSetup ? 'Enable' : 'Report',
-        attr: client.needsSetup ? 'data-google-ads-enable' : 'data-google-ads-report-enabled',
-        value: client.needsSetup ? client.googleCustomerId : client.clientId,
-        checked: Boolean(client.googleAdsReportEnabled),
-        inline: true,
-      });
+      const headAction = isLive
+        ? renderGoogleAdsCardMenu(client.clientId, client.accountName)
+        : renderMetaHubSwitch({
+          label: 'Enable',
+          attr: client.needsSetup ? 'data-google-ads-enable' : 'data-google-ads-report-enabled',
+          value: client.needsSetup ? client.googleCustomerId : client.clientId,
+          checked: false,
+          inline: true,
+        });
       const actionButtons = [];
       if (canEdit) {
         actionButtons.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(client.clientId)}">Edit report</a>`);
-        if (client.reportUrl && client.googleAdsReportEnabled) {
+        if (client.reportUrl && isLive) {
           actionButtons.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`);
         }
       }
@@ -18417,11 +18450,11 @@
             <div class="meta-hub-card-title">
               <div class="meta-hub-card-name-row">
                 ${nameMarkup}
-                ${client.linkedMetaAccountName ? `<span class="meta-report-badge meta-report-badge--linked" title="${esc(client.linkedMetaAccountName)}">Linked · ${esc(client.linkedMetaAccountName)}</span>` : ''}
+                ${client.linkedMetaAccountName ? `<span class="meta-report-badge meta-report-badge--linked" title="${esc(client.linkedMetaAccountName)}">Linked</span>` : ''}
               </div>
               <div class="meta-hub-card-slug">${esc(client.googleCustomerLabel || client.googleCustomerId || '—')}</div>
             </div>
-            ${enableSwitch}
+            ${headAction}
           </div>
           <div class="meta-hub-card-meta">
             ${statusBadge}
@@ -18555,6 +18588,26 @@
             showToast(error.message || 'Update failed', 'error');
           } finally {
             if (seq === saveSeq) switchEl?.classList.remove('is-saving');
+          }
+        };
+      });
+
+      document.querySelectorAll('[data-google-ads-disable]').forEach((button) => {
+        button.onclick = async (event) => {
+          event.stopPropagation();
+          const clientId = button.getAttribute('data-google-ads-disable');
+          const card = button.closest('[data-google-ads-row]');
+          const accountName = card?.getAttribute('data-google-ads-name') || clientId;
+          closeCardMenus();
+          if (!confirm(`Disable the report for ${accountName}?`)) return;
+          button.disabled = true;
+          try {
+            await patchGoogleAdsReportSettings(clientId, { metaReportEnabled: false }, { fast: true });
+            showToast('Report disabled', 'success');
+            await loadGoogleAdsHubPage();
+          } catch (error) {
+            showToast(error.message || 'Update failed', 'error');
+            button.disabled = false;
           }
         };
       });

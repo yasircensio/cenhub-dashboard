@@ -1513,6 +1513,10 @@
       color: #c62828 !important;
     }
 
+    .card-menu-dropdown button.card-menu-item--danger:first-child {
+      border-top: none;
+    }
+
     .card-menu-item--danger:hover {
       background: var(--danger-soft) !important;
     }
@@ -4640,7 +4644,8 @@
       color: var(--text-muted);
       font-size: 12px;
     }
-    .meta-hub-card-head .meta-hub-switch--inline {
+    .meta-hub-card-head .meta-hub-switch--inline,
+    .meta-hub-card-head .card-menu {
       flex-shrink: 0;
       margin-left: auto;
     }
