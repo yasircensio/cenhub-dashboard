@@ -4395,8 +4395,7 @@
     .meta-report-public-logo {
       display: block;
       height: 36px;
-      max-width: min(100%, 280px);
-      mix-blend-mode: screen;
+      max-width: min(100%, 360px);
       object-fit: contain;
       width: auto;
     }

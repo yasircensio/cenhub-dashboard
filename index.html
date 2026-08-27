@@ -4404,8 +4404,7 @@
     .meta-report-public-logo {
       display: block;
       height: 36px;
-      max-width: min(100%, 280px);
-      mix-blend-mode: screen;
+      max-width: min(100%, 360px);
       object-fit: contain;
       width: auto;
     }
@@ -6546,7 +6545,7 @@
     }
 
     function renderCensioAnalyticsLogoMarkup(href = '') {
-      const img = `<img class="meta-report-public-logo" src="/censio-analytics-logo.png?v=3" alt="Censio Analytics" />`;
+      const img = `<img class="meta-report-public-logo" src="/censio-analytics-logo.png?v=4" alt="Censio Analytics" />`;
       if (!href) return img;
       return `<a href="${href}" class="brand-logo-link" aria-label="Censio Analytics">${img}</a>`;
     }
