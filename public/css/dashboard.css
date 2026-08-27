@@ -4386,24 +4386,15 @@
     .meta-report-public-hero { text-align: left; }
     .meta-report-public-topbar-brand {
       align-items: center;
-      color: #fff;
-      display: inline-flex;
-      gap: 13px;
+      display: flex;
     }
-    .meta-report-public-logo-icon {
+    .meta-report-public-logo {
       display: block;
-      flex: 0 0 52px;
-      height: 52px;
-      width: 52px;
-    }
-    .meta-report-public-logo-text {
-      color: #fff;
-      font-family: 'Poppins', sans-serif;
-      font-size: 42px;
-      font-weight: 700;
-      letter-spacing: -0.045em;
-      line-height: 1;
-      white-space: nowrap;
+      height: 36px;
+      max-width: min(100%, 280px);
+      mix-blend-mode: screen;
+      object-fit: contain;
+      width: auto;
     }
     .meta-report-public-subtitle {
       color: rgba(255, 255, 255, 0.72);
@@ -4777,9 +4768,7 @@
 
     @media (max-width: 600px) {
       .meta-hub-card-actions:not(.client-card-actions) { grid-template-columns: 1fr; }
-      .meta-report-public-topbar-brand { gap: 9px; }
-      .meta-report-public-logo-icon { flex-basis: 40px; height: 40px; width: 40px; }
-      .meta-report-public-logo-text { font-size: 29px; }
+      .meta-report-public-logo { height: 28px; }
       .meta-report-toolbar { align-items: stretch; flex-direction: column; }
       .meta-report-toolbar-left, .meta-report-toolbar-actions { width: 100%; }
       .meta-report-toolbar-actions .admin-btn, .meta-report-toolbar-actions .meta-report-backfill-wrap { flex: 1 1 auto; }

@@ -1460,11 +1460,7 @@ Resume the interrupted ${S}?`)&&(l=$.id,c=Number($.batchOffset)||0)}}if(n?setFbL
       <div class="brand-topbar-inner">
         <div class="brand-topbar-left">
           <div class="meta-report-public-topbar-brand">
-            <svg class="meta-report-public-logo-icon" viewBox="0 0 56 56" aria-hidden="true">
-              <path d="M 17 14 A 21 21 0 1 0 40 10" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" />
-              <circle cx="11" cy="10" r="3.5" fill="currentColor" />
-            </svg>
-            <span class="meta-report-public-logo-text">Censio Analytics</span>
+            <img class="meta-report-public-logo" src="/censio-analytics-logo.png?v=3" alt="Censio Analytics" />
           </div>
         </div>
       </div>
