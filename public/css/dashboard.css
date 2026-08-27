@@ -4627,6 +4627,24 @@
     }
     .meta-hub-card-actions .admin-btn { justify-content: center; text-align: center; width: 100%; }
     .meta-hub-card-actions--single { grid-template-columns: 1fr; }
+    .meta-hub-card-actions--quiet {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 2px;
+    }
+    .meta-hub-card-actions--quiet .admin-btn {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 8px 14px;
+      width: auto;
+    }
+    .meta-hub-card-actions--quiet .admin-btn:hover {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
     .meta-hub-card .client-card-actions {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       margin-top: 4px;

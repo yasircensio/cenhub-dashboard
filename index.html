@@ -4636,6 +4636,24 @@
     }
     .meta-hub-card-actions .admin-btn { justify-content: center; text-align: center; width: 100%; }
     .meta-hub-card-actions--single { grid-template-columns: 1fr; }
+    .meta-hub-card-actions--quiet {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 2px;
+    }
+    .meta-hub-card-actions--quiet .admin-btn {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 8px 14px;
+      width: auto;
+    }
+    .meta-hub-card-actions--quiet .admin-btn:hover {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
     .meta-hub-card .client-card-actions {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       margin-top: 4px;
@@ -18371,13 +18389,16 @@
         : `<span class="meta-hub-card-name">${esc(client.accountName)}</span>`;
       const actionButtons = [];
       if (client.needsSetup) {
-        actionButtons.push(`<button type="button" class="admin-btn admin-btn--primary" data-google-ads-enable="${esc(client.googleCustomerId)}" data-google-ads-name="${esc(client.accountName)}">Enable</button>`);
+        actionButtons.push(`<button type="button" class="admin-btn" data-google-ads-enable="${esc(client.googleCustomerId)}" data-google-ads-name="${esc(client.accountName)}">Enable</button>`);
       } else if (canEdit) {
         actionButtons.push(`<a class="admin-btn" href="/admin/google-ads/${encodeURIComponent(client.clientId)}">Edit report</a>`);
         if (client.reportUrl && client.googleAdsReportEnabled) {
           actionButtons.push(`<button type="button" class="admin-btn admin-btn--secondary" data-copy-report-url="${esc(client.reportUrl)}">Copy link</button>`);
         }
       }
+      const actionsClass = client.needsSetup
+        ? 'meta-hub-card-actions meta-hub-card-actions--quiet'
+        : `meta-hub-card-actions${actionButtons.length === 1 ? ' meta-hub-card-actions--single' : ''}`;
       return `
         <article class="meta-hub-card ${client.needsSetup ? 'is-setup' : ''}" data-google-ads-row="${esc(rowKey)}">
           <div class="meta-hub-card-head">
@@ -18393,7 +18414,7 @@
             <span class="meta-hub-card-meta-dot" aria-hidden="true">·</span>
             <span>Google Ads</span>
           </div>
-          <div class="meta-hub-card-actions${actionButtons.length === 1 ? ' meta-hub-card-actions--single' : ''}">
+          <div class="${actionsClass}">
             ${actionButtons.join('')}
           </div>
         </article>
