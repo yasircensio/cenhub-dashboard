@@ -25,6 +25,13 @@ function main() {
       monthKey: '2026-08',
     },
   );
+  assert.deepStrictEqual(
+    parseGoogleAdsReportsPath('/api/google-ads-reports/clients/gads-2700870813/conversion-actions'),
+    {
+      kind: 'conversion-actions',
+      clientId: 'gads-2700870813',
+    },
+  );
   console.log('google-ads-reports-handler path tests passed');
 }
 
