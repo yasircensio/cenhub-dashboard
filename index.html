@@ -17772,6 +17772,70 @@
       return settings.googleAdsReportLeadsSource === 'manual' ? 'manual' : 'google';
     }
 
+    function resolveGoogleAdsDisplayedLeads(month = {}, settings = {}) {
+      const mode = resolveGoogleAdsLeadsSource({
+        googleAdsReportLeadsSource: settings.googleAdsReportLeadsSource || settings.leadsSource || month.leadsSource,
+      });
+      const googleLeads = month.googleConversions != null ? Number(month.googleConversions) : null;
+      const manualLeads = month.manualLeads != null ? Number(month.manualLeads) : null;
+      if (mode === 'manual' && manualLeads != null && Number.isFinite(manualLeads)) return manualLeads;
+      return Number.isFinite(googleLeads) ? googleLeads : '';
+    }
+
+    function resolveGoogleAdsDisplayedInput(month, key) {
+      if (month && month[key] != null && month[key] !== '') return month[key];
+      return '';
+    }
+
+    function resolveGoogleAdsSharedEditorValues(month = {}, settings = {}, draft = null) {
+      return {
+        leads: draft?.manualLeads != null ? draft.manualLeads : resolveGoogleAdsDisplayedLeads(month, settings),
+        wonLeads: draft?.wonLeads ?? resolveGoogleAdsDisplayedInput(month, 'wonLeads'),
+        avgLeadValue: draft?.avgLeadValue ?? resolveGoogleAdsDisplayedInput(month, 'avgLeadValue'),
+        avgProfitPerWon: draft?.avgProfitPerWon ?? resolveGoogleAdsDisplayedInput(month, 'avgProfitPerWon'),
+        leadsLocked: resolveGoogleAdsLeadsSource(settings) !== 'manual',
+      };
+    }
+
+    function syncGoogleAdsMonthLeadsForSettings(month, settings) {
+      if (!month) return month;
+      const leads = resolveGoogleAdsDisplayedLeads(month, settings);
+      const numericLeads = leads === '' ? 0 : Number(leads) || 0;
+      month.leadsSource = resolveGoogleAdsLeadsSource(settings);
+      month.leadsOverridden = month.leadsSource === 'manual' && month.manualLeads != null;
+      if (month.topline) month.topline.leads = numericLeads;
+      if (month.meta) month.meta.leads = numericLeads;
+      return month;
+    }
+
+    function applyGoogleAdsLeadsSourceToPayload(targetPayload, settings) {
+      if (!targetPayload) return;
+      targetPayload.settings = {
+        ...(targetPayload.settings || {}),
+        ...settings,
+        googleAdsReportLeadsSource: settings.googleAdsReportLeadsSource,
+      };
+      Object.values(targetPayload.months || {}).forEach((month) => {
+        syncGoogleAdsMonthLeadsForSettings(month, targetPayload.settings);
+      });
+    }
+
+    function applyGoogleAdsLeadsSourceAcrossViews(clientId, settings, draftMode) {
+      const nextSource = settings.googleAdsReportLeadsSource || draftMode;
+      const nextSettings = { ...settings, googleAdsReportLeadsSource: nextSource };
+      if (googleAdsReportsState.clientPayload?.clientId === clientId) {
+        applyGoogleAdsLeadsSourceToPayload(googleAdsReportsState.clientPayload, nextSettings);
+      }
+      if (linkedReportsState.googlePayload?.clientId === clientId) {
+        applyGoogleAdsLeadsSourceToPayload(linkedReportsState.googlePayload, nextSettings);
+      }
+      const cvClient = googleAdsReportsState.customValues?.overview?.clients?.find((row) => row.clientId === clientId);
+      if (cvClient) {
+        cvClient.googleAdsReportLeadsSource = nextSource;
+        googleAdsReportsState.customValues.draftInputs = null;
+      }
+    }
+
     function googleAdsLeadsSourceLabel(mode) {
       return mode === 'manual' ? 'Manual' : 'Google Ads';
     }
@@ -17882,20 +17946,14 @@
     }
 
     function applyGoogleAdsLeadsSourceLocally(payload, settings, draftMode) {
-      const nextSource = settings.googleAdsReportLeadsSource || draftMode;
       const currentPayload = googleAdsReportsState.clientPayload || payload;
-      currentPayload.settings = {
-        ...(currentPayload.settings || {}),
+      const nextSettings = {
         ...settings,
-        googleAdsReportLeadsSource: nextSource,
+        googleAdsReportLeadsSource: settings.googleAdsReportLeadsSource || draftMode,
       };
+      applyGoogleAdsLeadsSourceAcrossViews(currentPayload.clientId, nextSettings, draftMode);
+      applyGoogleAdsLeadsSourceToPayload(currentPayload, nextSettings);
       googleAdsReportsState.clientPayload = currentPayload;
-      if (linkedReportsState.googlePayload?.clientId === currentPayload.clientId) {
-        linkedReportsState.googlePayload.settings = {
-          ...(linkedReportsState.googlePayload.settings || {}),
-          ...currentPayload.settings,
-        };
-      }
       refreshGoogleAdsReportClientShareUi(currentPayload);
       const monthKey = googleAdsReportsState.activeMonthKey;
       const monthPayload = currentPayload.months?.[monthKey];
@@ -17918,8 +17976,7 @@
         closeMetaReportModal();
         showToast(draftMode === 'manual' ? 'Switched all months to Manual leads' : 'Switched all months to Google Ads leads', 'success');
         if (fromCustomValues) {
-          const client = googleAdsReportsState.customValues.overview?.clients?.find((row) => row.clientId === clientId);
-          if (client) client.googleAdsReportLeadsSource = settings.googleAdsReportLeadsSource || draftMode;
+          applyGoogleAdsLeadsSourceAcrossViews(clientId, settings, draftMode);
           refreshGoogleAdsCvListAndEditor();
           return;
         }
@@ -18282,6 +18339,7 @@
     function renderGoogleAdsReportMonthBody(monthPayload, { editable = false, yearPayload = null, activeMonthKey = null } = {}) {
       const tabMonthKey = activeMonthKey || monthPayload?.monthKey || null;
       const tabBounds = tabMonthKey ? metaReportMonthBounds(tabMonthKey) : null;
+      const sharedValues = resolveGoogleAdsSharedEditorValues(monthPayload, yearPayload?.settings);
       let editPanelHtml = '';
       if (editable && monthPayload && !monthPayload.meta?.emptyMonth && tabBounds) {
         editPanelHtml = `
@@ -18293,10 +18351,10 @@
             <div class="meta-report-edit-grid">
               <label>Period start<input type="date" id="meta-report-period-start" value="${esc(tabBounds.start)}" /></label>
               <label>Period end<input type="date" id="meta-report-period-end" value="${esc(tabBounds.end)}" /></label>
-              <label class="meta-cv-value-field${resolveGoogleAdsLeadsSource(yearPayload?.settings) === 'manual' ? '' : ' is-locked'}">Number of leads<input type="number" step="any" id="meta-report-leads" value="${esc(monthPayload.topline?.leads ?? '')}"${resolveGoogleAdsLeadsSource(yearPayload?.settings) === 'manual' ? '' : ' readonly disabled tabindex="-1" aria-readonly="true"'} /></label>
-              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(monthPayload.topline?.wonLeads ?? '')}" /></label>
-              <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(monthPayload.topline?.avgLeadValue ?? '')}" /></label>
-              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(monthPayload.inputs?.avgProfitPerWon ?? '')}" /></label>
+              <label class="meta-cv-value-field${sharedValues.leadsLocked ? ' is-locked' : ''}">Number of leads<input type="number" step="any" id="meta-report-leads" value="${esc(sharedValues.leads)}"${sharedValues.leadsLocked ? ' readonly disabled tabindex="-1" aria-readonly="true"' : ''} /></label>
+              <label>Won leads<input type="number" step="any" id="meta-report-won-leads" value="${esc(sharedValues.wonLeads)}" /></label>
+              <label>Avg lead value<input type="number" step="any" id="meta-report-avg-lead-value" value="${esc(sharedValues.avgLeadValue)}" /></label>
+              <label>Avg profit per won<input type="number" step="any" id="meta-report-avg-profit" value="${esc(sharedValues.avgProfitPerWon)}" /></label>
             </div>
             <div class="meta-report-edit-actions">
               <button type="button" class="admin-btn admin-btn--ghost" id="meta-report-refresh-meta">${ICON_SYNC} Refresh from Google Ads</button>
@@ -19162,17 +19220,12 @@
 
       const monthStatus = client.months?.[monthKey] || {};
       const showProfit = client.googleAdsReportShowBottomline;
-      const draft = state.draftInputs;
-      const leadsMode = resolveGoogleAdsLeadsSource(client);
-      const displayLeads = draft?.manualLeads != null
-        ? draft.manualLeads
-        : (leadsMode === 'manual' && monthStatus.manualLeads != null
-          ? monthStatus.manualLeads
-          : (monthStatus.googleConversions != null ? monthStatus.googleConversions : ''));
-      const displayWon = draft?.wonLeads ?? (monthStatus.wonLeads != null ? monthStatus.wonLeads : '');
-      const displayAvgLead = draft?.avgLeadValue ?? (monthStatus.avgLeadValue != null ? monthStatus.avgLeadValue : '');
-      const displayAvgProfit = draft?.avgProfitPerWon ?? (monthStatus.avgProfitPerWon != null ? monthStatus.avgProfitPerWon : '');
-      const leadsLocked = leadsMode !== 'manual';
+      const sharedValues = resolveGoogleAdsSharedEditorValues(monthStatus, client, state.draftInputs);
+      const displayLeads = sharedValues.leads;
+      const displayWon = sharedValues.wonLeads;
+      const displayAvgLead = sharedValues.avgLeadValue;
+      const displayAvgProfit = sharedValues.avgProfitPerWon;
+      const leadsLocked = sharedValues.leadsLocked;
 
       return `
         <div class="meta-report-edit-panel-head">
