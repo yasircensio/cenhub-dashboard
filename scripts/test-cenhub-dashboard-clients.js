@@ -3,6 +3,7 @@ const {
   filterCenhubHubClients,
   resolveCenhubDashboardFlag,
 } = require('../lib/account-store');
+const { shouldListOnMetaCenhubPage } = require('../lib/meta-report-ghl-service');
 
 function testResolveFlag() {
   assert.strictEqual(
@@ -60,4 +61,16 @@ function testHubFilters() {
 
 testResolveFlag();
 testHubFilters();
+
+assert.strictEqual(
+  shouldListOnMetaCenhubPage({ cenhubDashboard: true, metaAdAccountId: '1' }),
+  true,
+  'Cenhub GHL client can appear on Meta Cenhub list',
+);
+assert.strictEqual(
+  shouldListOnMetaCenhubPage({ cenhubDashboard: false, metaAdAccountId: '460777740387875' }),
+  false,
+  'Nova-C style Meta-only client stays off Meta Cenhub list',
+);
+
 console.log('cenhub dashboard client tests passed');
