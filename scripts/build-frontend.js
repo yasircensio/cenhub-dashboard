@@ -143,6 +143,10 @@ async function bootAdminApp() {
     await loadGoogleAdsHubPage();
     return;
   }
+  if (IS_ADMIN_GOOGLE_ADS_CUSTOM) {
+    await loadGoogleAdsCustomValuesPage();
+    return;
+  }
   if (IS_ADMIN_GOOGLE_ADS_CLIENT) {
     await loadGoogleAdsClientPage();
     return;
@@ -195,7 +199,7 @@ async function bootClientApp() {
   if (needsAdminShell) {
     if (!document.querySelector('script[src*="admin.bundle.js"]')) {
       const script = document.createElement('script');
-      script.src = '/js/admin.bundle.js?v=330';
+      script.src = '/js/admin.bundle.js?v=331';
       script.defer = true;
       document.body.appendChild(script);
     }

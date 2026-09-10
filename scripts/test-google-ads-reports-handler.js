@@ -4,6 +4,9 @@ const { parseGoogleAdsReportsPath } = require('../lib/google-ads-reports-handler
 function main() {
   assert.deepStrictEqual(parseGoogleAdsReportsPath('/api/google-ads-reports'), { kind: 'dashboard' });
   assert.deepStrictEqual(parseGoogleAdsReportsPath('/api/google-ads-reports/provision'), { kind: 'provision' });
+  assert.deepStrictEqual(parseGoogleAdsReportsPath('/api/google-ads-reports/custom-values'), {
+    kind: 'custom-values',
+  });
   assert.deepStrictEqual(parseGoogleAdsReportsPath('/api/google-ads-reports/clients/gads-9103268801'), {
     kind: 'client-year',
     clientId: 'gads-9103268801',

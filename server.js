@@ -72,7 +72,7 @@ function serveDashboardHtml(response, mode, clientSlug = null, extraAttrs = {}) 
     || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'sync-history-meta-reports' || mode === 'fb-lead-sync'
     || mode === 'meta-reports' || mode === 'meta-reports-client' || mode === 'meta-reports-custom'
     || mode === 'meta-reports-ghl-clients'
-    || mode === 'google-ads' || mode === 'google-ads-client'
+    || mode === 'google-ads' || mode === 'google-ads-client' || mode === 'google-ads-custom'
     || mode === 'report';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
   let html = fs.readFileSync(path.join(ROOT, templateName), 'utf8');
@@ -459,8 +459,13 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (url === '/admin/google-ads/custom-values') {
+    serveDashboardHtml(response, 'google-ads-custom');
+    return;
+  }
+
   const googleAdsClientMatch = url.match(/^\/admin\/google-ads\/([^/]+)\/?$/);
-  if (googleAdsClientMatch) {
+  if (googleAdsClientMatch && googleAdsClientMatch[1] !== 'custom-values') {
     serveDashboardHtml(response, 'google-ads-client', googleAdsClientMatch[1]);
     return;
   }

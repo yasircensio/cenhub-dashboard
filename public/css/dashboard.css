@@ -63,6 +63,7 @@
     body[data-dashboard-mode="meta-reports-client"],
     body[data-dashboard-mode="google-ads"],
     body[data-dashboard-mode="google-ads-client"],
+    body[data-dashboard-mode="google-ads-custom"],
     body[data-dashboard-mode="report"],
     body[data-dashboard-mode="team"],
     body[data-dashboard-mode="login"] {

@@ -99,6 +99,7 @@ function main() {
     'loadMetaReportsClientPage',
     'loadGoogleAdsHubPage',
     'loadGoogleAdsClientPage',
+    'loadGoogleAdsCustomValuesPage',
   ];
 
     const adminBootRoutes = [
@@ -114,6 +115,8 @@ function main() {
     'loadMetaReportsHubPage',
     'IS_ADMIN_GOOGLE_ADS',
     'loadGoogleAdsHubPage',
+    'IS_ADMIN_GOOGLE_ADS_CUSTOM',
+    'loadGoogleAdsCustomValuesPage',
     'IS_ADMIN_GOOGLE_ADS_CLIENT',
     'loadGoogleAdsClientPage',
     'IS_ADMIN_SYNC_HISTORY_META_REPORTS',
