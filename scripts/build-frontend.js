@@ -135,6 +135,10 @@ async function bootAdminApp() {
     await loadMetaReportsGhlClientsPage();
     return;
   }
+  if (IS_ADMIN_META_REPORTS_ADS_CHECK) {
+    await loadMetaAdsCheckPage();
+    return;
+  }
   if (IS_ADMIN_META_REPORTS_CLIENT) {
     await loadMetaReportsClientPage();
     return;
@@ -199,7 +203,7 @@ async function bootClientApp() {
   if (needsAdminShell) {
     if (!document.querySelector('script[src*="admin.bundle.js"]')) {
       const script = document.createElement('script');
-      script.src = '/js/admin.bundle.js?v=336';
+      script.src = '/js/admin.bundle.js?v=337';
       script.defer = true;
       document.body.appendChild(script);
     }

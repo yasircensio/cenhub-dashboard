@@ -125,6 +125,7 @@ function main() {
     'resolveGoogleAdsSharedEditorValues',
     'IS_ADMIN_META_REPORTS_ADS_CHECK',
     'loadMetaAdsCheckPage',
+    'await loadMetaAdsCheckPage()',
     'IS_ADMIN_GOOGLE_ADS_CLIENT',
     'loadGoogleAdsClientPage',
     'IS_ADMIN_SYNC_HISTORY_META_REPORTS',
