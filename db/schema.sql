@@ -225,6 +225,7 @@ CREATE TABLE IF NOT EXISTS google_ads_report_clients (
   default_avg_profit_per_won NUMERIC,
   linked_meta_client_id TEXT,
   timezone TEXT NOT NULL DEFAULT 'Europe/Copenhagen',
+  leads_source TEXT NOT NULL DEFAULT 'google',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -253,6 +254,7 @@ CREATE TABLE IF NOT EXISTS google_ads_report_months (
   won_leads NUMERIC,
   avg_lead_value NUMERIC,
   avg_profit_per_won NUMERIC,
+  manual_leads NUMERIC,
   published BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
