@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   metrics_model_changed_at TIMESTAMPTZ,
   metrics_model_version INTEGER NOT NULL DEFAULT 1,
   ready_for_ghl BOOLEAN NOT NULL DEFAULT FALSE,
+  cenhub_dashboard BOOLEAN NOT NULL DEFAULT FALSE,
   meta_ad_account_id TEXT,
   meta_page_id TEXT,
   meta_pixel_id TEXT,

@@ -20746,8 +20746,97 @@
       }
     }
 
+    const CLIENT_HUB_FILTER_OPTIONS = [
+      { value: 'all', label: 'All' },
+      { value: 'live', label: 'Live' },
+      { value: 'needs-setup', label: 'Needs setup' },
+    ];
+    const clientsHubState = {
+      filter: 'all',
+      searchQuery: '',
+      clients: [],
+    };
+
+    function filterCenhubHubClients(clients, filter, searchQuery = '') {
+      let list = clients || [];
+      if (filter === 'live') list = list.filter((client) => client.status === 'ready');
+      if (filter === 'needs-setup') list = list.filter((client) => client.status && client.status !== 'ready');
+      const query = String(searchQuery || '').trim().toLowerCase();
+      if (query) {
+        list = list.filter((client) => {
+          const haystack = `${client.accountName || ''} ${client.clientId || ''}`.toLowerCase();
+          return haystack.includes(query);
+        });
+      }
+      return list;
+    }
+
+    function renderClientHubFiltersHtml(activeFilter) {
+      return CLIENT_HUB_FILTER_OPTIONS.map((option) => `
+        <button
+          type="button"
+          class="meta-hub-filter${activeFilter === option.value ? ' is-active' : ''}"
+          data-client-hub-filter="${esc(option.value)}"
+          role="tab"
+          aria-selected="${activeFilter === option.value ? 'true' : 'false'}"
+        >${esc(option.label)}</button>
+      `).join('');
+    }
+
+    function clientHubEmptyMessage(filter, totalCount, searchQuery) {
+      const query = String(searchQuery || '').trim();
+      if (query) return `No clients match “${query}”.`;
+      if (!totalCount) {
+        return isStaffAdmin()
+          ? 'No Cenhub clients yet. Create your first client below.'
+          : 'No Cenhub clients yet.';
+      }
+      if (filter === 'live') return 'No live dashboards yet.';
+      if (filter === 'needs-setup') return 'No clients need setup.';
+      return 'No Cenhub clients yet.';
+    }
+
+    function bindClientHubEvents() {
+      document.querySelectorAll('[data-client-hub-filter]').forEach((button) => {
+        button.onclick = () => {
+          clientsHubState.filter = button.getAttribute('data-client-hub-filter') || 'all';
+          refreshAdminHubDom();
+        };
+      });
+      const search = document.getElementById('hub-search');
+      if (search) {
+        search.oninput = () => {
+          clientsHubState.searchQuery = search.value || '';
+          refreshAdminHubDom({ keepFocus: 'hub-search' });
+        };
+      }
+    }
+
+    function refreshAdminHubDom({ keepFocus } = {}) {
+      const dashboard = document.getElementById('dashboard');
+      if (!dashboard || !IS_ADMIN_HUB) return;
+      const addOpen = Boolean(document.getElementById('add-client-panel')?.open);
+      dashboard.innerHTML = renderAdminHubPage(clientsHubState.clients);
+      bindClientHubEvents();
+      const panel = document.getElementById('add-client-panel');
+      if (panel && addOpen) panel.open = true;
+      if (keepFocus === 'hub-search') {
+        const input = document.getElementById('hub-search');
+        if (input) {
+          input.focus();
+          const len = input.value.length;
+          input.setSelectionRange(len, len);
+        }
+      }
+    }
+
     function renderAdminHubPage(clients) {
-      const count = clients.length;
+      clientsHubState.clients = clients || [];
+      const searchQuery = clientsHubState.searchQuery;
+      const filter = clientsHubState.filter;
+      const visible = filterCenhubHubClients(clientsHubState.clients, filter, searchQuery);
+      const count = visible.length;
+      const emptyCopy = clientHubEmptyMessage(filter, clientsHubState.clients.length, searchQuery);
       const syncLogActions = currentStaffUser ? `
               <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta">Meta sync log</a>
               <a class="admin-btn admin-btn--secondary" href="/admin/sync-history/meta-reports">Meta report sync log</a>
@@ -20762,22 +20851,24 @@
         ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero">
           <h1>Client administration</h1>
-          <p>Manage dashboard accounts, sync GHL data, and preview client views.</p>
+          <p>Cenhub GHL dashboards. Meta Ads and Google Ads clients stay on their own hubs until you add them here.</p>
         </div>
         <div class="admin-hub">
           <div class="hub-toolbar-row">
             <div class="hub-search">
               ${ICON_SEARCH}
-              <input id="hub-search" type="search" placeholder="Search clients..." oninput="filterHubCards()" />
+              <input id="hub-search" type="search" placeholder="Search clients..." value="${esc(searchQuery)}" autocomplete="off" />
             </div>
             <span class="hub-count" id="hub-count">${count} client${count === 1 ? '' : 's'}</span>
             <div class="hub-toolbar-actions">
+              <div class="meta-hub-filters" id="client-hub-filters" role="tablist" aria-label="Filter Cenhub clients">
+                ${renderClientHubFiltersHtml(filter)}
+              </div>
               ${adminActions}
             </div>
           </div>
           <div class="client-grid" id="client-grid">
-            ${count ? clients.map((client) => renderClientCard(client)).join('') : `<div class="hub-empty">${isStaffAdmin() ? 'No clients yet. Create your first client below.' : 'No clients yet.'}</div>`}
-            <div class="hub-empty" id="hub-no-results" style="display:none">No clients match your search.</div>
+            ${count ? visible.map((client) => renderClientCard(client)).join('') : `<div class="hub-empty">${esc(emptyCopy)}</div>`}
           </div>
           ${isStaffAdmin() ? renderAddClientPanel() : ''}
         </div>
@@ -20895,15 +20986,9 @@
     }
 
     function filterHubCards() {
-      const query = (document.getElementById('hub-search')?.value || '').trim().toLowerCase();
-      let visible = 0;
-      document.querySelectorAll('#client-grid .client-card').forEach((card) => {
-        const match = !query || (card.dataset.search || '').includes(query);
-        card.style.display = match ? '' : 'none';
-        if (match) visible += 1;
-      });
-      const empty = document.getElementById('hub-no-results');
-      if (empty) empty.style.display = query && !visible ? '' : 'none';
+      const search = document.getElementById('hub-search');
+      clientsHubState.searchQuery = search?.value || '';
+      refreshAdminHubDom({ keepFocus: 'hub-search' });
     }
 
     function renderAddClientPanel() {
@@ -20913,7 +20998,7 @@
             <h2>${ICON_PLUS} Add new client</h2>
             <span class="add-client-summary-hint">Click to expand</span>
           </summary>
-          <p class="add-client-desc">Creates the account and opens the setup page where you pick the metrics model and connect GHL.</p>
+          <p class="add-client-desc">Creates a Cenhub GHL dashboard and opens setup. Meta Ads partners are added from Meta Ads, not this list.</p>
           <div class="add-client-body">
             <div class="setup-grid setup-grid--3">
               <div class="field-group">
@@ -20949,6 +21034,7 @@
       try {
         const data = await adminFetch('/api/clients');
         dashboard.innerHTML = renderAdminHubPage(data.clients || []);
+        bindClientHubEvents();
       } catch (error) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('clients'))}
@@ -21068,6 +21154,7 @@
         const dashboard = document.getElementById('dashboard');
         if (dashboard) {
           dashboard.innerHTML = renderAdminHubPage(clients);
+          bindClientHubEvents();
         }
         const failed = clients.filter((client) =>
           pendingIds.has(client.clientId) && client.lastSyncStatus === 'error',
