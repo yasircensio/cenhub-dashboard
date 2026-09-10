@@ -70,6 +70,7 @@
     body[data-dashboard-mode="fb-lead-sync"],
     body[data-dashboard-mode="meta-reports"],
     body[data-dashboard-mode="meta-reports-client"],
+    body[data-dashboard-mode="meta-reports-ads-check"],
     body[data-dashboard-mode="google-ads"],
     body[data-dashboard-mode="google-ads-client"],
     body[data-dashboard-mode="google-ads-custom"],
@@ -6245,6 +6246,66 @@
     .meta-cv-legend i {
       border-radius: 999px; display: inline-block; height: 10px; width: 10px;
     }
+    .meta-ads-check-toolbar {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+    .meta-ads-check-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+    .meta-ads-check-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .meta-ads-check-media {
+      align-items: center;
+      aspect-ratio: 1;
+      background: #16120e;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .meta-ads-check-media img,
+    .meta-ads-check-media video {
+      height: 100%;
+      object-fit: cover;
+      width: 100%;
+    }
+    .meta-ads-check-media-empty {
+      color: #d6c7b8;
+      font-size: 13px;
+      padding: 16px;
+      text-align: center;
+    }
+    .meta-ads-check-body { padding: 12px 14px 14px; }
+    .meta-ads-check-type {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+      padding: 2px 8px;
+      text-transform: uppercase;
+    }
+    .meta-ads-check-type.is-video { background: #fff4eb; color: #c2410c; }
+    .meta-ads-check-type.is-image { background: #ecfdf5; color: #047857; }
+    .meta-ads-check-type.is-carousel { background: #eff6ff; color: #1d4ed8; }
+    .meta-ads-check-name { font-size: 14px; font-weight: 650; margin: 0 0 4px; }
+    .meta-ads-check-meta {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 0;
+    }
     .meta-cv-legend i.is-complete { background: #16a34a; }
     .meta-cv-legend i.is-partial { background: #d97706; }
     .meta-cv-legend i.is-empty { background: #fff; border: 1px dashed #cbd5e1; }
@@ -6457,6 +6518,11 @@
           delete document.body.dataset.clientSlug;
           return;
         }
+        if (parts[1] === 'meta-reports' && parts[2] && parts[3] === 'ads-check') {
+          document.body.dataset.dashboardMode = 'meta-reports-ads-check';
+          document.body.dataset.clientSlug = parts[2];
+          return;
+        }
         if (parts[1] === 'meta-reports' && parts[2]) {
           document.body.dataset.dashboardMode = 'meta-reports-client';
           document.body.dataset.clientSlug = parts[2];
@@ -6497,6 +6563,7 @@
     const IS_ADMIN_META_REPORTS_CLIENT = DASHBOARD_MODE === 'meta-reports-client';
     const IS_ADMIN_META_REPORTS_CUSTOM = DASHBOARD_MODE === 'meta-reports-custom';
     const IS_ADMIN_META_REPORTS_GHL_CLIENTS = DASHBOARD_MODE === 'meta-reports-ghl-clients';
+    const IS_ADMIN_META_REPORTS_ADS_CHECK = DASHBOARD_MODE === 'meta-reports-ads-check';
     const IS_ADMIN_GOOGLE_ADS = DASHBOARD_MODE === 'google-ads';
     const IS_ADMIN_GOOGLE_ADS_CLIENT = DASHBOARD_MODE === 'google-ads-client';
     const IS_ADMIN_GOOGLE_ADS_CUSTOM = DASHBOARD_MODE === 'google-ads-custom';
@@ -6508,13 +6575,13 @@
     const IS_PREVIEW = IS_CLIENT_VIEW && Boolean(new URLSearchParams(window.location.search).get('client'));
     const IS_ADMIN = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN_FB_LEAD_SYNC
       || IS_ADMIN_META_REPORTS || IS_ADMIN_META_REPORTS_CLIENT || IS_ADMIN_META_REPORTS_CUSTOM
-      || IS_ADMIN_META_REPORTS_GHL_CLIENTS
+      || IS_ADMIN_META_REPORTS_GHL_CLIENTS || IS_ADMIN_META_REPORTS_ADS_CHECK
       || IS_ADMIN_GOOGLE_ADS || IS_ADMIN_GOOGLE_ADS_CLIENT || IS_ADMIN_GOOGLE_ADS_CUSTOM
       || new URLSearchParams(window.location.search).get('view') === 'admin';
 
     const ADMIN_UI = IS_ADMIN_HUB || IS_ADMIN_CLIENT || IS_TEAM_PAGE || IS_ADMIN_SYNC_HISTORY || IS_ADMIN_FB_LEAD_SYNC
       || IS_ADMIN_META_REPORTS || IS_ADMIN_META_REPORTS_CLIENT || IS_ADMIN_META_REPORTS_CUSTOM
-      || IS_ADMIN_META_REPORTS_GHL_CLIENTS
+      || IS_ADMIN_META_REPORTS_GHL_CLIENTS || IS_ADMIN_META_REPORTS_ADS_CHECK
       || IS_ADMIN_GOOGLE_ADS || IS_ADMIN_GOOGLE_ADS_CLIENT || IS_ADMIN_GOOGLE_ADS_CUSTOM
       || IS_ADMIN;
     const LOADING_MSG = ADMIN_UI ? 'Loading dashboard data...' : 'Henter dashboard data...';
@@ -6855,7 +6922,7 @@
       const syncActive = activeTab === 'ghl-sync' || activeTab === 'meta-sync'
         || activeTab === 'meta-report-sync' || activeTab === 'fb-lead-sync';
       const metaReportsActive = activeTab === 'meta-reports' || activeTab === 'meta-reports-custom'
-        || activeTab === 'meta-reports-ghl-clients';
+        || activeTab === 'meta-reports-ghl-clients' || activeTab === 'meta-reports-ads-check';
       const googleAdsActive = activeTab === 'google-ads' || activeTab === 'google-ads-custom';
       const nav = `
         <nav class="staff-nav" aria-label="Admin navigation">
@@ -21455,6 +21522,110 @@
       }
     }
 
+    function renderMetaAdsCheckCard(ad) {
+      const type = ad.type || 'image';
+      const media = ad.videoUrl
+        ? `<video src="${esc(ad.videoUrl)}" poster="${esc(ad.thumbnailUrl || '')}" controls muted playsinline></video>`
+        : (ad.thumbnailUrl || ad.imageUrl
+          ? `<img src="${esc(ad.thumbnailUrl || ad.imageUrl)}" alt="${esc(ad.adName || 'Ad')}" />`
+          : '<div class="meta-ads-check-media-empty">No preview from Meta</div>');
+      return `
+        <article class="meta-ads-check-card">
+          <div class="meta-ads-check-media">${media}</div>
+          <div class="meta-ads-check-body">
+            <span class="meta-ads-check-type is-${esc(type)}">${esc(type)}</span>
+            <h3 class="meta-ads-check-name">${esc(ad.adName || 'Untitled ad')}</h3>
+            <p class="meta-ads-check-meta">
+              ${esc(ad.campaignName || 'No campaign')}<br>
+              ${esc(ad.adsetName || 'No ad set')}<br>
+              ${esc(ad.effectiveStatus || ad.status || 'unknown')}
+            </p>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderMetaAdsCheckPage(payload) {
+      const ads = payload.creatives || [];
+      const scope = payload.scope === 'all' ? 'all' : 'active';
+      return `
+        ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
+        ${wrapDashboardShell(`
+        <div class="page-hero admin-hub-hero meta-premium-page-hero">
+          <div class="meta-premium-page-hero-inner">
+            <div class="admin-breadcrumb">
+              <a href="/admin">Clients</a>
+              <span aria-hidden="true"> / </span>
+              <a href="/admin/meta-reports">Meta reports</a>
+              <span aria-hidden="true"> / </span>
+              <a href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}">${esc(payload.accountName)}</a>
+              <span aria-hidden="true"> / </span>
+              <span>Ads check</span>
+            </div>
+            <h1>Live Meta ads check</h1>
+            <p class="meta-report-public-subtitle">
+              Read-only probe with the current System User token. Nothing is saved.
+            </p>
+          </div>
+        </div>
+        <div class="meta-ads-check-toolbar">
+          <span class="meta-cv-summary-pill is-complete">${payload.ok ? 'Access works' : 'Access failed'}</span>
+          <span class="meta-cv-summary-pill">${payload.adCount || 0} ads</span>
+          <span class="meta-cv-summary-pill">${payload.videoCount || 0} videos</span>
+          <span class="meta-cv-summary-pill">${payload.imageCount || 0} statics</span>
+          <span class="meta-cv-summary-pill">${payload.carouselCount || 0} carousels</span>
+          <a class="admin-btn admin-btn--small${scope === 'active' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check">Active only</a>
+          <a class="admin-btn admin-btn--small${scope === 'all' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=all">Include paused</a>
+        </div>
+        ${ads.length
+          ? `<div class="meta-ads-check-grid">${ads.map(renderMetaAdsCheckCard).join('')}</div>`
+          : '<div class="sync-history-empty" style="padding:24px 0">No ads returned for this scope. Try Include paused, or the token cannot see creatives yet.</div>'}
+        `)}
+      `;
+    }
+
+    async function loadMetaAdsCheckPage() {
+      const dashboard = document.getElementById('dashboard');
+      if (!dashboard) return;
+      const user = await fetchStaffMe();
+      if (!user) {
+        window.location.href = `/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        return;
+      }
+      currentStaffUser = user;
+      dashboard.innerHTML = `
+        ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
+        ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Checking Meta ads access...</p></div>')}
+      `;
+      try {
+        const scope = new URLSearchParams(window.location.search).get('scope') === 'all' ? 'all' : 'active';
+        const payload = await adminFetch(
+          `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(scope)}`,
+        );
+        dashboard.innerHTML = renderMetaAdsCheckPage(payload);
+      } catch (error) {
+        dashboard.innerHTML = `
+          ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
+          ${wrapDashboardShell(`
+            <div class="page-hero admin-hub-hero meta-premium-page-hero">
+              <div class="meta-premium-page-hero-inner">
+                <div class="admin-breadcrumb">
+                  <a href="/admin/meta-reports">Meta reports</a>
+                  <span aria-hidden="true"> / </span>
+                  <span>Ads check</span>
+                </div>
+                <h1>Live Meta ads check</h1>
+              </div>
+            </div>
+            <div class="error-state" style="padding:24px 0">
+              <p><strong>Current access is not enough, or the request failed.</strong></p>
+              <p>${esc(error.message || 'Request failed.')}</p>
+            </div>
+          `)}
+        `;
+      }
+    }
+
     async function loadMetaReportsCustomValuesPage({ silent = false, keepSelection = false } = {}) {
       const dashboard = document.getElementById('dashboard');
       if (!dashboard) return;
@@ -25193,6 +25364,11 @@
 
       if (IS_ADMIN_META_REPORTS_GHL_CLIENTS) {
         loadMetaReportsGhlClientsPage();
+        return;
+      }
+
+      if (IS_ADMIN_META_REPORTS_ADS_CHECK) {
+        loadMetaAdsCheckPage();
         return;
       }
 

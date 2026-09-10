@@ -62,6 +62,7 @@
     { "source": "/admin/meta-reports", "destination": "/admin.html" },
     { "source": "/admin/meta-reports/custom-values", "destination": "/admin.html" },
     { "source": "/admin/meta-reports/ghl-clients", "destination": "/admin.html" },
+    { "source": "/admin/meta-reports/:client_id/ads-check", "destination": "/admin.html" },
     { "source": "/admin/meta-reports/:client_id", "destination": "/admin.html" },
     { "source": "/admin/google-ads", "destination": "/admin.html" },
     { "source": "/admin/google-ads/custom-values", "destination": "/admin.html" },

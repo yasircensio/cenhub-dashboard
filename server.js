@@ -71,7 +71,7 @@ function serveDashboardHtml(response, mode, clientSlug = null, extraAttrs = {}) 
   const isAdminMode = mode === 'hub' || mode === 'admin' || mode === 'login' || mode === 'team'
     || mode === 'sync-history-ghl' || mode === 'sync-history-meta' || mode === 'sync-history-meta-reports' || mode === 'fb-lead-sync'
     || mode === 'meta-reports' || mode === 'meta-reports-client' || mode === 'meta-reports-custom'
-    || mode === 'meta-reports-ghl-clients'
+    || mode === 'meta-reports-ghl-clients' || mode === 'meta-reports-ads-check'
     || mode === 'google-ads' || mode === 'google-ads-client' || mode === 'google-ads-custom'
     || mode === 'report';
   const templateName = isAdminMode ? 'admin.html' : 'client.html';
@@ -482,6 +482,12 @@ const server = http.createServer(async (request, response) => {
 
   if (url === '/admin/meta-reports/ghl-clients') {
     serveDashboardHtml(response, 'meta-reports-ghl-clients');
+    return;
+  }
+
+  const metaAdsCheckMatch = url.match(/^\/admin\/meta-reports\/([^/]+)\/ads-check\/?$/);
+  if (metaAdsCheckMatch) {
+    serveDashboardHtml(response, 'meta-reports-ads-check', normalizeClientId(metaAdsCheckMatch[1]));
     return;
   }
 

@@ -61,6 +61,7 @@
     body[data-dashboard-mode="fb-lead-sync"],
     body[data-dashboard-mode="meta-reports"],
     body[data-dashboard-mode="meta-reports-client"],
+    body[data-dashboard-mode="meta-reports-ads-check"],
     body[data-dashboard-mode="google-ads"],
     body[data-dashboard-mode="google-ads-client"],
     body[data-dashboard-mode="google-ads-custom"],
@@ -6235,6 +6236,66 @@
     .meta-cv-legend span { align-items: center; display: inline-flex; gap: 6px; }
     .meta-cv-legend i {
       border-radius: 999px; display: inline-block; height: 10px; width: 10px;
+    }
+    .meta-ads-check-toolbar {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+    .meta-ads-check-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+    .meta-ads-check-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .meta-ads-check-media {
+      align-items: center;
+      aspect-ratio: 1;
+      background: #16120e;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .meta-ads-check-media img,
+    .meta-ads-check-media video {
+      height: 100%;
+      object-fit: cover;
+      width: 100%;
+    }
+    .meta-ads-check-media-empty {
+      color: #d6c7b8;
+      font-size: 13px;
+      padding: 16px;
+      text-align: center;
+    }
+    .meta-ads-check-body { padding: 12px 14px 14px; }
+    .meta-ads-check-type {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+      padding: 2px 8px;
+      text-transform: uppercase;
+    }
+    .meta-ads-check-type.is-video { background: #fff4eb; color: #c2410c; }
+    .meta-ads-check-type.is-image { background: #ecfdf5; color: #047857; }
+    .meta-ads-check-type.is-carousel { background: #eff6ff; color: #1d4ed8; }
+    .meta-ads-check-name { font-size: 14px; font-weight: 650; margin: 0 0 4px; }
+    .meta-ads-check-meta {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin: 0;
     }
     .meta-cv-legend i.is-complete { background: #16a34a; }
     .meta-cv-legend i.is-partial { background: #d97706; }

@@ -21,6 +21,10 @@ function main() {
     kind: 'client-settings',
     clientId: 'ml-tagdaekning',
   });
+  assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/clients/censio/ads-check'), {
+    kind: 'ads-check',
+    clientId: 'censio',
+  });
   assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/clients/ml-tagdaekning/months/2026-01'), {
     kind: 'month-save',
     clientId: 'ml-tagdaekning',
