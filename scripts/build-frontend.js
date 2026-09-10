@@ -186,6 +186,21 @@ document.addEventListener('visibilitychange', function () {
 
   const clientInit = `
 async function bootClientApp() {
+  const pathName = window.location.pathname.replace(/\\/+$/, '') || '/';
+  const needsAdminShell = pathName === '/admin'
+    || pathName === '/login'
+    || pathName === '/team'
+    || pathName.startsWith('/admin/')
+    || pathName.startsWith('/report/');
+  if (needsAdminShell) {
+    if (!document.querySelector('script[src*="admin.bundle.js"]')) {
+      const script = document.createElement('script');
+      script.src = '/js/admin.bundle.js?v=329';
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+    return;
+  }
   bindStaffChromeEvents();
   await probeStaffPreviewSession();
   if (IS_REPORT_VIEW) {

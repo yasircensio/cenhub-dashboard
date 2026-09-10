@@ -67,7 +67,7 @@
     { "source": "/admin/google-ads/:client_id", "destination": "/admin.html" },
     { "source": "/report/:token", "destination": "/admin.html" },
     { "source": "/admin/:client_id", "destination": "/admin.html" },
-    { "source": "/:client_id", "destination": "/client.html" }
+    { "source": "/:client_id([a-z0-9-]+)", "destination": "/client.html" }
   ],
   "headers": [
     {
