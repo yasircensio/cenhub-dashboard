@@ -18877,7 +18877,7 @@
     }
 
     function getGoogleAdsCvFilteredClients(overview = googleAdsReportsState.customValues.overview) {
-      const clients = overview?.clients || [];
+      const clients = (overview?.clients || []).filter((client) => client.googleAdsReportEnabled !== false);
       const query = String(googleAdsReportsState.customValues.searchQuery || '').trim().toLowerCase();
       if (!query) return clients;
       return clients.filter((client) => (

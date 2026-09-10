@@ -2,6 +2,7 @@ const assert = require('assert');
 const {
   classifyGoogleAdsCustomInputStatus,
   googleAdsCustomInputsUpdatedAt,
+  shouldListOnGoogleAdsCustomValuesPage,
 } = require('../lib/google-ads-report-store');
 
 function main() {
@@ -29,6 +30,25 @@ function main() {
     googleAdsCustomInputsUpdatedAt({ updatedAt: '2026-09-10T10:00:00.000Z' }, 'partial'),
     '2026-09-10T10:00:00.000Z',
   );
+
+  assert.strictEqual(shouldListOnGoogleAdsCustomValuesPage({
+    clientId: 'gads-1',
+    googleCustomerId: '123',
+    enabled: true,
+  }), true);
+  assert.strictEqual(shouldListOnGoogleAdsCustomValuesPage({
+    clientId: 'gads-1',
+    googleCustomerId: '123',
+    enabled: false,
+  }), false);
+  assert.strictEqual(shouldListOnGoogleAdsCustomValuesPage({
+    clientId: 'gads-1',
+    googleCustomerId: '123',
+    googleAdsReportEnabled: false,
+  }), false);
+  assert.strictEqual(shouldListOnGoogleAdsCustomValuesPage({
+    clientId: 'gads-1',
+  }), false);
 
   console.log('Google Ads custom values status tests passed.');
 }
