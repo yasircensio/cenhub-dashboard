@@ -4859,15 +4859,20 @@
     .meta-report-topline-source-wrap > .meta-report-topline-summary {
       height: 100%; min-height: 52px;
     }
-    #meta-report-topline-source-host {
+    #meta-report-topline-source-host,
+    #gads-leads-source-host {
       display: flex; flex-direction: column; min-width: 0;
     }
     #meta-report-topline-source-host[hidden] { display: none !important; }
     #meta-report-topline-source-host[hidden] + .meta-report-excel-sheet-summary {
       grid-column: 1 / -1;
     }
-    #meta-report-topline-source-host .meta-report-topline-source-wrap {
+    #meta-report-topline-source-host .meta-report-topline-source-wrap,
+    #gads-leads-source-host .meta-report-topline-source-wrap {
       flex: 1; height: 100%;
+    }
+    #gads-leads-source-host .meta-report-topline-source-wrap > .meta-report-topline-summary {
+      height: 100%; min-height: 52px;
     }
     .meta-report-control-editors {
       display: flex; flex-direction: column; gap: 12px;
@@ -17652,7 +17657,6 @@
         draftInputs: null,
         saving: false,
       },
-      leadsSourceSaving: false,
     };
 
     function googleAdsSettingsToMetaUx(settings = {}) {
@@ -17775,11 +17779,10 @@
     function renderGoogleAdsLeadsSourceControl(payload, { prefix = 'gads' } = {}) {
       const settings = payload?.settings || {};
       const mode = resolveGoogleAdsLeadsSource(settings);
-      const saving = googleAdsReportsState.leadsSourceSaving;
       const year = payload?.year || googleAdsReportsState.selectedYear;
       const sourceValueClass = mode === 'manual' ? 'is-cenhub' : 'is-meta';
       return `
-        <div class="meta-report-topline-source-wrap meta-topline-source-panel${saving ? ' is-loading' : ''}" id="${prefix}-leads-source-panel">
+        <div class="meta-report-topline-source-wrap meta-topline-source-panel" id="${prefix}-leads-source-panel">
           <div class="meta-report-topline-summary">
             <div class="meta-report-topline-summary-content">
               <div class="meta-report-topline-summary-row">
@@ -17791,10 +17794,7 @@
                 <span class="meta-report-topline-summary-value">All months · ${esc(year)}</span>
               </div>
             </div>
-            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="${prefix}-leads-source-change"${saving ? ' disabled' : ''}>Edit</button>
-          </div>
-          <div class="meta-topline-source-loading" id="${prefix}-leads-source-loading"${saving ? '' : ' hidden'}>
-            <span class="meta-report-save-indicator-spinner"></span> Switching source…
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" id="${prefix}-leads-source-change">Edit</button>
           </div>
         </div>
       `;
@@ -17881,42 +17881,52 @@
       applyBtn.disabled = !(ackInput?.checked && confirmed);
     }
 
+    function applyGoogleAdsLeadsSourceLocally(payload, settings, draftMode) {
+      const nextSource = settings.googleAdsReportLeadsSource || draftMode;
+      const currentPayload = googleAdsReportsState.clientPayload || payload;
+      currentPayload.settings = {
+        ...(currentPayload.settings || {}),
+        ...settings,
+        googleAdsReportLeadsSource: nextSource,
+      };
+      googleAdsReportsState.clientPayload = currentPayload;
+      if (linkedReportsState.googlePayload?.clientId === currentPayload.clientId) {
+        linkedReportsState.googlePayload.settings = {
+          ...(linkedReportsState.googlePayload.settings || {}),
+          ...currentPayload.settings,
+        };
+      }
+      refreshGoogleAdsReportClientShareUi(currentPayload);
+      const monthKey = googleAdsReportsState.activeMonthKey;
+      const monthPayload = currentPayload.months?.[monthKey];
+      if (monthPayload) refreshGoogleAdsReportMonthPanel(monthPayload);
+    }
+
     async function applyGoogleAdsLeadsSourceChange(payload, { fromCustomValues = false } = {}) {
       const clientId = payload?.clientId;
       const draftMode = getGoogleAdsLeadsDraftMode();
       if (!clientId || draftMode === resolveGoogleAdsLeadsSource(payload?.settings)) return;
       const applyBtn = document.getElementById('gads-leads-apply');
       const loading = document.getElementById('gads-leads-modal-loading');
-      googleAdsReportsState.leadsSourceSaving = true;
       if (applyBtn) applyBtn.disabled = true;
       if (loading) loading.removeAttribute('hidden');
       try {
         const result = await patchGoogleAdsReportSettings(clientId, {
           googleAdsReportLeadsSource: draftMode,
-        });
+        }, { fast: true });
         const settings = result.settings || {};
+        closeMetaReportModal();
+        showToast(draftMode === 'manual' ? 'Switched all months to Manual leads' : 'Switched all months to Google Ads leads', 'success');
         if (fromCustomValues) {
           const client = googleAdsReportsState.customValues.overview?.clients?.find((row) => row.clientId === clientId);
           if (client) client.googleAdsReportLeadsSource = settings.googleAdsReportLeadsSource || draftMode;
-          closeMetaReportModal();
-          showToast(draftMode === 'manual' ? 'Switched all months to Manual leads' : 'Switched all months to Google Ads leads', 'success');
-          refreshGoogleAdsCvListAndEditor();
-          await refreshGoogleAdsCvOverviewSilently();
           refreshGoogleAdsCvListAndEditor();
           return;
         }
-        const currentPayload = googleAdsReportsState.clientPayload || payload;
-        currentPayload.settings = { ...currentPayload.settings, ...settings };
-        googleAdsReportsState.clientPayload = await adminFetch(
-          `/api/google-ads-reports/clients/${encodeURIComponent(clientId)}?year=${encodeURIComponent(googleAdsReportsState.selectedYear)}`,
-        );
-        closeMetaReportModal();
-        showToast(draftMode === 'manual' ? 'Switched all months to Manual leads' : 'Switched all months to Google Ads leads', 'success');
-        await reloadCurrentLinkedEditor();
+        applyGoogleAdsLeadsSourceLocally(payload, settings, draftMode);
       } catch (error) {
         showToast(error.message || 'Switch failed', 'error');
-      } finally {
-        googleAdsReportsState.leadsSourceSaving = false;
+        if (applyBtn) applyBtn.disabled = false;
         if (loading) loading.setAttribute('hidden', '');
       }
     }
