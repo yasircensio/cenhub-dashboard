@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { classifyCreative, summarizeAd } = require('../lib/meta-ads-creatives');
+const { classifyCreative, extractVideoId, summarizeAd } = require('../lib/meta-ads-creatives');
 
 function main() {
   assert.strictEqual(classifyCreative({ object_type: 'SHARE', image_url: 'https://img' }), 'image');
@@ -31,6 +31,23 @@ function main() {
   assert.strictEqual(summarized.videoUrl, 'https://video.mp4');
   assert.strictEqual(summarized.thumbnailUrl, 'https://poster');
   assert.strictEqual(summarized.campaignName, 'Prospecting');
+
+  // Some ad formats only nest the video id under object_story_spec.video_data
+  // instead of exposing creative.video_id directly.
+  assert.strictEqual(
+    extractVideoId({ object_story_spec: { video_data: { video_id: 'nested-1' } } }),
+    'nested-1',
+  );
+  const nestedSummary = summarizeAd({
+    id: 'ad-2',
+    name: 'Nested video ad',
+    creative: {
+      object_story_spec: { video_data: { video_id: 'nested-1' } },
+    },
+  }, { id: 'nested-1', source: 'https://nested.mp4', picture: 'https://nested-poster.jpg' });
+  assert.strictEqual(nestedSummary.type, 'video');
+  assert.strictEqual(nestedSummary.videoId, 'nested-1');
+  assert.strictEqual(nestedSummary.videoUrl, 'https://nested.mp4');
 
   console.log('Meta ads creatives tests passed.');
 }
