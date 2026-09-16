@@ -21617,12 +21617,6 @@
       return ad.storedVideoUrl || ad.videoUrl || '';
     }
 
-    function dbgAdsCheck(hypothesisId, message, data, runId = 'post-fix') {
-      // #region agent log
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',runId,hypothesisId,location:'index.html:ads-check',message,data,timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-    }
-
     function setMetaAdsCheckVideoStatus(media, { label, busy = true, hide = false } = {}) {
       if (!media) return;
       const status = media.querySelector('[data-ads-check-status]');
@@ -21688,21 +21682,9 @@
       });
     }
 
-    function bindMetaAdsCheckVideoDebug(root, videos) {
-      dbgAdsCheck('E', 'ads-check videos rendered', {
-        videoCount: (videos || []).length,
-        samples: (videos || []).slice(0, 5).map((ad) => ({
-          name: ad.adName,
-          type: ad.type,
-          stored: Boolean(ad.stored),
-          videoId: ad.videoId || null,
-          srcHost: String(metaAdsCheckPlaybackSrc(ad) || '').slice(0, 80),
-          usesMediaEndpoint: /\/ads-check\/media\//.test(metaAdsCheckPlaybackSrc(ad) || ''),
-          usesBlobHost: /blob\.vercel-storage\.com/.test(metaAdsCheckPlaybackSrc(ad) || ''),
-          hasNativeSrc: true,
-        })),
-      }, 'post-fix-ux');
-      root.querySelectorAll('video[data-ads-check-video]').forEach((video, index) => {
+    function bindMetaAdsCheckVideos(root) {
+      const videos = root.querySelectorAll('video[data-ads-check-video]');
+      videos.forEach((video) => {
         const media = video.closest('.meta-ads-check-media');
         const blobSrc = video.getAttribute('data-ads-check-src') || '';
         const poster = media ? media.querySelector('[data-ads-check-poster]') : null;
@@ -21717,73 +21699,28 @@
           setMetaAdsCheckVideoStatus(media, { label: 'Preparing video…', busy: true });
           const response = await fetch(blobSrc);
           const file = new Blob([await response.arrayBuffer()], { type: 'video/mp4' });
-          // #region agent log
-          dbgAdsCheck('B', 'blob hydrate', {
-            index,
-            status: response.status,
-            bytes: file.size,
-            type: file.type,
-            looksVideo: String(file.type || '').includes('video'),
-          }, 'post-fix-ux');
-          // #endregion
           video.src = URL.createObjectURL(file);
           video.dataset.hydrated = '1';
           await video.play().catch(() => {});
         };
         video.addEventListener('play', () => {
+          videos.forEach((other) => {
+            if (other !== video) other.pause();
+          });
           setMetaAdsCheckVideoStatus(media, { label: 'Loading video…', busy: true });
-          // #region agent log
-          dbgAdsCheck('G', 'video play', { index, readyState: video.readyState }, 'post-fix-ux');
-          // #endregion
         });
         video.addEventListener('waiting', () => {
           setMetaAdsCheckVideoStatus(media, { label: 'Buffering…', busy: true });
-          // #region agent log
-          dbgAdsCheck('G', 'video waiting', { index, readyState: video.readyState }, 'post-fix-ux');
-          // #endregion
         });
-        video.addEventListener('playing', () => {
-          markPlaying();
-          // #region agent log
-          dbgAdsCheck('D', 'video playing', {
-            index,
-            src: String(video.currentSrc || blobSrc).slice(0, 120),
-            width: video.videoWidth,
-            height: video.videoHeight,
-            hydrated: video.dataset.hydrated || 'native',
-          }, 'post-fix-ux');
-          // #endregion
-        });
+        video.addEventListener('playing', markPlaying);
         video.addEventListener('pause', () => {
           if (video.videoWidth) setMetaAdsCheckVideoStatus(media, { hide: true });
         });
         video.addEventListener('error', () => {
-          // #region agent log
-          dbgAdsCheck('D', 'video element error', {
-            index,
-            src: String(video.currentSrc || blobSrc).slice(0, 120),
-            mediaError: video.error ? video.error.code : null,
-            hydrated: video.dataset.hydrated || '',
-          }, 'post-fix-ux');
-          // #endregion
-          fallbackHydrate().catch((error) => {
+          fallbackHydrate().catch(() => {
             video.dataset.hydrated = 'failed';
             setMetaAdsCheckVideoStatus(media, { label: 'This video could not be played.', busy: false });
-            // #region agent log
-            dbgAdsCheck('B', 'blob hydrate failed', { index, error: String(error && error.message || error) }, 'post-fix-ux');
-            // #endregion
           });
-        });
-        video.addEventListener('loadeddata', () => {
-          // #region agent log
-          dbgAdsCheck('D', 'video element loaded', {
-            index,
-            src: String(video.currentSrc || blobSrc).slice(0, 120),
-            width: video.videoWidth,
-            height: video.videoHeight,
-            hydrated: video.dataset.hydrated || 'native',
-          }, 'post-fix-ux');
-          // #endregion
         });
       });
     }
@@ -21809,7 +21746,7 @@
             </div>
             <h1>Live Meta ads check</h1>
             <p class="meta-report-public-subtitle">
-              Press play on a video. The thumbnail stays until it starts, and you’ll see Loading or Buffering while it prepares.
+              Active video ads and image ads, on separate tabs. Only active videos are stored.
             </p>
           </div>
         </div>
@@ -21858,7 +21795,7 @@
         );
         dashboard.innerHTML = renderMetaAdsCheckPage(payload);
         bindMetaAdsCheckTabs(dashboard);
-        bindMetaAdsCheckVideoDebug(dashboard, uniqueMetaAdsCheckVideos(payload.creatives || []));
+        bindMetaAdsCheckVideos(dashboard);
       } catch (error) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
