@@ -21576,15 +21576,12 @@
     }
 
     function metaAdsCheckPlaybackSrc(ad) {
-      if ((ad.stored || ad.storedVideoUrl) && ad.videoId) {
-        return `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/media/${encodeURIComponent(ad.videoId)}`;
-      }
       return ad.storedVideoUrl || ad.videoUrl || '';
     }
 
-    function dbgAdsCheck(hypothesisId, message, data) {
+    function dbgAdsCheck(hypothesisId, message, data, runId = 'post-fix') {
       // #region agent log
-      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',runId:'pre-fix',hypothesisId,location:'index.html:ads-check',message,data,timestamp:Date.now()})}).catch(()=>{});
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',runId,hypothesisId,location:'index.html:ads-check',message,data,timestamp:Date.now()})}).catch(()=>{});
       // #endregion
     }
 
@@ -21594,7 +21591,7 @@
       const photoUrl = ad.imageUrl || ad.thumbnailUrl || '';
       let media;
       if (playbackUrl) {
-        media = `<video data-ads-check-video src="${esc(playbackUrl)}" poster="${esc(photoUrl)}" controls muted playsinline preload="metadata"></video>`;
+        media = `<video data-ads-check-video data-ads-check-src="${esc(playbackUrl)}" poster="${esc(photoUrl)}" controls muted playsinline preload="none"></video>`;
       } else if (photoUrl) {
         media = `<img src="${esc(photoUrl)}" alt="${esc(ad.adName || 'Ad')}" />`;
       } else {
@@ -21643,37 +21640,49 @@
           usesMediaEndpoint: /\/ads-check\/media\//.test(metaAdsCheckPlaybackSrc(ad) || ''),
           usesBlobHost: /blob\.vercel-storage\.com/.test(metaAdsCheckPlaybackSrc(ad) || ''),
         })),
-      });
+      }, 'post-fix');
       root.querySelectorAll('video[data-ads-check-video]').forEach((video, index) => {
-        const src = video.getAttribute('src') || '';
-        fetch(src, { credentials: 'include', headers: { Range: 'bytes=0-64' } }).then(async (response) => {
-          const contentType = response.headers.get('content-type') || '';
-          dbgAdsCheck('A', 'media probe', {
-            index,
-            src: src.slice(0, 120),
-            status: response.status,
-            contentType,
-            looksJson: contentType.includes('json'),
-            looksVideo: contentType.includes('video'),
-          });
-        }).catch((error) => {
-          dbgAdsCheck('A', 'media probe failed', { index, src: src.slice(0, 120), error: String(error && error.message || error) });
-        });
+        const blobSrc = video.getAttribute('data-ads-check-src') || '';
         video.addEventListener('error', () => {
           dbgAdsCheck('D', 'video element error', {
             index,
-            src: src.slice(0, 120),
+            src: (video.currentSrc || blobSrc).slice(0, 120),
             mediaError: video.error ? video.error.code : null,
-          });
+            hydrated: video.dataset.hydrated || '',
+          }, 'post-fix');
         });
         video.addEventListener('loadeddata', () => {
           dbgAdsCheck('D', 'video element loaded', {
             index,
-            src: src.slice(0, 120),
+            src: (video.currentSrc || blobSrc).slice(0, 120),
             width: video.videoWidth,
             height: video.videoHeight,
-          });
+            hydrated: video.dataset.hydrated || '',
+          }, 'post-fix');
         });
+        if (!blobSrc) return;
+        const hydrate = async () => {
+          if (video.dataset.hydrated === '1' || video.dataset.hydrated === 'loading') return;
+          video.dataset.hydrated = 'loading';
+          const response = await fetch(blobSrc);
+          const file = await response.blob();
+          dbgAdsCheck('B', 'blob hydrate', {
+            index,
+            status: response.status,
+            bytes: file.size,
+            type: file.type,
+            looksVideo: String(file.type || '').includes('video'),
+          }, 'post-fix');
+          video.src = URL.createObjectURL(file);
+          video.dataset.hydrated = '1';
+        };
+        video.addEventListener('pointerdown', (event) => {
+          if (video.dataset.hydrated === '1') return;
+          event.preventDefault();
+          hydrate().then(() => video.play()).catch((error) => {
+            dbgAdsCheck('B', 'blob hydrate failed', { index, error: String(error && error.message || error) }, 'post-fix');
+          });
+        }, { capture: true });
       });
     }
 
