@@ -10120,9 +10120,10 @@
     }
 
     const META_HUB_FILTER_OPTIONS = [
-      { value: 'all', label: 'All' },
       { value: 'enabled', label: 'Live reports' },
+      { value: 'all', label: 'All' },
       { value: 'meta-only', label: 'Meta only' },
+      { value: 'cenhub', label: 'Cenhub enabled' },
       { value: 'needs-setup', label: 'Needs setup' },
     ];
 
@@ -10135,6 +10136,7 @@
       let list = clients || [];
       if (filter === 'enabled') list = list.filter((client) => client.metaReportEnabled);
       if (filter === 'meta-only') list = list.filter((client) => !clientUsesCenhubMetaReportTopline(client));
+      if (filter === 'cenhub') list = list.filter((client) => clientUsesCenhubMetaReportTopline(client));
       if (filter === 'needs-setup') list = list.filter((client) => client.needsSetup);
       const query = String(searchQuery || '').trim().toLowerCase();
       if (query) {
