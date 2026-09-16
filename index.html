@@ -6264,6 +6264,63 @@
       border-radius: 16px;
       box-shadow: var(--shadow-sm);
       overflow: hidden;
+      position: relative;
+    }
+    .meta-ads-check-card.is-selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.22);
+    }
+    .meta-ads-check-select {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+      cursor: pointer;
+      display: flex;
+      height: 28px;
+      justify-content: center;
+      left: 10px;
+      position: absolute;
+      top: 10px;
+      width: 28px;
+      z-index: 3;
+    }
+    .meta-ads-check-select input {
+      accent-color: var(--primary);
+      cursor: pointer;
+      height: 16px;
+      margin: 0;
+      width: 16px;
+    }
+    .meta-ads-check-select.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+    .meta-ads-check-bulk {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .meta-ads-check-select-all {
+      align-items: center;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 13px;
+      font-weight: 650;
+      gap: 8px;
+    }
+    .meta-ads-check-select-all input {
+      accent-color: var(--primary);
+      height: 16px;
+      margin: 0;
+      width: 16px;
+    }
+    .meta-ads-check-bulk-count {
+      color: var(--text-muted);
+      font-size: 12px;
     }
     .meta-ads-check-media {
       align-items: center;
@@ -21617,6 +21674,54 @@
       return ad.storedVideoUrl || ad.videoUrl || '';
     }
 
+    function metaAdsCheckSafeName(value) {
+      return String(value || 'file').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 80) || 'file';
+    }
+
+    function resolveMetaAdsCheckDownload(ad) {
+      const id = ad.videoId || ad.imageHash || ad.adId || 'file';
+      const base = metaAdsCheckSafeName(`${id}_${ad.adName || ad.videoTitle || 'ad'}`);
+      const videoUrl = ad.storedVideoUrl || ad.videoUrl || '';
+      if (videoUrl) return { url: videoUrl, filename: `${base}.mp4`, isOriginal: true };
+      if (ad.imageUrl && ad.imageUrl !== ad.thumbnailUrl) {
+        return { url: ad.imageUrl, filename: `${base}.jpg`, isOriginal: true };
+      }
+      if (ad.imageUrl || ad.thumbnailUrl) {
+        return { url: ad.imageUrl || ad.thumbnailUrl, filename: `${base}_thumb.jpg`, isOriginal: false };
+      }
+      return null;
+    }
+
+    function metaAdsCheckDownloadHref(url, filename) {
+      return `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/download`
+        + `?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename || 'download')}`;
+    }
+
+    async function downloadAdsCheckFile({ url, filename }) {
+      try {
+        const response = await fetch(url, { mode: 'cors' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.download = filename || 'download';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 4000);
+        return;
+      } catch {
+        const anchor = document.createElement('a');
+        anchor.href = metaAdsCheckDownloadHref(url, filename);
+        anchor.rel = 'noopener';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        await sleepMs(400);
+      }
+    }
+
     function setMetaAdsCheckVideoStatus(media, { label, busy = true, hide = false } = {}) {
       if (!media) return;
       const status = media.querySelector('[data-ads-check-status]');
@@ -21636,6 +21741,7 @@
       const type = ad.type || 'image';
       const playbackUrl = metaAdsCheckPlaybackSrc(ad);
       const photoUrl = ad.imageUrl || ad.thumbnailUrl || '';
+      const download = resolveMetaAdsCheckDownload(ad);
       let media;
       if (playbackUrl) {
         media = `
@@ -21651,8 +21757,15 @@
       } else {
         media = '<div class="meta-ads-check-media-empty">No preview from Meta</div>';
       }
+      const downloadHtml = download
+        ? `<button type="button" class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download data-url="${esc(download.url)}" data-filename="${esc(download.filename)}">Download${download.isOriginal ? '' : ' thumbnail'}</button>`
+        : '<span class="meta-ads-check-no-download">No downloadable file</span>';
       return `
         <article class="meta-ads-check-card">
+          <label class="meta-ads-check-select${download ? '' : ' is-disabled'}">
+            <input type="checkbox" data-ads-check-select ${download ? '' : 'disabled '}/>
+            <span class="sr-only">Select ${esc(ad.adName || ad.videoTitle || 'ad')}</span>
+          </label>
           <div class="meta-ads-check-media">${media}</div>
           <div class="meta-ads-check-body">
             <span class="meta-ads-check-type is-${esc(type)}">${esc(type)}</span>
@@ -21662,6 +21775,7 @@
               ${esc(ad.campaignName || 'No campaign')}<br>
               ${esc(ad.effectiveStatus || ad.status || 'unknown')}
             </p>
+            <div class="meta-ads-check-actions">${downloadHtml}</div>
           </div>
         </article>
       `;
@@ -21678,8 +21792,111 @@
           root.querySelectorAll('[data-ads-check-panel]').forEach((panel) => {
             panel.hidden = panel.getAttribute('data-ads-check-panel') !== tab;
           });
+          syncMetaAdsCheckBulk(root, tab);
         });
       });
+    }
+
+    function panelDownloadButtons(root, tab) {
+      const panel = root.querySelector(`[data-ads-check-panel="${tab}"]`);
+      return panel ? Array.from(panel.querySelectorAll('[data-ads-check-download]')) : [];
+    }
+
+    function panelSelectInputs(root, tab) {
+      const panel = root.querySelector(`[data-ads-check-panel="${tab}"]`);
+      return panel ? Array.from(panel.querySelectorAll('[data-ads-check-select]:not(:disabled)')) : [];
+    }
+
+    function syncMetaAdsCheckBulk(root, tab = root.querySelector('[data-ads-check-tab].admin-btn--primary')?.getAttribute('data-ads-check-tab') || 'videos') {
+      const selected = panelSelectInputs(root, tab).filter((input) => input.checked);
+      const total = panelSelectInputs(root, tab).length;
+      const selectAll = root.querySelector(`[data-ads-check-select-all="${tab}"]`);
+      const count = root.querySelector(`[data-ads-check-bulk-count="${tab}"]`);
+      const downloadSelected = root.querySelector(`[data-ads-check-download-selected="${tab}"]`);
+      if (selectAll) {
+        selectAll.checked = total > 0 && selected.length === total;
+        selectAll.indeterminate = selected.length > 0 && selected.length < total;
+      }
+      if (count) count.textContent = selected.length ? `${selected.length} selected` : '';
+      if (downloadSelected) {
+        downloadSelected.disabled = selected.length === 0;
+        downloadSelected.textContent = selected.length ? `Download selected (${selected.length})` : 'Download selected';
+      }
+      panelSelectInputs(root, tab).forEach((input) => {
+        input.closest('.meta-ads-check-card')?.classList.toggle('is-selected', input.checked);
+      });
+    }
+
+    async function runMetaAdsCheckDownloads(button, items) {
+      if (!items.length) return;
+      const original = button.textContent;
+      button.disabled = true;
+      let failed = 0;
+      for (let i = 0; i < items.length; i += 1) {
+        button.textContent = `Downloading ${i + 1}/${items.length}…`;
+        try {
+          await downloadAdsCheckFile(items[i]);
+        } catch {
+          failed += 1;
+        }
+      }
+      button.disabled = false;
+      button.textContent = original;
+      if (failed) {
+        showToast(`Downloaded ${items.length - failed} of ${items.length}. ${failed} failed.`, 'error');
+      } else {
+        showToast(`Downloaded ${items.length} file${items.length === 1 ? '' : 's'}`, 'success');
+      }
+    }
+
+    function bindMetaAdsCheckDownloads(root) {
+      root.querySelectorAll('[data-ads-check-select]').forEach((input) => {
+        input.addEventListener('change', () => {
+          const tab = input.closest('[data-ads-check-panel]')?.getAttribute('data-ads-check-panel');
+          syncMetaAdsCheckBulk(root, tab);
+        });
+      });
+      root.querySelectorAll('[data-ads-check-select-all]').forEach((input) => {
+        input.addEventListener('change', () => {
+          const tab = input.getAttribute('data-ads-check-select-all');
+          panelSelectInputs(root, tab).forEach((item) => {
+            item.checked = input.checked;
+          });
+          syncMetaAdsCheckBulk(root, tab);
+        });
+      });
+      root.querySelectorAll('[data-ads-check-download]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          await runMetaAdsCheckDownloads(button, [{
+            url: button.getAttribute('data-url'),
+            filename: button.getAttribute('data-filename'),
+          }]);
+        });
+      });
+      root.querySelectorAll('[data-ads-check-download-selected]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const tab = button.getAttribute('data-ads-check-download-selected');
+          const items = panelSelectInputs(root, tab)
+            .filter((input) => input.checked)
+            .map((input) => input.closest('.meta-ads-check-card')?.querySelector('[data-ads-check-download]'))
+            .filter(Boolean)
+            .map((item) => ({ url: item.getAttribute('data-url'), filename: item.getAttribute('data-filename') }));
+          await runMetaAdsCheckDownloads(button, items);
+          syncMetaAdsCheckBulk(root, tab);
+        });
+      });
+      root.querySelectorAll('[data-ads-check-download-all]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const tab = button.getAttribute('data-ads-check-download-all');
+          const items = panelDownloadButtons(root, tab).map((item) => ({
+            url: item.getAttribute('data-url'),
+            filename: item.getAttribute('data-filename'),
+          }));
+          await runMetaAdsCheckDownloads(button, items);
+        });
+      });
+      syncMetaAdsCheckBulk(root, 'videos');
+      syncMetaAdsCheckBulk(root, 'images');
     }
 
     function bindMetaAdsCheckVideos(root) {
@@ -21762,13 +21979,25 @@
           <button type="button" class="admin-btn admin-btn--small" data-ads-check-tab="images">Images</button>
         </div>
         <section data-ads-check-panel="videos">
-          ${videos.length
-            ? `<div class="meta-ads-check-grid is-videos">${videos.map((ad) => renderMetaAdsCheckCard(ad, { large: true })).join('')}</div>`
+          ${videos.length ? `
+          <div class="meta-ads-check-bulk">
+            <label class="meta-ads-check-select-all"><input type="checkbox" data-ads-check-select-all="videos" /> Select all videos</label>
+            <span class="meta-ads-check-bulk-count" data-ads-check-bulk-count="videos"></span>
+            <button type="button" class="admin-btn admin-btn--primary admin-btn--small" data-ads-check-download-selected="videos" disabled>Download selected</button>
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" data-ads-check-download-all="videos">Download all videos</button>
+          </div>
+          <div class="meta-ads-check-grid is-videos">${videos.map((ad) => renderMetaAdsCheckCard(ad, { large: true })).join('')}</div>`
             : '<div class="sync-history-empty" style="padding:24px 0">No active video ads to show.</div>'}
         </section>
         <section data-ads-check-panel="images" hidden>
-          ${images.length
-            ? `<div class="meta-ads-check-grid">${images.map((ad) => renderMetaAdsCheckCard(ad)).join('')}</div>`
+          ${images.length ? `
+          <div class="meta-ads-check-bulk">
+            <label class="meta-ads-check-select-all"><input type="checkbox" data-ads-check-select-all="images" /> Select all images</label>
+            <span class="meta-ads-check-bulk-count" data-ads-check-bulk-count="images"></span>
+            <button type="button" class="admin-btn admin-btn--primary admin-btn--small" data-ads-check-download-selected="images" disabled>Download selected</button>
+            <button type="button" class="admin-btn admin-btn--secondary admin-btn--small" data-ads-check-download-all="images">Download all images</button>
+          </div>
+          <div class="meta-ads-check-grid">${images.map((ad) => renderMetaAdsCheckCard(ad)).join('')}</div>`
             : '<div class="sync-history-empty" style="padding:24px 0">No image ads to show.</div>'}
         </section>
         `)}
@@ -21796,6 +22025,7 @@
         dashboard.innerHTML = renderMetaAdsCheckPage(payload);
         bindMetaAdsCheckTabs(dashboard);
         bindMetaAdsCheckVideos(dashboard);
+        bindMetaAdsCheckDownloads(dashboard);
       } catch (error) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}

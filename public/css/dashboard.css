@@ -6255,6 +6255,63 @@
       border-radius: 16px;
       box-shadow: var(--shadow-sm);
       overflow: hidden;
+      position: relative;
+    }
+    .meta-ads-check-card.is-selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(255, 106, 0, 0.22);
+    }
+    .meta-ads-check-select {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+      cursor: pointer;
+      display: flex;
+      height: 28px;
+      justify-content: center;
+      left: 10px;
+      position: absolute;
+      top: 10px;
+      width: 28px;
+      z-index: 3;
+    }
+    .meta-ads-check-select input {
+      accent-color: var(--primary);
+      cursor: pointer;
+      height: 16px;
+      margin: 0;
+      width: 16px;
+    }
+    .meta-ads-check-select.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+    .meta-ads-check-bulk {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .meta-ads-check-select-all {
+      align-items: center;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 13px;
+      font-weight: 650;
+      gap: 8px;
+    }
+    .meta-ads-check-select-all input {
+      accent-color: var(--primary);
+      height: 16px;
+      margin: 0;
+      width: 16px;
+    }
+    .meta-ads-check-bulk-count {
+      color: var(--text-muted);
+      font-size: 12px;
     }
     .meta-ads-check-media {
       align-items: center;
