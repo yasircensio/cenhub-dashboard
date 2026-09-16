@@ -21559,7 +21559,7 @@
           : '<div class="meta-ads-check-media-empty">No preview from Meta</div>');
       const download = resolveMetaAdsCheckDownload(ad);
       const downloadHtml = download
-        ? `<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download href="${esc(metaAdsCheckDownloadHref(download.url, download.filename))}">Download${download.isOriginal ? '' : ' (thumbnail only)'}</a>`
+        ? `<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download target="_blank" rel="noopener" href="${esc(metaAdsCheckDownloadHref(download.url, download.filename))}">Open${download.isOriginal ? '' : ' (thumbnail only)'}</a>`
         : '<span class="meta-ads-check-no-download">No downloadable file</span>';
       return `
         <article class="meta-ads-check-card">
@@ -21597,7 +21597,7 @@
             </div>
             <h1>Live Meta ads check</h1>
             <p class="meta-report-public-subtitle">
-              Videos and statics currently running for this client, straight from Meta. Download any file to save it locally.
+              Videos and statics currently running for this client, straight from Meta. Open a file in a new tab, then save it from there.
             </p>
           </div>
         </div>
@@ -21610,7 +21610,6 @@
           <span class="meta-cv-summary-pill">${payload.withDownloadableFile ?? 0} original files</span>
           <a class="admin-btn admin-btn--small${scope === 'active' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=active">Active only</a>
           <a class="admin-btn admin-btn--small${scope === 'all' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=all">Active + paused</a>
-          ${ads.length ? '<button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-ads-check-download-all">Download all shown</button>' : ''}
         </div>
         ${ads.length
           ? `<div class="meta-ads-check-grid">${ads.map(renderMetaAdsCheckCard).join('')}</div>`
@@ -21638,7 +21637,6 @@
           `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(scope)}`,
         );
         dashboard.innerHTML = renderMetaAdsCheckPage(payload);
-        bindMetaAdsCheckDownloadAll();
       } catch (error) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
@@ -21660,32 +21658,6 @@
           `)}
         `;
       }
-    }
-
-    function bindMetaAdsCheckDownloadAll() {
-      const button = document.getElementById('meta-ads-check-download-all');
-      if (!button) return;
-      button.onclick = async () => {
-        const links = Array.from(document.querySelectorAll('[data-ads-check-download]'));
-        if (!links.length) return;
-        button.disabled = true;
-        const original = button.textContent;
-        for (let i = 0; i < links.length; i += 1) {
-          button.textContent = `Downloading ${i + 1}/${links.length}…`;
-          const anchor = document.createElement('a');
-          anchor.href = links[i].href;
-          anchor.style.display = 'none';
-          document.body.appendChild(anchor);
-          anchor.click();
-          anchor.remove();
-          // Stagger requests so the browser doesn't block/queue them all at once.
-          // eslint-disable-next-line no-await-in-loop
-          await new Promise((resolve) => setTimeout(resolve, 350));
-        }
-        button.disabled = false;
-        button.textContent = original;
-        showToast(`Started ${links.length} download${links.length === 1 ? '' : 's'}`, 'success');
-      };
     }
 
     async function loadMetaReportsCustomValuesPage({ silent = false, keepSelection = false } = {}) {
