@@ -2467,9 +2467,9 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
     `);try{const a=await adminFetch("/api/meta-reports/ghl-clients");metaReportsState.ghlClients.data=a,e.innerHTML=renderMetaReportsGhlClientsPage(a),metaReportsState.ghlClients.mounted=!0,bindMetaReportsGhlClientsEvents()}catch(a){e.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ghl-clients"))}
       ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(a.message)}</div>`)}
-    `}}function renderMetaAdsCheckCard(e){const t=e.type||"image";return`
+    `}}function metaAdsCheckSafeName(e){return String(e||"file").replace(/[^a-zA-Z0-9._-]+/g,"_").slice(0,80)||"file"}function resolveMetaAdsCheckDownload(e){const t=metaAdsCheckSafeName(`${e.adId}_${e.adName}`);return e.videoUrl?{url:e.videoUrl,filename:`${t}.mp4`,isOriginal:!0}:e.imageUrl&&e.imageUrl!==e.thumbnailUrl?{url:e.imageUrl,filename:`${t}.jpg`,isOriginal:!0}:e.thumbnailUrl?{url:e.thumbnailUrl,filename:`${t}_thumb.jpg`,isOriginal:!1}:null}function metaAdsCheckDownloadHref(e,t){return`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/download?url=${encodeURIComponent(e)}&filename=${encodeURIComponent(t)}`}function renderMetaAdsCheckCard(e){const t=e.type||"image",a=e.videoUrl?`<video src="${esc(e.videoUrl)}" poster="${esc(e.thumbnailUrl||"")}" controls muted playsinline></video>`:e.thumbnailUrl||e.imageUrl?`<img src="${esc(e.thumbnailUrl||e.imageUrl)}" alt="${esc(e.adName||"Ad")}" />`:'<div class="meta-ads-check-media-empty">No preview from Meta</div>',n=resolveMetaAdsCheckDownload(e),o=n?`<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download href="${esc(metaAdsCheckDownloadHref(n.url,n.filename))}">Download${n.isOriginal?"":" (thumbnail only)"}</a>`:'<span class="meta-ads-check-no-download">No downloadable file</span>';return`
     <article class="meta-ads-check-card">
-      <div class="meta-ads-check-media">${e.videoUrl?`<video src="${esc(e.videoUrl)}" poster="${esc(e.thumbnailUrl||"")}" controls muted playsinline></video>`:e.thumbnailUrl||e.imageUrl?`<img src="${esc(e.thumbnailUrl||e.imageUrl)}" alt="${esc(e.adName||"Ad")}" />`:'<div class="meta-ads-check-media-empty">No preview from Meta</div>'}</div>
+      <div class="meta-ads-check-media">${a}</div>
       <div class="meta-ads-check-body">
         <span class="meta-ads-check-type is-${esc(t)}">${esc(t)}</span>
         <h3 class="meta-ads-check-name">${esc(e.adName||"Untitled ad")}</h3>
@@ -2478,6 +2478,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
           ${esc(e.adsetName||"No ad set")}<br>
           ${esc(e.effectiveStatus||e.status||"unknown")}
         </p>
+        <div class="meta-ads-check-actions">${o}</div>
       </div>
     </article>
   `}function renderMetaAdsCheckPage(e){const t=e.creatives||[],a=e.scope==="all"?"all":"active";return`
@@ -2496,7 +2497,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
         </div>
         <h1>Live Meta ads check</h1>
         <p class="meta-report-public-subtitle">
-          Read-only probe with the current System User token. Nothing is saved.
+          Videos and statics currently running for this client, straight from Meta. Download any file to save it locally.
         </p>
       </div>
     </div>
@@ -2506,15 +2507,17 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
       <span class="meta-cv-summary-pill">${e.videoCount||0} videos</span>
       <span class="meta-cv-summary-pill">${e.imageCount||0} statics</span>
       <span class="meta-cv-summary-pill">${e.carouselCount||0} carousels</span>
-      <a class="admin-btn admin-btn--small${a==="active"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check">Active only</a>
-      <a class="admin-btn admin-btn--small${a==="all"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=all">Include paused</a>
+      <span class="meta-cv-summary-pill">${e.withDownloadableFile??0} original files</span>
+      <a class="admin-btn admin-btn--small${a==="active"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=active">Active only</a>
+      <a class="admin-btn admin-btn--small${a==="all"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=all">Active + paused</a>
+      ${t.length?'<button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-ads-check-download-all">Download all shown</button>':""}
     </div>
-    ${t.length?`<div class="meta-ads-check-grid">${t.map(renderMetaAdsCheckCard).join("")}</div>`:'<div class="sync-history-empty" style="padding:24px 0">No ads returned for this scope. Try Include paused, or the token cannot see creatives yet.</div>'}
+    ${t.length?`<div class="meta-ads-check-grid">${t.map(renderMetaAdsCheckCard).join("")}</div>`:'<div class="sync-history-empty" style="padding:24px 0">No ads returned for this scope. Try Active + paused, or the token cannot see creatives yet.</div>'}
     `)}
   `}async function loadMetaAdsCheckPage(){const e=document.getElementById("dashboard");if(!e)return;const t=await fetchStaffMe();if(!t){window.location.href=`/login?next=${encodeURIComponent(window.location.pathname+window.location.search)}`;return}currentStaffUser=t,e.innerHTML=`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ads-check"))}
     ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Checking Meta ads access...</p></div>')}
-  `;try{const a=new URLSearchParams(window.location.search).get("scope")==="all"?"all":"active",n=await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(a)}`);e.innerHTML=renderMetaAdsCheckPage(n)}catch(a){e.innerHTML=`
+  `;try{const a=new URLSearchParams(window.location.search).get("scope")==="active"?"active":"all",n=await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(a)}`);e.innerHTML=renderMetaAdsCheckPage(n),bindMetaAdsCheckDownloadAll()}catch(a){e.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ads-check"))}
       ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero meta-premium-page-hero">
@@ -2532,7 +2535,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
           <p>${esc(a.message||"Request failed.")}</p>
         </div>
       `)}
-    `}}async function loadMetaReportsCustomValuesPage({silent:e=!1,keepSelection:t=!1}={}){const a=document.getElementById("dashboard");if(!a)return;const n=await fetchStaffMe();if(!n){window.location.href=`/login?next=${encodeURIComponent(window.location.pathname)}`;return}currentStaffUser=n,!metaReportsState.customValues.mounted&&!e&&(a.innerHTML=`
+    `}}function bindMetaAdsCheckDownloadAll(){const e=document.getElementById("meta-ads-check-download-all");e&&(e.onclick=async()=>{const t=Array.from(document.querySelectorAll("[data-ads-check-download]"));if(!t.length)return;e.disabled=!0;const a=e.textContent;for(let n=0;n<t.length;n+=1){e.textContent=`Downloading ${n+1}/${t.length}\u2026`;const o=document.createElement("a");o.href=t[n].href,o.style.display="none",document.body.appendChild(o),o.click(),o.remove(),await new Promise(s=>setTimeout(s,350))}e.disabled=!1,e.textContent=a,showToast(`Started ${t.length} download${t.length===1?"":"s"}`,"success")})}async function loadMetaReportsCustomValuesPage({silent:e=!1,keepSelection:t=!1}={}){const a=document.getElementById("dashboard");if(!a)return;const n=await fetchStaffMe();if(!n){window.location.href=`/login?next=${encodeURIComponent(window.location.pathname)}`;return}currentStaffUser=n,!metaReportsState.customValues.mounted&&!e&&(a.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-custom"))}
       ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Loading custom values...</p></div>')}
     `);try{const o=await adminFetch(`/api/meta-reports/custom-values?year=${encodeURIComponent(metaReportsState.selectedYear)}`);metaReportsState.selectedYear=Number(o.year)||metaReportsState.selectedYear,metaReportsState.customValues.overview=o,t||(o.clients||[]).some(r=>r.clientId===metaReportsState.customValues.selectedClientId)||(metaReportsState.customValues.selectedClientId=null,metaReportsState.customValues.selectedMonthKey=null,metaReportsState.customValues.editorPayload=null),a.innerHTML=renderMetaReportsCustomValuesPage(o),metaReportsState.customValues.mounted=!0,metaReportsState.customValues.saving=!1,bindMetaReportsCustomValuesEvents(o)}catch(o){if(!metaReportsState.customValues.mounted)a.innerHTML=`

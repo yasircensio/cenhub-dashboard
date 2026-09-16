@@ -6306,6 +6306,17 @@
       line-height: 1.45;
       margin: 0;
     }
+    .meta-ads-check-actions {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .meta-ads-check-download { width: 100%; justify-content: center; }
+    .meta-ads-check-no-download {
+      color: var(--text-soft);
+      font-size: 12px;
+      font-style: italic;
+    }
     .meta-cv-legend i.is-complete { background: #16a34a; }
     .meta-cv-legend i.is-partial { background: #d97706; }
     .meta-cv-legend i.is-empty { background: #fff; border: 1px dashed #cbd5e1; }
@@ -21520,6 +21531,25 @@
       }
     }
 
+    function metaAdsCheckSafeName(value) {
+      return String(value || 'file').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 80) || 'file';
+    }
+
+    // Prefers the real uploaded file (video, or full-resolution image) over
+    // the small preview thumbnail Meta always returns.
+    function resolveMetaAdsCheckDownload(ad) {
+      const base = metaAdsCheckSafeName(`${ad.adId}_${ad.adName}`);
+      if (ad.videoUrl) return { url: ad.videoUrl, filename: `${base}.mp4`, isOriginal: true };
+      if (ad.imageUrl && ad.imageUrl !== ad.thumbnailUrl) return { url: ad.imageUrl, filename: `${base}.jpg`, isOriginal: true };
+      if (ad.thumbnailUrl) return { url: ad.thumbnailUrl, filename: `${base}_thumb.jpg`, isOriginal: false };
+      return null;
+    }
+
+    function metaAdsCheckDownloadHref(url, filename) {
+      return `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/download`
+        + `?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+    }
+
     function renderMetaAdsCheckCard(ad) {
       const type = ad.type || 'image';
       const media = ad.videoUrl
@@ -21527,6 +21557,10 @@
         : (ad.thumbnailUrl || ad.imageUrl
           ? `<img src="${esc(ad.thumbnailUrl || ad.imageUrl)}" alt="${esc(ad.adName || 'Ad')}" />`
           : '<div class="meta-ads-check-media-empty">No preview from Meta</div>');
+      const download = resolveMetaAdsCheckDownload(ad);
+      const downloadHtml = download
+        ? `<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download href="${esc(metaAdsCheckDownloadHref(download.url, download.filename))}">Download${download.isOriginal ? '' : ' (thumbnail only)'}</a>`
+        : '<span class="meta-ads-check-no-download">No downloadable file</span>';
       return `
         <article class="meta-ads-check-card">
           <div class="meta-ads-check-media">${media}</div>
@@ -21538,6 +21572,7 @@
               ${esc(ad.adsetName || 'No ad set')}<br>
               ${esc(ad.effectiveStatus || ad.status || 'unknown')}
             </p>
+            <div class="meta-ads-check-actions">${downloadHtml}</div>
           </div>
         </article>
       `;
@@ -21562,7 +21597,7 @@
             </div>
             <h1>Live Meta ads check</h1>
             <p class="meta-report-public-subtitle">
-              Read-only probe with the current System User token. Nothing is saved.
+              Videos and statics currently running for this client, straight from Meta. Download any file to save it locally.
             </p>
           </div>
         </div>
@@ -21572,12 +21607,14 @@
           <span class="meta-cv-summary-pill">${payload.videoCount || 0} videos</span>
           <span class="meta-cv-summary-pill">${payload.imageCount || 0} statics</span>
           <span class="meta-cv-summary-pill">${payload.carouselCount || 0} carousels</span>
-          <a class="admin-btn admin-btn--small${scope === 'active' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check">Active only</a>
-          <a class="admin-btn admin-btn--small${scope === 'all' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=all">Include paused</a>
+          <span class="meta-cv-summary-pill">${payload.withDownloadableFile ?? 0} original files</span>
+          <a class="admin-btn admin-btn--small${scope === 'active' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=active">Active only</a>
+          <a class="admin-btn admin-btn--small${scope === 'all' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=all">Active + paused</a>
+          ${ads.length ? '<button type="button" class="admin-btn admin-btn--primary admin-btn--small" id="meta-ads-check-download-all">Download all shown</button>' : ''}
         </div>
         ${ads.length
           ? `<div class="meta-ads-check-grid">${ads.map(renderMetaAdsCheckCard).join('')}</div>`
-          : '<div class="sync-history-empty" style="padding:24px 0">No ads returned for this scope. Try Include paused, or the token cannot see creatives yet.</div>'}
+          : '<div class="sync-history-empty" style="padding:24px 0">No ads returned for this scope. Try Active + paused, or the token cannot see creatives yet.</div>'}
         `)}
       `;
     }
@@ -21596,11 +21633,12 @@
         ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Checking Meta ads access...</p></div>')}
       `;
       try {
-        const scope = new URLSearchParams(window.location.search).get('scope') === 'all' ? 'all' : 'active';
+        const scope = new URLSearchParams(window.location.search).get('scope') === 'active' ? 'active' : 'all';
         const payload = await adminFetch(
           `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(scope)}`,
         );
         dashboard.innerHTML = renderMetaAdsCheckPage(payload);
+        bindMetaAdsCheckDownloadAll();
       } catch (error) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
@@ -21622,6 +21660,32 @@
           `)}
         `;
       }
+    }
+
+    function bindMetaAdsCheckDownloadAll() {
+      const button = document.getElementById('meta-ads-check-download-all');
+      if (!button) return;
+      button.onclick = async () => {
+        const links = Array.from(document.querySelectorAll('[data-ads-check-download]'));
+        if (!links.length) return;
+        button.disabled = true;
+        const original = button.textContent;
+        for (let i = 0; i < links.length; i += 1) {
+          button.textContent = `Downloading ${i + 1}/${links.length}…`;
+          const anchor = document.createElement('a');
+          anchor.href = links[i].href;
+          anchor.style.display = 'none';
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          // Stagger requests so the browser doesn't block/queue them all at once.
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((resolve) => setTimeout(resolve, 350));
+        }
+        button.disabled = false;
+        button.textContent = original;
+        showToast(`Started ${links.length} download${links.length === 1 ? '' : 's'}`, 'success');
+      };
     }
 
     async function loadMetaReportsCustomValuesPage({ silent = false, keepSelection = false } = {}) {
