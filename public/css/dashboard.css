@@ -6263,11 +6263,49 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
+      position: relative;
     }
     .meta-ads-check-media img,
     .meta-ads-check-media video {
       height: 100%;
       width: 100%;
+    }
+    .meta-ads-check-poster {
+      inset: 0;
+      object-fit: contain;
+      pointer-events: none;
+      position: absolute;
+      z-index: 1;
+    }
+    .meta-ads-check-media.is-playing .meta-ads-check-poster {
+      display: none;
+    }
+    .meta-ads-check-video-status {
+      align-items: center;
+      background: rgba(17, 12, 8, 0.82);
+      border-radius: 999px;
+      bottom: 52px;
+      color: #fff;
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 650;
+      gap: 8px;
+      left: 50%;
+      max-width: calc(100% - 24px);
+      padding: 8px 12px;
+      pointer-events: none;
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      z-index: 2;
+    }
+    .meta-ads-check-video-status[hidden] { display: none !important; }
+    .meta-ads-check-video-status .spinner {
+      border-color: rgba(255,255,255,0.28);
+      border-top-color: #fff;
+      height: 14px;
+      margin: 0;
+      width: 14px;
     }
     .meta-ads-check-tabs {
       display: flex;

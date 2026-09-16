@@ -6272,11 +6272,49 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
+      position: relative;
     }
     .meta-ads-check-media img,
     .meta-ads-check-media video {
       height: 100%;
       width: 100%;
+    }
+    .meta-ads-check-poster {
+      inset: 0;
+      object-fit: contain;
+      pointer-events: none;
+      position: absolute;
+      z-index: 1;
+    }
+    .meta-ads-check-media.is-playing .meta-ads-check-poster {
+      display: none;
+    }
+    .meta-ads-check-video-status {
+      align-items: center;
+      background: rgba(17, 12, 8, 0.82);
+      border-radius: 999px;
+      bottom: 52px;
+      color: #fff;
+      display: inline-flex;
+      font-size: 12px;
+      font-weight: 650;
+      gap: 8px;
+      left: 50%;
+      max-width: calc(100% - 24px);
+      padding: 8px 12px;
+      pointer-events: none;
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      z-index: 2;
+    }
+    .meta-ads-check-video-status[hidden] { display: none !important; }
+    .meta-ads-check-video-status .spinner {
+      border-color: rgba(255,255,255,0.28);
+      border-top-color: #fff;
+      height: 14px;
+      margin: 0;
+      width: 14px;
     }
     .meta-ads-check-tabs {
       display: flex;
@@ -21585,13 +21623,35 @@
       // #endregion
     }
 
+    function setMetaAdsCheckVideoStatus(media, { label, busy = true, hide = false } = {}) {
+      if (!media) return;
+      const status = media.querySelector('[data-ads-check-status]');
+      const text = media.querySelector('[data-ads-check-status-label]');
+      const spinner = media.querySelector('[data-ads-check-status-spinner]');
+      if (!status) return;
+      if (hide) {
+        status.hidden = true;
+        return;
+      }
+      status.hidden = false;
+      if (text && label) text.textContent = label;
+      if (spinner) spinner.hidden = !busy;
+    }
+
     function renderMetaAdsCheckCard(ad, { large = false } = {}) {
       const type = ad.type || 'image';
       const playbackUrl = metaAdsCheckPlaybackSrc(ad);
       const photoUrl = ad.imageUrl || ad.thumbnailUrl || '';
       let media;
       if (playbackUrl) {
-        media = `<video data-ads-check-video data-ads-check-src="${esc(playbackUrl)}" poster="${esc(photoUrl)}" controls muted playsinline preload="none"></video>`;
+        media = `
+          <video data-ads-check-video data-ads-check-src="${esc(playbackUrl)}" src="${esc(playbackUrl)}" poster="${esc(photoUrl)}" controls muted playsinline preload="metadata"></video>
+          ${photoUrl ? `<img class="meta-ads-check-poster" data-ads-check-poster src="${esc(photoUrl)}" alt="">` : ''}
+          <div class="meta-ads-check-video-status" data-ads-check-status hidden>
+            <div class="spinner" data-ads-check-status-spinner></div>
+            <span data-ads-check-status-label>Loading video…</span>
+          </div>
+        `;
       } else if (photoUrl) {
         media = `<img src="${esc(photoUrl)}" alt="${esc(ad.adName || 'Ad')}" />`;
       } else {
@@ -21639,50 +21699,92 @@
           srcHost: String(metaAdsCheckPlaybackSrc(ad) || '').slice(0, 80),
           usesMediaEndpoint: /\/ads-check\/media\//.test(metaAdsCheckPlaybackSrc(ad) || ''),
           usesBlobHost: /blob\.vercel-storage\.com/.test(metaAdsCheckPlaybackSrc(ad) || ''),
+          hasNativeSrc: true,
         })),
-      }, 'post-fix');
+      }, 'post-fix-ux');
       root.querySelectorAll('video[data-ads-check-video]').forEach((video, index) => {
+        const media = video.closest('.meta-ads-check-media');
         const blobSrc = video.getAttribute('data-ads-check-src') || '';
-        video.addEventListener('error', () => {
-          dbgAdsCheck('D', 'video element error', {
-            index,
-            src: (video.currentSrc || blobSrc).slice(0, 120),
-            mediaError: video.error ? video.error.code : null,
-            hydrated: video.dataset.hydrated || '',
-          }, 'post-fix');
-        });
-        video.addEventListener('loadeddata', () => {
-          dbgAdsCheck('D', 'video element loaded', {
-            index,
-            src: (video.currentSrc || blobSrc).slice(0, 120),
-            width: video.videoWidth,
-            height: video.videoHeight,
-            hydrated: video.dataset.hydrated || '',
-          }, 'post-fix');
-        });
-        if (!blobSrc) return;
-        const hydrate = async () => {
-          if (video.dataset.hydrated === '1' || video.dataset.hydrated === 'loading') return;
+        const poster = media ? media.querySelector('[data-ads-check-poster]') : null;
+        const markPlaying = () => {
+          if (media) media.classList.add('is-playing');
+          if (poster) poster.hidden = true;
+          setMetaAdsCheckVideoStatus(media, { hide: true });
+        };
+        const fallbackHydrate = async () => {
+          if (!blobSrc || video.dataset.hydrated === '1' || video.dataset.hydrated === 'loading' || video.dataset.hydrated === 'failed') return;
           video.dataset.hydrated = 'loading';
+          setMetaAdsCheckVideoStatus(media, { label: 'Preparing video…', busy: true });
           const response = await fetch(blobSrc);
-          const file = await response.blob();
+          const file = new Blob([await response.arrayBuffer()], { type: 'video/mp4' });
+          // #region agent log
           dbgAdsCheck('B', 'blob hydrate', {
             index,
             status: response.status,
             bytes: file.size,
             type: file.type,
             looksVideo: String(file.type || '').includes('video'),
-          }, 'post-fix');
+          }, 'post-fix-ux');
+          // #endregion
           video.src = URL.createObjectURL(file);
           video.dataset.hydrated = '1';
+          await video.play().catch(() => {});
         };
-        video.addEventListener('pointerdown', (event) => {
-          if (video.dataset.hydrated === '1') return;
-          event.preventDefault();
-          hydrate().then(() => video.play()).catch((error) => {
-            dbgAdsCheck('B', 'blob hydrate failed', { index, error: String(error && error.message || error) }, 'post-fix');
+        video.addEventListener('play', () => {
+          setMetaAdsCheckVideoStatus(media, { label: 'Loading video…', busy: true });
+          // #region agent log
+          dbgAdsCheck('G', 'video play', { index, readyState: video.readyState }, 'post-fix-ux');
+          // #endregion
+        });
+        video.addEventListener('waiting', () => {
+          setMetaAdsCheckVideoStatus(media, { label: 'Buffering…', busy: true });
+          // #region agent log
+          dbgAdsCheck('G', 'video waiting', { index, readyState: video.readyState }, 'post-fix-ux');
+          // #endregion
+        });
+        video.addEventListener('playing', () => {
+          markPlaying();
+          // #region agent log
+          dbgAdsCheck('D', 'video playing', {
+            index,
+            src: String(video.currentSrc || blobSrc).slice(0, 120),
+            width: video.videoWidth,
+            height: video.videoHeight,
+            hydrated: video.dataset.hydrated || 'native',
+          }, 'post-fix-ux');
+          // #endregion
+        });
+        video.addEventListener('pause', () => {
+          if (video.videoWidth) setMetaAdsCheckVideoStatus(media, { hide: true });
+        });
+        video.addEventListener('error', () => {
+          // #region agent log
+          dbgAdsCheck('D', 'video element error', {
+            index,
+            src: String(video.currentSrc || blobSrc).slice(0, 120),
+            mediaError: video.error ? video.error.code : null,
+            hydrated: video.dataset.hydrated || '',
+          }, 'post-fix-ux');
+          // #endregion
+          fallbackHydrate().catch((error) => {
+            video.dataset.hydrated = 'failed';
+            setMetaAdsCheckVideoStatus(media, { label: 'This video could not be played.', busy: false });
+            // #region agent log
+            dbgAdsCheck('B', 'blob hydrate failed', { index, error: String(error && error.message || error) }, 'post-fix-ux');
+            // #endregion
           });
-        }, { capture: true });
+        });
+        video.addEventListener('loadeddata', () => {
+          // #region agent log
+          dbgAdsCheck('D', 'video element loaded', {
+            index,
+            src: String(video.currentSrc || blobSrc).slice(0, 120),
+            width: video.videoWidth,
+            height: video.videoHeight,
+            hydrated: video.dataset.hydrated || 'native',
+          }, 'post-fix-ux');
+          // #endregion
+        });
       });
     }
 
@@ -21707,7 +21809,7 @@
             </div>
             <h1>Live Meta ads check</h1>
             <p class="meta-report-public-subtitle">
-              Videos and images are on separate tabs. Only active videos are stored.
+              Press play on a video. The thumbnail stays until it starts, and you’ll see Loading or Buffering while it prepares.
             </p>
           </div>
         </div>
