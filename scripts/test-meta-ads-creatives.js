@@ -25,7 +25,7 @@ function main() {
       thumbnail_url: 'https://thumb',
       video_id: 'vid-1',
     },
-  }, { id: 'vid-1', source: 'https://video.mp4', picture: 'https://poster', length: 15 });
+  }, { video: { id: 'vid-1', source: 'https://video.mp4', picture: 'https://poster', length: 15 } });
 
   assert.strictEqual(summarized.type, 'video');
   assert.strictEqual(summarized.videoUrl, 'https://video.mp4');
@@ -44,10 +44,24 @@ function main() {
     creative: {
       object_story_spec: { video_data: { video_id: 'nested-1' } },
     },
-  }, { id: 'nested-1', source: 'https://nested.mp4', picture: 'https://nested-poster.jpg' });
+  }, { video: { id: 'nested-1', source: 'https://nested.mp4', picture: 'https://nested-poster.jpg' } });
   assert.strictEqual(nestedSummary.type, 'video');
   assert.strictEqual(nestedSummary.videoId, 'nested-1');
   assert.strictEqual(nestedSummary.videoUrl, 'https://nested.mp4');
+
+  // Static images resolve through the ad account's image library by hash,
+  // since ads_read does not expose a full-resolution creative.image_url for
+  // every format.
+  const imageSummary = summarizeAd({
+    id: 'ad-3',
+    name: 'Static offer',
+    creative: {
+      image_hash: 'abc123',
+      thumbnail_url: 'https://small-thumb',
+    },
+  }, { libraryImage: { hash: 'abc123', url: 'https://full-res-image.jpg' } });
+  assert.strictEqual(imageSummary.type, 'image');
+  assert.strictEqual(imageSummary.imageUrl, 'https://full-res-image.jpg');
 
   console.log('Meta ads creatives tests passed.');
 }
