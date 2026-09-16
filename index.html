@@ -6278,34 +6278,19 @@
       height: 100%;
       width: 100%;
     }
-    .meta-ads-check-carousel-wrap { margin: 0 0 28px; }
-    .meta-ads-check-carousel-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin: 0 0 12px;
-    }
-    .meta-ads-check-carousel {
+    .meta-ads-check-tabs {
       display: flex;
-      gap: 16px;
-      overflow-x: auto;
-      padding: 0 0 8px;
-      scroll-snap-type: x mandatory;
+      gap: 8px;
+      margin: 0 0 16px;
     }
-    .meta-ads-check-carousel .meta-ads-check-card {
-      flex: 0 0 min(100%, 420px);
-      max-width: 420px;
-      scroll-snap-align: start;
-    }
-    .meta-ads-check-carousel .meta-ads-check-media {
-      aspect-ratio: 16 / 9;
-      background: #111;
-    }
-    .meta-ads-check-carousel .meta-ads-check-media video {
-      object-fit: contain;
-    }
+    .meta-ads-check-panel[hidden] { display: none !important; }
     .meta-ads-check-grid .meta-ads-check-media img,
     .meta-ads-check-grid .meta-ads-check-media video {
       object-fit: contain;
+    }
+    .meta-ads-check-grid.is-videos .meta-ads-check-media {
+      aspect-ratio: 16 / 9;
+      background: #111;
     }
     .meta-ads-check-media-empty {
       color: #d6c7b8;
@@ -21577,11 +21562,30 @@
       return stored.length ? stored : videos;
     }
 
+    function uniqueMetaAdsCheckImages(ads) {
+      const seen = new Set();
+      const images = [];
+      for (const ad of ads || []) {
+        if (ad.type === 'video' || ad.videoId) continue;
+        const key = String(ad.imageHash || ad.imageUrl || ad.adId || '');
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        images.push(ad);
+      }
+      return images;
+    }
+
     function metaAdsCheckPlaybackSrc(ad) {
       if ((ad.stored || ad.storedVideoUrl) && ad.videoId) {
         return `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/media/${encodeURIComponent(ad.videoId)}`;
       }
       return ad.storedVideoUrl || ad.videoUrl || '';
+    }
+
+    function dbgAdsCheck(hypothesisId, message, data) {
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',runId:'pre-fix',hypothesisId,location:'index.html:ads-check',message,data,timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
     }
 
     function renderMetaAdsCheckCard(ad, { large = false } = {}) {
@@ -21590,7 +21594,7 @@
       const photoUrl = ad.imageUrl || ad.thumbnailUrl || '';
       let media;
       if (playbackUrl) {
-        media = `<video src="${esc(playbackUrl)}" poster="${esc(photoUrl)}" controls muted playsinline preload="${large ? 'auto' : 'metadata'}"></video>`;
+        media = `<video data-ads-check-video src="${esc(playbackUrl)}" poster="${esc(photoUrl)}" controls muted playsinline preload="metadata"></video>`;
       } else if (photoUrl) {
         media = `<img src="${esc(photoUrl)}" alt="${esc(ad.adName || 'Ad')}" />`;
       } else {
@@ -21612,15 +21616,72 @@
       `;
     }
 
+    function bindMetaAdsCheckTabs(root) {
+      const buttons = root.querySelectorAll('[data-ads-check-tab]');
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const tab = button.getAttribute('data-ads-check-tab');
+          buttons.forEach((item) => {
+            item.classList.toggle('admin-btn--primary', item === button);
+          });
+          root.querySelectorAll('[data-ads-check-panel]').forEach((panel) => {
+            panel.hidden = panel.getAttribute('data-ads-check-panel') !== tab;
+          });
+        });
+      });
+    }
+
+    function bindMetaAdsCheckVideoDebug(root, videos) {
+      dbgAdsCheck('E', 'ads-check videos rendered', {
+        videoCount: (videos || []).length,
+        samples: (videos || []).slice(0, 5).map((ad) => ({
+          name: ad.adName,
+          type: ad.type,
+          stored: Boolean(ad.stored),
+          videoId: ad.videoId || null,
+          srcHost: String(metaAdsCheckPlaybackSrc(ad) || '').slice(0, 80),
+          usesMediaEndpoint: /\/ads-check\/media\//.test(metaAdsCheckPlaybackSrc(ad) || ''),
+          usesBlobHost: /blob\.vercel-storage\.com/.test(metaAdsCheckPlaybackSrc(ad) || ''),
+        })),
+      });
+      root.querySelectorAll('video[data-ads-check-video]').forEach((video, index) => {
+        const src = video.getAttribute('src') || '';
+        fetch(src, { credentials: 'include', headers: { Range: 'bytes=0-64' } }).then(async (response) => {
+          const contentType = response.headers.get('content-type') || '';
+          dbgAdsCheck('A', 'media probe', {
+            index,
+            src: src.slice(0, 120),
+            status: response.status,
+            contentType,
+            looksJson: contentType.includes('json'),
+            looksVideo: contentType.includes('video'),
+          });
+        }).catch((error) => {
+          dbgAdsCheck('A', 'media probe failed', { index, src: src.slice(0, 120), error: String(error && error.message || error) });
+        });
+        video.addEventListener('error', () => {
+          dbgAdsCheck('D', 'video element error', {
+            index,
+            src: src.slice(0, 120),
+            mediaError: video.error ? video.error.code : null,
+          });
+        });
+        video.addEventListener('loadeddata', () => {
+          dbgAdsCheck('D', 'video element loaded', {
+            index,
+            src: src.slice(0, 120),
+            width: video.videoWidth,
+            height: video.videoHeight,
+          });
+        });
+      });
+    }
+
     function renderMetaAdsCheckPage(payload) {
       const ads = payload.creatives || [];
       const scope = payload.scope === 'all' ? 'all' : 'active';
       const videos = uniqueMetaAdsCheckVideos(ads);
-      const statics = ads.filter((ad) => {
-        const isActiveVideo = (ad.type === 'video' || ad.videoId)
-          && String(ad.effectiveStatus || ad.status || '').toUpperCase() === 'ACTIVE';
-        return !isActiveVideo;
-      });
+      const images = uniqueMetaAdsCheckImages(ads);
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
         ${wrapDashboardShell(`
@@ -21637,29 +21698,31 @@
             </div>
             <h1>Live Meta ads check</h1>
             <p class="meta-report-public-subtitle">
-              Downloaded active videos play here. Paused ads are not downloaded.
+              Videos and images are on separate tabs. Only active videos are stored.
             </p>
           </div>
         </div>
         <div class="meta-ads-check-toolbar">
           <span class="meta-cv-summary-pill is-complete">${payload.ok ? 'Access works' : 'Access failed'}</span>
-          <span class="meta-cv-summary-pill">${videos.length} downloaded videos</span>
-          <span class="meta-cv-summary-pill">${statics.length} statics</span>
+          <span class="meta-cv-summary-pill">${videos.length} videos</span>
+          <span class="meta-cv-summary-pill">${images.length} images</span>
           <a class="admin-btn admin-btn--small${scope === 'active' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=active">Active only</a>
           <a class="admin-btn admin-btn--small${scope === 'all' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=all">Active + paused</a>
         </div>
-        ${videos.length
-          ? `<section class="meta-ads-check-carousel-wrap">
-              <h2 class="meta-ads-check-carousel-title">Downloaded videos</h2>
-              <div class="meta-ads-check-carousel">${videos.map((ad) => renderMetaAdsCheckCard(ad, { large: true })).join('')}</div>
-            </section>`
-          : '<div class="sync-history-empty" style="padding:24px 0">No active video ads to download. Paused videos are left in Meta and are not stored here.</div>'}
-        ${statics.length
-          ? `<section class="meta-ads-check-carousel-wrap">
-              <h2 class="meta-ads-check-carousel-title">Static ads</h2>
-              <div class="meta-ads-check-grid">${statics.map((ad) => renderMetaAdsCheckCard(ad)).join('')}</div>
-            </section>`
-          : ''}
+        <div class="meta-ads-check-tabs">
+          <button type="button" class="admin-btn admin-btn--small admin-btn--primary" data-ads-check-tab="videos">Videos</button>
+          <button type="button" class="admin-btn admin-btn--small" data-ads-check-tab="images">Images</button>
+        </div>
+        <section data-ads-check-panel="videos">
+          ${videos.length
+            ? `<div class="meta-ads-check-grid is-videos">${videos.map((ad) => renderMetaAdsCheckCard(ad, { large: true })).join('')}</div>`
+            : '<div class="sync-history-empty" style="padding:24px 0">No active video ads to show.</div>'}
+        </section>
+        <section data-ads-check-panel="images" hidden>
+          ${images.length
+            ? `<div class="meta-ads-check-grid">${images.map((ad) => renderMetaAdsCheckCard(ad)).join('')}</div>`
+            : '<div class="sync-history-empty" style="padding:24px 0">No image ads to show.</div>'}
+        </section>
         `)}
       `;
     }
@@ -21683,6 +21746,8 @@
           `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(scope)}`,
         );
         dashboard.innerHTML = renderMetaAdsCheckPage(payload);
+        bindMetaAdsCheckTabs(dashboard);
+        bindMetaAdsCheckVideoDebug(dashboard, uniqueMetaAdsCheckVideos(payload.creatives || []));
       } catch (error) {
         dashboard.innerHTML = `
           ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}

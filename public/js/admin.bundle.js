@@ -2467,7 +2467,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
     `);try{const a=await adminFetch("/api/meta-reports/ghl-clients");metaReportsState.ghlClients.data=a,e.innerHTML=renderMetaReportsGhlClientsPage(a),metaReportsState.ghlClients.mounted=!0,bindMetaReportsGhlClientsEvents()}catch(a){e.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ghl-clients"))}
       ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(a.message)}</div>`)}
-    `}}function uniqueMetaAdsCheckVideos(e){const t=new Set,a=[];for(const o of e||[]){if(!(o.type==="video"||o.videoId||o.stored))continue;const r=String(o.effectiveStatus||o.status||"").toUpperCase();if(r&&r!=="ACTIVE")continue;const i=String(o.videoId||o.adId||"");!i||t.has(i)||(t.add(i),a.push(o))}const n=a.filter(o=>o.stored||o.storedVideoUrl);return n.length?n:a}function metaAdsCheckPlaybackSrc(e){return(e.stored||e.storedVideoUrl)&&e.videoId?`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/media/${encodeURIComponent(e.videoId)}`:e.storedVideoUrl||e.videoUrl||""}function renderMetaAdsCheckCard(e,{large:t=!1}={}){const a=e.type||"image",n=metaAdsCheckPlaybackSrc(e),o=e.imageUrl||e.thumbnailUrl||"";let s;return n?s=`<video src="${esc(n)}" poster="${esc(o)}" controls muted playsinline preload="${t?"auto":"metadata"}"></video>`:o?s=`<img src="${esc(o)}" alt="${esc(e.adName||"Ad")}" />`:s='<div class="meta-ads-check-media-empty">No preview from Meta</div>',`
+    `}}function uniqueMetaAdsCheckVideos(e){const t=new Set,a=[];for(const o of e||[]){if(!(o.type==="video"||o.videoId||o.stored))continue;const r=String(o.effectiveStatus||o.status||"").toUpperCase();if(r&&r!=="ACTIVE")continue;const i=String(o.videoId||o.adId||"");!i||t.has(i)||(t.add(i),a.push(o))}const n=a.filter(o=>o.stored||o.storedVideoUrl);return n.length?n:a}function uniqueMetaAdsCheckImages(e){const t=new Set,a=[];for(const n of e||[]){if(n.type==="video"||n.videoId)continue;const o=String(n.imageHash||n.imageUrl||n.adId||"");!o||t.has(o)||(t.add(o),a.push(n))}return a}function metaAdsCheckPlaybackSrc(e){return(e.stored||e.storedVideoUrl)&&e.videoId?`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/media/${encodeURIComponent(e.videoId)}`:e.storedVideoUrl||e.videoUrl||""}function dbgAdsCheck(e,t,a){fetch("http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c",{method:"POST",headers:{"Content-Type":"application/json","X-Debug-Session-Id":"f182bb"},body:JSON.stringify({sessionId:"f182bb",runId:"pre-fix",hypothesisId:e,location:"index.html:ads-check",message:t,data:a,timestamp:Date.now()})}).catch(()=>{})}function renderMetaAdsCheckCard(e,{large:t=!1}={}){const a=e.type||"image",n=metaAdsCheckPlaybackSrc(e),o=e.imageUrl||e.thumbnailUrl||"";let s;return n?s=`<video data-ads-check-video src="${esc(n)}" poster="${esc(o)}" controls muted playsinline preload="metadata"></video>`:o?s=`<img src="${esc(o)}" alt="${esc(e.adName||"Ad")}" />`:s='<div class="meta-ads-check-media-empty">No preview from Meta</div>',`
     <article class="meta-ads-check-card">
       <div class="meta-ads-check-media">${s}</div>
       <div class="meta-ads-check-body">
@@ -2480,7 +2480,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
         </p>
       </div>
     </article>
-  `}function renderMetaAdsCheckPage(e){const t=e.creatives||[],a=e.scope==="all"?"all":"active",n=uniqueMetaAdsCheckVideos(t),o=t.filter(s=>!((s.type==="video"||s.videoId)&&String(s.effectiveStatus||s.status||"").toUpperCase()==="ACTIVE"));return`
+  `}function bindMetaAdsCheckTabs(e){const t=e.querySelectorAll("[data-ads-check-tab]");t.forEach(a=>{a.addEventListener("click",()=>{const n=a.getAttribute("data-ads-check-tab");t.forEach(o=>{o.classList.toggle("admin-btn--primary",o===a)}),e.querySelectorAll("[data-ads-check-panel]").forEach(o=>{o.hidden=o.getAttribute("data-ads-check-panel")!==n})})})}function bindMetaAdsCheckVideoDebug(e,t){dbgAdsCheck("E","ads-check videos rendered",{videoCount:(t||[]).length,samples:(t||[]).slice(0,5).map(a=>({name:a.adName,type:a.type,stored:!!a.stored,videoId:a.videoId||null,srcHost:String(metaAdsCheckPlaybackSrc(a)||"").slice(0,80),usesMediaEndpoint:/\/ads-check\/media\//.test(metaAdsCheckPlaybackSrc(a)||""),usesBlobHost:/blob\.vercel-storage\.com/.test(metaAdsCheckPlaybackSrc(a)||"")}))}),e.querySelectorAll("video[data-ads-check-video]").forEach((a,n)=>{const o=a.getAttribute("src")||"";fetch(o,{credentials:"include",headers:{Range:"bytes=0-64"}}).then(async s=>{const r=s.headers.get("content-type")||"";dbgAdsCheck("A","media probe",{index:n,src:o.slice(0,120),status:s.status,contentType:r,looksJson:r.includes("json"),looksVideo:r.includes("video")})}).catch(s=>{dbgAdsCheck("A","media probe failed",{index:n,src:o.slice(0,120),error:String(s&&s.message||s)})}),a.addEventListener("error",()=>{dbgAdsCheck("D","video element error",{index:n,src:o.slice(0,120),mediaError:a.error?a.error.code:null})}),a.addEventListener("loadeddata",()=>{dbgAdsCheck("D","video element loaded",{index:n,src:o.slice(0,120),width:a.videoWidth,height:a.videoHeight})})})}function renderMetaAdsCheckPage(e){const t=e.creatives||[],a=e.scope==="all"?"all":"active",n=uniqueMetaAdsCheckVideos(t),o=uniqueMetaAdsCheckImages(t);return`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ads-check"))}
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero meta-premium-page-hero">
@@ -2496,30 +2496,32 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
         </div>
         <h1>Live Meta ads check</h1>
         <p class="meta-report-public-subtitle">
-          Downloaded active videos play here. Paused ads are not downloaded.
+          Videos and images are on separate tabs. Only active videos are stored.
         </p>
       </div>
     </div>
     <div class="meta-ads-check-toolbar">
       <span class="meta-cv-summary-pill is-complete">${e.ok?"Access works":"Access failed"}</span>
-      <span class="meta-cv-summary-pill">${n.length} downloaded videos</span>
-      <span class="meta-cv-summary-pill">${o.length} statics</span>
+      <span class="meta-cv-summary-pill">${n.length} videos</span>
+      <span class="meta-cv-summary-pill">${o.length} images</span>
       <a class="admin-btn admin-btn--small${a==="active"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=active">Active only</a>
       <a class="admin-btn admin-btn--small${a==="all"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=all">Active + paused</a>
     </div>
-    ${n.length?`<section class="meta-ads-check-carousel-wrap">
-          <h2 class="meta-ads-check-carousel-title">Downloaded videos</h2>
-          <div class="meta-ads-check-carousel">${n.map(s=>renderMetaAdsCheckCard(s,{large:!0})).join("")}</div>
-        </section>`:'<div class="sync-history-empty" style="padding:24px 0">No active video ads to download. Paused videos are left in Meta and are not stored here.</div>'}
-    ${o.length?`<section class="meta-ads-check-carousel-wrap">
-          <h2 class="meta-ads-check-carousel-title">Static ads</h2>
-          <div class="meta-ads-check-grid">${o.map(s=>renderMetaAdsCheckCard(s)).join("")}</div>
-        </section>`:""}
+    <div class="meta-ads-check-tabs">
+      <button type="button" class="admin-btn admin-btn--small admin-btn--primary" data-ads-check-tab="videos">Videos</button>
+      <button type="button" class="admin-btn admin-btn--small" data-ads-check-tab="images">Images</button>
+    </div>
+    <section data-ads-check-panel="videos">
+      ${n.length?`<div class="meta-ads-check-grid is-videos">${n.map(s=>renderMetaAdsCheckCard(s,{large:!0})).join("")}</div>`:'<div class="sync-history-empty" style="padding:24px 0">No active video ads to show.</div>'}
+    </section>
+    <section data-ads-check-panel="images" hidden>
+      ${o.length?`<div class="meta-ads-check-grid">${o.map(s=>renderMetaAdsCheckCard(s)).join("")}</div>`:'<div class="sync-history-empty" style="padding:24px 0">No image ads to show.</div>'}
+    </section>
     `)}
   `}async function loadMetaAdsCheckPage(){const e=document.getElementById("dashboard");if(!e)return;const t=await fetchStaffMe();if(!t){window.location.href=`/login?next=${encodeURIComponent(window.location.pathname+window.location.search)}`;return}currentStaffUser=t,e.innerHTML=`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ads-check"))}
     ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Checking Meta ads access...</p></div>')}
-  `;try{const a=new URLSearchParams(window.location.search).get("scope")==="all"?"all":"active",n=await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(a)}`);e.innerHTML=renderMetaAdsCheckPage(n)}catch(a){e.innerHTML=`
+  `;try{const a=new URLSearchParams(window.location.search).get("scope")==="all"?"all":"active",n=await adminFetch(`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(a)}`);e.innerHTML=renderMetaAdsCheckPage(n),bindMetaAdsCheckTabs(e),bindMetaAdsCheckVideoDebug(e,uniqueMetaAdsCheckVideos(n.creatives||[]))}catch(a){e.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ads-check"))}
       ${wrapDashboardShell(`
         <div class="page-hero admin-hub-hero meta-premium-page-hero">
