@@ -6267,8 +6267,36 @@
     .meta-ads-check-media img,
     .meta-ads-check-media video {
       height: 100%;
-      object-fit: cover;
       width: 100%;
+    }
+    .meta-ads-check-carousel-wrap { margin: 0 0 28px; }
+    .meta-ads-check-carousel-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 12px;
+    }
+    .meta-ads-check-carousel {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding: 0 0 8px;
+      scroll-snap-type: x mandatory;
+    }
+    .meta-ads-check-carousel .meta-ads-check-card {
+      flex: 0 0 min(100%, 420px);
+      max-width: 420px;
+      scroll-snap-align: start;
+    }
+    .meta-ads-check-carousel .meta-ads-check-media {
+      aspect-ratio: 16 / 9;
+      background: #111;
+    }
+    .meta-ads-check-carousel .meta-ads-check-media video {
+      object-fit: contain;
+    }
+    .meta-ads-check-grid .meta-ads-check-media img,
+    .meta-ads-check-grid .meta-ads-check-media video {
+      object-fit: contain;
     }
     .meta-ads-check-media-empty {
       color: #d6c7b8;

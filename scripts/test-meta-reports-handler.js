@@ -30,6 +30,11 @@ function main() {
     kind: 'ads-check-download',
     clientId: 'censio',
   });
+  assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/clients/censio/ads-check/media/1446669490223580'), {
+    kind: 'ads-check-media',
+    clientId: 'censio',
+    videoId: '1446669490223580',
+  });
   assert.deepStrictEqual(parseMetaReportsPath('/api/meta-reports/clients/ml-tagdaekning/months/2026-01'), {
     kind: 'month-save',
     clientId: 'ml-tagdaekning',

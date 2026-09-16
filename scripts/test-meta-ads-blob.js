@@ -39,7 +39,7 @@ async function cacheTests() {
     setAdsCheckCache,
   } = require('../lib/meta-ads-check-cache');
   clearAdsCheckCacheForTests();
-  assert.strictEqual(adsCheckCacheKey('censio', 'all'), 'meta_ads_check:censio:all');
+  assert.strictEqual(adsCheckCacheKey('censio', 'all'), 'meta_ads_check:v3:censio:all');
   await setAdsCheckCache('censio', 'all', { ok: true, clientId: 'censio' });
   const cached = await getAdsCheckCache('censio', 'all');
   assert.strictEqual(cached.ok, true);

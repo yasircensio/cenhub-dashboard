@@ -2467,22 +2467,20 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
     `);try{const a=await adminFetch("/api/meta-reports/ghl-clients");metaReportsState.ghlClients.data=a,e.innerHTML=renderMetaReportsGhlClientsPage(a),metaReportsState.ghlClients.mounted=!0,bindMetaReportsGhlClientsEvents()}catch(a){e.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ghl-clients"))}
       ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(a.message)}</div>`)}
-    `}}function metaAdsCheckSafeName(e){return String(e||"file").replace(/[^a-zA-Z0-9._-]+/g,"_").slice(0,80)||"file"}function resolveMetaAdsCheckDownload(e){const t=metaAdsCheckSafeName(`${e.adId}_${e.adName}`);return e.storedVideoUrl||e.stored&&e.videoUrl?{url:e.storedVideoUrl||e.videoUrl,filename:`${t}.mp4`,isOriginal:!0,stored:!0}:e.videoUrl?{url:e.videoUrl,filename:`${t}.mp4`,isOriginal:!0,stored:!1}:e.imageUrl&&e.imageUrl!==e.thumbnailUrl?{url:e.imageUrl,filename:`${t}.jpg`,isOriginal:!0,stored:!1}:e.thumbnailUrl?{url:e.thumbnailUrl,filename:`${t}_thumb.jpg`,isOriginal:!1,stored:!1}:null}function metaAdsCheckDownloadHref(e,t,a){return a?e:`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/download?url=${encodeURIComponent(e)}&filename=${encodeURIComponent(t)}`}function renderMetaAdsCheckCard(e){const t=e.type||"image",a=e.storedVideoUrl||e.videoUrl,n=a?`<video src="${esc(a)}" poster="${esc(e.thumbnailUrl||"")}" controls muted playsinline></video>`:e.thumbnailUrl||e.imageUrl?`<img src="${esc(e.thumbnailUrl||e.imageUrl)}" alt="${esc(e.adName||"Ad")}" />`:'<div class="meta-ads-check-media-empty">No preview from Meta</div>',o=resolveMetaAdsCheckDownload(e),s=o?`<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download target="_blank" rel="noopener" href="${esc(metaAdsCheckDownloadHref(o.url,o.filename,o.stored))}">${o.stored?"Open from storage":`Open${o.isOriginal?"":" (thumbnail only)"}`}</a>`:'<span class="meta-ads-check-no-download">No downloadable file</span>';return`
+    `}}function uniqueMetaAdsCheckVideos(e){const t=new Set,a=[];for(const o of e||[]){if(!(o.type==="video"||o.videoId||o.stored))continue;const r=String(o.videoId||o.adId||"");!r||t.has(r)||(t.add(r),a.push(o))}const n=a.filter(o=>o.stored||o.storedVideoUrl);return n.length?n:a}function metaAdsCheckPlaybackSrc(e){return(e.stored||e.storedVideoUrl)&&e.videoId?`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/media/${encodeURIComponent(e.videoId)}`:e.storedVideoUrl||e.videoUrl||""}function renderMetaAdsCheckCard(e,{large:t=!1}={}){const a=e.type||"image",n=metaAdsCheckPlaybackSrc(e),o=e.imageUrl||e.thumbnailUrl||"";let s;return n?s=`<video src="${esc(n)}" poster="${esc(o)}" controls muted playsinline preload="${t?"auto":"metadata"}"></video>`:o?s=`<img src="${esc(o)}" alt="${esc(e.adName||"Ad")}" />`:s='<div class="meta-ads-check-media-empty">No preview from Meta</div>',`
     <article class="meta-ads-check-card">
-      <div class="meta-ads-check-media">${n}</div>
+      <div class="meta-ads-check-media">${s}</div>
       <div class="meta-ads-check-body">
-        <span class="meta-ads-check-type is-${esc(t)}">${esc(t)}</span>
+        <span class="meta-ads-check-type is-${esc(a)}">${esc(a)}</span>
         ${e.stored?'<span class="meta-ads-check-type is-stored">stored</span>':""}
-        <h3 class="meta-ads-check-name">${esc(e.adName||"Untitled ad")}</h3>
+        <h3 class="meta-ads-check-name">${esc(e.adName||e.videoTitle||"Untitled ad")}</h3>
         <p class="meta-ads-check-meta">
           ${esc(e.campaignName||"No campaign")}<br>
-          ${esc(e.adsetName||"No ad set")}<br>
           ${esc(e.effectiveStatus||e.status||"unknown")}
         </p>
-        <div class="meta-ads-check-actions">${s}</div>
       </div>
     </article>
-  `}function renderMetaAdsCheckPage(e){const t=e.creatives||[],a=e.scope==="all"?"all":"active";return`
+  `}function renderMetaAdsCheckPage(e){const t=e.creatives||[],a=e.scope==="all"?"all":"active",n=uniqueMetaAdsCheckVideos(t),o=t.filter(s=>s.type!=="video"&&!s.videoId);return`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ads-check"))}
     ${wrapDashboardShell(`
     <div class="page-hero admin-hub-hero meta-premium-page-hero">
@@ -2498,22 +2496,25 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
         </div>
         <h1>Live Meta ads check</h1>
         <p class="meta-report-public-subtitle">
-          Videos play from Cenhub storage after we copy them once. Nothing is changed in Meta. Open a stored file to save it.
+          Downloaded videos play here, in this carousel. Static ads below use the original image, not the tiny thumbnail.
         </p>
       </div>
     </div>
     <div class="meta-ads-check-toolbar">
       <span class="meta-cv-summary-pill is-complete">${e.ok?"Access works":"Access failed"}</span>
-      <span class="meta-cv-summary-pill">${e.adCount||0} ads</span>
-      <span class="meta-cv-summary-pill">${e.videoCount||0} videos</span>
-      <span class="meta-cv-summary-pill">${e.imageCount||0} statics</span>
-      <span class="meta-cv-summary-pill">${e.carouselCount||0} carousels</span>
-      <span class="meta-cv-summary-pill">${e.withDownloadableFile??0} original files</span>
-      <span class="meta-cv-summary-pill">${e.storedVideoCount??0} stored videos</span>
+      <span class="meta-cv-summary-pill">${n.length} downloaded videos</span>
+      <span class="meta-cv-summary-pill">${o.length} statics</span>
       <a class="admin-btn admin-btn--small${a==="active"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=active">Active only</a>
       <a class="admin-btn admin-btn--small${a==="all"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=all">Active + paused</a>
     </div>
-    ${t.length?`<div class="meta-ads-check-grid">${t.map(renderMetaAdsCheckCard).join("")}</div>`:'<div class="sync-history-empty" style="padding:24px 0">No ads returned for this scope. Try Active + paused, or the token cannot see creatives yet.</div>'}
+    ${n.length?`<section class="meta-ads-check-carousel-wrap">
+          <h2 class="meta-ads-check-carousel-title">Downloaded videos</h2>
+          <div class="meta-ads-check-carousel">${n.map(s=>renderMetaAdsCheckCard(s,{large:!0})).join("")}</div>
+        </section>`:'<div class="sync-history-empty" style="padding:24px 0">No downloaded videos yet for this client.</div>'}
+    ${o.length?`<section class="meta-ads-check-carousel-wrap">
+          <h2 class="meta-ads-check-carousel-title">Static ads</h2>
+          <div class="meta-ads-check-grid">${o.map(s=>renderMetaAdsCheckCard(s)).join("")}</div>
+        </section>`:""}
     `)}
   `}async function loadMetaAdsCheckPage(){const e=document.getElementById("dashboard");if(!e)return;const t=await fetchStaffMe();if(!t){window.location.href=`/login?next=${encodeURIComponent(window.location.pathname+window.location.search)}`;return}currentStaffUser=t,e.innerHTML=`
     ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ads-check"))}

@@ -203,7 +203,7 @@ async function bootClientApp() {
   if (needsAdminShell) {
     if (!document.querySelector('script[src*="admin.bundle.js"]')) {
       const script = document.createElement('script');
-      script.src = '/js/admin.bundle.js?v=342';
+      script.src = '/js/admin.bundle.js?v=343';
       script.defer = true;
       document.body.appendChild(script);
     }
