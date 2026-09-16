@@ -21566,6 +21566,8 @@
       for (const ad of ads || []) {
         const isVideo = ad.type === 'video' || ad.videoId || ad.stored;
         if (!isVideo) continue;
+        const status = String(ad.effectiveStatus || ad.status || '').toUpperCase();
+        if (status && status !== 'ACTIVE') continue;
         const key = String(ad.videoId || ad.adId || '');
         if (!key || seen.has(key)) continue;
         seen.add(key);
@@ -21614,7 +21616,11 @@
       const ads = payload.creatives || [];
       const scope = payload.scope === 'all' ? 'all' : 'active';
       const videos = uniqueMetaAdsCheckVideos(ads);
-      const statics = ads.filter((ad) => ad.type !== 'video' && !ad.videoId);
+      const statics = ads.filter((ad) => {
+        const isActiveVideo = (ad.type === 'video' || ad.videoId)
+          && String(ad.effectiveStatus || ad.status || '').toUpperCase() === 'ACTIVE';
+        return !isActiveVideo;
+      });
       return `
         ${renderBrandTopbar(renderStaffAdminChrome('meta-reports-ads-check'))}
         ${wrapDashboardShell(`
@@ -21631,7 +21637,7 @@
             </div>
             <h1>Live Meta ads check</h1>
             <p class="meta-report-public-subtitle">
-              Downloaded videos play here, in this carousel. Static ads below use the original image, not the tiny thumbnail.
+              Downloaded active videos play here. Paused ads are not downloaded.
             </p>
           </div>
         </div>
@@ -21647,7 +21653,7 @@
               <h2 class="meta-ads-check-carousel-title">Downloaded videos</h2>
               <div class="meta-ads-check-carousel">${videos.map((ad) => renderMetaAdsCheckCard(ad, { large: true })).join('')}</div>
             </section>`
-          : '<div class="sync-history-empty" style="padding:24px 0">No downloaded videos yet for this client.</div>'}
+          : '<div class="sync-history-empty" style="padding:24px 0">No active video ads to download. Paused videos are left in Meta and are not stored here.</div>'}
         ${statics.length
           ? `<section class="meta-ads-check-carousel-wrap">
               <h2 class="meta-ads-check-carousel-title">Static ads</h2>
@@ -21672,7 +21678,7 @@
         ${wrapDashboardShell('<div class="loading-state"><div class="spinner"></div><p>Checking Meta ads access...</p></div>')}
       `;
       try {
-        const scope = new URLSearchParams(window.location.search).get('scope') === 'active' ? 'active' : 'all';
+        const scope = new URLSearchParams(window.location.search).get('scope') === 'all' ? 'all' : 'active';
         const payload = await adminFetch(
           `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check?scope=${encodeURIComponent(scope)}`,
         );

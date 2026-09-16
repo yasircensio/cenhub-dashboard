@@ -1,12 +1,8 @@
 /**
- * Copies 1–2 Meta ad videos into Vercel Blob (Cenhub storage).
- * Does not change anything in Meta (GET only).
+ * Copies all currently ACTIVE Meta ad videos into Vercel Blob.
+ * Paused / inactive videos are not downloaded.
  *
- * Usage: node scripts/download-meta-ads-check.js [clientId] [--limit 2]
- *
- * Prefers a local Graph fetch. If the local system user token cannot read
- * ads, it loads the live ads-check list from production, then uses the
- * stored Facebook Page token to get download URLs.
+ * Usage: node scripts/download-meta-ads-check.js [clientId]
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 require('dotenv').config({
@@ -83,8 +79,8 @@ async function main() {
   const clientId = process.argv[2] && !process.argv[2].startsWith('-')
     ? process.argv[2]
     : 'censio';
-  const limit = Math.max(1, Number(argValue('--limit', '2')) || 2);
-  const scope = process.argv.includes('--all') ? 'all' : 'active';
+  const limit = Math.max(1, Number(argValue('--limit', '50')) || 50);
+  const scope = 'active';
   const account = await getAccount(clientId, { includeSecrets: true });
   if (!account) throw new Error(`Account not found: ${clientId}`);
 

@@ -38,6 +38,13 @@ function main() {
     extractVideoId({ object_story_spec: { video_data: { video_id: 'nested-1' } } }),
     'nested-1',
   );
+  assert.strictEqual(
+    extractVideoId({ asset_feed_spec: { videos: [{ video_id: 'feed-9' }] } }),
+    'feed-9',
+  );
+  assert.strictEqual(classifyCreative({
+    asset_feed_spec: { videos: [{ video_id: 'feed-9' }] },
+  }), 'video');
   const nestedSummary = summarizeAd({
     id: 'ad-2',
     name: 'Nested video ad',
