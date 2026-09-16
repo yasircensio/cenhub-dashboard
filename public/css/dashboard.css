@@ -6290,6 +6290,7 @@
     .meta-ads-check-type.is-video { background: #fff4eb; color: #c2410c; }
     .meta-ads-check-type.is-image { background: #ecfdf5; color: #047857; }
     .meta-ads-check-type.is-carousel { background: #eff6ff; color: #1d4ed8; }
+    .meta-ads-check-type.is-stored { background: #f5f3ff; color: #6d28d9; }
     .meta-ads-check-name { font-size: 14px; font-weight: 650; margin: 0 0 4px; }
     .meta-ads-check-meta {
       color: var(--text-muted);

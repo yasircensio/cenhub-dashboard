@@ -52,6 +52,10 @@ function main() {
   });
   assert.strictEqual(isAllowedAdsCheckDownloadUrl('https://scontent.xx.fbcdn.net/v/foo.jpg'), true);
   assert.strictEqual(isAllowedAdsCheckDownloadUrl('https://video.xx.fbcdn.net/v/foo.mp4'), true);
+  assert.strictEqual(
+    isAllowedAdsCheckDownloadUrl('https://abc123.public.blob.vercel-storage.com/meta-ads/censio/videos/1.mp4'),
+    true,
+  );
   assert.strictEqual(isAllowedAdsCheckDownloadUrl('https://graph.facebook.com/v21.0/123'), true);
   assert.strictEqual(isAllowedAdsCheckDownloadUrl('http://scontent.xx.fbcdn.net/v/foo.jpg'), false, 'rejects non-https');
   assert.strictEqual(isAllowedAdsCheckDownloadUrl('https://evil.com/foo.jpg'), false, 'rejects other hosts');

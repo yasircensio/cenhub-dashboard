@@ -2467,18 +2467,19 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
     `);try{const a=await adminFetch("/api/meta-reports/ghl-clients");metaReportsState.ghlClients.data=a,e.innerHTML=renderMetaReportsGhlClientsPage(a),metaReportsState.ghlClients.mounted=!0,bindMetaReportsGhlClientsEvents()}catch(a){e.innerHTML=`
       ${renderBrandTopbar(renderStaffAdminChrome("meta-reports-ghl-clients"))}
       ${wrapDashboardShell(`<div class="error-state" style="padding:24px">${esc(a.message)}</div>`)}
-    `}}function metaAdsCheckSafeName(e){return String(e||"file").replace(/[^a-zA-Z0-9._-]+/g,"_").slice(0,80)||"file"}function resolveMetaAdsCheckDownload(e){const t=metaAdsCheckSafeName(`${e.adId}_${e.adName}`);return e.videoUrl?{url:e.videoUrl,filename:`${t}.mp4`,isOriginal:!0}:e.imageUrl&&e.imageUrl!==e.thumbnailUrl?{url:e.imageUrl,filename:`${t}.jpg`,isOriginal:!0}:e.thumbnailUrl?{url:e.thumbnailUrl,filename:`${t}_thumb.jpg`,isOriginal:!1}:null}function metaAdsCheckDownloadHref(e,t){return`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/download?url=${encodeURIComponent(e)}&filename=${encodeURIComponent(t)}`}function renderMetaAdsCheckCard(e){const t=e.type||"image",a=e.videoUrl?`<video src="${esc(e.videoUrl)}" poster="${esc(e.thumbnailUrl||"")}" controls muted playsinline></video>`:e.thumbnailUrl||e.imageUrl?`<img src="${esc(e.thumbnailUrl||e.imageUrl)}" alt="${esc(e.adName||"Ad")}" />`:'<div class="meta-ads-check-media-empty">No preview from Meta</div>',n=resolveMetaAdsCheckDownload(e),o=n?`<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download target="_blank" rel="noopener" href="${esc(metaAdsCheckDownloadHref(n.url,n.filename))}">Open${n.isOriginal?"":" (thumbnail only)"}</a>`:'<span class="meta-ads-check-no-download">No downloadable file</span>';return`
+    `}}function metaAdsCheckSafeName(e){return String(e||"file").replace(/[^a-zA-Z0-9._-]+/g,"_").slice(0,80)||"file"}function resolveMetaAdsCheckDownload(e){const t=metaAdsCheckSafeName(`${e.adId}_${e.adName}`);return e.storedVideoUrl||e.stored&&e.videoUrl?{url:e.storedVideoUrl||e.videoUrl,filename:`${t}.mp4`,isOriginal:!0,stored:!0}:e.videoUrl?{url:e.videoUrl,filename:`${t}.mp4`,isOriginal:!0,stored:!1}:e.imageUrl&&e.imageUrl!==e.thumbnailUrl?{url:e.imageUrl,filename:`${t}.jpg`,isOriginal:!0,stored:!1}:e.thumbnailUrl?{url:e.thumbnailUrl,filename:`${t}_thumb.jpg`,isOriginal:!1,stored:!1}:null}function metaAdsCheckDownloadHref(e,t,a){return a?e:`/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/download?url=${encodeURIComponent(e)}&filename=${encodeURIComponent(t)}`}function renderMetaAdsCheckCard(e){const t=e.type||"image",a=e.storedVideoUrl||e.videoUrl,n=a?`<video src="${esc(a)}" poster="${esc(e.thumbnailUrl||"")}" controls muted playsinline></video>`:e.thumbnailUrl||e.imageUrl?`<img src="${esc(e.thumbnailUrl||e.imageUrl)}" alt="${esc(e.adName||"Ad")}" />`:'<div class="meta-ads-check-media-empty">No preview from Meta</div>',o=resolveMetaAdsCheckDownload(e),s=o?`<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download target="_blank" rel="noopener" href="${esc(metaAdsCheckDownloadHref(o.url,o.filename,o.stored))}">${o.stored?"Open from storage":`Open${o.isOriginal?"":" (thumbnail only)"}`}</a>`:'<span class="meta-ads-check-no-download">No downloadable file</span>';return`
     <article class="meta-ads-check-card">
-      <div class="meta-ads-check-media">${a}</div>
+      <div class="meta-ads-check-media">${n}</div>
       <div class="meta-ads-check-body">
         <span class="meta-ads-check-type is-${esc(t)}">${esc(t)}</span>
+        ${e.stored?'<span class="meta-ads-check-type is-stored">stored</span>':""}
         <h3 class="meta-ads-check-name">${esc(e.adName||"Untitled ad")}</h3>
         <p class="meta-ads-check-meta">
           ${esc(e.campaignName||"No campaign")}<br>
           ${esc(e.adsetName||"No ad set")}<br>
           ${esc(e.effectiveStatus||e.status||"unknown")}
         </p>
-        <div class="meta-ads-check-actions">${o}</div>
+        <div class="meta-ads-check-actions">${s}</div>
       </div>
     </article>
   `}function renderMetaAdsCheckPage(e){const t=e.creatives||[],a=e.scope==="all"?"all":"active";return`
@@ -2497,7 +2498,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
         </div>
         <h1>Live Meta ads check</h1>
         <p class="meta-report-public-subtitle">
-          Videos and statics currently running for this client, straight from Meta. Open a file in a new tab, then save it from there.
+          Videos play from Cenhub storage after we copy them once. Nothing is changed in Meta. Open a stored file to save it.
         </p>
       </div>
     </div>
@@ -2508,6 +2509,7 @@ Type "skip" to skip manual months, or "overwrite" to replace all:`,"skip");if(!g
       <span class="meta-cv-summary-pill">${e.imageCount||0} statics</span>
       <span class="meta-cv-summary-pill">${e.carouselCount||0} carousels</span>
       <span class="meta-cv-summary-pill">${e.withDownloadableFile??0} original files</span>
+      <span class="meta-cv-summary-pill">${e.storedVideoCount??0} stored videos</span>
       <a class="admin-btn admin-btn--small${a==="active"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=active">Active only</a>
       <a class="admin-btn admin-btn--small${a==="all"?" admin-btn--primary":""}" href="/admin/meta-reports/${encodeURIComponent(e.clientId)}/ads-check?scope=all">Active + paused</a>
     </div>

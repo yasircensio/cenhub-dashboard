@@ -6299,6 +6299,7 @@
     .meta-ads-check-type.is-video { background: #fff4eb; color: #c2410c; }
     .meta-ads-check-type.is-image { background: #ecfdf5; color: #047857; }
     .meta-ads-check-type.is-carousel { background: #eff6ff; color: #1d4ed8; }
+    .meta-ads-check-type.is-stored { background: #f5f3ff; color: #6d28d9; }
     .meta-ads-check-name { font-size: 14px; font-weight: 650; margin: 0 0 4px; }
     .meta-ads-check-meta {
       color: var(--text-muted);
@@ -21535,37 +21536,43 @@
       return String(value || 'file').replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 80) || 'file';
     }
 
-    // Prefers the real uploaded file (video, or full-resolution image) over
-    // the small preview thumbnail Meta always returns.
+    // Prefers a copy already saved in Cenhub storage, then the real uploaded
+    // file (video or full-resolution image), then Meta's small thumbnail.
     function resolveMetaAdsCheckDownload(ad) {
       const base = metaAdsCheckSafeName(`${ad.adId}_${ad.adName}`);
-      if (ad.videoUrl) return { url: ad.videoUrl, filename: `${base}.mp4`, isOriginal: true };
-      if (ad.imageUrl && ad.imageUrl !== ad.thumbnailUrl) return { url: ad.imageUrl, filename: `${base}.jpg`, isOriginal: true };
-      if (ad.thumbnailUrl) return { url: ad.thumbnailUrl, filename: `${base}_thumb.jpg`, isOriginal: false };
+      if (ad.storedVideoUrl || (ad.stored && ad.videoUrl)) {
+        return { url: ad.storedVideoUrl || ad.videoUrl, filename: `${base}.mp4`, isOriginal: true, stored: true };
+      }
+      if (ad.videoUrl) return { url: ad.videoUrl, filename: `${base}.mp4`, isOriginal: true, stored: false };
+      if (ad.imageUrl && ad.imageUrl !== ad.thumbnailUrl) return { url: ad.imageUrl, filename: `${base}.jpg`, isOriginal: true, stored: false };
+      if (ad.thumbnailUrl) return { url: ad.thumbnailUrl, filename: `${base}_thumb.jpg`, isOriginal: false, stored: false };
       return null;
     }
 
-    function metaAdsCheckDownloadHref(url, filename) {
+    function metaAdsCheckDownloadHref(url, filename, stored) {
+      if (stored) return url;
       return `/api/meta-reports/clients/${encodeURIComponent(CLIENT_SLUG)}/ads-check/download`
         + `?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
     }
 
     function renderMetaAdsCheckCard(ad) {
       const type = ad.type || 'image';
-      const media = ad.videoUrl
-        ? `<video src="${esc(ad.videoUrl)}" poster="${esc(ad.thumbnailUrl || '')}" controls muted playsinline></video>`
+      const playbackUrl = ad.storedVideoUrl || ad.videoUrl;
+      const media = playbackUrl
+        ? `<video src="${esc(playbackUrl)}" poster="${esc(ad.thumbnailUrl || '')}" controls muted playsinline></video>`
         : (ad.thumbnailUrl || ad.imageUrl
           ? `<img src="${esc(ad.thumbnailUrl || ad.imageUrl)}" alt="${esc(ad.adName || 'Ad')}" />`
           : '<div class="meta-ads-check-media-empty">No preview from Meta</div>');
       const download = resolveMetaAdsCheckDownload(ad);
       const downloadHtml = download
-        ? `<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download target="_blank" rel="noopener" href="${esc(metaAdsCheckDownloadHref(download.url, download.filename))}">Open${download.isOriginal ? '' : ' (thumbnail only)'}</a>`
+        ? `<a class="admin-btn admin-btn--secondary admin-btn--small meta-ads-check-download" data-ads-check-download target="_blank" rel="noopener" href="${esc(metaAdsCheckDownloadHref(download.url, download.filename, download.stored))}">${download.stored ? 'Open from storage' : `Open${download.isOriginal ? '' : ' (thumbnail only)'}`}</a>`
         : '<span class="meta-ads-check-no-download">No downloadable file</span>';
       return `
         <article class="meta-ads-check-card">
           <div class="meta-ads-check-media">${media}</div>
           <div class="meta-ads-check-body">
             <span class="meta-ads-check-type is-${esc(type)}">${esc(type)}</span>
+            ${ad.stored ? '<span class="meta-ads-check-type is-stored">stored</span>' : ''}
             <h3 class="meta-ads-check-name">${esc(ad.adName || 'Untitled ad')}</h3>
             <p class="meta-ads-check-meta">
               ${esc(ad.campaignName || 'No campaign')}<br>
@@ -21597,7 +21604,7 @@
             </div>
             <h1>Live Meta ads check</h1>
             <p class="meta-report-public-subtitle">
-              Videos and statics currently running for this client, straight from Meta. Open a file in a new tab, then save it from there.
+              Videos play from Cenhub storage after we copy them once. Nothing is changed in Meta. Open a stored file to save it.
             </p>
           </div>
         </div>
@@ -21608,6 +21615,7 @@
           <span class="meta-cv-summary-pill">${payload.imageCount || 0} statics</span>
           <span class="meta-cv-summary-pill">${payload.carouselCount || 0} carousels</span>
           <span class="meta-cv-summary-pill">${payload.withDownloadableFile ?? 0} original files</span>
+          <span class="meta-cv-summary-pill">${payload.storedVideoCount ?? 0} stored videos</span>
           <a class="admin-btn admin-btn--small${scope === 'active' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=active">Active only</a>
           <a class="admin-btn admin-btn--small${scope === 'all' ? ' admin-btn--primary' : ''}" href="/admin/meta-reports/${encodeURIComponent(payload.clientId)}/ads-check?scope=all">Active + paused</a>
         </div>
