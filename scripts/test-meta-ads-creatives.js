@@ -63,6 +63,14 @@ function main() {
   assert.strictEqual(imageSummary.type, 'image');
   assert.strictEqual(imageSummary.imageUrl, 'https://full-res-image.jpg');
 
+  const { collectCreativeImageHashes } = require('../lib/meta-ads-creatives');
+  assert.deepStrictEqual(collectCreativeImageHashes([
+    { creative: { image_hash: 'aaa' } },
+    { creative: { image_hash: 'aaa' } },
+    { creative: { image_hash: 'bbb' } },
+    { creative: {} },
+  ]), ['aaa', 'bbb']);
+
   console.log('Meta ads creatives tests passed.');
 }
 

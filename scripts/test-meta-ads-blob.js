@@ -31,4 +31,24 @@ function main() {
   console.log('Meta ads blob tests passed.');
 }
 
+async function cacheTests() {
+  const {
+    adsCheckCacheKey,
+    clearAdsCheckCacheForTests,
+    getAdsCheckCache,
+    setAdsCheckCache,
+  } = require('../lib/meta-ads-check-cache');
+  clearAdsCheckCacheForTests();
+  assert.strictEqual(adsCheckCacheKey('censio', 'all'), 'meta_ads_check:censio:all');
+  await setAdsCheckCache('censio', 'all', { ok: true, clientId: 'censio' });
+  const cached = await getAdsCheckCache('censio', 'all');
+  assert.strictEqual(cached.ok, true);
+  assert.strictEqual(cached.clientId, 'censio');
+  console.log('Meta ads check cache tests passed.');
+}
+
 main();
+cacheTests().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
