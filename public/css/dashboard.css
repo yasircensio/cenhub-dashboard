@@ -337,6 +337,8 @@
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.22);
       color: #fff;
+      padding-left: 12px;
+      padding-right: 12px;
     }
 
     .header-presets .preset-btn:hover {
@@ -3689,28 +3691,20 @@
       margin-bottom: 14px;
     }
 
-    .compare-bar {
+    /* Comparison control: a compact chip in the header row, menu opens on one click. */
+    .compare-control {
       align-items: center;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-      padding: 10px 14px;
+      display: inline-flex;
+      gap: 4px;
       position: relative;
-    }
-
-    .compare-bar.is-active {
-      border-color: rgba(255, 106, 0, 0.35);
     }
 
     .compare-summary {
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.45;
       min-width: 0;
+      padding: 8px 10px 6px;
     }
 
     .compare-summary strong {
@@ -3733,14 +3727,6 @@
       margin-top: 2px;
     }
 
-    .compare-actions {
-      align-items: center;
-      display: flex;
-      flex-shrink: 0;
-      gap: 6px;
-      position: relative;
-    }
-
     .compare-btn {
       align-items: center;
       background: var(--panel);
@@ -3752,9 +3738,16 @@
       font: inherit;
       font-size: 12px;
       font-weight: 500;
-      gap: 8px;
+      gap: 7px;
+      max-width: 230px;
       padding: 9px 12px;
-      transition: border-color 0.15s ease, color 0.15s ease;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .compare-btn-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .compare-btn:hover {
@@ -3764,6 +3757,37 @@
 
     .compare-btn.is-disabled {
       color: var(--text-soft);
+    }
+
+    .compare-btn.is-error {
+      border-color: #e57373;
+    }
+
+    /* Header (dark) variant, same look as the period preset buttons next to it. */
+    .preset-controls--header .compare-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
+
+    .preset-controls--header .compare-btn:hover {
+      background: rgba(255, 106, 0, 0.25);
+      border-color: var(--border-strong);
+      color: #fff;
+    }
+
+    .preset-controls--header .compare-btn.is-disabled {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .preset-controls--header .compare-btn.is-active {
+      background: rgba(255, 106, 0, 0.3);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .preset-controls--header .compare-btn.is-error {
+      border-color: #ff8a80;
     }
 
     .compare-btn-icon {
@@ -3788,12 +3812,21 @@
       cursor: pointer;
       font-size: 18px;
       line-height: 1;
-      padding: 4px 8px;
+      padding: 4px 7px;
     }
 
     .compare-clear:hover {
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.06);
       color: var(--text);
+    }
+
+    .preset-controls--header .compare-clear {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .preset-controls--header .compare-clear:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
     }
 
     .compare-menu {
@@ -3801,15 +3834,36 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       box-shadow: var(--shadow-md);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       gap: 2px;
-      min-width: 270px;
+      min-width: 280px;
       padding: 6px;
       position: absolute;
       right: 0;
+      text-align: left;
       top: calc(100% + 8px);
-      z-index: 30;
+      z-index: 40;
+    }
+
+    /* The menu is light even inside the dark header: reset the dark select styling. */
+    .preset-controls--header .compare-menu .client-period-select,
+    .preset-controls--header .compare-menu .client-period-select:focus,
+    .preset-controls--header .compare-menu .client-period-select:hover {
+      --period-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0h8L4 5z' fill='%23707680'/%3E%3C/svg%3E");
+      background-color: var(--panel);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .preset-controls--header .compare-menu .client-period-select:hover {
+      border-color: var(--border-strong);
+    }
+
+    .preset-controls--header .compare-menu .client-period-select option {
+      background: #fff;
+      color: #111;
     }
 
     .compare-menu[hidden] {
@@ -3897,18 +3951,11 @@
     }
 
     @media (max-width: 640px) {
-      .compare-bar {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .compare-actions {
-        justify-content: flex-end;
-      }
-
       .compare-menu {
         min-width: 0;
-        width: min(100%, 320px);
+        right: auto;
+        left: 0;
+        width: min(320px, calc(100vw - 56px));
       }
     }
 

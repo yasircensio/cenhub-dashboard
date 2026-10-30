@@ -346,6 +346,8 @@
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(255, 255, 255, 0.22);
       color: #fff;
+      padding-left: 12px;
+      padding-right: 12px;
     }
 
     .header-presets .preset-btn:hover {
@@ -3698,28 +3700,20 @@
       margin-bottom: 14px;
     }
 
-    .compare-bar {
+    /* Comparison control: a compact chip in the header row, menu opens on one click. */
+    .compare-control {
       align-items: center;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      gap: 12px;
-      justify-content: space-between;
-      padding: 10px 14px;
+      display: inline-flex;
+      gap: 4px;
       position: relative;
-    }
-
-    .compare-bar.is-active {
-      border-color: rgba(255, 106, 0, 0.35);
     }
 
     .compare-summary {
       color: var(--text-muted);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.45;
       min-width: 0;
+      padding: 8px 10px 6px;
     }
 
     .compare-summary strong {
@@ -3742,14 +3736,6 @@
       margin-top: 2px;
     }
 
-    .compare-actions {
-      align-items: center;
-      display: flex;
-      flex-shrink: 0;
-      gap: 6px;
-      position: relative;
-    }
-
     .compare-btn {
       align-items: center;
       background: var(--panel);
@@ -3761,9 +3747,16 @@
       font: inherit;
       font-size: 12px;
       font-weight: 500;
-      gap: 8px;
+      gap: 7px;
+      max-width: 230px;
       padding: 9px 12px;
-      transition: border-color 0.15s ease, color 0.15s ease;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .compare-btn-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .compare-btn:hover {
@@ -3773,6 +3766,37 @@
 
     .compare-btn.is-disabled {
       color: var(--text-soft);
+    }
+
+    .compare-btn.is-error {
+      border-color: #e57373;
+    }
+
+    /* Header (dark) variant, same look as the period preset buttons next to it. */
+    .preset-controls--header .compare-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
+
+    .preset-controls--header .compare-btn:hover {
+      background: rgba(255, 106, 0, 0.25);
+      border-color: var(--border-strong);
+      color: #fff;
+    }
+
+    .preset-controls--header .compare-btn.is-disabled {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .preset-controls--header .compare-btn.is-active {
+      background: rgba(255, 106, 0, 0.3);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .preset-controls--header .compare-btn.is-error {
+      border-color: #ff8a80;
     }
 
     .compare-btn-icon {
@@ -3797,12 +3821,21 @@
       cursor: pointer;
       font-size: 18px;
       line-height: 1;
-      padding: 4px 8px;
+      padding: 4px 7px;
     }
 
     .compare-clear:hover {
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.06);
       color: var(--text);
+    }
+
+    .preset-controls--header .compare-clear {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .preset-controls--header .compare-clear:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
     }
 
     .compare-menu {
@@ -3810,15 +3843,36 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       box-shadow: var(--shadow-md);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       gap: 2px;
-      min-width: 270px;
+      min-width: 280px;
       padding: 6px;
       position: absolute;
       right: 0;
+      text-align: left;
       top: calc(100% + 8px);
-      z-index: 30;
+      z-index: 40;
+    }
+
+    /* The menu is light even inside the dark header: reset the dark select styling. */
+    .preset-controls--header .compare-menu .client-period-select,
+    .preset-controls--header .compare-menu .client-period-select:focus,
+    .preset-controls--header .compare-menu .client-period-select:hover {
+      --period-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0h8L4 5z' fill='%23707680'/%3E%3C/svg%3E");
+      background-color: var(--panel);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .preset-controls--header .compare-menu .client-period-select:hover {
+      border-color: var(--border-strong);
+    }
+
+    .preset-controls--header .compare-menu .client-period-select option {
+      background: #fff;
+      color: #111;
     }
 
     .compare-menu[hidden] {
@@ -3906,18 +3960,11 @@
     }
 
     @media (max-width: 640px) {
-      .compare-bar {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .compare-actions {
-        justify-content: flex-end;
-      }
-
       .compare-menu {
         min-width: 0;
-        width: min(100%, 320px);
+        right: auto;
+        left: 0;
+        width: min(320px, calc(100vw - 56px));
       }
     }
 
@@ -24360,31 +24407,66 @@
       return `${off}${entries}${pickHtml}`;
     }
 
-    function renderCompareBar() {
+    // Compact comparison chip that lives in the header next to the period controls.
+    // The full "X sammenlignet med Y" sentence is inside the menu and in the button tooltip.
+    function renderCompareControl() {
       if (!usesCrmClientDashboard() || !comparisonHelpers()) return '';
       const current = getCurrentBoundedRange();
-      const active = Boolean(current) && compareState.mode !== 'off';
-      const summary = renderCompareSummary(current);
-      const notice = compareState.notice
-        ? `<div class="compare-notice">${esc(compareState.notice)}</div>`
-        : '';
-      const clear = active
+      const requested = Boolean(current) && compareState.mode !== 'off';
+      const status = requested ? cachedComparison?.status : null;
+      const ready = requested && comparisonIsReady();
+
+      let label = 'Sammenlign';
+      let stateClass = current ? '' : ' is-disabled';
+      let title = current
+        ? 'Sammenlign med en tidligere periode'
+        : 'Vælg en bestemt periode for at kunne sammenligne';
+
+      if (requested && status === 'loading') {
+        label = 'Henter…';
+        title = 'Henter sammenligning';
+      } else if (requested && status === 'error') {
+        label = 'Sammenligning fejlede';
+        stateClass = ' is-error';
+        title = 'Sammenligningen kunne ikke hentes';
+      } else if (requested && status === 'unavailable') {
+        label = 'Sammenlign';
+        title = 'Der findes ingen sammenligningsperiode for denne periode';
+      } else if (ready) {
+        const description = getComparisonDescription();
+        if (description) {
+          label = `vs. ${description.comparisonSeriesLabel}`;
+          stateClass = ' is-active';
+          title = `${description.sentence}${comparisonHasNoData() ? ' - ingen data i sammenligningsperioden' : ''}`;
+        }
+      }
+
+      const clearButton = stateClass === ' is-active'
         ? '<button type="button" class="compare-clear" aria-label="Fjern sammenligning" title="Fjern sammenligning" onclick="clearComparison()">×</button>'
         : '';
+      const notice = compareState.notice
+        ? `<div class="compare-notice compare-summary">${esc(compareState.notice)}</div>`
+        : '';
+      const summary = requested ? `<div class="compare-summary">${renderCompareSummary(current)}</div>` : '';
+
       return `
-        <div class="compare-bar${active ? ' is-active' : ''}" id="compare-bar">
-          <div class="compare-summary">${summary}${notice}</div>
-          <div class="compare-actions">
-            ${clear}
-            <button type="button" class="compare-btn${current ? '' : ' is-disabled'}" aria-haspopup="true" onclick="toggleCompareMenu(event)">
-              <span class="compare-btn-icon" aria-hidden="true">⇄</span>
-              <span>${active ? 'Skift sammenligning' : 'Sammenlign'}</span>
-              <span class="compare-btn-caret" aria-hidden="true"></span>
-            </button>
-            <div class="compare-menu" id="compare-menu" hidden onclick="event.stopPropagation()">${renderCompareMenu(current)}</div>
-          </div>
+        <div class="compare-control" id="compare-control">
+          <button type="button" class="compare-btn${stateClass}" aria-haspopup="true" title="${esc(title)}" onclick="toggleCompareMenu(event)">
+            <span class="compare-btn-icon" aria-hidden="true">⇄</span>
+            <span class="compare-btn-label">${esc(label)}</span>
+            <span class="compare-btn-caret" aria-hidden="true"></span>
+          </button>
+          ${clearButton}
+          <div class="compare-menu" id="compare-menu" hidden onclick="event.stopPropagation()">${summary}${notice}${renderCompareMenu(current)}</div>
         </div>
       `;
+    }
+
+    // Re-render just the chip (header is not re-rendered when data changes).
+    function refreshCompareControl() {
+      const element = document.getElementById('compare-control');
+      if (!element || !usesCrmClientDashboard()) return;
+      element.outerHTML = renderCompareControl();
     }
 
     let compareOutsideClickBound = false;
@@ -24545,6 +24627,7 @@
       let text = `${periodLabel} · ${crmGranularityLabel(performance?.granularity)} · ${metricLabel}`;
       const description = comparisonIsReady() && !comparisonHasNoData() ? getComparisonDescription() : null;
       if (description) text += ` · mod ${description.comparisonLabel}`;
+      else if (comparisonIsReady() && comparisonHasNoData()) text += ' · ingen data i sammenligningsperioden';
       return text;
     }
 
@@ -25563,6 +25646,7 @@
       updateCustomDateRowVisibility();
       syncDatePickerDisplays();
       refreshClientPeriodPicker();
+      refreshCompareControl();
       refreshPipelinePanel();
     }
 
@@ -25722,6 +25806,7 @@
         mode = 'previous_period';
         compareState.mode = mode;
         compareState.notice = 'Den valgte måned passer ikke til denne periode. Viser forrige periode.';
+        showToast(compareState.notice);
       }
       const options = {
         todayIso: getTodayIso(),
@@ -25734,6 +25819,7 @@
         if (fallback) {
           compareState.mode = 'previous_period';
           compareState.notice = 'Den valgte periode kan ikke sammenlignes med sig selv. Viser forrige periode.';
+          showToast(compareState.notice);
           return fallback;
         }
       }
@@ -26085,7 +26171,7 @@
           .map((year) => `<option value="${year}"${Number(clientPeriodYear) === year ? ' selected' : ''}>${year}</option>`)
           .join(''),
         monthHtml: `
-          <option value="" disabled${clientPeriodMonth ? '' : ' selected'}>Vælg måned</option>
+          <option value="" disabled${clientPeriodMonth ? '' : ' selected'}>Måned</option>
           <option value="all"${clientPeriodMonth === 'all' ? ' selected' : ''}>Hele året</option>
           ${monthOptions}
         `,
@@ -26189,6 +26275,7 @@
           <div class="preset-btn-row${headerClass}">
             ${renderPresetButtons()}
             ${usesCrmClientDashboard() ? renderClientPeriodSelects() : ''}
+            ${usesCrmClientDashboard() ? renderCompareControl() : ''}
           </div>
           ${renderCustomDateInputs()}
         </div>
@@ -26588,7 +26675,6 @@
       if (usesCrmClientDashboard()) {
         return `
           ${renderMetricsChangeBanner(data)}
-          ${renderCompareBar()}
           ${renderCrmKpiGrid(performance)}
           ${renderCrmDevelopmentChart(performance)}
           ${renderDashboardMiddleSections(data)}
@@ -26640,6 +26726,7 @@
         mountCharts(data);
         mountCrmDevelopmentChart(data.performance);
       }
+      refreshCompareControl();
     }
 
     function renderDashboard(data) {
