@@ -175,22 +175,33 @@
       width: 100%;
     }
 
-    /* Full-width layout (?fullwidth=1): no centred 1280px box, only a thin inset so card edges and
-       shadows are not clipped by the iframe. Wins over the responsive padding rules below. */
+    /* Full-width layout (?fullwidth=1): no centred 1280px box, just an even side gutter
+       (32px, 16px on phones) shared by the top bar and the content. Wins over the
+       responsive padding rules below. */
+    body.layout-fullwidth {
+      --fullwidth-gutter: 32px;
+    }
+
     body.layout-fullwidth .dashboard-shell {
       max-width: none;
-      padding: 0 6px 24px;
+      padding: 0 var(--fullwidth-gutter) 24px;
     }
 
     body.layout-fullwidth .brand-topbar-inner {
       max-width: none;
-      padding-left: 8px;
-      padding-right: 8px;
+      padding-left: var(--fullwidth-gutter);
+      padding-right: var(--fullwidth-gutter);
     }
 
     body.layout-fullwidth .brand-topbar--centered {
-      padding-left: 8px;
-      padding-right: 8px;
+      padding-left: var(--fullwidth-gutter);
+      padding-right: var(--fullwidth-gutter);
+    }
+
+    @media (max-width: 640px) {
+      body.layout-fullwidth {
+        --fullwidth-gutter: 16px;
+      }
     }
 
     .brand-topbar {
