@@ -3614,18 +3614,35 @@
       min-height: 156px;
     }
 
-    .kpi-grid--client-top {
+    .kpi-grid.kpi-grid--client-top {
       grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-auto-rows: auto;
+      gap: 10px;
     }
 
-    .kpi-grid--client-top > .card {
+    .kpi-grid.kpi-grid--client-top > .card {
+      min-height: 0;
+      padding: 12px 14px;
       justify-content: flex-start;
     }
 
-    .crm-kpi-card--pair {
+    .kpi-grid.kpi-grid--client-top > .card .card-label {
+      margin-bottom: 4px;
+    }
+
+    .kpi-grid.kpi-grid--client-top > .card .card-value,
+    .kpi-grid.kpi-grid--client-top > .card.primary .card-value {
+      font-size: 22px;
+    }
+
+    .kpi-grid.kpi-grid--client-top > .card .card-sub {
+      margin-top: 4px;
+    }
+
+    .kpi-grid.kpi-grid--client-top > .card.crm-kpi-card--pair {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 12px;
       align-items: start;
     }
 

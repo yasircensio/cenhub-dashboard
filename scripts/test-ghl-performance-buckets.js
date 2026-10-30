@@ -88,6 +88,34 @@ function main() {
   assert.strictEqual(merged.totals.customers, 1);
   assert.strictEqual(merged.totals.adSpend, spendSum);
 
+  const septemberDays = [];
+  for (let day = 1; day <= 30; day += 1) {
+    const iso = `2026-09-${String(day).padStart(2, '0')}`;
+    septemberDays.push({
+      start: iso,
+      end: iso,
+      revenue: 0,
+      profit: 0,
+      adSpend: 0,
+      leads: 0,
+      customers: 0,
+    });
+  }
+  const lastMonth = mergePerformanceMarketing(
+    {
+      granularity: 'day',
+      range: { start: '2026-09-01', end: '2026-09-30' },
+      buckets: septemberDays,
+    },
+    { adSpend: 30000, totalRevenue: 0, totalLeads: 0, clientsWon: 0 },
+    [{ month: '2026-09', spend: 30000 }],
+    { timeZone: 'Europe/Copenhagen' },
+    new Date('2026-10-30T12:00:00.000Z'),
+  );
+  const lastMonthSpend = lastMonth.buckets.reduce((sum, bucket) => sum + bucket.adSpend, 0);
+  assert.ok(Math.abs(lastMonthSpend - 30000) < 1, `expected last month spend 30000, got ${lastMonthSpend}`);
+  assert.ok(lastMonth.buckets.every((bucket) => bucket.adSpend > 0));
+
   const totals = totalsFromKpis({ totalRevenue: 100, adSpend: 20, totalLeads: 4, clientsWon: 2, poasDk: 30 });
   assert.strictEqual(totals.roas, 5);
   assert.strictEqual(totals.cpl, 5);
