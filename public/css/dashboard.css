@@ -4182,6 +4182,39 @@
       gap: 6px;
     }
 
+    /* Loading state for period / comparison switches: keep the layout, dim it, show a thin bar. */
+    #dashboard-content {
+      transition: opacity 0.2s ease;
+    }
+
+    #dashboard-content.is-refreshing {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    body.is-refreshing::before {
+      animation: refresh-bar 1s ease-in-out infinite;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent) no-repeat;
+      background-size: 40% 100%;
+      content: '';
+      height: 3px;
+      left: 0;
+      position: fixed;
+      right: 0;
+      top: 0;
+      z-index: 1600;
+    }
+
+    @keyframes refresh-bar {
+      from { background-position: -40% 0; }
+      to { background-position: 140% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.is-refreshing::before { animation: none; background-position: 30% 0; }
+      #dashboard-content { transition: none; }
+    }
+
     .compare-delta {
       font-weight: 600;
     }

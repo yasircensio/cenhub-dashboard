@@ -4191,6 +4191,39 @@
       gap: 6px;
     }
 
+    /* Loading state for period / comparison switches: keep the layout, dim it, show a thin bar. */
+    #dashboard-content {
+      transition: opacity 0.2s ease;
+    }
+
+    #dashboard-content.is-refreshing {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    body.is-refreshing::before {
+      animation: refresh-bar 1s ease-in-out infinite;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent) no-repeat;
+      background-size: 40% 100%;
+      content: '';
+      height: 3px;
+      left: 0;
+      position: fixed;
+      right: 0;
+      top: 0;
+      z-index: 1600;
+    }
+
+    @keyframes refresh-bar {
+      from { background-position: -40% 0; }
+      to { background-position: 140% 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.is-refreshing::before { animation: none; background-position: 30% 0; }
+      #dashboard-content { transition: none; }
+    }
+
     .compare-delta {
       font-weight: 600;
     }
@@ -24685,7 +24718,16 @@
 
     // Compact comparison chip that lives in the header next to the period controls.
     // The full "X sammenlignet med Y" sentence is inside the menu and in the button tooltip.
+    let compareControlHtmlInDom = '';
+
+    // Remembers what is in the DOM so identical re-renders can be skipped (no flicker, menu stays open).
     function renderCompareControl() {
+      const html = buildCompareControlHtml();
+      compareControlHtmlInDom = html;
+      return html;
+    }
+
+    function buildCompareControlHtml() {
       if (!usesCrmClientDashboard() || !comparisonHelpers()) return '';
       const current = getCurrentBoundedRange();
       const requested = Boolean(current) && compareState.mode !== 'off';
@@ -24742,7 +24784,10 @@
     function refreshCompareControl() {
       const element = document.getElementById('compare-control');
       if (!element || !usesCrmClientDashboard()) return;
-      element.outerHTML = renderCompareControl();
+      const next = buildCompareControlHtml();
+      if (next === compareControlHtmlInDom) return;
+      compareControlHtmlInDom = next;
+      element.outerHTML = next;
     }
 
     function closeCompareMenu() {
@@ -24946,7 +24991,11 @@
       if (wrap) wrap.style.display = isEmpty ? 'none' : 'block';
     }
 
-    function mountCrmDevelopmentChart(performance) {
+    // The grow-in animation plays only the first time (or on a metric pill click); data refreshes
+    // that rebuild the chart draw it instantly so nothing visibly "restarts".
+    let crmChartAnimatedOnce = false;
+
+    function mountCrmDevelopmentChart(performance, mountOptions = {}) {
       if (!usesCrmClientDashboard()) return;
 
       const canvas = document.getElementById('crm-development-chart-canvas');
@@ -25024,10 +25073,13 @@
       }
 
       const currencyMetrics = new Set(['revenue', 'profit', 'adSpend', 'cpl', 'cac']);
+      const animateChart = mountOptions.animate === true || !crmChartAnimatedOnce;
+      crmChartAnimatedOnce = true;
       crmDevelopmentChartInstance = new Chart(canvas, {
         type: 'line',
         data: { labels, datasets },
         options: {
+          animation: animateChart ? { duration: 450 } : false,
           responsive: true,
           maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
@@ -25096,7 +25148,7 @@
         if (subtitle) {
           subtitle.textContent = crmChartSubtitleText(source, metricLabel);
         }
-        mountCrmDevelopmentChart(source);
+        mountCrmDevelopmentChart(source, { animate: true });
       });
     }
 
@@ -26154,7 +26206,9 @@
         return;
       }
       cachedComparison = { status: 'loading', mode: compareState.mode, currentRange: getCurrentBoundedRange(), range: null };
-      if (cachedData) updateDashboardContent(cachedData);
+      // Only the chip shows "Henter…" and the page dims; cards and chart are rendered once, when ready.
+      refreshCompareControl();
+      setContentRefreshing(true);
       try {
         const raw = await fetchComparisonRaw(undefined);
         if (requestId !== comparisonRequestId) return;
@@ -27139,6 +27193,28 @@
       `;
     }
 
+    // Dim the current content + show a thin progress bar while new data loads (no layout shift).
+    function setContentRefreshing(refreshing) {
+      document.getElementById('dashboard-content')?.classList.toggle('is-refreshing', refreshing);
+      document.body.classList.toggle('is-refreshing', refreshing);
+    }
+
+    // Cheap fingerprint of everything the client dashboard renders, to skip identical re-renders.
+    let lastRenderSignature = '';
+
+    function getRenderSignature(data) {
+      try {
+        return JSON.stringify([
+          data.kpis, data.performance, data.statusBreakdown, data.sourceReport,
+          data.assigneeReport, data.pipelines, data.filters,
+          cachedComparison?.status, cachedComparison?.range, cachedComparison?.performance?.totals,
+          crmDevelopmentMetricId,
+        ]);
+      } catch (error) {
+        return '';
+      }
+    }
+
     function updateDashboardContent(data) {
       if (IS_ADMIN) {
         const filtersPanel = document.getElementById('admin-filters-panel');
@@ -27164,6 +27240,9 @@
         mountCharts(data);
         mountCrmDevelopmentChart(data.performance);
       }
+      lastRenderSignature = usesCrmClientDashboard() ? getRenderSignature(data) : '';
+      // New content is in place: fade back to full opacity (CSS transition) and hide the bar.
+      setContentRefreshing(false);
       refreshCompareControl();
     }
 
@@ -27231,6 +27310,8 @@
     }
 
     function setPresetButtonsDisabled(disabled) {
+      // Client view keeps the buttons enabled: a new click simply cancels the running load.
+      if (usesCrmClientDashboard()) return;
       document.querySelectorAll('[data-preset]').forEach((button) => {
         button.disabled = disabled;
       });
@@ -27301,7 +27382,13 @@
             `)}`;
         } else if (!background) {
           const content = document.getElementById('dashboard-content');
-          if (content) content.innerHTML = renderKpiSkeleton();
+          if (usesCrmClientDashboard() && cachedData) {
+            // Client view: keep the current content on screen (dimmed) instead of collapsing the
+            // page into a skeleton, so height and scroll position stay put while loading.
+            setContentRefreshing(true);
+          } else if (content) {
+            content.innerHTML = renderKpiSkeleton();
+          }
           if (applyBtn) {
             applyBtn.disabled = true;
             applyBtn.textContent = 'Loading...';
@@ -27422,8 +27509,13 @@
       try {
         if (hasLayout) {
           cachedData = applyMarketingData(cachedData, cachedFacebookMetrics);
-          updateDashboardContent(cachedData);
-          updateFilterUi();
+          // Background refreshes (timer, tab focus) with identical data must not redraw anything.
+          const unchanged = background && usesCrmClientDashboard()
+            && lastRenderSignature && getRenderSignature(cachedData) === lastRenderSignature;
+          if (!unchanged) {
+            updateDashboardContent(cachedData);
+            updateFilterUi();
+          }
         } else {
           renderDashboard(cachedData);
           mountCharts(cachedData);
