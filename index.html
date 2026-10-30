@@ -3714,8 +3714,9 @@
       font-size: 12px;
       font-weight: 500;
       gap: 7px;
+      line-height: 1.25;
       max-width: 230px;
-      padding: 9px 12px;
+      padding: 9px 14px;
       transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       white-space: nowrap;
     }
@@ -3763,6 +3764,15 @@
 
     .preset-controls--header .compare-btn.is-error {
       border-color: #ff8a80;
+    }
+
+    /* A chosen month / custom range behaves like an active preset: solid orange with the soft glow. */
+    .preset-controls--header .period-picker-btn.is-active,
+    .preset-controls--header .period-picker-btn.is-active:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
+      color: #fff;
     }
 
     .compare-btn-icon {
@@ -3827,39 +3837,40 @@
     }
 
     /* ---- Period picker: segmented quick periods + "Anden periode" popover ---- */
+    /* Quick periods: separate pill buttons, same look as the original header presets. */
     .period-seg {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 10px;
       display: inline-flex;
-      gap: 2px;
+      flex-wrap: wrap;
+      gap: 8px;
       max-width: 100%;
-      overflow-x: auto;
-      padding: 3px;
     }
 
     .period-seg-btn {
-      background: transparent;
-      border: none;
-      border-radius: 7px;
-      color: rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 10px;
+      color: #fff;
       cursor: pointer;
       font: inherit;
       font-size: 12px;
       font-weight: 500;
-      padding: 6px 12px;
-      transition: background 0.15s ease, color 0.15s ease;
+      line-height: 1.25;
+      padding: 9px 14px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       white-space: nowrap;
     }
 
-    .period-seg-btn:hover:not(:disabled):not(.active) {
-      background: rgba(255, 255, 255, 0.12);
+    .period-seg-btn:hover:not(:disabled) {
+      background: rgba(255, 106, 0, 0.25);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
-    .period-seg-btn.active {
+    .period-seg-btn.active,
+    .period-seg-btn.active:hover:not(:disabled) {
       background: var(--primary);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
       color: #fff;
     }
 
