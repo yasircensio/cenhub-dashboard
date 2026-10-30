@@ -24643,9 +24643,9 @@
       const description = getComparisonDescription();
       if (!description) return 'Ingen sammenligning valgt.';
       const noData = comparisonHasNoData()
-        ? ' <span class="compare-note">Ingen data i sammenligningsperioden.</span>'
+        ? `<div class="compare-note">Ingen data i ${esc(description.comparisonLabel)}</div>`
         : '';
-      return `<strong>${esc(description.currentLabel)}</strong> sammenlignet med <strong>${esc(description.comparisonLabel)}</strong> <span class="compare-relation">(${esc(description.relation)})</span>${noData}`;
+      return `<strong>${esc(description.currentLabel)}</strong> vs. <strong>${esc(description.comparisonLabel)}</strong> <span class="compare-relation">· ${esc(description.relation)}</span>${noData}`;
     }
 
     function renderCompareMonthOptions(year, selectedMonth) {
@@ -24717,7 +24717,7 @@
     }
 
     // Compact comparison chip that lives in the header next to the period controls.
-    // The full "X sammenlignet med Y" sentence is inside the menu and in the button tooltip.
+    // The short "X vs. Y · relation" line is inside the menu and in the button tooltip.
     let compareControlHtmlInDom = '';
 
     // Remembers what is in the DOM so identical re-renders can be skipped (no flicker, menu stays open).
@@ -24755,7 +24755,7 @@
         if (description) {
           label = `vs. ${description.comparisonSeriesLabel}`;
           stateClass = ' is-active';
-          title = `${description.sentence}${comparisonHasNoData() ? ' - ingen data i sammenligningsperioden' : ''}`;
+          title = `${description.sentence}${comparisonHasNoData() ? ` · ingen data i ${description.comparisonLabel}` : ''}`;
         }
       }
 
@@ -24940,9 +24940,12 @@
     function crmChartSubtitleText(performance, metricLabel) {
       const periodLabel = performance?.periodLabel || 'Valgt periode';
       let text = `${periodLabel} · ${crmGranularityLabel(performance?.granularity)} · ${metricLabel}`;
-      const description = comparisonIsReady() && !comparisonHasNoData() ? getComparisonDescription() : null;
-      if (description) text += ` · mod ${description.comparisonLabel}`;
-      else if (comparisonIsReady() && comparisonHasNoData()) text += ' · ingen data i sammenligningsperioden';
+      const description = comparisonIsReady() ? getComparisonDescription() : null;
+      if (description) {
+        text += comparisonHasNoData()
+          ? ` · ingen data i ${description.comparisonLabel}`
+          : ` · mod ${description.comparisonLabel}`;
+      }
       return text;
     }
 

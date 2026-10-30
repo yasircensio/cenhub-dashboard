@@ -384,8 +384,8 @@ function describeComparison({ current, comparison, mode = 'previous_period', tod
   const comparisonStart = parseIsoDate(comparison.start);
 
   let relation;
-  if (mode === 'previous_year') relation = 'samme periode sidste år';
-  else if (mode === 'pick') relation = 'valgt periode';
+  if (mode === 'previous_year') relation = 'sidste år';
+  else if (mode === 'pick') relation = 'valgt';
   else if (shape === 'month') relation = 'forrige måned';
   else if (shape === 'year') relation = 'forrige år';
   else {
@@ -409,7 +409,7 @@ function describeComparison({ current, comparison, mode = 'previous_period', tod
     comparisonLabel,
     relation,
     shortRef,
-    sentence: `${currentLabel} sammenlignet med ${comparisonLabel} (${relation})`,
+    sentence: `${currentLabel} vs. ${comparisonLabel} (${relation})`,
     currentSeriesLabel: formatComparisonSeriesLabel(current, todayIso),
     comparisonSeriesLabel: formatComparisonSeriesLabel(comparison, todayIso),
   };

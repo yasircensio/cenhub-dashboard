@@ -229,7 +229,7 @@ function testComparison() {
     mode: 'previous_period',
     todayIso: today,
   });
-  assert.strictEqual(description.sentence, 'september 2026 sammenlignet med august 2026 (forrige måned)');
+  assert.strictEqual(description.sentence, 'september 2026 vs. august 2026 (forrige måned)');
   assert.strictEqual(description.shortRef, 'august');
   assert.strictEqual(description.currentSeriesLabel, 'Sep 2026');
   assert.strictEqual(description.comparisonSeriesLabel, 'Aug 2026');
@@ -240,7 +240,7 @@ function testComparison() {
     todayIso: today,
   });
   assert.strictEqual(lastYear.shortRef, 'september 2025');
-  assert.ok(lastYear.sentence.includes('samme periode sidste år'));
+  assert.strictEqual(lastYear.sentence, 'september 2026 vs. september 2025 (sidste år)');
 
   // Deltas: good/bad follows the metric direction (costs are inverted).
   const revenueUp = computeDelta(120, 100, 'up');
