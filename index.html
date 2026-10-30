@@ -24630,7 +24630,7 @@
 
     function renderCompareSummary(current) {
       if (!current) {
-        return 'Vælg en bestemt periode for at sammenligne med en tidligere periode.';
+        return 'Vælg en periode først.';
       }
       if (compareState.mode === 'off' || !cachedComparison) {
         return 'Ingen sammenligning valgt.';
@@ -24663,7 +24663,7 @@
 
       if (!current) {
         return `
-          <div class="compare-menu-note">Sammenligning kræver en bestemt periode. Vælg en periode først:</div>
+          <div class="compare-menu-note">Vælg en periode først:</div>
           <button type="button" class="compare-menu-item" onclick="applyPreset('month'); closeCompareMenu()"><span class="compare-menu-title">Denne måned</span></button>
           <button type="button" class="compare-menu-item" onclick="applyPreset('lastMonth'); closeCompareMenu()"><span class="compare-menu-title">Sidste måned</span></button>
           <button type="button" class="compare-menu-item" onclick="applyPreset('year'); closeCompareMenu()"><span class="compare-menu-title">I år</span></button>
@@ -24738,7 +24738,7 @@
       let stateClass = current ? '' : ' is-disabled';
       let title = current
         ? 'Sammenlign med en tidligere periode'
-        : 'Vælg en bestemt periode for at kunne sammenligne';
+        : 'Vælg en periode først';
 
       if (requested && status === 'loading') {
         label = 'Henter…';
