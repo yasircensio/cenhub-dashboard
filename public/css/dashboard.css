@@ -726,6 +726,27 @@
       padding: 10px 34px 10px 12px;
     }
 
+    .client-period-quick {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .client-period-or {
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .preset-controls--header .client-period-or {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .client-period-row {
+      justify-content: flex-end;
+    }
+
     .client-period-select:focus-visible {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.14);

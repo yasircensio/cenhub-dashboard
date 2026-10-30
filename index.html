@@ -735,6 +735,27 @@
       padding: 10px 34px 10px 12px;
     }
 
+    .client-period-quick {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .client-period-or {
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .preset-controls--header .client-period-or {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .client-period-row {
+      justify-content: flex-end;
+    }
+
     .client-period-select:focus-visible {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.14);
@@ -25027,6 +25048,7 @@
 
     function onManualDateChange() {
       syncFiltersFromDom();
+      clearClientPeriodMonthSelection();
 
       state.preset = 'custom';
       state.dateField = 'createdAt';
@@ -25367,6 +25389,7 @@
     let clientPeriodYear = null;
     let clientPeriodMonth = '';
     let clientEarliestDataYear = null;
+    let clientPeriodSkipValidation = false;
 
     function trackClientEarliestDataYear(performance) {
       if (state.preset !== 'all') return;
@@ -25417,8 +25440,17 @@
       const { yearHtml, monthHtml } = renderClientPeriodOptions();
       return `
         <div class="custom-date-row client-period-row" id="custom-date-row" ${state.preset !== 'custom' ? 'hidden' : ''}>
-          <select id="client-period-year" class="client-period-select" aria-label="År" onchange="onClientPeriodYearChange(this.value)">${yearHtml}</select>
-          <select id="client-period-month" class="client-period-select" aria-label="Måned" onchange="onClientPeriodMonthChange(this.value)">${monthHtml}</select>
+          <div class="client-period-quick">
+            <select id="client-period-year" class="client-period-select" aria-label="År" onchange="onClientPeriodYearChange(this.value)">${yearHtml}</select>
+            <select id="client-period-month" class="client-period-select" aria-label="Måned" onchange="onClientPeriodMonthChange(this.value)">${monthHtml}</select>
+          </div>
+          <span class="client-period-or" aria-hidden="true">eller</span>
+          <div class="custom-date-range">
+            ${renderDatePickerTrigger('dateFrom', 'From', 'Fra dato')}
+            <span class="date-range-separator" aria-hidden="true">→</span>
+            ${renderDatePickerTrigger('dateTo', 'To', 'Til dato')}
+          </div>
+          <div class="date-range-error" id="date-range-error" hidden></div>
         </div>
       `;
     }
@@ -25450,7 +25482,20 @@
       state.dateFrom = range.start;
       state.dateTo = range.end;
       updateFilterUi();
-      applyDataFilters(false);
+      // Dropdown ranges are always valid (clamped to today), so skip the manual-date checks.
+      clientPeriodSkipValidation = true;
+      try {
+        applyDataFilters(false);
+      } finally {
+        clientPeriodSkipValidation = false;
+      }
+    }
+
+    // Manually picked From/To dates replace any dropdown month selection.
+    function clearClientPeriodMonthSelection() {
+      if (!usesCrmClientDashboard() || !clientPeriodMonth) return;
+      clientPeriodMonth = '';
+      refreshClientPeriodPicker();
     }
 
     function onClientPeriodYearChange(value) {
@@ -26233,17 +26278,16 @@
       clearDateRangeError();
       closeDatePicker();
       if (preset === 'custom' && usesCrmClientDashboard()) {
-        // Client view: Year + Month dropdowns instead of free date pickers.
+        // Client view: Year + Month dropdowns next to the free From/To date range.
         state.preset = 'custom';
         state.dateField = 'createdAt';
         if (clientPeriodYear && clientPeriodMonth) {
           applyClientPeriodSelection();
           return;
         }
-        state.dateFrom = '';
-        state.dateTo = '';
+        restoreCustomDateRange();
         updateFilterUi();
-        document.getElementById('client-period-month')?.focus();
+        if (state.dateFrom && state.dateTo) applyDataFilters(false);
         return;
       }
       setPreset(preset);
@@ -26259,7 +26303,7 @@
     function applyDataFilters(syncFromDom = true) {
       if (syncFromDom) syncFiltersFromDom();
 
-      if (state.preset === 'custom' && !usesCrmClientDashboard()) {
+      if (state.preset === 'custom' && !clientPeriodSkipValidation) {
         if (hasPartialDateRange()) {
           showDateRangeError('Select both From and To dates.');
           return;
