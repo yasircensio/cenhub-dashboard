@@ -116,6 +116,21 @@ function main() {
   assert.ok(Math.abs(lastMonthSpend - 30000) < 1, `expected last month spend 30000, got ${lastMonthSpend}`);
   assert.ok(lastMonth.buckets.every((bucket) => bucket.adSpend > 0));
 
+  // Chart profit must equal bundlinje minus ad spend (same as the POAS card), even after re-merging.
+  const profitInput = {
+    granularity: 'day',
+    range: { start: '2026-10-01', end: '2026-10-02' },
+    buckets: [
+      { start: '2026-10-01', end: '2026-10-01', revenue: 100, profit: 80, bundlinje: 80, adSpend: 0, leads: 1, customers: 1 },
+      { start: '2026-10-02', end: '2026-10-02', revenue: 0, profit: 0, bundlinje: 0, adSpend: 0, leads: 0, customers: 0 },
+    ],
+  };
+  const profitNow = new Date('2026-10-02T12:00:00.000Z');
+  const firstMerge = mergePerformanceMarketing(profitInput, { totalRevenue: 100, adSpend: 20, wonBundlinje: 80 }, [{ month: '2026-10', spend: 20 }], {}, profitNow);
+  const secondMerge = mergePerformanceMarketing(firstMerge, { totalRevenue: 100, adSpend: 20, wonBundlinje: 80 }, [{ month: '2026-10', spend: 20 }], {}, profitNow);
+  assert.ok(Math.abs(secondMerge.buckets[0].profit - (80 - 10)) < 0.01, `bucket profit ${secondMerge.buckets[0].profit}`);
+  assert.strictEqual(secondMerge.totals.profit, 60);
+
   const totals = totalsFromKpis({ totalRevenue: 100, adSpend: 20, totalLeads: 4, clientsWon: 2, poasDk: 30 });
   assert.strictEqual(totals.roas, 5);
   assert.strictEqual(totals.cpl, 5);

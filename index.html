@@ -3623,44 +3623,6 @@
       min-height: 156px;
     }
 
-    .kpi-grid.kpi-grid--client-top {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      grid-auto-rows: auto;
-      gap: 10px;
-    }
-
-    .kpi-grid.kpi-grid--client-top > .card {
-      min-height: 0;
-      padding: 12px 14px;
-      justify-content: flex-start;
-    }
-
-    .kpi-grid.kpi-grid--client-top > .card .card-label {
-      margin-bottom: 4px;
-    }
-
-    .kpi-grid.kpi-grid--client-top > .card .card-value,
-    .kpi-grid.kpi-grid--client-top > .card.primary .card-value {
-      font-size: 22px;
-    }
-
-    .kpi-grid.kpi-grid--client-top > .card .card-sub {
-      margin-top: 4px;
-    }
-
-    .kpi-grid.kpi-grid--client-top > .card.crm-kpi-card--pair {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      align-items: start;
-    }
-
-    .crm-kpi-pair-divider {
-      border-left: 1px solid var(--border);
-      padding-left: 16px;
-      min-width: 0;
-    }
-
     .crm-legacy-kpi-section {
       margin-top: 4px;
     }
@@ -3710,19 +3672,7 @@
       color: var(--accent-green);
     }
 
-    @media (max-width: 1100px) {
-      .kpi-grid--client-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-
     @media (max-width: 640px) {
-      .kpi-grid--client-top { grid-template-columns: 1fr; }
-      .crm-kpi-card--pair { grid-template-columns: 1fr; }
-      .crm-kpi-pair-divider {
-        border-left: none;
-        border-top: 1px solid var(--border);
-        padding-left: 0;
-        padding-top: 14px;
-      }
       .crm-chart-metric-pills { justify-content: flex-start; }
     }
 
@@ -23978,15 +23928,10 @@
       }
     }
 
-    const CRM_KPI_LAYOUT = [
-      { kind: 'single', id: 'revenue' },
-      { kind: 'single', id: 'profit' },
-      { kind: 'single', id: 'roas' },
-      { kind: 'single', id: 'customers' },
-      { kind: 'single', id: 'adSpend' },
-      { kind: 'single', id: 'closeRate' },
-      { kind: 'pair', ids: ['cpl', 'leads'] },
-      { kind: 'pair', ids: ['ltv', 'cac'] },
+    // Ten single-value cards (two rows of five), same markup/CSS as the detailed KPI cards.
+    const CRM_KPI_ORDER = [
+      'revenue', 'profit', 'roas', 'customers', 'adSpend',
+      'closeRate', 'leads', 'cpl', 'cac', 'ltv',
     ];
 
     const CRM_KPI_CARD_CLASS = {
@@ -23997,61 +23942,46 @@
     };
 
     const CRM_KPI_LABELS = {
-      revenue: { label: 'Omsætning', hint: '' },
+      revenue: { label: 'Omsætning', hint: 'Vundet omsætning i perioden' },
       profit: { label: 'POAS (DK)', hint: 'Bundlinje − annonceforbrug' },
       roas: { label: 'ROAS', hint: 'Omsætning ÷ annonceforbrug' },
-      customers: { label: 'Lukkede kunder', hint: '' },
-      adSpend: { label: 'Annoncebudget', hint: '' },
-      closeRate: { label: 'Close rate', hint: 'Vundne kunder ÷ leads' },
+      customers: { label: 'Lukkede kunder', hint: 'Unikke kunder vundet i perioden' },
+      adSpend: { label: 'Annoncebudget', hint: 'Annonceforbrug i perioden' },
+      closeRate: { label: 'Close rate', hint: 'Vundne kunder ÷ nye leads' },
       cpl: { label: 'CPL', hint: 'Pris pr. lead' },
-      leads: { label: 'Leads', hint: '' },
+      leads: { label: 'Leads', hint: 'Nye leads i perioden' },
       ltv: { label: 'LTV', hint: 'Kommer snart' },
       cac: { label: 'CAC', hint: 'Pris pr. lukket kunde' },
     };
 
     const CRM_CHART_METRICS = ['revenue', 'profit', 'adSpend', 'leads', 'customers', 'cpl', 'cac', 'closeRate'];
 
-    function renderCrmKpiMetricInner(metricId, totals) {
-      const meta = CRM_KPI_LABELS[metricId] || { label: metricId, hint: '' };
-      const value = formatCrmMetricValue(metricId, crmMetricValue(totals, metricId));
-      const hint = meta.hint || '';
-      return `
-          <div class="card-label">${meta.label}</div>
-          <div class="card-value">${value}</div>
-          ${hint ? `<div class="card-sub">${hint}</div>` : ''}
-      `;
-    }
-
     function renderCrmKpiGrid(performance) {
       if (!performance?.totals) {
         return '<div class="empty-section">Ingen performance-data for valgt periode.</div>';
       }
       const totals = performance.totals;
-      const cards = CRM_KPI_LAYOUT.map((layout) => {
-        if (layout.kind === 'single') {
-          const cardClass = CRM_KPI_CARD_CLASS[layout.id] || '';
-          return `
-            <div class="card${cardClass}">
-              ${renderCrmKpiMetricInner(layout.id, totals)}
-            </div>
-          `;
-        }
+      const cards = CRM_KPI_ORDER.map((metricId) => {
+        const meta = CRM_KPI_LABELS[metricId];
+        const value = formatCrmMetricValue(metricId, crmMetricValue(totals, metricId));
         return `
-          <div class="card crm-kpi-card--pair">
-            <div>${renderCrmKpiMetricInner(layout.ids[0], totals)}</div>
-            <div class="crm-kpi-pair-divider">${renderCrmKpiMetricInner(layout.ids[1], totals)}</div>
+          <div class="card${CRM_KPI_CARD_CLASS[metricId] || ''}">
+            <div class="card-label">${meta.label}</div>
+            <div class="card-value">${value}</div>
+            <div class="card-sub">${meta.hint}</div>
           </div>
         `;
       });
-      return `<div class="kpi-grid kpi-grid--client-top">${cards.join('')}</div>`;
+      return `<div class="kpi-grid">${cards.join('')}</div>`;
     }
 
     function crmBucketMetricValue(bucket, metricId) {
       switch (metricId) {
         case 'revenue': return bucket.revenue || 0;
         case 'profit':
-          if (Number.isFinite(Number(bucket.profit))) return Number(bucket.profit);
-          return (bucket.revenue || 0) - (bucket.adSpend || 0);
+          // Bundlinje minus ad spend, same definition as the POAS (DK) card.
+          return (Number.isFinite(Number(bucket.bundlinje)) ? Number(bucket.bundlinje) : (Number(bucket.profit) || 0))
+            - (bucket.adSpend || 0);
         case 'adSpend': return bucket.adSpend || 0;
         case 'leads': return bucket.leads || 0;
         case 'customers': return bucket.customers || 0;
