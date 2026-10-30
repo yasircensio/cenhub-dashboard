@@ -5,7 +5,6 @@
  */
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
-const fs = require('fs');
 const path = require('path');
 const { query, usePostgres } = require('../lib/db');
 const { getAccount, listClientIds } = require('../lib/account-store');
@@ -18,29 +17,8 @@ const {
 const { buildCronSummary24h, getFbLeadSyncDashboard } = require('../lib/fb-lead-sync-history');
 const { handleFbLeadSyncRetryRequest } = require('../lib/fb-lead-sync-retry-handler');
 
-const DEBUG_LOG = path.join(__dirname, '..', '.cursor', 'debug-7ba7fd.log');
-const INGEST = 'http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c';
-
-function debugLog(location, message, data = {}, hypothesisId = 'E2E') {
-  const entry = {
-    sessionId: '7ba7fd',
-    hypothesisId,
-    location,
-    message,
-    data,
-    timestamp: Date.now(),
-    runId: 'e2e-test',
-  };
-  try {
-    fs.appendFileSync(DEBUG_LOG, `${JSON.stringify(entry)}\n`);
-  } catch {
-    // ignore
-  }
-  fetch(INGEST, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '7ba7fd' },
-    body: JSON.stringify(entry),
-  }).catch(() => {});
+function debugLog() {
+  // Verbose tracing disabled; test output uses console.log below.
 }
 
 function assert(condition, message) {

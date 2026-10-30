@@ -2,21 +2,8 @@
 /**
  * Simulates custom-values save reading inputs after editor re-render (hypothesis A).
  */
-const fs = require('fs');
-const path = require('path');
-
-const LOG_PATH = path.join(__dirname, '..', '.cursor', 'debug-b952dc.log');
-
-function agentLog(message, data, hypothesisId) {
-  fs.appendFileSync(LOG_PATH, `${JSON.stringify({
-    sessionId: 'b952dc',
-    runId: 'save-order-sim',
-    hypothesisId,
-    location: 'scripts/test-meta-cv-save-order.js',
-    message,
-    data,
-    timestamp: Date.now(),
-  })}\n`);
+function agentLog() {
+  // Debug session logging removed.
 }
 
 function readWonLeadsFromDom(html) {
