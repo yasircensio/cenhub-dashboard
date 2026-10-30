@@ -3843,9 +3843,9 @@
        full-height pill that touches the capsule edge on every side (no inner gap).
        One shared control height (40px) keeps it level with the buttons next to it. */
     .period-seg {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 10px;
       box-sizing: border-box;
       display: inline-flex;
       gap: 0;
@@ -3858,8 +3858,10 @@
     .period-seg-btn {
       background: transparent;
       border: none;
-      border-radius: 999px;
-      color: rgba(255, 255, 255, 0.82);
+      /* Inner radius = container radius (10px) minus its 1px border, so the selected
+         segment follows the rounded corners exactly and touches every edge. */
+      border-radius: 9px;
+      color: #fff;
       cursor: pointer;
       font: inherit;
       font-size: 12px;
@@ -3871,7 +3873,7 @@
     }
 
     .period-seg-btn:hover:not(:disabled):not(.active) {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 106, 0, 0.25);
       color: #fff;
     }
 
@@ -4071,7 +4073,7 @@
     /* Phones: quick periods as a 2x2 grid, date fields stacked. */
     @media (max-width: 480px) {
       .header-presets .period-seg {
-        border-radius: 18px;
+        border-radius: 10px;
         display: grid;
         gap: 3px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4081,7 +4083,7 @@
       }
 
       .header-presets .period-seg-btn {
-        border-radius: 14px;
+        border-radius: 7px;
         min-height: 36px;
       }
 
