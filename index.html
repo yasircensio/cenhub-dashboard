@@ -3698,6 +3698,229 @@
       margin-bottom: 14px;
     }
 
+    .compare-bar {
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      padding: 10px 14px;
+      position: relative;
+    }
+
+    .compare-bar.is-active {
+      border-color: rgba(255, 106, 0, 0.35);
+    }
+
+    .compare-summary {
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.45;
+      min-width: 0;
+    }
+
+    .compare-summary strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .compare-relation {
+      color: var(--text-soft);
+    }
+
+    .compare-note {
+      color: #b45309;
+      font-weight: 500;
+    }
+
+    .compare-notice {
+      color: #b45309;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .compare-actions {
+      align-items: center;
+      display: flex;
+      flex-shrink: 0;
+      gap: 6px;
+      position: relative;
+    }
+
+    .compare-btn {
+      align-items: center;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      gap: 8px;
+      padding: 9px 12px;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .compare-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--primary);
+    }
+
+    .compare-btn.is-disabled {
+      color: var(--text-soft);
+    }
+
+    .compare-btn-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .compare-btn-caret {
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid currentColor;
+      height: 0;
+      opacity: 0.7;
+      width: 0;
+    }
+
+    .compare-clear {
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-soft);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 4px 8px;
+    }
+
+    .compare-clear:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text);
+    }
+
+    .compare-menu {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 270px;
+      padding: 6px;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 30;
+    }
+
+    .compare-menu[hidden] {
+      display: none;
+    }
+
+    .compare-menu-note {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.4;
+      padding: 8px 10px 6px;
+    }
+
+    .compare-menu-item {
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      font: inherit;
+      gap: 2px;
+      padding: 9px 10px;
+      text-align: left;
+    }
+
+    .compare-menu-item:hover:not(:disabled) {
+      background: rgba(255, 106, 0, 0.08);
+    }
+
+    .compare-menu-item:disabled {
+      color: var(--text-soft);
+      cursor: not-allowed;
+    }
+
+    .compare-menu-item.is-selected,
+    .compare-menu-pick.is-selected {
+      background: rgba(255, 106, 0, 0.1);
+    }
+
+    .compare-menu-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .compare-menu-sub {
+      color: var(--text-soft);
+      font-size: 12px;
+    }
+
+    .compare-menu-off .compare-menu-title {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .compare-menu-pick {
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 9px 10px;
+    }
+
+    .compare-menu-pick-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .compare-delta {
+      font-weight: 600;
+    }
+
+    .compare-delta.is-good {
+      color: #138b53;
+    }
+
+    .compare-delta.is-bad {
+      color: #c2413b;
+    }
+
+    .compare-delta.is-neutral {
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+
+    @media (max-width: 640px) {
+      .compare-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .compare-actions {
+        justify-content: flex-end;
+      }
+
+      .compare-menu {
+        min-width: 0;
+        width: min(100%, 320px);
+      }
+    }
+
     .crm-development-chart .crm-chart-header {
       display: flex;
       flex-wrap: wrap;
@@ -23958,16 +24181,17 @@
           return (Number(t.revenue) || 0) - (Number(t.adSpend) || 0);
         case 'roas': return crmSafeDivide(t.revenue, t.adSpend);
         case 'customers': return t.customers ?? 0;
-        case 'adSpend': return t.adSpend ?? 0;
+        case 'adSpend': return Number(t.adSpend) > 0 ? Number(t.adSpend) : null;
         case 'closeRate':
           if (Number.isFinite(Number(t.closeRate))) return Number(t.closeRate);
           return crmSafeDivide(t.customers, t.leads) != null
             ? (crmSafeDivide(t.customers, t.leads) * 100)
             : null;
-        case 'cpl': return t.cpl ?? crmSafeDivide(t.adSpend, t.leads);
+        // Without ad spend there is no cost per lead / client: show a dash, not "Dkr 0".
+        case 'cpl': return Number(t.adSpend) > 0 ? (t.cpl ?? crmSafeDivide(t.adSpend, t.leads)) : null;
         case 'leads': return t.leads ?? 0;
         case 'ltv': return t.ltv;
-        case 'cac': return t.cac ?? crmSafeDivide(t.adSpend, t.customers);
+        case 'cac': return Number(t.adSpend) > 0 ? (t.cac ?? crmSafeDivide(t.adSpend, t.customers)) : null;
         default: return null;
       }
     }
@@ -24023,6 +24247,239 @@
 
     const CRM_CHART_METRICS = ['revenue', 'profit', 'adSpend', 'leads', 'customers', 'cpl', 'cac', 'closeRate'];
 
+    /* ---------- Comparison bar, menu and helpers ---------- */
+
+    function comparisonIsReady() {
+      return cachedComparison?.status === 'ready' && Boolean(cachedComparison.performance?.totals);
+    }
+
+    // Comparison period has no records (before the account's first lead, or completely empty).
+    function comparisonHasNoData() {
+      if (!comparisonIsReady()) return false;
+      const helpers = comparisonHelpers();
+      if (helpers.isBeforeDataStart(cachedComparison.range, clientEarliestDataDate)) return true;
+      const totals = cachedComparison.performance.totals;
+      return !(totals.leads || totals.customers || totals.revenue || totals.adSpend);
+    }
+
+    function getComparisonDescription() {
+      if (!comparisonIsReady()) return null;
+      return comparisonHelpers().describeComparison({
+        current: cachedComparison.currentRange,
+        comparison: cachedComparison.range,
+        mode: cachedComparison.mode,
+        todayIso: getTodayIso(),
+      });
+    }
+
+    function renderCompareSummary(current) {
+      if (!current) {
+        return 'Vælg en bestemt periode for at sammenligne med en tidligere periode.';
+      }
+      if (compareState.mode === 'off' || !cachedComparison) {
+        return 'Ingen sammenligning valgt.';
+      }
+      if (cachedComparison.status === 'loading') return 'Henter sammenligning…';
+      if (cachedComparison.status === 'error') return 'Sammenligning kunne ikke hentes.';
+      if (cachedComparison.status === 'unavailable') {
+        return 'Der findes ingen sammenligningsperiode for denne periode.';
+      }
+      const description = getComparisonDescription();
+      if (!description) return 'Ingen sammenligning valgt.';
+      const noData = comparisonHasNoData()
+        ? ' <span class="compare-note">Ingen data i sammenligningsperioden.</span>'
+        : '';
+      return `<strong>${esc(description.currentLabel)}</strong> sammenlignet med <strong>${esc(description.comparisonLabel)}</strong> <span class="compare-relation">(${esc(description.relation)})</span>${noData}`;
+    }
+
+    function renderCompareMonthOptions(year, selectedMonth) {
+      const maxMonth = getClientPeriodMaxMonth(year);
+      const options = CLIENT_MONTH_NAMES
+        .slice(0, maxMonth)
+        .map((name, index) => `<option value="${index + 1}"${Number(selectedMonth) === index + 1 ? ' selected' : ''}>${name}</option>`)
+        .join('');
+      return `<option value=""${selectedMonth ? '' : ' selected'} disabled>Vælg måned</option>${options}`;
+    }
+
+    function renderCompareMenu(current) {
+      const helpers = comparisonHelpers();
+      const todayIso = getTodayIso();
+
+      if (!current) {
+        return `
+          <div class="compare-menu-note">Sammenligning kræver en bestemt periode. Vælg en periode først:</div>
+          <button type="button" class="compare-menu-item" onclick="applyPreset('month'); closeCompareMenu()"><span class="compare-menu-title">Denne måned</span></button>
+          <button type="button" class="compare-menu-item" onclick="applyPreset('lastMonth'); closeCompareMenu()"><span class="compare-menu-title">Sidste måned</span></button>
+          <button type="button" class="compare-menu-item" onclick="applyPreset('year'); closeCompareMenu()"><span class="compare-menu-title">I år</span></button>
+        `;
+      }
+
+      const shape = helpers.detectRangeShape(current, todayIso);
+      const previousTitle = shape === 'month' ? 'Forrige måned' : shape === 'year' ? 'Forrige år' : 'Forrige periode';
+      const entries = [
+        { mode: 'previous_period', title: previousTitle },
+        { mode: 'previous_year', title: 'Samme periode sidste år' },
+      ].map(({ mode, title }) => {
+        const range = helpers.resolveComparisonRange(current, mode, { todayIso });
+        const selected = compareState.mode === mode;
+        const sub = range ? helpers.formatComparisonRangeLabel(range, todayIso) : 'Ikke tilgængelig for denne periode';
+        return `
+          <button type="button" class="compare-menu-item${selected ? ' is-selected' : ''}" ${range ? '' : 'disabled'} onclick="setCompareMode('${mode}')">
+            <span class="compare-menu-title">${title}</span>
+            <span class="compare-menu-sub">${esc(sub)}</span>
+          </button>
+        `;
+      }).join('');
+
+      let pickHtml = '';
+      if (shape !== 'custom') {
+        const years = getClientPeriodYears();
+        const pickYear = compareState.pickYear && years.includes(Number(compareState.pickYear))
+          ? Number(compareState.pickYear)
+          : null;
+        const yearOptions = `<option value=""${pickYear ? '' : ' selected'} disabled>År</option>${years
+          .map((year) => `<option value="${year}"${pickYear === year ? ' selected' : ''}>${year}</option>`)
+          .join('')}`;
+        const monthSelect = shape === 'month'
+          ? `<select id="compare-pick-month" class="client-period-select" aria-label="Måned" onchange="onComparePickChange()">${renderCompareMonthOptions(pickYear || years[0], compareState.pickMonth)}</select>`
+          : '';
+        pickHtml = `
+          <div class="compare-menu-pick${compareState.mode === 'pick' ? ' is-selected' : ''}">
+            <span class="compare-menu-title">${shape === 'month' ? 'Vælg måned og år' : 'Vælg år'}</span>
+            <div class="compare-menu-pick-row">
+              <select id="compare-pick-year" class="client-period-select" aria-label="År" onchange="onComparePickYearChange()">${yearOptions}</select>
+              ${monthSelect}
+            </div>
+          </div>
+        `;
+      }
+
+      const off = compareState.mode !== 'off'
+        ? '<button type="button" class="compare-menu-item compare-menu-off" onclick="clearComparison()"><span class="compare-menu-title">Ingen sammenligning</span></button>'
+        : '';
+      return `${off}${entries}${pickHtml}`;
+    }
+
+    function renderCompareBar() {
+      if (!usesCrmClientDashboard() || !comparisonHelpers()) return '';
+      const current = getCurrentBoundedRange();
+      const active = Boolean(current) && compareState.mode !== 'off';
+      const summary = renderCompareSummary(current);
+      const notice = compareState.notice
+        ? `<div class="compare-notice">${esc(compareState.notice)}</div>`
+        : '';
+      const clear = active
+        ? '<button type="button" class="compare-clear" aria-label="Fjern sammenligning" title="Fjern sammenligning" onclick="clearComparison()">×</button>'
+        : '';
+      return `
+        <div class="compare-bar${active ? ' is-active' : ''}" id="compare-bar">
+          <div class="compare-summary">${summary}${notice}</div>
+          <div class="compare-actions">
+            ${clear}
+            <button type="button" class="compare-btn${current ? '' : ' is-disabled'}" aria-haspopup="true" onclick="toggleCompareMenu(event)">
+              <span class="compare-btn-icon" aria-hidden="true">⇄</span>
+              <span>${active ? 'Skift sammenligning' : 'Sammenlign'}</span>
+              <span class="compare-btn-caret" aria-hidden="true"></span>
+            </button>
+            <div class="compare-menu" id="compare-menu" hidden onclick="event.stopPropagation()">${renderCompareMenu(current)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    let compareOutsideClickBound = false;
+
+    function closeCompareMenu() {
+      const menu = document.getElementById('compare-menu');
+      if (menu) menu.hidden = true;
+    }
+
+    function toggleCompareMenu(event) {
+      event?.stopPropagation();
+      const menu = document.getElementById('compare-menu');
+      if (!menu) return;
+      menu.hidden = !menu.hidden;
+      if (!compareOutsideClickBound) {
+        compareOutsideClickBound = true;
+        document.addEventListener('click', closeCompareMenu);
+        document.addEventListener('keydown', (keyEvent) => {
+          if (keyEvent.key === 'Escape') closeCompareMenu();
+        });
+      }
+    }
+
+    // Changing the year in the pick menu: keep the month valid, apply once the choice is complete.
+    function onComparePickYearChange() {
+      const yearSelect = document.getElementById('compare-pick-year');
+      const monthSelect = document.getElementById('compare-pick-month');
+      const year = Number(yearSelect?.value) || null;
+      if (!year) return;
+      if (monthSelect) {
+        let month = Number(monthSelect.value) || 0;
+        if (month > getClientPeriodMaxMonth(year)) month = 0;
+        monthSelect.innerHTML = renderCompareMonthOptions(year, month);
+        if (!month) {
+          compareState.pickYear = year;
+          return;
+        }
+        setCompareMode('pick', { pickYear: year, pickMonth: month });
+        return;
+      }
+      setCompareMode('pick', { pickYear: year, pickMonth: 0 });
+    }
+
+    function onComparePickChange() {
+      const year = Number(document.getElementById('compare-pick-year')?.value) || compareState.pickYear;
+      const month = Number(document.getElementById('compare-pick-month')?.value) || 0;
+      if (!year || !month) return;
+      setCompareMode('pick', { pickYear: year, pickMonth: month });
+    }
+
+    function formatCrmDeltaNumber(value) {
+      const abs = Math.abs(Number(value) || 0);
+      return new Intl.NumberFormat('da-DK', { maximumFractionDigits: abs >= 100 ? 0 : 1 }).format(abs);
+    }
+
+    // The change line that replaces the grey hint while a comparison is active.
+    function renderCrmDeltaLine(metricId, currentTotals) {
+      if (metricId === 'ltv' || !comparisonIsReady()) return '';
+      const helpers = comparisonHelpers();
+      const description = getComparisonDescription();
+      if (!description) return '';
+      const ref = description.shortRef;
+      const previousTotals = cachedComparison.performance.totals;
+      const previous = crmMetricValue(previousTotals, metricId);
+      const current = crmMetricValue(currentTotals, metricId);
+      const title = `${ref}: ${formatCrmMetricValue(metricId, previous)}`;
+
+      if (comparisonHasNoData()) {
+        return `<div class="card-sub compare-delta is-neutral" title="${esc(title)}">– ingen data i ${esc(ref)}</div>`;
+      }
+
+      const delta = helpers.computeDelta(
+        current,
+        previous,
+        helpers.COMPARE_METRIC_DIRECTION[metricId] || 'up',
+        { points: metricId === 'closeRate' },
+      );
+      const tone = (delta.kind === 'change' || delta.kind === 'new')
+        ? (delta.isGood ? 'is-good' : 'is-bad')
+        : 'is-neutral';
+      let text;
+      if (delta.kind === 'change') {
+        const arrow = delta.direction === 'up' ? '▲' : '▼';
+        const unit = delta.unit === 'pp' ? ' pp' : '%';
+        text = `${arrow} ${formatCrmDeltaNumber(delta.value)}${unit} vs. ${ref}`;
+      } else if (delta.kind === 'new') {
+        text = `▲ Ny vs. ${ref}`;
+      } else if (delta.kind === 'flat') {
+        text = `– uændret vs. ${ref}`;
+      } else {
+        text = `– ingen data vs. ${ref}`;
+      }
+      return `<div class="card-sub compare-delta ${tone}" title="${esc(title)}">${esc(text)}</div>`;
+    }
+
     function renderCrmKpiGrid(performance) {
       if (!performance?.totals) {
         return '<div class="empty-section">Ingen performance-data for valgt periode.</div>';
@@ -24031,11 +24488,12 @@
       const cards = CRM_KPI_ORDER.map((metricId) => {
         const meta = CRM_KPI_LABELS[metricId];
         const value = formatCrmMetricValue(metricId, crmMetricValue(totals, metricId));
+        const deltaLine = renderCrmDeltaLine(metricId, totals);
         return `
           <div class="card${CRM_KPI_CARD_CLASS[metricId] || ''}">
             <div class="card-label">${meta.label}</div>
             <div class="card-value">${value}</div>
-            <div class="card-sub">${meta.hint}</div>
+            ${deltaLine || `<div class="card-sub">${meta.hint}</div>`}
           </div>
         `;
       });
@@ -24082,6 +24540,14 @@
       return 'dag';
     }
 
+    function crmChartSubtitleText(performance, metricLabel) {
+      const periodLabel = performance?.periodLabel || 'Valgt periode';
+      let text = `${periodLabel} · ${crmGranularityLabel(performance?.granularity)} · ${metricLabel}`;
+      const description = comparisonIsReady() && !comparisonHasNoData() ? getComparisonDescription() : null;
+      if (description) text += ` · mod ${description.comparisonLabel}`;
+      return text;
+    }
+
     function renderCrmDevelopmentChart(performance) {
       const hasBuckets = Boolean(performance?.buckets?.length);
       const metricId = crmDevelopmentMetricId;
@@ -24099,7 +24565,7 @@
           <div class="crm-chart-header">
             <div>
               <div class="section-title">Udvikling over tid</div>
-              <div class="crm-chart-subtitle" id="crm-chart-subtitle">${esc(periodLabel)} · ${crmGranularityLabel(granularity)} · ${esc(metricLabel)}</div>
+              <div class="crm-chart-subtitle" id="crm-chart-subtitle">${esc(crmChartSubtitleText(performance, metricLabel))}</div>
             </div>
             <div class="crm-chart-metric-pills">${pills}</div>
           </div>
@@ -24148,10 +24614,21 @@
       }
 
       const metricId = crmDevelopmentMetricId;
-      const labels = performance.buckets.map((bucket) => formatCrmBucketLabel(bucket, performance.granularity));
-      const mainData = performance.buckets.map((bucket) => crmBucketMetricValue(bucket, metricId));
+      const compareActive = comparisonIsReady()
+        && !comparisonHasNoData()
+        && Boolean(cachedComparison.performance?.buckets?.length);
+      const description = compareActive ? getComparisonDescription() : null;
+      // Day 1 sits over day 1 (or month over month), like the CRM chart.
+      const aligned = compareActive
+        ? comparisonHelpers().alignComparisonBuckets(performance.buckets, cachedComparison.performance.buckets)
+        : performance.buckets.map((bucket) => ({ current: bucket, comparison: null }));
+      const labels = aligned.map((pair) => formatCrmBucketLabel(
+        pair.current || pair.comparison,
+        performance.granularity,
+      ));
+      const mainData = aligned.map((pair) => (pair.current ? crmBucketMetricValue(pair.current, metricId) : null));
       const datasets = [{
-        label: CRM_KPI_LABELS[metricId]?.label || metricId,
+        label: compareActive ? description.currentSeriesLabel : (CRM_KPI_LABELS[metricId]?.label || metricId),
         data: mainData,
         borderColor: '#46C7A0',
         backgroundColor: 'rgba(70, 199, 160, 0.22)',
@@ -24162,7 +24639,24 @@
         borderWidth: 2,
       }];
 
-      if (metricId === 'revenue') {
+      if (compareActive) {
+        datasets.push({
+          label: description.comparisonSeriesLabel,
+          data: aligned.map((pair) => (pair.comparison ? crmBucketMetricValue(pair.comparison, metricId) : null)),
+          borderColor: '#f08a24',
+          backgroundColor: 'transparent',
+          borderDash: [6, 4],
+          fill: false,
+          tension: 0.35,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2,
+          spanGaps: false,
+        });
+      }
+
+      // The ad-spend overlay is hidden while comparing so the chart keeps at most two lines.
+      if (metricId === 'revenue' && !compareActive) {
         datasets.push({
           label: CRM_KPI_LABELS.adSpend.label,
           data: performance.buckets.map((bucket) => bucket.adSpend || 0),
@@ -24188,6 +24682,13 @@
             legend: { display: datasets.length > 1, position: 'bottom' },
             tooltip: {
               callbacks: {
+                title(items) {
+                  const pair = aligned[items[0]?.dataIndex];
+                  if (!compareActive || !pair) return items[0]?.label || '';
+                  const currentLabel = pair.current ? formatCrmBucketLabel(pair.current, performance.granularity) : '–';
+                  const comparisonLabel = pair.comparison ? formatCrmBucketLabel(pair.comparison, performance.granularity) : '–';
+                  return `${description.currentSeriesLabel} ${currentLabel}  ·  ${description.comparisonSeriesLabel} ${comparisonLabel}`;
+                },
                 label(context) {
                   const value = context.parsed.y;
                   if (metricId === 'closeRate' || context.dataset.label === CRM_KPI_LABELS.closeRate?.label) {
@@ -24238,10 +24739,9 @@
         });
         const source = cachedData?.performance || performance;
         const subtitle = document.getElementById('crm-chart-subtitle');
-        const periodLabel = source?.periodLabel || 'Valgt periode';
         const metricLabel = CRM_KPI_LABELS[crmDevelopmentMetricId]?.label || crmDevelopmentMetricId;
         if (subtitle) {
-          subtitle.textContent = `${periodLabel} · ${crmGranularityLabel(source?.granularity)} · ${metricLabel}`;
+          subtitle.textContent = crmChartSubtitleText(source, metricLabel);
         }
         mountCrmDevelopmentChart(source);
       });
@@ -24560,9 +25060,14 @@
 
       params.set('pipelineIds', selected.join(','));
 
-      if (state.dateField) params.set('dateField', state.dateField);
-      if (state.dateFrom) params.set('dateFrom', state.dateFrom);
-      if (state.dateTo) params.set('dateTo', state.dateTo);
+      // Period comparison reuses every filter but swaps the date range (and pins bucket size).
+      const dateField = options.dateField ?? state.dateField;
+      const dateFrom = options.dateFrom ?? state.dateFrom;
+      const dateTo = options.dateTo ?? state.dateTo;
+      if (dateField) params.set('dateField', dateField);
+      if (dateFrom) params.set('dateFrom', dateFrom);
+      if (dateTo) params.set('dateTo', dateTo);
+      if (options.granularity) params.set('granularity', options.granularity);
 
       ['status', 'source', 'assignedTo', 'adSpend'].forEach((key) => {
         if (state[key] && state[key] !== 'all') params.set(key, state[key]);
@@ -25182,6 +25687,139 @@
       return result;
     }
 
+    /* ---------- Period comparison (client dashboard only, session state) ---------- */
+
+    // mode: 'off' | 'previous_period' | 'previous_year' | 'pick'
+    const compareState = { mode: 'off', pickYear: null, pickMonth: 0, notice: '' };
+    // { status: 'loading'|'ready'|'error'|'unavailable', range, currentRange, mode, performance, kpis }
+    let cachedComparison = null;
+    let comparisonRequestId = 0;
+
+    function comparisonHelpers() {
+      return window.PerformanceMerge || null;
+    }
+
+    // The bounded range being shown right now (null for Till date and half-picked custom ranges).
+    function getCurrentBoundedRange() {
+      if (state.preset === 'all' || !state.dateFrom || !state.dateTo) return null;
+      return { start: state.dateFrom, end: state.dateTo };
+    }
+
+    function isComparisonRequested() {
+      return usesCrmClientDashboard()
+        && compareState.mode !== 'off'
+        && Boolean(comparisonHelpers())
+        && Boolean(getCurrentBoundedRange());
+    }
+
+    function resolveActiveComparisonRange() {
+      if (!isComparisonRequested()) return null;
+      const helpers = comparisonHelpers();
+      const current = getCurrentBoundedRange();
+      const shape = helpers.detectRangeShape(current, getTodayIso());
+      let mode = compareState.mode;
+      if (mode === 'pick' && shape === 'month' && !compareState.pickMonth) {
+        mode = 'previous_period';
+        compareState.mode = mode;
+        compareState.notice = 'Den valgte måned passer ikke til denne periode. Viser forrige periode.';
+      }
+      const options = {
+        todayIso: getTodayIso(),
+        pick: { year: compareState.pickYear, month: compareState.pickMonth },
+      };
+      const resolved = helpers.resolveComparisonRange(current, mode, options);
+      if (!resolved && mode === 'pick') {
+        // The picked period equals (or no longer fits) the current one: use the previous period.
+        const fallback = helpers.resolveComparisonRange(current, 'previous_period', options);
+        if (fallback) {
+          compareState.mode = 'previous_period';
+          compareState.notice = 'Den valgte periode kan ikke sammenlignes med sig selv. Viser forrige periode.';
+          return fallback;
+        }
+      }
+      return resolved;
+    }
+
+    function applyMarketingDataForRange(data, fbMetrics, range) {
+      if (!window.MarketingMetrics) return data;
+      return window.MarketingMetrics.applyMarketingToDashboard(data, fbMetrics, 'custom', {
+        timeZone: data.account?.timezone || 'Europe/Copenhagen',
+        dateFrom: range.start,
+        dateTo: range.end,
+      });
+    }
+
+    // Fetches the raw dashboard for the comparison range. Never throws except on abort,
+    // so a failed comparison cannot break the main dashboard.
+    async function fetchComparisonRaw(signal) {
+      if (!isComparisonRequested()) return null;
+      const helpers = comparisonHelpers();
+      const currentRange = getCurrentBoundedRange();
+      const range = resolveActiveComparisonRange();
+      if (!range) return { status: 'unavailable', range: null, currentRange, mode: compareState.mode };
+      try {
+        const query = buildQuery(availablePipelines, {
+          dateFrom: range.start,
+          dateTo: range.end,
+          dateField: 'createdAt',
+          granularity: helpers.inferGranularityForRange(currentRange),
+        });
+        const data = await fetchJson(`/api/dashboard?${query}`, signal);
+        return { status: 'raw', data, range, currentRange, mode: compareState.mode };
+      } catch (error) {
+        if (error.name === 'AbortError') throw error;
+        return { status: 'error', range, currentRange, mode: compareState.mode, error: error.message };
+      }
+    }
+
+    function buildComparisonResult(raw, fbMetrics) {
+      if (!raw) return null;
+      if (raw.status !== 'raw') return { ...raw };
+      const merged = applyMarketingDataForRange(raw.data, fbMetrics, raw.range);
+      return {
+        status: 'ready',
+        range: raw.range,
+        currentRange: raw.currentRange,
+        mode: raw.mode,
+        performance: merged.performance || null,
+        kpis: merged.kpis || null,
+      };
+    }
+
+    // Re-fetch only the comparison (menu change) without reloading the main dashboard.
+    async function refreshComparisonOnly() {
+      const requestId = ++comparisonRequestId;
+      if (!isComparisonRequested()) {
+        cachedComparison = null;
+        if (cachedData) updateDashboardContent(cachedData);
+        return;
+      }
+      cachedComparison = { status: 'loading', mode: compareState.mode, currentRange: getCurrentBoundedRange(), range: null };
+      if (cachedData) updateDashboardContent(cachedData);
+      try {
+        const raw = await fetchComparisonRaw(undefined);
+        if (requestId !== comparisonRequestId) return;
+        cachedComparison = buildComparisonResult(raw, cachedFacebookMetrics);
+      } catch (error) {
+        if (requestId !== comparisonRequestId) return;
+        cachedComparison = { status: 'error', mode: compareState.mode, range: null, currentRange: getCurrentBoundedRange() };
+      }
+      if (cachedData) updateDashboardContent(cachedData);
+    }
+
+    function setCompareMode(mode, options = {}) {
+      compareState.mode = mode;
+      compareState.notice = '';
+      if (options.pickYear) compareState.pickYear = Number(options.pickYear);
+      if (options.pickMonth !== undefined) compareState.pickMonth = Number(options.pickMonth) || 0;
+      closeCompareMenu();
+      refreshComparisonOnly();
+    }
+
+    function clearComparison() {
+      setCompareMode('off');
+    }
+
     async function fetchDashboardData(pipelines, signal, options = {}) {
       const query = buildQuery(pipelines, options);
       const data = await fetchJson(`/api/dashboard${query ? `?${query}` : ''}`, signal);
@@ -25404,6 +26042,7 @@
     let clientPeriodYear = null;
     let clientPeriodMonth = '';
     let clientEarliestDataYear = null;
+    let clientEarliestDataDate = null;
     let clientPeriodSkipValidation = false;
 
     function trackClientEarliestDataYear(performance) {
@@ -25413,6 +26052,8 @@
         clientEarliestDataYear = clientEarliestDataYear
           ? Math.min(clientEarliestDataYear, startYear)
           : startYear;
+        const startIso = String(performance.range.start).slice(0, 10);
+        if (!clientEarliestDataDate || startIso < clientEarliestDataDate) clientEarliestDataDate = startIso;
       }
     }
 
@@ -25947,6 +26588,7 @@
       if (usesCrmClientDashboard()) {
         return `
           ${renderMetricsChangeBanner(data)}
+          ${renderCompareBar()}
           ${renderCrmKpiGrid(performance)}
           ${renderCrmDevelopmentChart(performance)}
           ${renderDashboardMiddleSections(data)}
@@ -26159,6 +26801,10 @@
           const reuseBootstrap = canReuseBootstrapDashboard(bootstrapData) && !shouldFetchFresh;
           let data;
           let fbMetrics;
+          // Period comparison runs in parallel; it never throws except on abort.
+          const comparisonRequestToken = ++comparisonRequestId;
+          const comparisonPromise = fetchComparisonRaw(signal);
+          comparisonPromise.catch(() => {});
           if (reuseBootstrap) {
             [fbMetrics, data] = await Promise.all([
               fetchFacebookMetrics(signal),
@@ -26172,6 +26818,11 @@
           }
           if (generation !== fetchGeneration) return;
           cachedFacebookMetrics = fbMetrics;
+          const comparisonRaw = await comparisonPromise;
+          if (generation !== fetchGeneration) return;
+          if (comparisonRequestToken === comparisonRequestId) {
+            cachedComparison = buildComparisonResult(comparisonRaw, fbMetrics);
+          }
           cachedData = applyMarketingData(data, fbMetrics);
           if (cachedData.account?.facebookClientId) {
             facebookClientId = cachedData.account.facebookClientId;
@@ -26293,6 +26944,12 @@
     function applyPreset(preset) {
       clearDateRangeError();
       closeDatePicker();
+      if (preset === 'all') {
+        // Till date has nothing earlier to compare against.
+        compareState.mode = 'off';
+        compareState.notice = '';
+        cachedComparison = null;
+      }
       if (usesCrmClientDashboard() && clientPeriodMonth) {
         // Leaving a Year/Month dropdown pick: clear it and don't remember it as the Custom range.
         clientPeriodMonth = '';

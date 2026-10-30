@@ -136,7 +136,136 @@ function main() {
   assert.strictEqual(totals.cpl, 5);
   assert.strictEqual(totals.cac, 10);
 
+  testComparison();
+
   console.log('GHL performance bucket tests passed.');
+}
+
+function testComparison() {
+  const {
+    resolveComparisonRange,
+    describeComparison,
+    computeDelta,
+    alignComparisonBuckets,
+    detectRangeShape,
+    isBeforeDataStart,
+  } = require('../lib/performance-merge');
+  const today = '2026-10-30';
+
+  // Full past month -> whole previous month.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-09-01', end: '2026-09-30' }, 'previous_period', { todayIso: today }),
+    { start: '2026-08-01', end: '2026-08-31' },
+  );
+  // January rolls back into December of the previous year.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-01-01', end: '2026-01-31' }, 'previous_period', { todayIso: today }),
+    { start: '2025-12-01', end: '2025-12-31' },
+  );
+  // Month to date (preset end is the month end, today is the 30th) -> same elapsed days of September (30).
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-10-01', end: '2026-10-31' }, 'previous_period', { todayIso: today }),
+    { start: '2026-09-01', end: '2026-09-30' },
+  );
+  // Month to date on the 31st would not fit a 30-day month: capped to its length.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-10-01', end: '2026-10-31' }, 'previous_period', { todayIso: '2026-10-31' }),
+    { start: '2026-09-01', end: '2026-09-30' },
+  );
+  // Early in the month: equal number of elapsed days.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-10-01', end: '2026-10-31' }, 'previous_period', { todayIso: '2026-10-10' }),
+    { start: '2026-09-01', end: '2026-09-10' },
+  );
+  // Year to date -> same dates last year.
+  assert.strictEqual(detectRangeShape({ start: '2026-01-01', end: '2026-10-30' }, today), 'year');
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-01-01', end: '2026-10-30' }, 'previous_period', { todayIso: today }),
+    { start: '2025-01-01', end: '2025-10-30' },
+  );
+  // Full past year -> whole previous year.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2025-01-01', end: '2025-12-31' }, 'previous_period', { todayIso: today }),
+    { start: '2024-01-01', end: '2024-12-31' },
+  );
+  // Custom range -> equally long window directly before.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-10-10', end: '2026-10-23' }, 'previous_period', { todayIso: today }),
+    { start: '2026-09-26', end: '2026-10-09' },
+  );
+  // Same period last year, including a leap year February.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2025-02-01', end: '2025-02-28' }, 'previous_year', { todayIso: today }),
+    { start: '2024-02-01', end: '2024-02-29' },
+  );
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-10-01', end: '2026-10-31' }, 'previous_year', { todayIso: today }),
+    { start: '2025-10-01', end: '2025-10-30' },
+  );
+  // Picking a month mirrors the shape (month vs month), and a running month is cut to equal days.
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-09-01', end: '2026-09-30' }, 'pick', { todayIso: today, pick: { year: 2025, month: 2 } }),
+    { start: '2025-02-01', end: '2025-02-28' },
+  );
+  assert.deepStrictEqual(
+    resolveComparisonRange({ start: '2026-10-01', end: '2026-10-31' }, 'pick', { todayIso: today, pick: { year: 2025, month: 2 } }),
+    { start: '2025-02-01', end: '2025-02-28' },
+  );
+  // Picking the same period is not a comparison.
+  assert.strictEqual(
+    resolveComparisonRange({ start: '2026-09-01', end: '2026-09-30' }, 'pick', { todayIso: today, pick: { year: 2026, month: 9 } }),
+    null,
+  );
+  // A comparison that starts in the future is rejected.
+  assert.strictEqual(
+    resolveComparisonRange({ start: '2026-10-01', end: '2026-10-31' }, 'pick', { todayIso: today, pick: { year: 2026, month: 11 } }),
+    null,
+  );
+
+  // Labels say exactly what is compared with what.
+  const description = describeComparison({
+    current: { start: '2026-09-01', end: '2026-09-30' },
+    comparison: { start: '2026-08-01', end: '2026-08-31' },
+    mode: 'previous_period',
+    todayIso: today,
+  });
+  assert.strictEqual(description.sentence, 'september 2026 sammenlignet med august 2026 (forrige måned)');
+  assert.strictEqual(description.shortRef, 'august');
+  assert.strictEqual(description.currentSeriesLabel, 'Sep 2026');
+  assert.strictEqual(description.comparisonSeriesLabel, 'Aug 2026');
+  const lastYear = describeComparison({
+    current: { start: '2026-09-01', end: '2026-09-30' },
+    comparison: { start: '2025-09-01', end: '2025-09-30' },
+    mode: 'previous_year',
+    todayIso: today,
+  });
+  assert.strictEqual(lastYear.shortRef, 'september 2025');
+  assert.ok(lastYear.sentence.includes('samme periode sidste år'));
+
+  // Deltas: good/bad follows the metric direction (costs are inverted).
+  const revenueUp = computeDelta(120, 100, 'up');
+  assert.strictEqual(revenueUp.kind, 'change');
+  assert.ok(Math.abs(revenueUp.value - 20) < 1e-9 && revenueUp.isGood);
+  const costUp = computeDelta(120, 100, 'down');
+  assert.ok(costUp.direction === 'up' && costUp.isGood === false);
+  const costDown = computeDelta(80, 100, 'down');
+  assert.ok(costDown.direction === 'down' && costDown.isGood === true);
+  assert.strictEqual(computeDelta(5, 0, 'up').kind, 'new');
+  assert.strictEqual(computeDelta(0, 0, 'up').kind, 'flat');
+  assert.strictEqual(computeDelta(null, 10, 'up').kind, 'unknown');
+  const points = computeDelta(8, 6.5, 'up', { points: true });
+  assert.ok(points.unit === 'pp' && Math.abs(points.value - 1.5) < 1e-9);
+
+  // 31-day month against a 30-day month is aligned by position; the extra day has no partner.
+  const august = Array.from({ length: 31 }, (_, i) => ({ start: `2026-08-${String(i + 1).padStart(2, '0')}` }));
+  const september = Array.from({ length: 30 }, (_, i) => ({ start: `2026-09-${String(i + 1).padStart(2, '0')}` }));
+  const aligned = alignComparisonBuckets(august, september);
+  assert.strictEqual(aligned.length, 31);
+  assert.strictEqual(aligned[0].comparison.start, '2026-09-01');
+  assert.strictEqual(aligned[30].comparison, null);
+
+  assert.strictEqual(isBeforeDataStart({ start: '2024-01-01', end: '2024-01-31' }, '2025-03-10'), true);
+  assert.strictEqual(isBeforeDataStart({ start: '2025-03-01', end: '2025-03-31' }, '2025-03-10'), false);
 }
 
 main();
