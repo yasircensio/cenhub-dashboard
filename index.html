@@ -3839,46 +3839,43 @@
     }
 
     /* ---- Period picker: segmented quick periods + "Anden periode" popover ---- */
-    /* Quick periods: one joined capsule (exactly one active). The selected segment is a
-       full-height pill that touches the capsule edge on every side (no inner gap).
-       One shared control height (40px) keeps it level with the buttons next to it. */
+    /* Quick periods: separate buttons, same look as "Anden periode" and "Sammenlign"
+       next to them. One shared control height (40px) keeps the whole row level. */
     .period-seg {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    .period-seg-btn {
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.22);
       border-radius: 10px;
       box-sizing: border-box;
-      display: inline-flex;
-      gap: 0;
-      height: 40px;
-      max-width: 100%;
-      overflow: hidden;
-      padding: 0;
-    }
-
-    .period-seg-btn {
-      background: transparent;
-      border: none;
-      /* Inner radius = container radius (10px) minus its 1px border, so the selected
-         segment follows the rounded corners exactly and touches every edge. */
-      border-radius: 9px;
       color: #fff;
       cursor: pointer;
       font: inherit;
       font-size: 12px;
       font-weight: 500;
       line-height: 1.25;
-      padding: 0 17px;
-      transition: background 0.15s ease, color 0.15s ease;
+      min-height: 40px;
+      padding: 9px 16px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       white-space: nowrap;
     }
 
-    .period-seg-btn:hover:not(:disabled):not(.active) {
+    .period-seg-btn:hover:not(:disabled) {
       background: rgba(255, 106, 0, 0.25);
+      border-color: var(--border-strong);
       color: #fff;
     }
 
-    .period-seg-btn.active {
+    .period-seg-btn.active,
+    .period-seg-btn.active:hover:not(:disabled) {
       background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.12);
       color: #fff;
     }
 
@@ -4073,18 +4070,13 @@
     /* Phones: quick periods as a 2x2 grid, date fields stacked. */
     @media (max-width: 480px) {
       .header-presets .period-seg {
-        border-radius: 10px;
         display: grid;
-        gap: 3px;
+        gap: 8px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        height: auto;
-        overflow: visible;
-        padding: 3px;
       }
 
       .header-presets .period-seg-btn {
-        border-radius: 7px;
-        min-height: 36px;
+        min-height: 40px;
       }
 
       .period-custom-range {
