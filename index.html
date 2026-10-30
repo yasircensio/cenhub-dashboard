@@ -719,7 +719,7 @@
       color: rgba(255, 255, 255, 0.72);
     }
 
-    /* Year / month dropdowns beside the presets. Overrides the global `select` rule
+    /* Compact selects (used in the comparison menu). Overrides the global `select` rule
        (width:100%, 16px stroke chevron, 40px right padding) with a small filled caret. */
     .client-period-select,
     .client-period-select:focus {
@@ -746,44 +746,10 @@
       width: auto;
     }
 
-    .client-period-group {
-      align-items: center;
-      display: inline-flex;
-      gap: 6px;
-    }
-
     .client-period-select:focus-visible {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.14);
       outline: none;
-    }
-
-    .preset-controls--header .client-period-select,
-    .preset-controls--header .client-period-select:focus {
-      --period-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0h8L4 5z' fill='%23ffffff' fill-opacity='.85'/%3E%3C/svg%3E");
-      background-color: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.22);
-      color: #fff;
-    }
-
-    .preset-controls--header .client-period-select:hover {
-      background-color: rgba(255, 106, 0, 0.25);
-      border-color: var(--border-strong);
-    }
-
-    .client-period-select.is-active,
-    .client-period-select.is-active:focus,
-    .preset-controls--header .client-period-select.is-active,
-    .preset-controls--header .client-period-select.is-active:focus {
-      --period-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0h8L4 5z' fill='%23ffffff'/%3E%3C/svg%3E");
-      background-color: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-    }
-
-    .preset-controls--header .client-period-select option {
-      background: #1b1109;
-      color: #fff;
     }
 
     .date-range-error {
@@ -3856,23 +3822,286 @@
       z-index: 40;
     }
 
-    /* The menu is light even inside the dark header: reset the dark select styling. */
-    .preset-controls--header .compare-menu .client-period-select,
-    .preset-controls--header .compare-menu .client-period-select:focus,
-    .preset-controls--header .compare-menu .client-period-select:hover {
-      --period-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0h8L4 5z' fill='%23707680'/%3E%3C/svg%3E");
-      background-color: var(--panel);
-      border-color: var(--border);
-      color: var(--text);
-    }
-
-    .preset-controls--header .compare-menu .client-period-select:hover {
+    .compare-menu .client-period-select:hover {
       border-color: var(--border-strong);
     }
 
-    .preset-controls--header .compare-menu .client-period-select option {
-      background: #fff;
-      color: #111;
+    /* ---- Period picker: segmented quick periods + "Anden periode" popover ---- */
+    .period-seg {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      display: inline-flex;
+      gap: 2px;
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 3px;
+    }
+
+    .period-seg-btn {
+      background: transparent;
+      border: none;
+      border-radius: 7px;
+      color: rgba(255, 255, 255, 0.82);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      transition: background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .period-seg-btn:hover:not(:disabled):not(.active) {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .period-seg-btn.active {
+      background: var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      color: #fff;
+    }
+
+    .period-seg-btn:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+
+    .period-seg-btn:focus-visible,
+    .period-picker-btn:focus-visible,
+    .compare-btn:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    .period-picker {
+      display: inline-flex;
+      position: relative;
+    }
+
+    .period-picker-icon {
+      align-items: center;
+      display: inline-flex;
+      height: 14px;
+      width: 14px;
+    }
+
+    .period-picker-icon svg {
+      height: 14px;
+      width: 14px;
+    }
+
+    .period-popover {
+      gap: 12px;
+      padding: 14px;
+      width: 304px;
+    }
+
+    .period-popover-head {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .period-year-nav {
+      align-items: center;
+      display: inline-flex;
+      font-size: 14px;
+      font-weight: 600;
+      gap: 8px;
+    }
+
+    .period-year-nav button {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 16px;
+      height: 28px;
+      line-height: 1;
+      width: 28px;
+    }
+
+    .period-year-nav button:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .period-year-nav button:disabled {
+      cursor: default;
+      opacity: 0.35;
+    }
+
+    .period-year-nav span {
+      min-width: 38px;
+      text-align: center;
+    }
+
+    .period-whole-year {
+      white-space: nowrap;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+    }
+
+    .period-whole-year:hover:not(.is-selected) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .period-month-grid {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .period-month {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 9px 0;
+      text-align: center;
+    }
+
+    .period-month:hover:not(:disabled):not(.is-selected) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .period-month:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+
+    .period-month.is-current:not(.is-selected) {
+      box-shadow: inset 0 0 0 1px rgba(255, 106, 0, 0.45);
+    }
+
+    .period-month.is-selected,
+    .period-whole-year.is-selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .period-month:focus-visible,
+    .period-whole-year:focus-visible,
+    .period-year-nav button:focus-visible {
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.3);
+      outline: none;
+    }
+
+    .period-popover-section {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .period-popover-title {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .period-custom-range {
+      align-items: flex-end;
+      display: flex;
+      gap: 8px;
+    }
+
+    .period-custom-range .date-picker-field {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .period-custom-range .date-picker-trigger {
+      min-width: 0;
+      padding: 8px 10px;
+      width: 100%;
+    }
+
+    .period-custom-range .date-range-separator {
+      padding-bottom: 10px;
+    }
+
+    .period-custom-range .date-picker-value {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .period-seg {
+      scrollbar-width: none;
+    }
+
+    .period-seg::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Phones: quick periods as a 2x2 grid, date fields stacked. */
+    @media (max-width: 480px) {
+      .header-presets .period-seg {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        overflow: visible;
+      }
+
+      .period-custom-range {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .period-custom-range .date-range-separator {
+        display: none;
+      }
+    }
+
+    /* The popover is light even inside the dark header: reset the header date-picker styling. */
+    .preset-controls--header .period-popover .date-picker-label {
+      color: var(--text-soft);
+    }
+
+    .preset-controls--header .period-popover .date-picker-trigger {
+      background: var(--panel);
+      border-color: var(--border);
+      box-shadow: none;
+      color: var(--text);
+    }
+
+    .preset-controls--header .period-popover .date-picker-trigger:hover {
+      background: var(--panel);
+      border-color: var(--border-strong);
+    }
+
+    .preset-controls--header .period-popover .date-picker-trigger.is-empty .date-picker-value {
+      color: var(--text-soft);
+    }
+
+    .preset-controls--header .period-popover .date-picker-icon {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .preset-controls--header .period-popover .date-range-separator {
+      color: var(--text-soft);
+    }
+
+    .header-presets .period-popover .date-range-error {
+      color: var(--danger);
     }
 
     .compare-menu[hidden] {
@@ -3960,11 +4189,38 @@
     }
 
     @media (max-width: 640px) {
-      .compare-menu {
+      .compare-menu,
+      .compare-menu.period-popover {
         min-width: 0;
         right: auto;
         left: 0;
         width: min(320px, calc(100vw - 56px));
+      }
+
+      .header-actions--client,
+      .preset-controls--header {
+        align-items: stretch;
+        width: 100%;
+      }
+
+      .header-presets {
+        justify-content: flex-start;
+      }
+
+      .period-picker,
+      .compare-control {
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .header-presets .period-seg {
+        width: 100%;
+      }
+
+      .header-presets .period-seg-btn {
+        flex: 1;
+        padding-left: 8px;
+        padding-right: 8px;
       }
     }
 
@@ -24469,8 +24725,6 @@
       element.outerHTML = renderCompareControl();
     }
 
-    let compareOutsideClickBound = false;
-
     function closeCompareMenu() {
       const menu = document.getElementById('compare-menu');
       if (menu) menu.hidden = true;
@@ -24480,14 +24734,10 @@
       event?.stopPropagation();
       const menu = document.getElementById('compare-menu');
       if (!menu) return;
-      menu.hidden = !menu.hidden;
-      if (!compareOutsideClickBound) {
-        compareOutsideClickBound = true;
-        document.addEventListener('click', closeCompareMenu);
-        document.addEventListener('keydown', (keyEvent) => {
-          if (keyEvent.key === 'Escape') closeCompareMenu();
-        });
-      }
+      const opening = menu.hidden;
+      closePeriodPicker();
+      menu.hidden = !opening;
+      bindHeaderPopoverDismiss();
     }
 
     // Changing the year in the pick menu: keep the month valid, apply once the choice is complete.
@@ -25637,16 +25887,17 @@
 
       document.querySelectorAll('[data-preset]').forEach((button) => {
         const isCustomButton = button.dataset.preset === 'custom';
-        button.classList.toggle(
-          'active',
-          button.dataset.preset === state.preset && !(isCustomButton && isClientPeriodPickActive()),
-        );
+        const isActive = button.dataset.preset === state.preset
+          && !(isCustomButton && isClientPeriodPickActive());
+        button.classList.toggle('active', isActive);
+        if (button.classList.contains('period-seg-btn')) button.setAttribute('aria-pressed', String(isActive));
       });
 
       updateCustomDateRowVisibility();
       syncDatePickerDisplays();
       refreshClientPeriodPicker();
       refreshCompareControl();
+      updateHeroSubtitle();
       refreshPipelinePanel();
     }
 
@@ -25686,6 +25937,8 @@
 
       if (state.dateFrom && state.dateTo) {
         saveCustomDateRange();
+        // Range is complete and valid: close the period popover and load it.
+        if (usesCrmClientDashboard()) closePeriodPicker();
         applyDataFilters(false);
       }
     }
@@ -26156,55 +26409,224 @@
       return Number(year) === currentYear ? month : 12;
     }
 
-    function renderClientPeriodOptions() {
-      const years = getClientPeriodYears();
-      if (!clientPeriodYear || !years.includes(Number(clientPeriodYear))) {
-        clientPeriodYear = years[0];
-      }
-      const maxMonth = getClientPeriodMaxMonth(clientPeriodYear);
-      const monthOptions = CLIENT_MONTH_NAMES
-        .slice(0, maxMonth)
-        .map((name, index) => `<option value="${index + 1}"${String(clientPeriodMonth) === String(index + 1) ? ' selected' : ''}>${name}</option>`)
-        .join('');
-      return {
-        yearHtml: years
-          .map((year) => `<option value="${year}"${Number(clientPeriodYear) === year ? ' selected' : ''}>${year}</option>`)
-          .join(''),
-        monthHtml: `
-          <option value="" disabled${clientPeriodMonth ? '' : ' selected'}>Måned</option>
-          <option value="all"${clientPeriodMonth === 'all' ? ' selected' : ''}>Hele året</option>
-          ${monthOptions}
-        `,
-      };
-    }
-
-    // A month/year picked from the dropdowns (as opposed to the free From/To Custom range).
+    // A month/year picked in the period popover (as opposed to a free From/To range).
     function isClientPeriodPickActive() {
       return usesCrmClientDashboard() && state.preset === 'custom' && Boolean(clientPeriodMonth);
     }
 
-    // Year + Month dropdowns shown next to the preset buttons (client view only).
-    function renderClientPeriodSelects() {
-      const { yearHtml, monthHtml } = renderClientPeriodOptions();
-      const activeClass = isClientPeriodPickActive() ? ' is-active' : '';
+    /* ---------- Client header: quick periods + "Anden periode" popover ---------- */
+
+    let periodPickerViewYear = null;
+
+    // Year shown in the month grid (separate from the applied selection until a month is chosen).
+    function getPeriodPickerViewYear() {
+      const years = getClientPeriodYears();
+      if (!periodPickerViewYear || !years.includes(Number(periodPickerViewYear))) {
+        periodPickerViewYear = clientPeriodYear && years.includes(Number(clientPeriodYear))
+          ? Number(clientPeriodYear)
+          : years[0];
+      }
+      return Number(periodPickerViewYear);
+    }
+
+    // Text on the picker button: the chosen month/year/range, or the generic label.
+    function getPeriodPickerLabel() {
+      if (state.preset !== 'custom') return 'Anden periode';
+      if (clientPeriodMonth && clientPeriodYear) {
+        return clientPeriodMonth === 'all'
+          ? String(clientPeriodYear)
+          : `${CLIENT_MONTH_NAMES[Number(clientPeriodMonth) - 1]} ${clientPeriodYear}`;
+      }
+      if (state.dateFrom && state.dateTo && comparisonHelpers()) {
+        return comparisonHelpers().formatComparisonRangeLabel({ start: state.dateFrom, end: state.dateTo }, getTodayIso());
+      }
+      return 'Anden periode';
+    }
+
+    function renderPeriodMonthGrid(viewYear) {
+      const maxMonth = getClientPeriodMaxMonth(viewYear);
+      const { year: currentYear, month: currentMonth } = getCalendarPartsInTimeZone(getDashboardTimeZone());
+      return CLIENT_MONTH_NAMES.map((name, index) => {
+        const month = index + 1;
+        const disabled = month > maxMonth;
+        const selected = isClientPeriodPickActive()
+          && Number(clientPeriodYear) === viewYear
+          && String(clientPeriodMonth) === String(month);
+        const isCurrent = viewYear === currentYear && month === currentMonth;
+        return `<button type="button" class="period-month${selected ? ' is-selected' : ''}${isCurrent ? ' is-current' : ''}" data-month="${month}" aria-label="${name} ${viewYear}" ${selected ? 'aria-pressed="true"' : ''} ${disabled ? 'disabled' : ''} onclick="selectPeriodMonth(${month})">${name.slice(0, 3)}</button>`;
+      }).join('');
+    }
+
+    function renderClientPresetSegments() {
+      const items = [
+        ['all', 'Til dato'],
+        ['month', 'Denne måned'],
+        ['lastMonth', 'Sidste måned'],
+        ['year', 'I år'],
+      ];
       return `
-        <div class="client-period-group" role="group" aria-label="Vælg periode">
-          <select id="client-period-year" class="client-period-select${activeClass}" aria-label="År" onchange="onClientPeriodYearChange(this.value)">${yearHtml}</select>
-          <select id="client-period-month" class="client-period-select${activeClass}" aria-label="Måned" onchange="onClientPeriodMonthChange(this.value)">${monthHtml}</select>
+        <div class="period-seg" role="group" aria-label="Periode">
+          ${items.map(([preset, label]) => `<button type="button" class="period-seg-btn${state.preset === preset ? ' active' : ''}" data-preset="${preset}" aria-pressed="${state.preset === preset}" onclick="applyPreset('${preset}')">${label}</button>`).join('')}
         </div>
       `;
     }
 
+    function renderPeriodPicker() {
+      const viewYear = getPeriodPickerViewYear();
+      const years = getClientPeriodYears();
+      const wholeYearSelected = isClientPeriodPickActive()
+        && Number(clientPeriodYear) === viewYear
+        && clientPeriodMonth === 'all';
+      return `
+        <div class="period-picker" id="period-picker">
+          <button type="button" class="compare-btn period-picker-btn${state.preset === 'custom' ? ' is-active' : ''}" id="period-picker-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="period-popover" onclick="togglePeriodPicker(event)">
+            <span class="period-picker-icon" aria-hidden="true">${ICON_CALENDAR}</span>
+            <span class="compare-btn-label" id="period-picker-label">${esc(getPeriodPickerLabel())}</span>
+            <span class="compare-btn-caret" aria-hidden="true"></span>
+          </button>
+          <div class="compare-menu period-popover" id="period-popover" role="dialog" aria-label="Vælg periode" hidden onclick="event.stopPropagation()">
+            <div class="period-popover-head">
+              <div class="period-year-nav">
+                <button type="button" id="period-year-prev" aria-label="Tidligere år" ${viewYear === years[years.length - 1] ? 'disabled' : ''} onclick="stepPeriodYear(-1)">‹</button>
+                <span id="period-year-label" aria-live="polite">${viewYear}</span>
+                <button type="button" id="period-year-next" aria-label="Næste år" ${viewYear === years[0] ? 'disabled' : ''} onclick="stepPeriodYear(1)">›</button>
+              </div>
+              <button type="button" class="period-whole-year${wholeYearSelected ? ' is-selected' : ''}" id="period-whole-year" onclick="selectPeriodMonth('all')">Hele året</button>
+            </div>
+            <div class="period-month-grid" id="period-month-grid" role="group" aria-label="Måned" onkeydown="onPeriodGridKeydown(event)">${renderPeriodMonthGrid(viewYear)}</div>
+            <div class="period-popover-section">
+              <div class="period-popover-title">Egen periode</div>
+              <div class="period-custom-range">
+                ${renderDatePickerTrigger('dateFrom', 'Fra', 'Fra dato')}
+                <span class="date-range-separator" aria-hidden="true">→</span>
+                ${renderDatePickerTrigger('dateTo', 'Til', 'Til dato')}
+              </div>
+              <div class="date-range-error" id="date-range-error" hidden></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Update the picker in place (never re-render it while open: the date picker may be in use).
     function refreshClientPeriodPicker() {
-      const yearSelect = document.getElementById('client-period-year');
-      const monthSelect = document.getElementById('client-period-month');
-      if (!yearSelect || !monthSelect) return;
-      const { yearHtml, monthHtml } = renderClientPeriodOptions();
-      yearSelect.innerHTML = yearHtml;
-      monthSelect.innerHTML = monthHtml;
-      const active = isClientPeriodPickActive();
-      yearSelect.classList.toggle('is-active', active);
-      monthSelect.classList.toggle('is-active', active);
+      const button = document.getElementById('period-picker-btn');
+      if (!button) return;
+      button.classList.toggle('is-active', state.preset === 'custom');
+      const label = document.getElementById('period-picker-label');
+      if (label) label.textContent = getPeriodPickerLabel();
+
+      const viewYear = getPeriodPickerViewYear();
+      const years = getClientPeriodYears();
+      const yearLabel = document.getElementById('period-year-label');
+      if (yearLabel) yearLabel.textContent = String(viewYear);
+      const prev = document.getElementById('period-year-prev');
+      const next = document.getElementById('period-year-next');
+      if (prev) prev.disabled = viewYear === years[years.length - 1];
+      if (next) next.disabled = viewYear === years[0];
+      const grid = document.getElementById('period-month-grid');
+      if (grid) grid.innerHTML = renderPeriodMonthGrid(viewYear);
+      const whole = document.getElementById('period-whole-year');
+      if (whole) {
+        whole.classList.toggle('is-selected', isClientPeriodPickActive()
+          && Number(clientPeriodYear) === viewYear
+          && clientPeriodMonth === 'all');
+      }
+    }
+
+    function closePeriodPicker() {
+      const popover = document.getElementById('period-popover');
+      if (popover) popover.hidden = true;
+      document.getElementById('period-picker-btn')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function togglePeriodPicker(event) {
+      event?.stopPropagation();
+      const popover = document.getElementById('period-popover');
+      if (!popover) return;
+      const opening = popover.hidden;
+      closeCompareMenu();
+      if (opening) {
+        periodPickerViewYear = null;
+        refreshClientPeriodPicker();
+        popover.hidden = false;
+        document.getElementById('period-picker-btn')?.setAttribute('aria-expanded', 'true');
+        popover.querySelector('.period-month.is-selected, .period-month.is-current, .period-month:not(:disabled)')?.focus();
+      } else {
+        closePeriodPicker();
+      }
+      bindHeaderPopoverDismiss();
+    }
+
+    // Older/newer year in the month grid. The years list is newest first.
+    function stepPeriodYear(direction) {
+      const years = getClientPeriodYears();
+      const index = years.indexOf(getPeriodPickerViewYear());
+      const nextIndex = direction < 0 ? index + 1 : index - 1;
+      if (nextIndex < 0 || nextIndex >= years.length) return;
+      periodPickerViewYear = years[nextIndex];
+      refreshClientPeriodPicker();
+    }
+
+    function selectPeriodMonth(month) {
+      clientPeriodYear = getPeriodPickerViewYear();
+      clientPeriodMonth = month === 'all' ? 'all' : String(month);
+      closePeriodPicker();
+      applyClientPeriodSelection();
+    }
+
+    // Arrow keys move between month tiles (4 per row).
+    function onPeriodGridKeydown(event) {
+      const steps = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -4, ArrowDown: 4 };
+      const step = steps[event.key];
+      if (!step) return;
+      const tiles = [...document.querySelectorAll('#period-month-grid .period-month')];
+      let index = tiles.indexOf(document.activeElement);
+      if (index < 0) return;
+      event.preventDefault();
+      for (let guard = 0; guard < tiles.length; guard += 1) {
+        index += step;
+        if (index < 0 || index >= tiles.length) return;
+        if (!tiles[index].disabled) {
+          tiles[index].focus();
+          return;
+        }
+      }
+    }
+
+    let headerPopoverDismissBound = false;
+
+    // One outside-click / Escape handler for both header popovers.
+    function bindHeaderPopoverDismiss() {
+      if (headerPopoverDismissBound) return;
+      headerPopoverDismissBound = true;
+      document.addEventListener('click', (event) => {
+        const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+        // Choosing a date in the date picker must not close the popover it was opened from.
+        if (path.some((node) => node && (node.id === 'date-picker-popover' || node.id === 'date-picker-backdrop'))) return;
+        closePeriodPicker();
+        closeCompareMenu();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        closePeriodPicker();
+        closeCompareMenu();
+      });
+    }
+
+    // Subtitle under the account name always states which dates are on screen.
+    function getHeroSubtitleText() {
+      if (!usesCrmClientDashboard()) return 'Performance dashboard · Pipeline & omsætning';
+      const range = getCurrentBoundedRange();
+      const periodText = range && comparisonHelpers()
+        ? comparisonHelpers().formatComparisonRangeLabel(range, getTodayIso())
+        : 'Til dato';
+      return `Performance dashboard · ${periodText}`;
+    }
+
+    function updateHeroSubtitle() {
+      const element = document.getElementById('hero-subtitle');
+      if (element) element.textContent = getHeroSubtitleText();
     }
 
     function applyClientPeriodSelection() {
@@ -26241,20 +26663,6 @@
       refreshClientPeriodPicker();
     }
 
-    function onClientPeriodYearChange(value) {
-      clientPeriodYear = Number(value);
-      if (clientPeriodMonth !== 'all' && Number(clientPeriodMonth) > getClientPeriodMaxMonth(clientPeriodYear)) {
-        clientPeriodMonth = 'all';
-      }
-      refreshClientPeriodPicker();
-      applyClientPeriodSelection();
-    }
-
-    function onClientPeriodMonthChange(value) {
-      clientPeriodMonth = value;
-      applyClientPeriodSelection();
-    }
-
     function renderCustomDateInputs() {
       return `
         <div class="custom-date-row" id="custom-date-row" ${(state.preset !== 'custom' || isClientPeriodPickActive()) ? 'hidden' : ''}>
@@ -26269,13 +26677,23 @@
     }
 
     function renderPresetControls(inHeader = false) {
+      if (usesCrmClientDashboard()) {
+        // Client header: quick periods, one "Anden periode" popover, comparison chip.
+        return `
+          <div class="preset-controls preset-controls--header">
+            <div class="preset-btn-row header-presets">
+              ${renderClientPresetSegments()}
+              ${renderPeriodPicker()}
+              ${renderCompareControl()}
+            </div>
+          </div>
+        `;
+      }
       const headerClass = inHeader ? ' header-presets' : '';
       return `
         <div class="preset-controls${inHeader ? ' preset-controls--header' : ''}">
           <div class="preset-btn-row${headerClass}">
             ${renderPresetButtons()}
-            ${usesCrmClientDashboard() ? renderClientPeriodSelects() : ''}
-            ${usesCrmClientDashboard() ? renderCompareControl() : ''}
           </div>
           ${renderCustomDateInputs()}
         </div>
@@ -26756,7 +27174,7 @@
           <div class="header">
             <div>
               <h1>${esc(accountName)}</h1>
-              <p>Performance dashboard · Pipeline & omsætning</p>
+              <p id="hero-subtitle">${esc(getHeroSubtitleText())}</p>
             </div>
             ${IS_ADMIN ? '' : `
             <div class="header-actions header-actions--client">
