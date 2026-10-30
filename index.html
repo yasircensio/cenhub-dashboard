@@ -717,6 +717,41 @@
       color: rgba(255, 255, 255, 0.72);
     }
 
+    .client-period-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-color: var(--panel);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-position: right 12px center;
+      background-repeat: no-repeat;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      min-width: 132px;
+      padding: 10px 34px 10px 12px;
+    }
+
+    .client-period-select:focus-visible {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.14);
+      outline: none;
+    }
+
+    .preset-controls--header .client-period-select {
+      background-color: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+
+    .preset-controls--header .client-period-select option {
+      background: #1b1109;
+      color: #fff;
+    }
+
     .date-range-error {
       color: var(--danger);
       font-size: 12px;
@@ -24986,6 +25021,7 @@
 
       updateCustomDateRowVisibility();
       syncDatePickerDisplays();
+      refreshClientPeriodPicker();
       refreshPipelinePanel();
     }
 
@@ -25080,6 +25116,7 @@
     }
 
     function applyMarketingData(data, fbMetrics) {
+      trackClientEarliestDataYear(data?.performance);
       if (!window.MarketingMetrics) return data;
       const marketingPreset = resolveMarketingPreset();
       const useMarketingDateRange = marketingPreset === 'custom';
@@ -25323,7 +25360,115 @@
       `;
     }
 
+    const CLIENT_MONTH_NAMES = [
+      'Januar', 'Februar', 'Marts', 'April', 'Maj', 'Juni',
+      'Juli', 'August', 'September', 'Oktober', 'November', 'December',
+    ];
+    let clientPeriodYear = null;
+    let clientPeriodMonth = '';
+    let clientEarliestDataYear = null;
+
+    function trackClientEarliestDataYear(performance) {
+      if (state.preset !== 'all') return;
+      const startYear = Number(String(performance?.range?.start || '').slice(0, 4));
+      if (startYear >= 2000) {
+        clientEarliestDataYear = clientEarliestDataYear
+          ? Math.min(clientEarliestDataYear, startYear)
+          : startYear;
+      }
+    }
+
+    function getClientPeriodYears() {
+      const { year: currentYear } = getCalendarPartsInTimeZone(getDashboardTimeZone());
+      const earliest = Math.min(clientEarliestDataYear || (currentYear - 2), currentYear);
+      const years = [];
+      for (let year = currentYear; year >= earliest; year -= 1) years.push(year);
+      return years;
+    }
+
+    function getClientPeriodMaxMonth(year) {
+      const { year: currentYear, month } = getCalendarPartsInTimeZone(getDashboardTimeZone());
+      return Number(year) === currentYear ? month : 12;
+    }
+
+    function renderClientPeriodOptions() {
+      const years = getClientPeriodYears();
+      if (!clientPeriodYear || !years.includes(Number(clientPeriodYear))) {
+        clientPeriodYear = years[0];
+      }
+      const maxMonth = getClientPeriodMaxMonth(clientPeriodYear);
+      const monthOptions = CLIENT_MONTH_NAMES
+        .slice(0, maxMonth)
+        .map((name, index) => `<option value="${index + 1}"${String(clientPeriodMonth) === String(index + 1) ? ' selected' : ''}>${name}</option>`)
+        .join('');
+      return {
+        yearHtml: years
+          .map((year) => `<option value="${year}"${Number(clientPeriodYear) === year ? ' selected' : ''}>${year}</option>`)
+          .join(''),
+        monthHtml: `
+          <option value="" disabled${clientPeriodMonth ? '' : ' selected'}>Vælg måned</option>
+          <option value="all"${clientPeriodMonth === 'all' ? ' selected' : ''}>Hele året</option>
+          ${monthOptions}
+        `,
+      };
+    }
+
+    function renderClientPeriodPicker() {
+      const { yearHtml, monthHtml } = renderClientPeriodOptions();
+      return `
+        <div class="custom-date-row client-period-row" id="custom-date-row" ${state.preset !== 'custom' ? 'hidden' : ''}>
+          <select id="client-period-year" class="client-period-select" aria-label="År" onchange="onClientPeriodYearChange(this.value)">${yearHtml}</select>
+          <select id="client-period-month" class="client-period-select" aria-label="Måned" onchange="onClientPeriodMonthChange(this.value)">${monthHtml}</select>
+        </div>
+      `;
+    }
+
+    function refreshClientPeriodPicker() {
+      const yearSelect = document.getElementById('client-period-year');
+      const monthSelect = document.getElementById('client-period-month');
+      if (!yearSelect || !monthSelect) return;
+      const { yearHtml, monthHtml } = renderClientPeriodOptions();
+      yearSelect.innerHTML = yearHtml;
+      monthSelect.innerHTML = monthHtml;
+    }
+
+    function applyClientPeriodSelection() {
+      if (!clientPeriodYear || !clientPeriodMonth) return;
+      const year = Number(clientPeriodYear);
+      const todayIso = getTodayIso();
+      let range;
+      if (clientPeriodMonth === 'all') {
+        range = { start: `${year}-01-01`, end: `${year}-12-31` };
+      } else {
+        range = formatMonthDateRange(year, Number(clientPeriodMonth));
+      }
+      if (todayIso && range.end > todayIso) range.end = todayIso;
+
+      clearDateRangeError();
+      state.preset = 'custom';
+      state.dateField = 'createdAt';
+      state.dateFrom = range.start;
+      state.dateTo = range.end;
+      updateFilterUi();
+      applyDataFilters(false);
+    }
+
+    function onClientPeriodYearChange(value) {
+      clientPeriodYear = Number(value);
+      if (clientPeriodMonth !== 'all' && Number(clientPeriodMonth) > getClientPeriodMaxMonth(clientPeriodYear)) {
+        clientPeriodMonth = 'all';
+      }
+      refreshClientPeriodPicker();
+      applyClientPeriodSelection();
+    }
+
+    function onClientPeriodMonthChange(value) {
+      clientPeriodMonth = value;
+      applyClientPeriodSelection();
+    }
+
     function renderCustomDateInputs() {
+      if (usesCrmClientDashboard()) return renderClientPeriodPicker();
       return `
         <div class="custom-date-row" id="custom-date-row" ${state.preset !== 'custom' ? 'hidden' : ''}>
           <div class="custom-date-range">
@@ -26087,6 +26232,20 @@
     function applyPreset(preset) {
       clearDateRangeError();
       closeDatePicker();
+      if (preset === 'custom' && usesCrmClientDashboard()) {
+        // Client view: Year + Month dropdowns instead of free date pickers.
+        state.preset = 'custom';
+        state.dateField = 'createdAt';
+        if (clientPeriodYear && clientPeriodMonth) {
+          applyClientPeriodSelection();
+          return;
+        }
+        state.dateFrom = '';
+        state.dateTo = '';
+        updateFilterUi();
+        document.getElementById('client-period-month')?.focus();
+        return;
+      }
       setPreset(preset);
       updateFilterUi();
       if (preset === 'custom') {
@@ -26100,7 +26259,7 @@
     function applyDataFilters(syncFromDom = true) {
       if (syncFromDom) syncFiltersFromDom();
 
-      if (state.preset === 'custom') {
+      if (state.preset === 'custom' && !usesCrmClientDashboard()) {
         if (hasPartialDateRange()) {
           showDateRangeError('Select both From and To dates.');
           return;
