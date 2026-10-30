@@ -3623,6 +3623,104 @@
       min-height: 156px;
     }
 
+    .crm-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .crm-kpi-grid > .card {
+      min-height: 132px;
+    }
+
+    .crm-kpi-card--pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .crm-kpi-metric-block .card-label {
+      margin-bottom: 6px;
+    }
+
+    .crm-kpi-metric-block .card-value {
+      font-size: 24px;
+    }
+
+    .crm-development-chart {
+      margin-bottom: 14px;
+    }
+
+    .crm-development-chart .crm-chart-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .crm-development-chart .crm-chart-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .crm-development-chart .crm-chart-subtitle {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .crm-chart-metric-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .crm-chart-metric-pill {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(19, 139, 83, 0.08);
+      color: var(--text-muted);
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .crm-chart-metric-pill.is-active {
+      background: #bbf7d0;
+      color: #166534;
+    }
+
+    .crm-chart-canvas-wrap {
+      position: relative;
+      height: 280px;
+    }
+
+    .crm-legacy-kpi-section {
+      margin-top: 14px;
+    }
+
+    .crm-legacy-kpi-section .section-title {
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 1100px) {
+      .crm-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .crm-kpi-grid { grid-template-columns: 1fr; }
+      .crm-kpi-card--pair { grid-template-columns: 1fr; }
+      .crm-chart-metric-pills { justify-content: flex-start; }
+    }
+
     .card {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -23810,9 +23908,304 @@
     function destroyCharts() {
       Object.values(chartInstances).forEach((chart) => chart.destroy());
       chartInstances = {};
+      destroyCrmDevelopmentChart();
+    }
+
+    let crmDevelopmentMetricId = 'revenue';
+    let crmDevelopmentChartInstance = null;
+
+    function usesCrmClientDashboard() {
+      return IS_CLIENT_VIEW && !IS_PREVIEW;
+    }
+
+    function crmSafeDivide(numerator, denominator) {
+      const num = Number(numerator) || 0;
+      const den = Number(denominator) || 0;
+      if (!den) return null;
+      const result = num / den;
+      return Number.isFinite(result) ? result : null;
+    }
+
+    function crmMetricValue(totals, metricId) {
+      const t = totals || {};
+      switch (metricId) {
+        case 'revenue': return t.revenue ?? 0;
+        case 'profit':
+          if (Number.isFinite(Number(t.profit))) return Number(t.profit);
+          return (Number(t.revenue) || 0) - (Number(t.adSpend) || 0);
+        case 'roas': return crmSafeDivide(t.revenue, t.adSpend);
+        case 'customers': return t.customers ?? 0;
+        case 'adSpend': return t.adSpend ?? 0;
+        case 'closeRate':
+          if (Number.isFinite(Number(t.closeRate))) return Number(t.closeRate);
+          return crmSafeDivide(t.customers, t.leads) != null
+            ? (crmSafeDivide(t.customers, t.leads) * 100)
+            : null;
+        case 'cpl': return t.cpl ?? crmSafeDivide(t.adSpend, t.leads);
+        case 'leads': return t.leads ?? 0;
+        case 'ltv': return t.ltv;
+        case 'cac': return t.cac ?? crmSafeDivide(t.adSpend, t.customers);
+        default: return null;
+      }
+    }
+
+    function formatCrmMetricValue(metricId, value) {
+      if (value == null || (metricId !== 'ltv' && Number.isNaN(Number(value)))) return '—';
+      switch (metricId) {
+        case 'revenue':
+        case 'profit':
+        case 'adSpend':
+        case 'cpl':
+        case 'cac':
+          return `Dkr ${fmtCompact(value)}`;
+        case 'roas':
+          return fmtRoas(value);
+        case 'closeRate':
+          return fmtPct(value);
+        case 'leads':
+        case 'customers':
+          return fmt(value);
+        case 'ltv':
+          return '—';
+        default:
+          return String(value);
+      }
+    }
+
+    const CRM_KPI_LAYOUT = [
+      { kind: 'single', id: 'revenue' },
+      { kind: 'single', id: 'profit' },
+      { kind: 'single', id: 'roas' },
+      { kind: 'single', id: 'customers' },
+      { kind: 'single', id: 'adSpend' },
+      { kind: 'single', id: 'closeRate' },
+      { kind: 'pair', ids: ['cpl', 'leads'] },
+      { kind: 'pair', ids: ['ltv', 'cac'] },
+    ];
+
+    const CRM_KPI_LABELS = {
+      revenue: { label: 'Omsætning', sub: 'Omsætning fra kunder i perioden' },
+      profit: { label: 'Bundlinje POAS', sub: 'Bundlinje minus annonceforbrug' },
+      roas: { label: 'ROAS', sub: 'Omsætning ÷ annonceforbrug' },
+      customers: { label: 'Lukkede kunder', sub: 'Unikke kunder vundet i perioden' },
+      adSpend: { label: 'Annoncebudget', sub: 'Samlet annonceudgift i perioden' },
+      closeRate: { label: 'Close rate', sub: 'Vundne kunder ÷ leads' },
+      cpl: { label: 'CPL', sub: 'Pris pr. lead' },
+      leads: { label: 'Leads', sub: 'Nye leads i perioden' },
+      ltv: { label: 'LTV', sub: 'Life time value (kommer snart)' },
+      cac: { label: 'CAC', sub: 'Pris pr. lukket kunde' },
+    };
+
+    const CRM_CHART_METRICS = ['revenue', 'profit', 'adSpend', 'leads', 'customers', 'cpl', 'cac', 'closeRate'];
+
+    function renderCrmKpiMetricBlock(metricId, totals) {
+      const meta = CRM_KPI_LABELS[metricId] || { label: metricId, sub: '' };
+      const value = formatCrmMetricValue(metricId, crmMetricValue(totals, metricId));
+      return `
+        <div class="crm-kpi-metric-block">
+          <div class="card-label">${meta.label}</div>
+          <div class="card-value">${value}</div>
+          ${meta.sub ? `<div class="card-sub">${meta.sub}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function renderCrmKpiGrid(performance) {
+      if (!performance?.totals) {
+        return '<div class="empty-section">Ingen performance-data for valgt periode.</div>';
+      }
+      const totals = performance.totals;
+      const cards = CRM_KPI_LAYOUT.map((layout) => {
+        if (layout.kind === 'single') {
+          return `
+            <div class="card${layout.id === 'revenue' ? ' primary' : ''}">
+              ${renderCrmKpiMetricBlock(layout.id, totals)}
+            </div>
+          `;
+        }
+        return `
+          <div class="card crm-kpi-card--pair">
+            ${renderCrmKpiMetricBlock(layout.ids[0], totals)}
+            ${renderCrmKpiMetricBlock(layout.ids[1], totals)}
+          </div>
+        `;
+      });
+      return `<div class="crm-kpi-grid">${cards.join('')}</div>`;
+    }
+
+    function crmBucketMetricValue(bucket, metricId) {
+      switch (metricId) {
+        case 'revenue': return bucket.revenue || 0;
+        case 'profit':
+          if (Number.isFinite(Number(bucket.profit))) return Number(bucket.profit);
+          return (bucket.revenue || 0) - (bucket.adSpend || 0);
+        case 'adSpend': return bucket.adSpend || 0;
+        case 'leads': return bucket.leads || 0;
+        case 'customers': return bucket.customers || 0;
+        case 'cpl': return crmSafeDivide(bucket.adSpend, bucket.leads) || 0;
+        case 'cac': return crmSafeDivide(bucket.adSpend, bucket.customers) || 0;
+        case 'closeRate': {
+          const rate = crmSafeDivide(bucket.customers, bucket.leads);
+          return rate != null ? rate * 100 : 0;
+        }
+        default: return 0;
+      }
+    }
+
+    function formatCrmBucketLabel(bucket, granularity) {
+      const start = bucket.start?.slice(0, 10) || '';
+      if (granularity === 'month') {
+        const [year, month] = start.split('-');
+        const date = new Date(Number(year), Number(month) - 1, 1);
+        return date.toLocaleDateString('da-DK', { month: 'short', year: 'numeric' });
+      }
+      if (granularity === 'week') {
+        const end = bucket.end?.slice(0, 10) || start;
+        return `${start.slice(8, 10)}/${start.slice(5, 7)}–${end.slice(8, 10)}/${end.slice(5, 7)}`;
+      }
+      return `${start.slice(8, 10)}/${start.slice(5, 7)}`;
+    }
+
+    function crmGranularityLabel(granularity) {
+      if (granularity === 'week') return 'uge';
+      if (granularity === 'month') return 'måned';
+      return 'dag';
+    }
+
+    function renderCrmDevelopmentChart(performance) {
+      if (!performance) return '';
+      const metricId = crmDevelopmentMetricId;
+      const metricLabel = CRM_KPI_LABELS[metricId]?.label || metricId;
+      const periodLabel = performance.periodLabel || 'Valgt periode';
+      const pills = CRM_CHART_METRICS.map((id) => {
+        const label = CRM_KPI_LABELS[id]?.label || id;
+        const active = id === metricId ? ' is-active' : '';
+        return `<button type="button" class="crm-chart-metric-pill${active}" data-crm-chart-metric="${id}">${label}</button>`;
+      }).join('');
+
+      return `
+        <div class="card crm-development-chart" id="crm-development-chart">
+          <div class="crm-chart-header">
+            <div>
+              <div class="crm-chart-title">Udvikling over tid</div>
+              <div class="crm-chart-subtitle">${esc(periodLabel)} · ${crmGranularityLabel(performance.granularity)} · ${esc(metricLabel)}</div>
+            </div>
+            <div class="crm-chart-metric-pills">${pills}</div>
+          </div>
+          <div class="crm-chart-canvas-wrap">
+            <canvas id="crm-development-chart-canvas" aria-label="Udviklingsgraf"></canvas>
+          </div>
+        </div>
+      `;
+    }
+
+    function destroyCrmDevelopmentChart() {
+      if (crmDevelopmentChartInstance) {
+        crmDevelopmentChartInstance.destroy();
+        crmDevelopmentChartInstance = null;
+      }
+    }
+
+    function mountCrmDevelopmentChart(performance) {
+      if (!usesCrmClientDashboard() || typeof Chart === 'undefined' || !performance?.buckets?.length) {
+        destroyCrmDevelopmentChart();
+        return;
+      }
+
+      const canvas = document.getElementById('crm-development-chart-canvas');
+      if (!canvas) return;
+
+      destroyCrmDevelopmentChart();
+
+      const metricId = crmDevelopmentMetricId;
+      const labels = performance.buckets.map((bucket) => formatCrmBucketLabel(bucket, performance.granularity));
+      const mainData = performance.buckets.map((bucket) => crmBucketMetricValue(bucket, metricId));
+      const datasets = [{
+        label: CRM_KPI_LABELS[metricId]?.label || metricId,
+        data: mainData,
+        borderColor: '#46C7A0',
+        backgroundColor: 'rgba(70, 199, 160, 0.22)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: performance.granularity === 'day' ? 0 : 3,
+        pointHoverRadius: 4,
+        borderWidth: 2,
+      }];
+
+      if (metricId === 'revenue') {
+        datasets.push({
+          label: CRM_KPI_LABELS.adSpend.label,
+          data: performance.buckets.map((bucket) => bucket.adSpend || 0),
+          borderColor: '#1877F2',
+          backgroundColor: 'transparent',
+          fill: false,
+          tension: 0.35,
+          pointRadius: 0,
+          borderWidth: 2,
+          yAxisID: 'y',
+        });
+      }
+
+      const currencyMetrics = new Set(['revenue', 'profit', 'adSpend', 'cpl', 'cac']);
+      crmDevelopmentChartInstance = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: datasets.length > 1, position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label(context) {
+                  const value = context.parsed.y;
+                  if (metricId === 'closeRate' || context.dataset.label === CRM_KPI_LABELS.closeRate?.label) {
+                    return `${context.dataset.label}: ${fmtPct(value)}`;
+                  }
+                  if (currencyMetrics.has(metricId) || context.dataset.label === CRM_KPI_LABELS.adSpend.label) {
+                    return `${context.dataset.label}: Dkr ${fmt(value)}`;
+                  }
+                  return `${context.dataset.label}: ${fmt(value)}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback(value) {
+                  if (metricId === 'closeRate') return `${value}%`;
+                  if (currencyMetrics.has(metricId)) return fmtCompact(value);
+                  return fmt(value);
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const wrap = document.getElementById('crm-development-chart');
+      if (wrap && !wrap.dataset.crmChartBound) {
+        wrap.dataset.crmChartBound = '1';
+        wrap.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-crm-chart-metric]');
+          if (!button) return;
+          const nextMetric = button.getAttribute('data-crm-chart-metric');
+          if (!nextMetric || nextMetric === crmDevelopmentMetricId) return;
+          crmDevelopmentMetricId = nextMetric;
+          if (cachedData) updateDashboardContent(cachedData);
+        });
+      }
     }
 
     function mountCharts(data) {
+      if (usesCrmClientDashboard()) return;
       if (typeof Chart === 'undefined' || !window.DashboardCharts) return;
 
       destroyCharts();
@@ -25271,16 +25664,11 @@
       `;
     }
 
-    function renderDashboardContent(data) {
+    function renderDashboardMiddleSections(data) {
       const { kpis, statusBreakdown, sourceReport, assigneeReport, pipelines, filters } = data;
       const showStatus = isVisible('sections', 'statusBreakdown');
 
       return `
-        ${renderMetricsChangeBanner(data)}
-        ${renderKpiCards(kpis)}
-
-        ${renderChartsSection()}
-
         ${showStatus ? `
           <div class="card">
             <div class="section-title">Opportunity Status (Cards)</div>
@@ -25368,6 +25756,34 @@
           Active filters: source=${filters.source}, assignee=${filters.assignedTo}, dates=${formatActiveDateFilter(filters)}.
         </div>
         ` : ''}
+      `;
+    }
+
+    function renderDashboardContent(data) {
+      const { kpis, performance } = data;
+
+      if (usesCrmClientDashboard()) {
+        return `
+          ${renderMetricsChangeBanner(data)}
+          ${renderCrmKpiGrid(performance)}
+          ${renderCrmDevelopmentChart(performance)}
+          ${renderDashboardMiddleSections(data)}
+          <div class="crm-legacy-kpi-section">
+            <div class="section-title">Detaljerede nøgletal</div>
+            ${renderKpiCards(kpis)}
+          </div>
+          <div class="brand-footer">
+            Dashboard by Cenhub
+            · Holstebro
+          </div>
+        `;
+      }
+
+      return `
+        ${renderMetricsChangeBanner(data)}
+        ${renderKpiCards(kpis)}
+        ${renderChartsSection()}
+        ${renderDashboardMiddleSections(data)}
         <div class="brand-footer">
           Dashboard by Cenhub
           · Holstebro
@@ -25398,6 +25814,7 @@
       if (content) {
         content.innerHTML = renderDashboardContent(data);
         mountCharts(data);
+        mountCrmDevelopmentChart(data.performance);
       }
     }
 
