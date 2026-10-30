@@ -3704,10 +3704,12 @@
       font: inherit;
       font-size: 12px;
       font-weight: 500;
+      box-sizing: border-box;
       gap: 7px;
       line-height: 1.25;
       max-width: 230px;
-      padding: 9px 14px;
+      min-height: 40px;
+      padding: 9px 16px;
       transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       white-space: nowrap;
     }
@@ -3830,13 +3832,15 @@
     /* ---- Period picker: segmented quick periods + "Anden periode" popover ---- */
     /* Quick periods: one joined capsule (exactly one active). The selected segment is a
        full-height pill that touches the capsule edge on every side (no inner gap).
-       Total height stays 35px like the buttons next to it (2px border + 33px segments). */
+       One shared control height (40px) keeps it level with the buttons next to it. */
     .period-seg {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.18);
       border-radius: 999px;
+      box-sizing: border-box;
       display: inline-flex;
       gap: 0;
+      height: 40px;
       max-width: 100%;
       overflow: hidden;
       padding: 0;
@@ -3852,7 +3856,7 @@
       font-size: 12px;
       font-weight: 500;
       line-height: 1.25;
-      padding: 9px 16px;
+      padding: 0 17px;
       transition: background 0.15s ease, color 0.15s ease;
       white-space: nowrap;
     }
@@ -4062,12 +4066,14 @@
         display: grid;
         gap: 3px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        height: auto;
         overflow: visible;
         padding: 3px;
       }
 
       .header-presets .period-seg-btn {
         border-radius: 14px;
+        min-height: 36px;
       }
 
       .period-custom-range {
