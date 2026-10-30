@@ -166,6 +166,24 @@
       width: 100%;
     }
 
+    /* Full-width layout (?fullwidth=1): no centred 1280px box, only a thin inset so card edges and
+       shadows are not clipped by the iframe. Wins over the responsive padding rules below. */
+    body.layout-fullwidth .dashboard-shell {
+      max-width: none;
+      padding: 0 6px 24px;
+    }
+
+    body.layout-fullwidth .brand-topbar-inner {
+      max-width: none;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    body.layout-fullwidth .brand-topbar--centered {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
     .brand-topbar {
       background: var(--brand-topbar-gradient);
       box-shadow: 0 2px 16px rgba(0, 0, 0, 0.14);
