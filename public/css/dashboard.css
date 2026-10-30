@@ -3619,48 +3619,28 @@
     }
 
     .kpi-grid--client-top > .card {
-      justify-content: center;
+      justify-content: flex-start;
     }
 
     .crm-kpi-card--pair {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0;
-      align-items: stretch;
-      padding-left: 0;
-      padding-right: 0;
+      gap: 16px;
+      align-items: start;
     }
 
-    .crm-kpi-metric-block {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-width: 0;
-      padding: 0 18px;
-    }
-
-    .crm-kpi-metric-block--divider {
+    .crm-kpi-pair-divider {
       border-left: 1px solid var(--border);
+      padding-left: 16px;
+      min-width: 0;
     }
 
-    .crm-kpi-metric-block.is-compact .card-value {
-      font-size: 24px;
+    .crm-legacy-kpi-section {
+      margin-top: 4px;
     }
 
-    .crm-kpi-metric-block.is-compact .card-label {
-      font-size: 10px;
-    }
-
-    .crm-kpi-hint {
-      color: var(--text-soft);
-      font-size: 11px;
-      line-height: 1.35;
-      margin-top: 6px;
-      min-height: 1.35em;
-    }
-
-    .crm-kpi-hint.is-empty {
-      visibility: hidden;
+    .crm-legacy-kpi-section .section-title {
+      margin-bottom: 14px;
     }
 
     .crm-development-chart .crm-chart-header {
@@ -3711,11 +3691,11 @@
     @media (max-width: 640px) {
       .kpi-grid--client-top { grid-template-columns: 1fr; }
       .crm-kpi-card--pair { grid-template-columns: 1fr; }
-      .crm-kpi-metric-block--divider {
+      .crm-kpi-pair-divider {
         border-left: none;
         border-top: 1px solid var(--border);
+        padding-left: 0;
         padding-top: 14px;
-        margin-top: 4px;
       }
       .crm-chart-metric-pills { justify-content: flex-start; }
     }
