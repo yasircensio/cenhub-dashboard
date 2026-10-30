@@ -6684,6 +6684,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/lib/performance-merge.js"></script>
   <script src="/lib/marketing-metrics.js"></script>
   <script>
     (function ensureDashboardModeAttr() {
@@ -26002,6 +26003,9 @@
             ? new Date(cachedData.cachedAt).getTime()
             : Date.now();
         } catch (error) {
+          // #region agent log
+          fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',location:'index.html:loadDashboard',message:'loadDashboard error',data:{errorName:error?.name||'',errorMessage:String(error?.message||''),hasPerformanceMerge:!!(typeof globalThis!=='undefined'&&globalThis.PerformanceMerge)},timestamp:Date.now(),hypothesisId:'A',runId:'pre-fix'})}).catch(()=>{});
+          // #endregion
           if (generation !== fetchGeneration) return;
           if (error.name === 'AbortError') {
             if (!hasLayout) {

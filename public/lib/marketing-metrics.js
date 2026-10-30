@@ -548,12 +548,21 @@ function applyMarketingToDashboard(data, fbMetrics, preset, options = {}) {
 
   let performance = data.performance || null;
   if (performance) {
-    const { mergePerformanceMarketing } = require('./ghl-performance-buckets');
-    performance = mergePerformanceMarketing(performance, kpis, monthlyAdSpend, {
-      timeZone,
-      dateFrom: options.dateFrom || data.filters?.dateFrom || null,
-      dateTo: options.dateTo || data.filters?.dateTo || null,
-    });
+    // #region agent log
+    fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',location:'marketing-metrics.js:applyMarketingToDashboard',message:'performance merge branch',data:{hasPerformanceMerge:!!(typeof globalThis!=='undefined'&&globalThis.PerformanceMerge),bucketCount:performance.buckets?.length||0},timestamp:Date.now(),hypothesisId:'A',runId:'pre-fix'})}).catch(()=>{});
+    // #endregion
+    const mergeModule = (typeof globalThis !== 'undefined' && globalThis.PerformanceMerge)
+      || (typeof require !== 'undefined' ? require('./performance-merge') : null);
+    if (mergeModule?.mergePerformanceMarketing) {
+      performance = mergeModule.mergePerformanceMarketing(performance, kpis, monthlyAdSpend, {
+        timeZone,
+        dateFrom: options.dateFrom || data.filters?.dateFrom || null,
+        dateTo: options.dateTo || data.filters?.dateTo || null,
+      });
+      // #region agent log
+      fetch('http://127.0.0.1:7412/ingest/8036624f-bbd1-4142-b516-bb72c323b06c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f182bb'},body:JSON.stringify({sessionId:'f182bb',location:'marketing-metrics.js:applyMarketingToDashboard',message:'performance merge ok',data:{adSpendTotal:performance.totals?.adSpend??null},timestamp:Date.now(),hypothesisId:'A',runId:'pre-fix'})}).catch(()=>{});
+      // #endregion
+    }
   }
 
   return {
