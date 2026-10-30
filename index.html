@@ -722,38 +722,34 @@
       -webkit-appearance: none;
       background-color: var(--panel);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-position: right 12px center;
+      background-position: right 10px center;
       background-repeat: no-repeat;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       color: var(--text);
       cursor: pointer;
       font: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      min-width: 132px;
-      padding: 10px 34px 10px 12px;
-    }
-
-    .client-period-quick {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .client-period-or {
-      color: var(--text-soft);
       font-size: 12px;
       font-weight: 500;
+      padding: 9px 28px 9px 14px;
     }
 
-    .preset-controls--header .client-period-or {
-      color: rgba(255, 255, 255, 0.55);
+    .client-period-group {
+      align-items: center;
+      display: inline-flex;
+      gap: 6px;
     }
 
-    .client-period-row {
-      justify-content: flex-end;
+    .client-period-select.is-active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .preset-controls--header .client-period-select.is-active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
     }
 
     .client-period-select:focus-visible {
@@ -763,9 +759,15 @@
     }
 
     .preset-controls--header .client-period-select {
-      background-color: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.18);
+      background-color: rgba(255, 255, 255, 0.1);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      border-color: rgba(255, 255, 255, 0.22);
       color: #fff;
+    }
+
+    .preset-controls--header .client-period-select:hover {
+      background-color: rgba(255, 106, 0, 0.25);
+      border-color: var(--border-strong);
     }
 
     .preset-controls--header .client-period-select option {
@@ -25018,7 +25020,7 @@
 
     function updateCustomDateRowVisibility() {
       document.querySelectorAll('#custom-date-row').forEach((row) => {
-        row.hidden = state.preset !== 'custom';
+        row.hidden = state.preset !== 'custom' || isClientPeriodPickActive();
       });
     }
 
@@ -25037,7 +25039,11 @@
       });
 
       document.querySelectorAll('[data-preset]').forEach((button) => {
-        button.classList.toggle('active', button.dataset.preset === state.preset);
+        const isCustomButton = button.dataset.preset === 'custom';
+        button.classList.toggle(
+          'active',
+          button.dataset.preset === state.preset && !(isCustomButton && isClientPeriodPickActive()),
+        );
       });
 
       updateCustomDateRowVisibility();
@@ -25436,21 +25442,19 @@
       };
     }
 
-    function renderClientPeriodPicker() {
+    // A month/year picked from the dropdowns (as opposed to the free From/To Custom range).
+    function isClientPeriodPickActive() {
+      return usesCrmClientDashboard() && state.preset === 'custom' && Boolean(clientPeriodMonth);
+    }
+
+    // Year + Month dropdowns shown next to the preset buttons (client view only).
+    function renderClientPeriodSelects() {
       const { yearHtml, monthHtml } = renderClientPeriodOptions();
+      const activeClass = isClientPeriodPickActive() ? ' is-active' : '';
       return `
-        <div class="custom-date-row client-period-row" id="custom-date-row" ${state.preset !== 'custom' ? 'hidden' : ''}>
-          <div class="client-period-quick">
-            <select id="client-period-year" class="client-period-select" aria-label="År" onchange="onClientPeriodYearChange(this.value)">${yearHtml}</select>
-            <select id="client-period-month" class="client-period-select" aria-label="Måned" onchange="onClientPeriodMonthChange(this.value)">${monthHtml}</select>
-          </div>
-          <span class="client-period-or" aria-hidden="true">eller</span>
-          <div class="custom-date-range">
-            ${renderDatePickerTrigger('dateFrom', 'From', 'Fra dato')}
-            <span class="date-range-separator" aria-hidden="true">→</span>
-            ${renderDatePickerTrigger('dateTo', 'To', 'Til dato')}
-          </div>
-          <div class="date-range-error" id="date-range-error" hidden></div>
+        <div class="client-period-group" role="group" aria-label="Vælg periode">
+          <select id="client-period-year" class="client-period-select${activeClass}" aria-label="År" onchange="onClientPeriodYearChange(this.value)">${yearHtml}</select>
+          <select id="client-period-month" class="client-period-select${activeClass}" aria-label="Måned" onchange="onClientPeriodMonthChange(this.value)">${monthHtml}</select>
         </div>
       `;
     }
@@ -25462,6 +25466,9 @@
       const { yearHtml, monthHtml } = renderClientPeriodOptions();
       yearSelect.innerHTML = yearHtml;
       monthSelect.innerHTML = monthHtml;
+      const active = isClientPeriodPickActive();
+      yearSelect.classList.toggle('is-active', active);
+      monthSelect.classList.toggle('is-active', active);
     }
 
     function applyClientPeriodSelection() {
@@ -25513,9 +25520,8 @@
     }
 
     function renderCustomDateInputs() {
-      if (usesCrmClientDashboard()) return renderClientPeriodPicker();
       return `
-        <div class="custom-date-row" id="custom-date-row" ${state.preset !== 'custom' ? 'hidden' : ''}>
+        <div class="custom-date-row" id="custom-date-row" ${(state.preset !== 'custom' || isClientPeriodPickActive()) ? 'hidden' : ''}>
           <div class="custom-date-range">
             ${renderDatePickerTrigger('dateFrom', 'From', 'Pick start date')}
             <span class="date-range-separator" aria-hidden="true">→</span>
@@ -25532,6 +25538,7 @@
         <div class="preset-controls${inHeader ? ' preset-controls--header' : ''}">
           <div class="preset-btn-row${headerClass}">
             ${renderPresetButtons()}
+            ${usesCrmClientDashboard() ? renderClientPeriodSelects() : ''}
           </div>
           ${renderCustomDateInputs()}
         </div>
@@ -25544,7 +25551,7 @@
         <button type="button" class="preset-btn ${state.preset === 'month' ? 'active' : ''}" data-preset="month" onclick="applyPreset('month')">This month</button>
         <button type="button" class="preset-btn ${state.preset === 'lastMonth' ? 'active' : ''}" data-preset="lastMonth" onclick="applyPreset('lastMonth')">Last month</button>
         <button type="button" class="preset-btn ${state.preset === 'year' ? 'active' : ''}" data-preset="year" onclick="applyPreset('year')">This year</button>
-        <button type="button" class="preset-btn ${state.preset === 'custom' ? 'active' : ''}" data-preset="custom" onclick="applyPreset('custom')">Custom</button>
+        <button type="button" class="preset-btn ${(state.preset === 'custom' && !isClientPeriodPickActive()) ? 'active' : ''}" data-preset="custom" onclick="applyPreset('custom')">Custom</button>
       `;
     }
 
@@ -26277,18 +26284,11 @@
     function applyPreset(preset) {
       clearDateRangeError();
       closeDatePicker();
-      if (preset === 'custom' && usesCrmClientDashboard()) {
-        // Client view: Year + Month dropdowns next to the free From/To date range.
-        state.preset = 'custom';
-        state.dateField = 'createdAt';
-        if (clientPeriodYear && clientPeriodMonth) {
-          applyClientPeriodSelection();
-          return;
-        }
-        restoreCustomDateRange();
-        updateFilterUi();
-        if (state.dateFrom && state.dateTo) applyDataFilters(false);
-        return;
+      if (usesCrmClientDashboard() && clientPeriodMonth) {
+        // Leaving a Year/Month dropdown pick: clear it and don't remember it as the Custom range.
+        clientPeriodMonth = '';
+        if (state.preset === 'custom') state.preset = 'all';
+        refreshClientPeriodPicker();
       }
       setPreset(preset);
       updateFilterUi();

@@ -713,38 +713,34 @@
       -webkit-appearance: none;
       background-color: var(--panel);
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-position: right 12px center;
+      background-position: right 10px center;
       background-repeat: no-repeat;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       color: var(--text);
       cursor: pointer;
       font: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      min-width: 132px;
-      padding: 10px 34px 10px 12px;
-    }
-
-    .client-period-quick {
-      align-items: center;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .client-period-or {
-      color: var(--text-soft);
       font-size: 12px;
       font-weight: 500;
+      padding: 9px 28px 9px 14px;
     }
 
-    .preset-controls--header .client-period-or {
-      color: rgba(255, 255, 255, 0.55);
+    .client-period-group {
+      align-items: center;
+      display: inline-flex;
+      gap: 6px;
     }
 
-    .client-period-row {
-      justify-content: flex-end;
+    .client-period-select.is-active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .preset-controls--header .client-period-select.is-active {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
     }
 
     .client-period-select:focus-visible {
@@ -754,9 +750,15 @@
     }
 
     .preset-controls--header .client-period-select {
-      background-color: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.18);
+      background-color: rgba(255, 255, 255, 0.1);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      border-color: rgba(255, 255, 255, 0.22);
       color: #fff;
+    }
+
+    .preset-controls--header .client-period-select:hover {
+      background-color: rgba(255, 106, 0, 0.25);
+      border-color: var(--border-strong);
     }
 
     .preset-controls--header .client-period-select option {
