@@ -3828,30 +3828,31 @@
     }
 
     /* ---- Period picker: segmented quick periods + "Anden periode" popover ---- */
-    /* Quick periods: one joined switcher (exactly one active). Same 35px height as the
-       pill buttons next to it (3px padding + 6px button padding + 15px text, plus borders). */
+    /* Quick periods: one joined capsule (exactly one active). The selected segment is a
+       full-height pill that touches the capsule edge on every side (no inner gap).
+       Total height stays 35px like the buttons next to it (2px border + 33px segments). */
     .period-seg {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 10px;
+      border-radius: 999px;
       display: inline-flex;
-      gap: 2px;
+      gap: 0;
       max-width: 100%;
-      overflow-x: auto;
-      padding: 3px;
+      overflow: hidden;
+      padding: 0;
     }
 
     .period-seg-btn {
       background: transparent;
       border: none;
-      border-radius: 7px;
+      border-radius: 999px;
       color: rgba(255, 255, 255, 0.82);
       cursor: pointer;
       font: inherit;
       font-size: 12px;
       font-weight: 500;
       line-height: 1.25;
-      padding: 6px 12px;
+      padding: 9px 16px;
       transition: background 0.15s ease, color 0.15s ease;
       white-space: nowrap;
     }
@@ -3863,7 +3864,6 @@
 
     .period-seg-btn.active {
       background: var(--primary);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
       color: #fff;
     }
 
@@ -4058,9 +4058,16 @@
     /* Phones: quick periods as a 2x2 grid, date fields stacked. */
     @media (max-width: 480px) {
       .header-presets .period-seg {
+        border-radius: 18px;
         display: grid;
+        gap: 3px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         overflow: visible;
+        padding: 3px;
+      }
+
+      .header-presets .period-seg-btn {
+        border-radius: 14px;
       }
 
       .period-custom-range {
